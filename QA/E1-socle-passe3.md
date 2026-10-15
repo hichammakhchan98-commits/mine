@@ -159,3 +159,20 @@ c'est à lui de trancher, pas au relecteur de l'absoudre.
 Les quatre majeurs sont à corriger avant de clore l'Étape 1 (§ 12.2 : « les bloquants et majeurs sont
 corrigés »). Une quatrième passe devra rejouer **D3, D4 et D5bis**, qui sont aujourd'hui les trois
 canaris verts.
+
+---
+
+## Suites données par l'auteur — 15/10/2026
+
+Les **4 majeurs** et les **6 mineurs** sont corrigés. Trois remarques :
+
+1. **P1 est traité comme s'il était bloquant**, sans attendre l'arbitrage proposé. Une page qui publie
+   un nombre faux est fausse, quelle que soit la gravité qu'on lui assigne — le § 2.1 met l'exactitude
+   technique avant tout le reste. Le texte est repris, et l'encart compte maintenant ses quatre entrées.
+2. **Le rejeu du canari D4 a d'abord donné un faux négatif de mon fait** : mon `sed` d'injection ne
+   matchait pas (apostrophes typographiques), et j'ai lu « passe encore » là où rien n'avait été injecté.
+   Injecté correctement, le contrôle P4 se déclenche. Le défaut était réel, la correction tient, mais
+   mon harnais de rejeu était faux — ce qui est exactement le genre d'erreur que ces passes existent
+   pour attraper, y compris chez le correcteur.
+3. **P10 est corrigé en excluant `QA/`** du contrôle « dépôt propre ». Le contrôle virait au rouge par
+   le seul fait d'être relu, puisque le relecteur écrit son rapport pendant la passe.

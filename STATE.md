@@ -72,13 +72,27 @@ notes de 2 sur l'exécution et l'économie sont volontaires, ces sujets appartie
 Portée par un **sous-agent distinct**, qui n'a pas lu le raisonnement de l'auteur et a recalculé les
 valeurs clés à partir de `data/` seul. Rapport : `QA/E1-socle.md`.
 
-**Verdict de la première passe : 26 défauts — 5 bloquants, 9 majeurs, 12 mineurs.** Le relecteur a
-aussi rétrogradé de lui-même un défaut devenu périmé pendant sa passe, plutôt que de le laisser au
-compte.
+**Trois passes ont été nécessaires.**
 
-Les 5 bloquants et les 9 majeurs sont corrigés (tableau ci-dessous). Les mineurs traités : m1 à m6,
-m9, m10, m11. **Reste ouvert** : m7 (grille § 7.2) — produite ci-dessus ; m8 — corrigé ; aucun mineur
-non traité.
+| Passe | Verdict | Corrigé |
+|---|---|---|
+| 1 | 26 défauts — **5 bloquants**, 9 majeurs, 12 mineurs | tous bloquants et majeurs, m1–m6, m9–m11 |
+| 2 | 14 défauts — **1 bloquant**, 7 majeurs, 6 mineurs. **3 canaris franchissaient les 11 contrôles** | le bloquant, les 7 majeurs, les 6 mineurs |
+| 3 | 10 défauts — **0 bloquant**, 4 majeurs, 6 mineurs. 2 nouveaux canaris rouges (erreur de modèle *partagée*) | les 4 majeurs, les 6 mineurs |
+
+**Le § 12.2 est satisfait : zéro bloquant.** Rapports : `QA/E1-socle.md`, `QA/E1-socle-passe2.md`,
+`QA/E1-socle-passe3.md`.
+
+**Ce que ces trois passes ont appris, et qui vaut pour tout le cours.** Deux fois, une correction
+s'est retournée : le contrôle « dépôt propre » ajouté en passe 1 cassait la reprise du mode B sur un
+clone neuf, et le paragraphe de coût ajouté pour combler une note faible réintroduisait un nombre
+tapé à la main **et faux**. Une correction est un changement comme un autre : elle se relit.
+
+**Canaris (§ 12.2, contrôle du relecteur).** 12 joués au total sur les trois passes. Tous rouges à ce
+jour : barres SVG empilées, enrobage 3D ignoré, régression du diamètre de tube, décalage vertical,
+resserrement de 20 %, divergence de règle Python/JS, comptage faux des deux côtés, règle de placement
+faussée des deux côtés, règle d'axe faussée des deux côtés, coût faux d'un facteur 10, V3 publiée
+sans balise, longueur de barre fausse des deux côtés.
 
 ## Défauts trouvés et corrigés pendant l'Étape 1 (§ R6, § 12.2)
 
@@ -112,6 +126,27 @@ non traité.
 | M8 | Le livrable de l'Étape 1 n'était pas committé | majeur | committé ; `check.mjs` exige désormais un arbre de travail propre |
 | M9 | Cadres sans crochets : simplification non signalée (−2,7 %) | majeur | déclarée dans la page, dans `data/` et dans la sortie de `calc/` |
 | M10 | La règle qui comptait les cadres ne décrivait pas celle qui les plaçait | majeur | règle unique ; et elle était fausse — l'espacement réel **dépassait** le nominal. 14 cadres, et non 13 |
+
+### Corrigés après la passe 2
+
+| # | Défaut | Gravité | Correction |
+|---|---|---|---|
+| N2 | La page affirmait deux voies « indépendantes » : faux pour la masse (0,00617 dérive de π/4 × 7850 × 10⁻⁶) et les deux partagent comptage, règle d'axe et longueurs | bloquant | la page liste ce qu'elles partagent et ce que le contrôle **n'attrape pas** ; le comptage est recalculé dans le test |
+| N1 | L'enrobage n'était pas appliqué le long de l'axe : about réel 26 mm pour 30 annoncés | majeur | premier cadre à `enrobage + ⌀/2` de l'about, des deux côtés |
+| N3 | Registre des hypothèses aux colonnes inversées, `fourchette` et `annee_ref` vides | majeur | balises V3 structurées ; le build échoue sans fourchette ni année |
+| N4 | Le paragraphe de coût ajouté en passe 1 réintroduisait un nombre **faux** (450 pour 433) | majeur | montants calculés par `calc/` |
+| N5 | L'anecdote d'étalonnage publiait les valeurs d'avant correction | majeur | variables |
+| N6 | `calc/__pycache__` versionné : le contrôle « dépôt propre » **échouait sur tout clone neuf** | majeur | ignoré et retiré du suivi |
+| N7, N8 | Aucun test ne mesurait le diamètre du tube ; le test SVG ne comparait jamais `cy` et recalait son échelle sur les barres contrôlées | majeur | diamètre mesuré ; échelle déduite du rectangle de section, `cx`, `cy` et rayon comparés |
+
+### Corrigés après la passe 3
+
+| # | Défaut | Gravité | Correction |
+|---|---|---|---|
+| P1 | La page publiait **un nombre faux** (20 mm au lieu de 34), avec une auto-correction laissée dans le texte, sous un encart « Trois simplifications » qui en listait quatre | majeur | texte repris |
+| P2 | La phrase désignait un filet inexistant : l'étalonnage n'attrape rien de ces erreurs. Et la longueur de barre n'était recalculée nulle part | majeur | phrase corrigée ; recalcul indépendant ajouté |
+| P3 | Le bloc économique n'était testé **nulle part** : un coût faux d'un facteur 10 passait | majeur | montants et heures recalculés, et confrontés au texte publié |
+| P4 | Le contrôle de balisage cessait d'exiger quoi que ce soit dès qu'**une** balise existait | majeur | toute mention « (V3 » hors balise échoue |
 
 ## Valeurs V2 en attente de vérification par le lecteur
 
@@ -151,5 +186,5 @@ registres régénérés par le build. Empreinte de `data/` : voir le pied de cha
 
 ## Effort consommé (§ 13.2)
 
-Étape 0 : 1 séance. Étape 1 : 1 séance (socle complet, 8 défauts trouvés et corrigés, passe /devil).
+Étape 0 : 1 séance. Étape 1 : 2 séances (socle complet ; 8 défauts trouvés en construisant, puis **50 défauts sur trois passes adversariales**, tous bloquants et majeurs corrigés).
 Hypothèse de budget en place : 2 séances par semaine, ~1,5 séance par livraison (V3, à confirmer).
