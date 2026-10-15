@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "version": "0.1-propose",
+    "statut": "PROPOSITION — cas SECONDAIRE LEGER (§ 10.1b). Non fige.",
+    "referentiel_principal": "M",
+    "normes_disponibles": false,
+    "phase": "5.0 — sans calculs normatifs",
+    "cas": "secondaire",
+    "perimetre": "fondamentaux du beton arme (B3) et seisme de base (B6). PAS de plans d'execution complets, PAS de maquette 3D globale.",
+    "date_proposition": "2026-10-15"
+  },
+  "site": { "ville": "idem cas phare (meme site, pour ne pas multiplier les hypotheses geotechniques)", "zone_sismique": { "acceleration": null, "vitesse": null }, "classe_sol": null, "nappe_m": 18.0, "q_adm_kPa": 250, "niveau_preuve": "V3" },
+  "geometrie": {
+    "emprise_m": [25, 40], "sous_sols": 2, "h_rdc_m": 4.0, "h_etage_m": 3.0, "niveaux": 6,
+    "trame_m": [5.0, 5.0, 5.0, 5.0, 5.0], "trame_note": "5 travees de 5.0 m dans le sens court ; 8 de 5.0 m dans le sens long",
+    "porte_a_faux": [{ "element": "balcon", "longueur_m": 1.4 }]
+  },
+  "batiment": { "usage": "logements collectifs avec commerces en RDC", "classe_importance": null, "classe_exposition": null, "resistance_feu_min": null, "note": "⏸ toutes les classes en attente des normes" },
+  "materiaux": { "beton": { "classe": null, "enrobage_mm": {} }, "acier_ha": null, "autres": {} },
+  "charges": { "G": {}, "Q": {}, "vent": {}, "neige": null, "sismique": {}, "note": "⏸ BLOQUE par le § 5.0" },
+  "elements": { "poteaux": [], "poutres": [], "voiles": [], "dalles": [], "fondations": [], "soutenement": [] },
+  "armatures": { "nomenclature": [], "masse_totale_kg": null },
+  "quantites": { "beton_m3": {}, "coffrage_m2": {}, "acier_kg": {}, "terrassement_m3": {} },
+  "cadences": {}, "prix_unitaires_MAD": { "annee_ref": 2026, "postes": {} },
+  "planning": { "taches": [], "dependances": [] }, "effectifs": {}, "materiel": {}
+}

@@ -1,0 +1,171 @@
+{
+  "meta": {
+    "version": "0.1-propose",
+    "statut": "PROPOSITION — non figee. Passe en 1.0 + fige_le + commit apres validation du lecteur (Etape 0, point e).",
+    "fige_le": "",
+    "commit_fige": "",
+    "referentiel_principal": "M",
+    "referentiel_charpente": "E-gen1",
+    "normes_disponibles": false,
+    "phase": "5.0 — sans calculs normatifs",
+    "cas": "phare",
+    "date_proposition": "2026-10-15",
+    "avertissement": "Programme fictif et generique. Ne reproduit aucun projet reel. Exemple pedagogique."
+  },
+
+  "site": {
+    "option_retenue": "S1",
+    "options": {
+      "S1": {
+        "ville": "Region de Marrakech (commune peri-urbaine fictive)",
+        "sismicite_qualitative": "moderee",
+        "reclassement_2024": "la prefecture de Marrakech figure parmi les 80 communes du decret 2.24.766 (8 communes) : traiter les DEUX zonages, l'un en cas principal, l'autre en annexe comparative (§ 3.1)",
+        "zone_sismique": { "acceleration": null, "vitesse": null, "note": "⏸ en attente des normes — a lire dans le catalogue communal officiel en vigueur, jamais de memoire" },
+        "classe_sol": null,
+        "classe_sol_descriptive": "alluvions limono-sableuses denses du Haouz sur substratum conglomeratique",
+        "nappe_m": 18.0,
+        "q_adm_kPa": 250,
+        "coupe_geotechnique_V3": [
+          { "de_m": 0.0, "a_m": 1.2, "nature": "remblais et limons de surface", "SPT_N": 8 },
+          { "de_m": 1.2, "a_m": 6.5, "nature": "limons sableux denses", "SPT_N": 24, "pressiometre_pl_MPa": 1.1, "Em_MPa": 14 },
+          { "de_m": 6.5, "a_m": 14.0, "nature": "sables graveleux", "SPT_N": 42, "pressiometre_pl_MPa": 2.4, "Em_MPa": 32 },
+          { "de_m": 14.0, "a_m": 25.0, "nature": "conglomerat altere puis sain", "SPT_N": ">50", "pressiometre_pl_MPa": 4.5, "Em_MPa": 70 }
+        ],
+        "laboratoire_V3": { "IP": 12, "VBS": 0.9, "gonflement": "non significatif", "sulfates_mg_kg": 420, "agressivite": "faible" },
+        "liquefaction": "sans objet (nappe profonde, sols denses)",
+        "consequence_fondations": "fondations superficielles / radier envisageables — a confirmer par calcul apres levee du § 5.0",
+        "niveau_preuve": "V3"
+      },
+      "S2": {
+        "ville": "Agadir (site littoral fictif)",
+        "sismicite_qualitative": "forte",
+        "zone_sismique": { "acceleration": null, "vitesse": null, "note": "⏸ en attente des normes" },
+        "classe_sol": null,
+        "classe_sol_descriptive": "sables dunaires laches a moyennement denses, nappe haute",
+        "nappe_m": 3.5,
+        "q_adm_kPa": 120,
+        "coupe_geotechnique_V3": [
+          { "de_m": 0.0, "a_m": 4.0, "nature": "sables dunaires laches", "SPT_N": 11 },
+          { "de_m": 4.0, "a_m": 12.0, "nature": "sables moyennement denses, saturees", "SPT_N": 19, "CPT_qc_MPa": 6.5 },
+          { "de_m": 12.0, "a_m": 28.0, "nature": "marnes sableuses compactes", "SPT_N": 45, "pressiometre_pl_MPa": 2.8, "Em_MPa": 40 }
+        ],
+        "liquefaction": "A VERIFIER — sables saturees laches sous nappe haute + sismicite forte : declencheur du volet liquefaction et interaction sol-structure (B1)",
+        "consequence_fondations": "fondations profondes (pieux fores) ou amelioration de sols (B1b) probables",
+        "interet_pedagogique": "active B1 profondes, B1b, liquefaction, ISS, corrosion en ambiance marine — le plus riche, le plus couteux",
+        "niveau_preuve": "V3"
+      },
+      "S3": {
+        "ville": "Casablanca (site fictif)",
+        "sismicite_qualitative": "faible",
+        "zone_sismique": { "acceleration": null, "vitesse": null, "note": "⏸ en attente des normes" },
+        "classe_sol": null,
+        "classe_sol_descriptive": "schistes et quartzites du socle sous faible couverture",
+        "nappe_m": 12.0,
+        "q_adm_kPa": 600,
+        "coupe_geotechnique_V3": [
+          { "de_m": 0.0, "a_m": 2.5, "nature": "remblais et argiles de decomposition", "SPT_N": 14 },
+          { "de_m": 2.5, "a_m": 8.0, "nature": "schistes alteres", "SPT_N": ">50", "pressiometre_pl_MPa": 3.5, "Em_MPa": 60 },
+          { "de_m": 8.0, "a_m": 20.0, "nature": "schistes sains", "pressiometre_pl_MPa": ">6", "Em_MPa": 140 }
+        ],
+        "liquefaction": "sans objet",
+        "consequence_fondations": "semelles isolees, excavation en rocher (sautage ou BRH) pour le niveau technique",
+        "interet_pedagogique": "le plus pauvre en geotechnique et en seisme — ecarte sauf demande",
+        "niveau_preuve": "V3"
+      }
+    }
+  },
+
+  "geometrie": {
+    "emprise_m": [120, 40],
+    "trame_longitudinale_m": 7.5,
+    "nb_travees_longitudinales": 16,
+    "decoupage_transversal_m": { "nef_laterale_cote_ville": 4.0, "hall_portee_libre": 32.0, "nef_laterale_cote_voies": 4.0 },
+    "niveaux": [
+      { "nom": "niveau technique", "altitude_m": -4.0, "emprise_partielle_m": [40, 20], "usage": "locaux techniques, stockage, raccordement du passage souterrain vers les quais", "h_libre_m": 3.2 },
+      { "nom": "RDC — hall voyageurs", "altitude_m": 0.0, "usage": "hall double hauteur, billetterie, commerces, controle d'acces", "h_libre_m": 9.0 },
+      { "nom": "mezzanine", "altitude_m": 5.0, "emprise_partielle_m": [120, 24], "usage": "salles d'attente, restauration, bureaux d'exploitation", "h_libre_m": 4.0 },
+      { "nom": "sous-face de couverture", "altitude_m": 12.5, "usage": "treillis metalliques de couverture du hall" }
+    ],
+    "sous_sols": 1,
+    "mezzanine": {
+      "largeur_m": 24.0,
+      "position": "bande continue le long de la facade cote voies",
+      "poutre_type_module_temoin": {
+        "id": "PM1",
+        "type": "poutre continue de plancher, 3 travees + console de marquise",
+        "travees_m": [8.0, 8.0, 8.0],
+        "console_m": 4.5,
+        "entraxe_m": 7.5,
+        "section_bxh_cm": [35, 75],
+        "note": "section = PREDIMENSIONNEMENT V3 par elancement usuel (h ~ L/11). Aucune verification reglementaire tant que le § 5.0 n'est pas leve."
+      }
+    },
+    "couverture_metallique": {
+      "portee_libre_m": 32.0,
+      "systeme": "treillis plans a membrures paralleles sur poteaux de rive, entraxe 7.5 m",
+      "hauteur_treillis_m": 2.2,
+      "elancement_V3": "h/L ~ 1/14.5 — ordre de grandeur de predimensionnement",
+      "couverture": "bac acier + isolation + etancheite, lanterneaux zenithaux",
+      "note": "⏸ vent, soulevement, flambement, deversement, assemblages : en attente des normes"
+    },
+    "marquise": {
+      "porte_a_faux_m": 4.5,
+      "position": "prolongement des poutres de mezzanine au-dessus du parvis cote voies",
+      "note": "console du module temoin n° 1 (§ 7.3)"
+    },
+    "circulations": {
+      "acces_quais": "passage souterrain (2 escaliers fixes + 2 escalators + 1 ascenseur par quai)",
+      "escalators": 4,
+      "ascenseurs": 3,
+      "escaliers_fixes": 4,
+      "noyaux": 2
+    },
+    "quais_desservis": 3,
+    "porte_a_faux": [{ "element": "marquise", "longueur_m": 4.5 }]
+  },
+
+  "batiment": {
+    "usage": "etablissement recevant du public — batiment voyageurs de gare a grande vitesse",
+    "effectif_public_V3": 1800,
+    "classe_importance": null,
+    "classe_importance_note": "⏸ a lire dans le RPS (classe des batiments recevant du public) — jamais de memoire",
+    "classe_exposition": null,
+    "classe_exposition_note": "⏸ a fixer avec la norme beton applicable (ambiance, carbonatation, chlorures)",
+    "resistance_feu_min": null,
+    "resistance_feu_note": "⏸ a fixer par le reglement de securite incendie applicable et le CPS",
+    "contraintes_exploitation": [
+      "exploitation ferroviaire maintenue pendant les travaux (phasage, plages horaires, consignations)",
+      "interfaces voie, quais, catenaire, signalisation, courants faibles, information voyageurs",
+      "co-activite avec les lots systemes et avec un autre maitre d'ouvrage (gestionnaire d'infrastructure)"
+    ]
+  },
+
+  "materiaux": {
+    "beton": { "classe": null, "classe_note": "⏸ en attente des normes", "enrobage_mm": {}, "superstructure_basse": "beton arme coule en place" },
+    "acier_ha": null,
+    "charpente": { "nuance": null, "note": "⏸ en attente des normes ; couverture en acier de construction, assemblages boulonnes de chantier" },
+    "autres": { "facades": "murs-rideaux vitres + panneaux isolants", "couverture": "bac acier double peau" }
+  },
+
+  "charges":   { "G": {}, "Q": {}, "vent": {}, "neige": null, "sismique": {}, "note": "⏸ BLOQUE par le § 5.0 — aucune descente de charges, aucune combinaison avant levee" },
+  "elements":  { "poteaux": [], "poutres": [], "voiles": [], "dalles": [], "fondations": [], "soutenement": [], "charpente": [] },
+  "armatures": { "nomenclature": [], "masse_totale_kg": null },
+
+  "quantites": {
+    "note": "a remplir en ordre de grandeur (V3, par ratios) pour la tranche verticale de suivi — § 5.3 adapte",
+    "beton_m3": {}, "coffrage_m2": {}, "acier_kg": {}, "terrassement_m3": {}
+  },
+  "cadences": {},
+  "prix_unitaires_MAD": { "annee_ref": 2026, "source": "V3 — fourchettes, aucun bordereau fourni", "postes": {} },
+  "planning": { "taches": [], "dependances": [], "date_fin_P1_demandee_au_lecteur": null },
+  "effectifs": {},
+  "materiel": {},
+
+  "multi_sites": {
+    "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
+    "sites": [
+      { "id": "S-GV", "nom": "Gare a grande vitesse (cas phare)", "emprise_m": [120, 40] },
+      { "id": "S-RER", "nom": "Gare de RER (site secondaire, pour D7 uniquement)", "emprise_m": [45, 18], "statut": "esquisse — pas de modules de calcul dedies" }
+    ]
+  }
+}

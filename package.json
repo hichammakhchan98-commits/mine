@@ -1,0 +1,12 @@
+{
+  "name": "cours-genie-civil",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cours complet de genie civil — de la conception a l'execution, au controle et a la direction de projet",
+  "type": "module",
+  "scripts": {
+    "check": "node build/check-e0.mjs",
+    "empreinte": "node build/check-e0.mjs --empreinte-seule"
+  },
+  "engines": { "node": ">=20" }
+}

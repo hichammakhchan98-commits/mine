@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "version": "0.1-propose",
+    "statut": "PROPOSITION — a valider par le lecteur (Etape 0, question 2)",
+    "date": "2026-10-15",
+    "regle": "UN referentiel principal par domaine de calcul et par cas. L'autre apparait en annexe comparative, JAMAIS dans le meme calcul (§ 3.1).",
+    "option_retenue_proposee": "M pour beton arme / precontraint / seisme ; E 1re generation pour l'acier, avec annexe comparative 2e generation",
+    "normes_disponibles": false,
+    "consequence": "Aucun de ces referentiels n'est utilise comme source de valeurs tant que normes_disponibles = false (§ 5.0). La matrice sert au cadrage et a la liste des documents a fournir."
+  },
+  "domaines": [
+    { "id": "charges-batiments", "domaine": "Charges d'exploitation, vent, neige des batiments", "referentiel": "NF P 06-001 (exploitation), NV 65 (vent), N 84 (neige) ; option E : EN 1991-1-1 / -1-3 / -1-4", "generation_millesime": "versions modifiees en vigueur a identifier", "statut": "V2 — ⚠ a verifier", "document_a_fournir": true },
+    { "id": "charges-ponts", "domaine": "Charges routieres et ferroviaires des ponts", "referentiel": "Fascicule 61 titre II (routes) ; ferroviaire a fixer par le CPS", "generation_millesime": "a identifier", "statut": "V2 — ⚠ a verifier", "document_a_fournir": true },
+    { "id": "beton-arme", "domaine": "Beton arme", "referentiel": "BAEL 91 mod. 99", "generation_millesime": "modificatif 99", "statut": "V2 — ⚠ document a fournir", "document_a_fournir": true, "bloquant_pour": ["A4", "B1", "B2", "B3", "B6", "B7a"] },
+    { "id": "beton-precontraint", "domaine": "Beton precontraint", "referentiel": "BPEL 91", "generation_millesime": "—", "statut": "V2 — ⚠ document a fournir", "document_a_fournir": true, "bloquant_pour": ["B4"] },
+    { "id": "acier", "domaine": "Acier et assemblages", "referentiel": "EN 1993-1-1, -1-8, -1-9 ; execution EN 1090 ; qualite des soudures EN ISO 5817 ; CM 66 en alternative historique", "generation_millesime": "1re generation, annexe comparative sur la 2e", "statut": "V2 — ⚠ a verifier", "document_a_fournir": true, "bloquant_pour": ["B5"] },
+    { "id": "seisme-batiments", "domaine": "Seisme des batiments", "referentiel": "RPS 2000 version 2011 + catalogue communal a jour (decrets 2.24.766 et 2.24.767)", "generation_millesime": "version 2011 ; reclassement 2024 publie au BO n° 7351 du 11/11/2024 (source secondaire)", "statut": "V2 + vigilance — ⚠ lire le texte officiel et l'annexe communale avant tout calcul", "document_a_fournir": true, "bloquant_pour": ["B6", "B6b"] },
+    { "id": "seisme-ponts", "domaine": "Seisme des ponts", "referentiel": "le decret du RPS vise les batiments : referentiel des ponts a fixer par le CPS ; a defaut EN 1998-2", "generation_millesime": "1re generation", "statut": "V2 — ⚠ a fixer", "document_a_fournir": true },
+    { "id": "geotechnique", "domaine": "Geotechnique", "referentiel": "Fascicule 62 titre V et DTU 13.12 (pratique) ou EN 1997-1", "generation_millesime": "1re generation", "statut": "V2 — ⚠ a verifier", "document_a_fournir": true, "bloquant_pour": ["B1", "B1b", "B2"] },
+    { "id": "incendie", "domaine": "Incendie", "referentiel": "EN 1992-1-2 et EN 1993-1-2 (stabilite au feu) ; reglement marocain de securite incendie des batiments a identifier", "generation_millesime": "1re generation ; EN 1992-1-2:2023 existe", "statut": "V2 — ⚠ ; existence de l'EN 1992-1-2:2023 : V0", "document_a_fournir": true, "bloquant_pour": ["B7a"] },
+    { "id": "chaussees-routieres", "domaine": "Chaussees routieres", "referentiel": "Catalogue marocain des structures types de chaussees (a identifier)", "generation_millesime": "a identifier", "statut": "V2 — ⚠ a identifier", "document_a_fournir": true },
+    { "id": "chaussees-aeroportuaires", "domaine": "Chaussees aeroportuaires", "referentiel": "Dimensionnement : methode dediee a choisir ; publication de la resistance : ACR–PCR (OACI Annexe 14 ; SIA Maroc AIC A03-25)", "generation_millesime": "ACR–PCR applicable depuis le 28/11/2024", "statut": "publication : V0 (11/10/2026) ; dimensionnement : V2 — ⚠", "document_a_fournir": false },
+    { "id": "marches-contrats", "domaine": "Marches et contrats", "referentiel": "CPS du marche (prime) ; CCAG-T decret 2-14-394 (13/05/2016) ; decret des marches publics 2-22-431 (2023) ; FIDIC en appui", "generation_millesime": "—", "statut": "CCAG-T : V0 ; 2-22-431 : ⚠ a verifier ; CPS : document a fournir", "document_a_fournir": true, "bloquant_pour": [] },
+    { "id": "materiaux", "domaine": "Materiaux (beton, armatures)", "referentiel": "norme marocaine equivalente a l'EN 206 et normes NM des armatures (a identifier)", "generation_millesime": "a identifier", "statut": "V2 — ⚠ a identifier", "document_a_fournir": true },
+    { "id": "demolition", "domaine": "Demolition et deconstruction", "referentiel": "references marocaines et europeennes a identifier ; AUCUN numero sans V0", "generation_millesime": "—", "statut": "⚠ a identifier", "document_a_fournir": true },
+    { "id": "tribunes-foule", "domaine": "Tribunes et effets de foule", "referentiel": "a identifier ; AUCUN numero sans V0", "generation_millesime": "—", "statut": "⚠ a identifier", "document_a_fournir": true },
+    { "id": "ferroviaire-batiments", "domaine": "Batiments ferroviaires : quais, gabarits, catenaire, interfaces (AJOUTE pour le cas phare)", "referentiel": "referentiels du gestionnaire d'infrastructure, a fixer par le CPS du marche ; gabarits et distances de securite : document d'exploitation ; AUCUN numero sans V0", "generation_millesime": "a identifier", "statut": "⚠ a identifier — lacune de la matrice A6.2, signalee a l'Etape 0", "document_a_fournir": true, "bloquant_pour": ["B7c"] },
+    { "id": "effets-foule-gare", "domaine": "Flux de voyageurs et evacuation d'un grand volume ERP (AJOUTE)", "referentiel": "reglement de securite incendie applicable + referentiel d'exploitation ferroviaire ; a identifier", "generation_millesime": "a identifier", "statut": "⚠ a identifier", "document_a_fournir": true, "bloquant_pour": ["B7a"] }
+  ]
+}
