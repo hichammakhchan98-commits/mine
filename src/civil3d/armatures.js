@@ -1,35 +1,22 @@
 import * as THREE from "three";
 import { materiau } from "./materiaux.js";
 import { cm, mm, CourbePolyligne } from "./geometrie.js";
+import { positionsArmatures, placementCadres, contourCadre, perimetreCadreFerme } from "./section.js";
 
 /* Helpers d'armatures. Les armatures repetitives (cadres) passent par InstancedMesh (§ 4.4).
    ATTENTION : cette bibliotheque DESSINE une geometrie a partir de parametres.
    Elle ne dimensionne rien et ne verifie aucune regle. */
 
 /**
- * Un cadre rectangulaire a coins arrondis, comme tube ferme sur le contour EXACT
- * (droites + arcs). Le contour est echantillonne puis suivi par une CourbePolyligne :
- * sa longueur est a 0,02 % de la formule fermee P = 2(b-2r) + 2(h-2r) + 2.pi.r,
- * que calc/etalonnage/perimetre_cadre.py etalonne de son cote.
+ * Tube ferme suivant un contour deja calcule par section.js.
+ * `diametreBarre` est bien un DIAMETRE : le rayon du tube vaut sa moitie, une seule fois.
+ * (La version precedente recevait deja une moitie et redivisait : les cadres etaient
+ * dessines a la moitie de leur diametre, soit 4 mm pour un HA8.)
  */
-function geometrieCadre(b, h, r, diaBarre, nArc = 10, nDroite = 8, segments = 160) {
-  if (2 * r > Math.min(b, h)) throw new Error(`rayon de cintrage ${r} incompatible avec ${b} x ${h}`);
-  const pts = [];
-  const coins = [[b / 2 - r, h / 2 - r, 0], [-(b / 2 - r), h / 2 - r, Math.PI / 2],
-                 [-(b / 2 - r), -(h / 2 - r), Math.PI], [b / 2 - r, -(h / 2 - r), -Math.PI / 2]];
-  for (let c = 0; c < 4; c++) {
-    const [cx, cy, a0] = coins[c];
-    for (let i = 0; i <= nArc; i++) {                       // l'arc du coin
-      const a = a0 + (i / nArc) * (Math.PI / 2);
-      pts.push(new THREE.Vector3(cx + r * Math.cos(a), cy + r * Math.sin(a), 0));
-    }
-    const suiv = coins[(c + 1) % 4];                        // puis la droite jusqu'au coin suivant
-    const fin = new THREE.Vector3(cx + r * Math.cos(a0 + Math.PI / 2), cy + r * Math.sin(a0 + Math.PI / 2), 0);
-    const deb = new THREE.Vector3(suiv[0] + r * Math.cos(suiv[2]), suiv[1] + r * Math.sin(suiv[2]), 0);
-    for (let i = 1; i < nDroite; i++) pts.push(fin.clone().lerp(deb, i / nDroite));
-  }
+function geometrieCadre(contour_m, diametreBarre_m, segments = 160) {
+  const pts = contour_m.map(([x, y]) => new THREE.Vector3(x, y, 0));
   const courbe = new CourbePolyligne(pts, true);
-  const geo = new THREE.TubeGeometry(courbe, segments, diaBarre / 2, 6, true);
+  const geo = new THREE.TubeGeometry(courbe, segments, diametreBarre_m / 2, 6, true);
   geo.userData = { longueur_m: courbe.getLength() };
   return geo;
 }
@@ -45,6 +32,9 @@ export function cage({
   cadres = { dia_mm: 8, espacement_cm: 15 },
   betonVisible = true, opaciteBeton = 0.17,
 } = {}) {
+  const conv = { dia_cadre_mm: cadres.dia_mm, rayon_cintrage_mm: cadres.rayon_cintrage_mm ?? 20 };
+  const geo2d = positionsArmatures({ b_cm, h_cm, enrobage_cm, inf, sup }, conv);
+  const pose = placementCadres(L_cm, enrobage_cm, cadres.espacement_cm);
   const b = cm(b_cm), h = cm(h_cm), L = cm(L_cm), e = cm(enrobage_cm);
   const groupe = new THREE.Group();
   groupe.name = "cage";
@@ -91,53 +81,46 @@ export function cage({
     triangles += 12;
   }
 
-  // --- cadres : InstancedMesh (armatures repetitives)
+  // --- cadres : InstancedMesh (armatures repetitives), poses par la regle unique
   const dCad = mm(cadres.dia_mm);
-  const bc = b - 2 * e, hc = h - 2 * e;           // cadre a l'interieur de l'enrobage
-  const rayon = Math.max(2.5 * dCad, 0.02);
-  const geoCad = geometrieCadre(bc, hc, rayon, dCad / 2);
-  const esp = cm(cadres.espacement_cm);
-  const nCad = Math.max(2, Math.floor((L - 2 * e) / esp) + 1);
+  const contour = contourCadre(geo2d.axe_cadre_cm.b, geo2d.axe_cadre_cm.h, geo2d.rayon_cintrage_cm)
+    .map(([x, y]) => [cm(x), cm(y)]);
+  const geoCad = geometrieCadre(contour, dCad);
+  const nCad = pose.n;
   const inst = new THREE.InstancedMesh(geoCad, materiau("acierHA"), nCad);
   inst.name = "cadres";
   const M = new THREE.Matrix4();
-  const z0 = -(nCad - 1) * esp / 2;
-  for (let i = 0; i < nCad; i++) inst.setMatrixAt(i, M.makeTranslation(0, 0, z0 + i * esp));
+  for (let i = 0; i < nCad; i++) inst.setMatrixAt(i, M.makeTranslation(0, 0, cm(pose.z_cm[i])));
   inst.instanceMatrix.needsUpdate = true;
   inst.userData = { phase: 2, materiau: "acierHA", etiquette: `Cadres HA${cadres.dia_mm}`,
-    detail: `${nCad} cadres, espacement ${cadres.espacement_cm} cm` };
+    detail: `${nCad} cadres, espacement reel ${pose.espacement_reel_cm.toFixed(1)} cm` };
   gArmatures.add(inst);
   triangles += (geoCad.index.count / 3) * nCad;
 
-  // --- barres longitudinales
+  // --- barres longitudinales : positions issues de section.js, jamais recalculees ici
   const barres = [];
-  const poseNappe = (nappe, bas) => {
-    const d = mm(nappe.dia_mm);
-    const y = bas ? -h / 2 + e + dCad + d / 2 : h / 2 - e - dCad - d / 2;
-    const dispo = bc - dCad - d;                     // place utile entre brins de cadre
+  const compteur = { inf: 0, sup: 0 };
+  for (const bar of geo2d.barres) {
+    const d = mm(bar.dia_mm);
     const geo = new THREE.CylinderGeometry(d / 2, d / 2, L - 2 * e, 10, 1);
     geo.rotateX(Math.PI / 2);
-    for (let i = 0; i < nappe.n; i++) {
-      const x = nappe.n === 1 ? 0 : -dispo / 2 + (dispo * i) / (nappe.n - 1);
-      const m = new THREE.Mesh(geo, materiau("acierHA"));
-      m.position.set(x, y, 0);
-      m.name = `barre-${bas ? "inf" : "sup"}-${i + 1}`;
-      m.userData = { phase: 2, materiau: "acierHA" };
-      gArmatures.add(m);
-      barres.push({ x, y, dia_mm: nappe.dia_mm, longueur_m: L - 2 * e });
-    }
-    triangles += (geo.index.count / 3) * nappe.n;
-    return { y, d };
-  };
-  const pInf = poseNappe(inf, true);
-  const pSup = poseNappe(sup, false);
+    const m = new THREE.Mesh(geo, materiau("acierHA"));
+    m.position.set(cm(bar.x_cm), cm(bar.y_cm), 0);
+    m.name = `barre-${bar.nappe}-${++compteur[bar.nappe]}`;
+    m.userData = { phase: 2, materiau: "acierHA" };
+    gArmatures.add(m);
+    barres.push({ x_cm: bar.x_cm, y_cm: bar.y_cm, dia_mm: bar.dia_mm, longueur_m: L - 2 * e });
+    triangles += geo.index.count / 3;
+  }
+  const yInf = geo2d.barres.find((x) => x.nappe === "inf").y_cm;
+  const ySup = geo2d.barres.find((x) => x.nappe === "sup").y_cm;
 
   // etiquettes : positions DEDUITES de la geometrie, pas placees a l'oeil
   const etiquettes = [
     { t: `${inf.n} HA${inf.dia_mm}`, detail: "nappe inférieure", phase: 2, suit: "armatures",
-      pos: [0, pInf.y, L / 2 + 0.02] },
+      pos: [0, cm(yInf), L / 2 + 0.02] },
     { t: `${sup.n} HA${sup.dia_mm}`, detail: "nappe supérieure", phase: 2, suit: "armatures",
-      pos: [0, pSup.y, L / 2 + 0.02] },
+      pos: [0, cm(ySup), L / 2 + 0.02] },
     { t: `Cadres HA${cadres.dia_mm} / ${cadres.espacement_cm} cm`, detail: `${nCad} cadres`, phase: 2, suit: "armatures",
       pos: [b / 2 + 0.03, 0, 0] },
     { t: `enrobage ${enrobage_cm} cm`, detail: "paramètre de la démonstration (V3)", phase: 2, suit: "armatures",
@@ -159,6 +142,10 @@ export function cage({
     groupe,
     metre: {
       nCadres: nCad,
+      espacementReel_cm: pose.espacement_reel_cm,
+      crochets: false,
+      positions_barres_cm: barres.map((x) => ({ x: x.x_cm, y: x.y_cm, dia_mm: x.dia_mm })),
+      axeCadre_cm: geo2d.axe_cadre_cm,
       longueurCadre_m: longCadre,
       nBarres: barres.length,
       longueurBarre_m: L - 2 * e,

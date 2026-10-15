@@ -6,12 +6,20 @@ import { mkdtempSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const ZIP = "cours-genie-civil-P1-E1-socle.zip";
+// Par defaut on refabrique le zip et on le verifie. Avec un argument, on verifie un zip
+// DEJA EXISTANT sans y toucher : c'est le seul moyen de controler la piece reellement
+// remise au lecteur, et non une copie fraiche du repertoire courant.
+const ARG = process.argv[2];
+const ZIP = ARG || "cours-genie-civil-P1-E1-socle.zip";
 const sh = (cmd, args, cwd) =>
   execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
-rmSync(ZIP, { force: true });
-sh("zip", ["-rq", ZIP, ".", "-x", "node_modules/*", "tests/captures/*", "test-results/*", "*.zip"], ".");
+if (!ARG) {
+  rmSync(ZIP, { force: true });
+  sh("zip", ["-rq", ZIP, ".", "-x", "node_modules/*", "tests/captures/*", "test-results/*", "*.zip"], ".");
+} else if (!existsSync(ZIP)) {
+  throw new Error(`zip introuvable : ${ZIP}`);
+}
 
 const tmp = mkdtempSync(join(tmpdir(), "reprise-"));
 try {
@@ -22,7 +30,7 @@ try {
   sh("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], tmp);
   // dans la copie, on ne refait pas le controle du zip : sinon la verification se rappellerait
   sh("npm", ["run", "check", "--", "--sans-zip"], tmp);
-  console.log(`zip ${ZIP} : rouvert dans un repertoire neuf, npm ci puis npm run check au vert`);
+  console.log(`zip ${ZIP}${ARG ? " (existant, non refabrique)" : ""} : rouvert dans un repertoire neuf, npm ci puis npm run check au vert`);
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

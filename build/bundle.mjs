@@ -3,6 +3,16 @@
 import { build } from "esbuild";
 import { cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync, statSync } from "node:fs";
 
+// La regle de section est aussi livree seule : svgkit.js la consomme en global.
+await build({
+  entryPoints: ["src/section.entry.js"],
+  bundle: true, format: "iife", globalName: "SectionGeom", minify: true,
+  target: ["es2020"], outfile: "assets/section.js", legalComments: "none",
+  // sans ce pied, l'IIFE reste dans la portee du module quand Node l'importe
+  footer: { js: "globalThis.SectionGeom=SectionGeom;" },
+});
+console.log("assets/section.js — regle de positionnement partagee");
+
 const r = await build({
   entryPoints: ["src/civil3d.entry.js"],
   bundle: true, format: "iife", globalName: "Civil3D", minify: true,

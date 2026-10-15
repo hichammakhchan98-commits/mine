@@ -1,51 +1,72 @@
 {
   "_avertissement": "DEMONSTRATION DE BIBLIOTHEQUE. La geometrie est dessinee a partir de ces parametres ; rien n'est dimensionne, rien n'est verifie. Aucune valeur normative : la phase § 5.0 interdit tout calcul reglementaire.",
-  "n_cadres": 13,
-  "perimetre_cadre_m": 1.9257,
-  "rayon_cintrage_mm": 20.0,
-  "longueur_cadres_m": 25.034,
+  "n_cadres": 14,
+  "espacement_reel_cm": 14.92,
+  "axe_cadre_cm": {
+    "b": 28.2,
+    "h": 68.2
+  },
+  "rayon_cintrage_mm": 20,
+  "crochets": false,
+  "crochets_note": "Le cadre est modelise FERME, SANS crochets d'extremite. Un cadre reel en porte deux. Le metre est donc MINORANT d'environ 3 % sur les cadres. La longueur d'un crochet est une valeur constructive : elle n'est pas avancee ici (§ 5.0).",
+  "perimetre_cadre_m": 1.8935,
+  "longueur_cadres_m": 26.509,
   "n_barres": 5,
   "longueur_barre_m": 1.94,
-  "masse_cadres_kg": 9.88,
+  "masse_cadres_kg": 10.46,
   "masse_barres_kg": 20.48,
-  "masse_acier_kg": 30.35,
+  "masse_acier_kg": 30.94,
   "volume_beton_m3": 0.525,
-  "ratio_kg_m3": 57.8,
-  "ordre_de_grandeur": {
-    "but": "detecter une erreur d'unite ou de facteur, PAS valider un dimensionnement",
-    "fourchette_geometrique_kg_m3": [
+  "ratio_kg_m3": 58.9,
+  "garde_fou_unite": {
+    "but": "detecter une erreur d'UNITE ou de FACTEUR (un x10, un mm pris pour un cm). Ce controle ne valide aucun dimensionnement et n'attrape pas une erreur geometrique de quelques pour cent.",
+    "fourchette_kg_m3": [
       30,
       250
     ],
-    "dans_la_fourchette_geometrique": true,
-    "fourchette_poutre_dimensionnee_kg_m3": [
+    "dans_la_fourchette": true
+  },
+  "coherence_interne": {
+    "but": "rapports internes : ils bougent des qu'une part du metre derape, la ou le garde-fou d'unite ne voit rien.",
+    "masse_cadres_sur_barres": 0.5108,
+    "masse_par_metre_developpe_cadres_kg_m": 0.3946,
+    "attendu_masse_par_metre_cadres_kg_m": 0.3946
+  },
+  "comparaison_poutre_dimensionnee": {
+    "fourchette_kg_m3": [
       80,
       150
     ],
-    "niveau_preuve_fourchettes": "V3",
-    "dans_la_fourchette_poutre_dimensionnee": false,
-    "observation": "Le ratio de cette cage est INFERIEUR a la fourchette usuelle d'une poutre dimensionnee. C'est attendu et ce n'est pas un defaut de calcul : les diametres et le nombre de barres sont des parametres de demonstration (V3), ils ne sortent d'aucun dimensionnement — la phase § 5.0 l'interdit. C'est precisement le piege que la page de demonstration enseigne : on ne lit pas un ferraillage dimensionne sur un modele 3D."
+    "niveau_preuve": "V3",
+    "dedans": false,
+    "observation": "Le ratio est INFERIEUR a la fourchette usuelle d'une poutre dimensionnee. C'est attendu : les diametres et le nombre de barres sont des parametres de demonstration, ils ne sortent d'aucun dimensionnement — la phase § 5.0 l'interdit. Ce constat est rapporte, il ne fait pas echouer le controle."
   },
   "contre_calcul": {
-    "voie_A_premiers_principes_kg": 30.35,
-    "voie_B_coefficient_tabule_kg": 30.38,
-    "ecart_pct": 0.075,
+    "voie_A": "contour discretise (celui du tube 3D) + aire x longueur x masse volumique",
+    "voie_B": "formule fermee du perimetre + coefficient tabule 0,00617 d^2",
+    "perimetre_voie_A_m": 1.89353,
+    "perimetre_voie_B_m": 1.89366,
+    "ecart_perimetre_pct": 0.0068,
+    "voie_A_kg": 30.94,
+    "voie_B_kg": 30.96,
+    "ecart_pct": 0.077,
     "tolerance_pct": 5.0,
     "verdict": "OK"
   },
   "verification_dimensionnelle": {
-    "masse_voie_A": {
-      "valeur": 4.7843,
-      "unite": "kilogram"
-    },
-    "masse_voie_B": {
-      "valeur": 4.7879,
-      "unite": "kilogram"
-    },
-    "perimetre_cadre": {
-      "valeur": 1.9257,
-      "unite": "meter"
-    },
+    "source": "data/demo-cage.json (aucune valeur en dur)",
+    "masse_1_barre_voie_A_kg": 4.7843,
+    "masse_1_barre_voie_B_kg": 4.7879,
+    "les_deux_voies_concordent": true,
+    "une_formule_non_homogene_leve": true,
     "verdict": "OK"
+  },
+  "variante_exercice": {
+    "_role": "valeurs attendues de l'exercice de la page, calculees et non ecrites a la main",
+    "espacement_cm": 7,
+    "n_cadres": 29,
+    "masse_acier_kg": 42.14,
+    "delta_masse_kg": 11.2,
+    "ratio_kg_m3": 80.3
   }
 }

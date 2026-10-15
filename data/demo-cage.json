@@ -10,15 +10,24 @@
     "b_cm": 35,
     "h_cm": 75,
     "enrobage_cm": 3,
-    "inf": { "n": 3, "dia_mm": 20 },
-    "sup": { "n": 2, "dia_mm": 16 },
+    "inf": {
+      "n": 3,
+      "dia_mm": 20
+    },
+    "sup": {
+      "n": 2,
+      "dia_mm": 16
+    },
     "origine": "reprend la section de predimensionnement V3 de la poutre PM1 du cas phare (E0-H06) pour que la demonstration parle du meme ouvrage que le cours"
   },
   "troncon": {
     "L_cm": 200,
     "role": "un troncon de 2,00 m suffit a montrer la cage, les cadres et le phasage sans alourdir la scene"
   },
-  "cadres": { "dia_mm": 8, "espacement_cm": 15 },
+  "cadres": {
+    "dia_mm": 8,
+    "espacement_cm": 15
+  },
   "constantes": {
     "masse_volumique_acier_kg_m3": 7850,
     "niveau_preuve": "V1",
@@ -26,9 +35,33 @@
   },
   "bornes_curseurs": {
     "note": "les curseurs sont bornes (§ 9.2) ; la recette § 9.4 exige de les tester a leurs bornes sans geometrie degeneree",
-    "L_cm": [100, 400],
-    "espacement_cm": [7, 30],
-    "n_inf": [2, 6],
-    "dia_inf_mm": [12, 25]
+    "L_cm": [
+      100,
+      400
+    ],
+    "espacement_cm": [
+      7,
+      30
+    ],
+    "n_inf": [
+      2,
+      6
+    ],
+    "dia_inf_mm": [
+      12,
+      25
+    ]
+  },
+  "conventions": {
+    "_role": "Les regles geometriques etaient ecrites en dur dans trois codes (python, 3D, SVG) et ne figuraient nulle part. Elles sont desormais ICI, lues par les trois (R1).",
+    "enrobage_mesure_a": "peau exterieure du cadre",
+    "enrobage_note": "L'enrobage se mesure a la peau de l'armature la plus exterieure, donc du cadre. L'axe du cadre est donc a enrobage + dia_cadre/2 de la peau du beton.",
+    "rayon_cintrage_mm": 20,
+    "rayon_cintrage_niveau_preuve": "V3",
+    "rayon_cintrage_note": "Parametre de TRACE de la demonstration, pas une regle de cintrage minimal : un rayon minimal est une disposition constructive reglementaire, que la phase § 5.0 interdit d'avancer. Fourchette plausible 15-30 mm.",
+    "crochets_extremite": false,
+    "crochets_note": "Le cadre est modelise FERME, SANS crochets d'extremite. Un cadre reel en porte deux. Le metre est donc MINORANT d'environ 3 % sur les cadres. La longueur d'un crochet est une valeur constructive : elle n'est pas avancee ici (§ 5.0).",
+    "placement_cadres": "premier et dernier cadre a l'enrobage de chaque about, les autres repartis a espacement constant",
+    "placement_note": "Une seule regle gouverne le COMPTAGE et le PLACEMENT. L'espacement reel est donc legerement inferieur ou egal a l'espacement nominal."
   }
 }

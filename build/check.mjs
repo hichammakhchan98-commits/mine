@@ -49,6 +49,29 @@ try {
   V("h · registres : en-tetes conformes", `${n} ligne(s) au total`);
 } catch (e) { E("h · registres", e.message); }
 
+/* --- M2 : une V3 publiee sans ligne de registre est une V3 non declaree (§ 3.2) --- */
+try {
+  const hyp = readFileSync("data/registre-hypotheses.csv", "utf8").trim().split("\n").slice(1);
+  const publie = readdirSync("content").filter((f) => f.endsWith(".md"))
+    .map((f) => readFileSync(join("content", f), "utf8")).join("\n");
+  const balises = [...publie.matchAll(/⟦V3\|([^|⟧]*)\|([^⟧]*)⟧/g)];
+  const mentions = [...publie.matchAll(/\(V3[,)]/g)];
+  if (mentions.length && !balises.length)
+    E("3.2 · registre des hypotheses",
+      `${mentions.length} mention(s) « (V3 » dans content/ mais aucune balise ⟦V3|…⟧ : rien n'alimente le registre`);
+  else if (balises.length !== hyp.length)
+    E("3.2 · registre des hypotheses",
+      `${balises.length} balise(s) V3 dans content/ contre ${hyp.length} ligne(s) de registre`);
+  else V("3.2 · chaque V3 publiee a sa ligne de registre", `${balises.length} hypothese(s)`);
+} catch (e) { E("3.2 · registre des hypotheses", e.message); }
+
+/* --- M8 : le livrable doit etre dans le depot (§ 5.2, et le zip du mode B embarque .git) --- */
+try {
+  const sale = execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim();
+  if (sale) E("5.2 · depot git", `arbre de travail non propre :\n      ${sale.split("\n").join("\n      ")}`);
+  else V("5.2 · depot git propre", "tout le livrable est suivi et committe");
+} catch (e) { E("5.2 · depot git", e.message); }
+
 /* --- garde-fou de la phase § 5.0 : aucune valeur normative ne doit fuir --- */
 try {
   const g = JSON.parse(readFileSync("data/projet-gare.json", "utf8"));
@@ -56,14 +79,19 @@ try {
   if (g.meta.normes_disponibles !== r.meta.normes_disponibles)
     E("5.0 · coherence", "normes_disponibles differe entre projet-gare.json et referentiels.json");
   else if (g.meta.normes_disponibles === false) {
-    for (const k of ["G", "Q", "vent", "sismique"])
-      if (g.charges?.[k] && Object.keys(g.charges[k]).length)
-        E("5.0 · charges", `charges.${k} est rempli alors que normes_disponibles = false`);
-    // aucune balise V2 ne doit exister dans le contenu tant que les normes manquent
-    const src = readFileSync("data/registre-sources.csv", "utf8");
-    const v2 = src.split("\n").filter((l) => l.includes(";V2;"));
+    // toutes les cles de charges, pas une liste figee qui en oublie une (neige)
+    for (const [k, v] of Object.entries(g.charges ?? {})) {
+      if (k === "note") continue;
+      const rempli = v && (typeof v === "object" ? Object.keys(v).length > 0 : v !== null);
+      if (rempli) E("5.0 · charges", `charges.${k} est rempli alors que normes_disponibles = false`);
+    }
+    // les V2 se cherchent dans le CONTENU PUBLIE, pas dans un registre qui peut etre vide
+    const publie = readdirSync("content").filter((f) => f.endsWith(".md"))
+      .map((f) => readFileSync(join("content", f), "utf8")).join("\n");
+    const v2 = [...publie.matchAll(/⟦V2\|[^⟧]*⟧/g)];
     if (v2.length) E("5.0 · balises", `${v2.length} valeur(s) V2 normative(s) ecrite(s) en phase § 5.0`);
-    else V("5.0 · phase sans calculs normatifs respectee", "charges vides, aucune V2 dans le contenu");
+    else V("5.0 · phase sans calculs normatifs respectee",
+      `${Object.keys(g.charges ?? {}).length - 1} jeux de charges vides, aucune balise V2 dans content/`);
   } else V("5.0 · suspension levee", "normes_disponibles = true");
 } catch (e) { E("5.0 · garde-fou", e.message); }
 

@@ -287,6 +287,9 @@ class Vue {
       etiquettes: this.etiq.rapport(),
       params: { ...this.params }, coupe: this.etatCoupe, eclate: this.etatEclate, phase: this.etatPhase,
       metre: this.contenu?.metre ?? null,
+      // positions reelles, pour que les tests confrontent la GEOMETRIE a data/ (§ 12.1 d)
+      barres: this.contenu?.metre?.positions_barres_cm ?? null,
+      axeCadre: this.contenu?.metre?.axeCadre_cm ?? null,
       contextesVivants: vivantes.length,
     };
   }

@@ -11,6 +11,7 @@ import katex from "katex";
 import { compiler, extraireBalises, controlerBlocsNormatifs } from "./md.mjs";
 import { empreinteData } from "./empreinte.mjs";
 
+await import("../assets/section.js");   // doit preceder svgkit : il la consomme
 await import("../assets/svgkit.js");
 const SVGKit = globalThis.SVGKit;
 

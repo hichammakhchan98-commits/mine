@@ -1,1 +1,6 @@
 id;hypothese;valeur;unite;fourchette;annee_ref;modules;justification
+H001;fourchette plausible 15 à 30 mm, année 2026;;;;;E1-demo;rayon de cintrage
+H002;80 à 150 kg/m³, année 2026;;;;;E1-demo;ratio d'acier d'une poutre dimensionnee
+H003;fourchette 30 à 250 kg/m³, année 2026;;;;;E1-demo;garde-fou d'unite
+H004;fourchette 14 à 20 MAD/kg, année 2026;;;;;E1-demo;prix de l'acier façonné et posé
+H005;fourchette 90 à 130 kg par ferrailleur et par jour, année 2026;;;;;E1-demo;cadence de façonnage et pose d'armatures

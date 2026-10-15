@@ -32,7 +32,7 @@ l'épreuve, chacune vérifiable dans le rapport de contrôle :
 
 ## La section, dessinée depuis les données
 
-:::figure {"fn":"coupeSection","args":"demo-cage.section","titre":"Coupe de la section, générée depuis data/demo-cage.json","motifs":["beton"],"num":1,"legende":[{"n":1,"t":"béton"},{"n":2,"t":"barres longitudinales"},{"n":3,"t":"cadre"}],"legendeXY":[196,250],"voir":["Les barres ne sont pas posées à l'œil : leur abscisse est calculée à partir de la largeur, de l'enrobage et du diamètre, puis répartie sur la place utile.","Le cadre est tracé à l'intérieur de l'enrobage, et les barres à l'intérieur du cadre : c'est l'ordre réel d'un plan de ferraillage.","Les cotes affichées sont les variables du fichier de données, pas du texte."],"erreur":"Dessiner les barres à l'intérieur de l'enrobage en oubliant l'épaisseur du cadre : sur un plan, l'erreur se voit à peine ; au coffrage, l'enrobage réel est insuffisant."}
+:::figure {"fn":"coupeSection","args":"demo-cage","titre":"Coupe de la section, générée depuis data/demo-cage.json","motifs":["beton"],"num":1,"legende":[{"n":1,"t":"béton"},{"n":2,"t":"barres longitudinales"},{"n":3,"t":"cadre"}],"legendeXY":[196,250],"voir":["Les barres ne sont pas posées à l'œil : leur abscisse est calculée à partir de la largeur, de l'enrobage et du diamètre, puis répartie sur la place utile.","Le cadre est tracé à l'intérieur de l'enrobage, et les barres à l'intérieur du cadre : c'est l'ordre réel d'un plan de ferraillage.","Les cotes affichées sont les variables du fichier de données, pas du texte."],"erreur":"Dessiner les barres à l'intérieur de l'enrobage en oubliant l'épaisseur du cadre : sur un plan, l'erreur se voit à peine ; au coffrage, l'enrobage réel est insuffisant."}
 :::
 
 La section est celle du prédimensionnement **V3** de la poutre `PM1` du cas phare : la démonstration
@@ -43,6 +43,19 @@ parle du même ouvrage que le cours, pour que rien ne soit gratuit.
 :::model3d {"id":"cage","titre":"Cage d'armatures paramétrique","init":"demoCage","sous":"Curseurs bornés, plan de coupe, vue éclatée et phasage. Clique une étiquette pour la déplier. Le bouton réinitialise le cadrage."}
 :::
 
+::: encart {"genre":"attente","titre":"Trois simplifications, déclarées (R6)"}
+1. **Les cadres n'ont pas de crochets d'extrémité.** Un cadre réel en porte deux. Le métré ci-dessous
+   est donc **minorant d'environ 3 %** sur les cadres. La longueur d'un crochet est une valeur
+   constructive : elle n'est pas avancée ici, la phase § 5.0 l'interdit.
+2. **Le rayon de cintrage vaut {{metre-cage.rayon_cintrage_mm}} mm**, lu dans `data/demo-cage.json`.
+   C'est un paramètre de **tracé**, pas un rayon minimal réglementaire — ⟦V3|rayon de cintrage|fourchette plausible 15 à 30 mm, année 2026⟧.
+   Il porte 1,8 % du périmètre : à coins vifs, le cadre mesurerait davantage.
+3. **Le coffrage modélisé n'a ni étaiement ni étais de reprise**, et la phase 4 retire les panneaux
+   sans dire à quelle condition. Dans la réalité, le décoffrage est subordonné à une résistance
+   atteinte, contrôlée sur éprouvettes ; le décoffrage prématuré est l'un des pièges listés au § 7.3.
+   Le sujet est traité au module d'exécution, en attente des normes.
+:::
+
 Ce que la 3D apporte ici et qu'une coupe ne donne pas : **la répartition des cadres sur la longueur**
 et l'ordre dans lequel les choses arrivent sur le chantier. Fais glisser le curseur de phase :
 coffrage, ferraillage, bétonnage, décoffrage — le coffrage apparaît à la première phase et disparaît à
@@ -50,7 +63,7 @@ la dernière. Cette question — *la 3D apporte-t-elle plus qu'une bonne coupe ?
 que tu trancheras à la fin de la tranche verticale (§ 5.3).
 
 :::encart {"genre":"voir","titre":"Techniques employées, pour mémoire"}
-Les cadres sont un **InstancedMesh** : une seule géométrie, treize instances, un seul appel de rendu.
+Les cadres sont un **InstancedMesh** : une seule géométrie, {{metre-cage.n_cadres}} instances, un seul appel de rendu.
 C'est ce qui permettra plus tard de dessiner des milliers de cadres sans effondrer la cadence
 d'affichage. Le rendu est **à la demande** : aucune boucle d'animation ne tourne quand rien ne bouge.
 La scène est initialisée à l'affichage et **libérée** en sortie, avec un plafond de contextes WebGL
@@ -73,17 +86,30 @@ Le tableau ci-dessous n'est pas saisi : chaque nombre est une variable produite 
 | Volume de béton | {{metre-cage.volume_beton_m3::n3s}} m³ |
 | Ratio | {{metre-cage.ratio_kg_m3::n1}} kg/m³ |
 
-**Contre-calcul.** Voie A, premiers principes : aire de la section droite × longueur × masse
-volumique, soit {{metre-cage.contre_calcul.voie_A_premiers_principes_kg::n2}} kg. Voie B, coefficient
-tabulé des plans de ferraillage $m = 0{,}00617\,d^2$ en kg/m avec $d$ en mm, soit
-{{metre-cage.contre_calcul.voie_B_coefficient_tabule_kg::n2}} kg. **Écart :
-{{metre-cage.contre_calcul.ecart_pct::n2}} %**, pour une tolérance de
-{{metre-cage.contre_calcul.tolerance_pct::n0}} % (§ 3.3).
+**Contre-calcul.** Les deux voies ne partagent ni le chemin de longueur, ni le chemin de masse.
 
-Un écart aussi faible est attendu : les deux voies décrivent la même géométrie et la seconde dérive
-historiquement de la première. Ce n'est donc **pas** une preuve que le modèle est juste — c'est un
-filet qui attrape les erreurs d'unité, de facteur et de saisie. La vraie parade contre une erreur de
-modèle partagée, c'est l'étalonnage ci-dessous, et la contre-expertise à l'aveugle du § 12.2.
+| | Longueur d'un cadre | Masse |
+|---|---|---|
+| **Voie A** | contour **discrétisé** (droites + arcs), celui-là même que suit le tube de la scène 3D → {{metre-cage.contre_calcul.perimetre_voie_A_m::n3s}} m | aire de la section droite × longueur × masse volumique |
+| **Voie B** | **formule fermée** $P = 2(b-2r) + 2(h-2r) + 2\pi r$ → {{metre-cage.contre_calcul.perimetre_voie_B_m::n3s}} m | coefficient tabulé des plans de ferraillage, $m = 0{,}00617\,d^2$ en kg/m, $d$ en mm |
+
+Résultats : {{metre-cage.contre_calcul.voie_A_kg::n2}} kg contre
+{{metre-cage.contre_calcul.voie_B_kg::n2}} kg, soit un **écart de
+{{metre-cage.contre_calcul.ecart_pct::n2}} %** pour une tolérance de
+{{metre-cage.contre_calcul.tolerance_pct::n0}} % (§ 3.3). Sur le périmètre seul, les deux chemins
+s'écartent de {{metre-cage.contre_calcul.ecart_perimetre_pct::n3s}} %.
+
+:::encart {"genre":"alerte","titre":"La première version de ce contre-calcul n'en était pas un"}
+Les deux voies partaient de la même formule, la seconde n'étant que la première avec une constante
+arrondie : $\pi/4 \times 7850 \times 10^{-6} = 0{,}0061654$ contre $0{,}00617$. L'« écart » publié,
+0,075 %, n'était rien d'autre que cet arrondi. Pire, les deux voies partageaient **toute la
+géométrie** : nombre de cadres, périmètre, longueurs. Aucune erreur géométrique n'était visible par
+ce contrôle.
+
+C'est la « limite et parade » du § 3.3 — deux voies écrites par le même auteur partagent volontiers
+la même erreur de modèle. La parade n'est pas de multiplier les voies, c'est de les faire diverger
+sur les facteurs qui comptent, et de les **étalonner** sur autre chose qu'elles-mêmes.
+:::
 
 ## L'étalonnage, sur une solution fermée
 
@@ -92,10 +118,15 @@ forment un cercle complet, donc
 
 $$P = 2\,(b - 2r) + 2\,(h - 2r) + 2\pi r$$
 
-`calc/etalonnage/perimetre_cadre.py` compare cette formule à une **discrétisation numérique du même
-contour** (200 000 segments) sur trois cas, dont un cas limite à rayon nul, et vérifie qu'un rayon de
-cintrage impossible est **refusé** au lieu d'être accepté en silence. Sans cet étalonnage, les sorties
-de `calc/` resteraient V3 et ne pourraient pas servir d'exemple de référence.
+`calc/etalonnage/perimetre_cadre.py` l'étalonne de trois façons : une **polygonalisation indépendante
+du contour entier** (le contour est l'ensemble des points à distance $r$ du rectangle réduit — aucun
+terme n'est repris de la formule) ; deux **cas à solution connue hors formule**, le cercle
+($b = h = 2r$, périmètre $2\pi r$) et le rectangle à coins vifs ($r = 0$, périmètre $2(b+h)$) ; et la
+vérification qu'un rayon de cintrage impossible est **refusé** au lieu d'être accepté en silence.
+
+Là aussi, la première version était creuse : elle recopiait le terme droit de la formule et ne
+discrétisait que les quatre arcs, soit 6,5 % du périmètre. Une erreur sur la partie droite serait
+passée des deux côtés.
 
 :::encart {"genre":"alerte","titre":"Ce que l'étalonnage a réellement attrapé"}
 La première version de la cage 3D construisait le cadre comme une courbe de Catmull-Rom passant par
@@ -113,7 +144,7 @@ la 3D vient toujours après le calcul, jamais à sa place.
 
 :::encart {"genre":"alerte","titre":"Le piège que le ratio d'acier enseigne"}
 Le ratio obtenu est de **{{metre-cage.ratio_kg_m3::n1}} kg/m³**, alors que la fourchette usuelle d'une
-poutre **dimensionnée** est de l'ordre de 80 à 150 kg/m³ (V3, déclarée). L'écart n'est pas une erreur
+poutre **dimensionnée** est de l'ordre de ⟦V3|ratio d'acier d'une poutre dimensionnee|80 à 150 kg/m³, année 2026⟧. L'écart n'est pas une erreur
 de calcul : il vient de ce que cette cage **n'a jamais été dimensionnée**. Les diamètres et le nombre
 de barres sont des paramètres de démonstration.
 
@@ -121,11 +152,30 @@ Le contrôle d'ordre de grandeur de `calc/tests/test_cage.py` a signalé cet éc
 exécution. Deux réactions étaient possibles : élargir la fourchette jusqu'à ce que le test passe, ou
 inventer un ferraillage plus lourd pour y entrer. Les deux sont malhonnêtes — la seconde fabriquerait
 un dimensionnement que la phase § 5.0 interdit. Le contrôle a donc été ramené à ce qu'il sert
-vraiment : **attraper une erreur d'unité ou de facteur** (fourchette géométrique 30 à 250 kg/m³), et
+vraiment : **attraper une erreur d'unité ou de facteur** (⟦V3|garde-fou d'unite|fourchette 30 à 250 kg/m³, année 2026⟧), et
 l'écart avec une poutre dimensionnée est **rapporté** sans faire échouer le test.
 
 On ne lit pas un ferraillage dimensionné sur un modèle 3D.
 :::
+
+## Ce que ces kilos coûtent, et ce qu'ils prennent de temps
+
+Un métré n'a d'intérêt que s'il se transforme en argent et en jours. Deux ordres de grandeur, tous
+deux **V3 déclarés**, pour montrer le chemin — ils seront repris sérieusement dans les modules D1 et D3 :
+
+- **Coût.** À ⟦V3|prix de l'acier façonné et posé|fourchette 14 à 20 MAD/kg, année 2026⟧, les
+  {{metre-cage.masse_acier_kg::n1}} kg de ce tronçon représentent de l'ordre de 450 à 620 MAD d'acier,
+  pour {{metre-cage.volume_beton_m3::n3s}} m³ de béton. Le ratio de
+  {{metre-cage.ratio_kg_m3::n1}} kg/m³ est la grandeur qui pilote ce poste : c'est pour cela qu'un
+  ratio d'acier se surveille sur un chantier, pas seulement sur une note de calcul.
+- **Délai.** À ⟦V3|cadence de façonnage et pose d'armatures|fourchette 90 à 130 kg par ferrailleur et par jour, année 2026⟧,
+  ce tronçon représente quelques heures d'un ferrailleur. Mais la grandeur qui commande le planning
+  n'est pas la masse : c'est le **nombre de cadres** — {{metre-cage.n_cadres}} ici, et
+  {{metre-cage.variante_exercice.n_cadres}} si l'espacement passe à
+  {{metre-cage.variante_exercice.espacement_cm}} cm. Un cadre se façonne, se transporte et se pose à
+  l'unité : resserrer les cadres coûte proportionnellement plus en main-d'œuvre qu'en acier.
+
+C'est le genre de lien que chaque module du cours devra faire, et que la grille du § 7.2 contrôle.
 
 ## Ce que le contrôle vérifie
 
@@ -139,11 +189,16 @@ dans un Chromium sans affichage — zéro erreur de console, contexte WebGL cré
 enfin que le **zip de reprise du mode B** se rouvre dans un répertoire neuf et y repasse au vert.
 
 :::exercice {"titre":"Vérifier soi-même que la chaîne tient","niveau":"application"}
-Ouvre `data/demo-cage.json`, remplace l'espacement des cadres par 7 cm, puis relance
-`npm run calc && npm run build`.
+Ouvre `data/demo-cage.json`, remplace l'espacement des cadres par
+{{metre-cage.variante_exercice.espacement_cm}} cm, puis relance `npm run calc && npm run build`.
 
-**Attendu** : le nombre de cadres passe de 13 à 28, la masse d'acier augmente d'environ 11 kg, la
-figure 1 est inchangée (l'espacement ne se voit pas en coupe), la cage 3D montre les cadres resserrés,
-et l'empreinte de `data/` affichée en pied de page change. Si l'un de ces cinq effets manque, la chaîne
-est rompue quelque part : c'est exactement ce que le contrôle d'empreinte du § 4.3 sert à détecter.
+**Attendu** : le nombre de cadres passe de {{metre-cage.n_cadres}} à
+{{metre-cage.variante_exercice.n_cadres}}, la masse d'acier augmente de
+{{metre-cage.variante_exercice.delta_masse_kg::n1}} kg, la figure 1 est **inchangée** (l'espacement ne
+se voit pas en coupe), la cage 3D montre les cadres resserrés, et l'empreinte de `data/` affichée en
+pied de page change. Si l'un de ces cinq effets manque, la chaîne est rompue quelque part : c'est
+exactement ce que le contrôle d'empreinte du § 4.3 sert à détecter.
+
+*(Ces valeurs attendues sont elles-mêmes calculées par `calc/cage.py`, pas écrites dans le texte : si
+la règle de placement des cadres change, l'énoncé de l'exercice suit.)*
 :::

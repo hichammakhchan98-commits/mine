@@ -138,21 +138,42 @@ for (const fichier of modules) {
 
       await mesurer("defaut");
       await regler({ __coupe: 0.5 });      await mesurer("coupe");
-      await regler({ __coupe: 0 , __eclate: 1 }); await mesurer("eclate");
+      // l'eclate se capture a la phase 3, sinon le coffrage est deja retire et la vue
+      // ne montre que deux couches sur trois
+      await regler({ __coupe: 0, __eclate: 1, __phase: 3 }); await mesurer("eclate");
+      await regler({ __phase: 4 });
       await regler({ __eclate: 0, __phase: 1 }); await mesurer("phase1");
       await regler({ __phase: 2 });        await mesurer("phase2");
       await regler({ __phase: 4 });        await mesurer("phase4");
 
-      const auxBornes = {};
-      for (const [cle, b] of Object.entries(bornes)) if (!cle.startsWith("__")) auxBornes[cle] = b.min;
-      await regler(auxBornes);             await mesurer("curseurs-min");
-      for (const [cle, b] of Object.entries(bornes)) if (!cle.startsWith("__")) auxBornes[cle] = b.max;
-      await regler(auxBornes);             await mesurer("curseurs-max");
+      // chaque curseur a ses bornes, LES AUTRES AU DEFAUT : un reglage en bloc masque
+      // les combinaisons qui degenerent
+      const defauts = await page.evaluate(() => {
+        const v = Civil3D.vues()[0], o = {};
+        for (const [cle, c] of Object.entries(v.curseurs ?? {})) if (!cle.startsWith("__")) o[cle] = c.p.valeur;
+        return o;
+      });
+      for (const [cle, b] of Object.entries(bornes)) {
+        if (cle.startsWith("__")) continue;
+        await regler({ ...defauts, [cle]: b.min }); await mesurer(`${cle}-min`);
+        await regler({ ...defauts, [cle]: b.max }); await mesurer(`${cle}-max`);
+      }
+      // pire cas explicite : le plus long troncon avec les cadres les plus serres
+      const pire = { ...defauts };
+      for (const [cle, b] of Object.entries(bornes)) {
+        if (cle.startsWith("__")) continue;
+        pire[cle] = cle.includes("esp") ? b.min : b.max;     // long + serre + gros diametres
+      }
+      await regler(pire);                  await mesurer("pire-cas");
 
       for (const e of etats) {
-        expect(e.variance, `${e.nom} : la scene est vide (variance de pixels nulle)`).toBeGreaterThan(2);
+        // seuil cale sur les valeurs reellement observees (16 a 45) et non sur une marge
+        // symbolique : a 2, un rendu quasi blanc passait
+        expect(e.variance, `${e.nom} : la scene est quasi vide`).toBeGreaterThan(8);
         expect(e.diag.triangles, `${e.nom} : budget de triangles depasse (§ 4.4)`).toBeLessThanOrEqual(150_000);
         expect(e.diag.etiquettes.chevauchements, `${e.nom} : etiquettes 3D qui se chevauchent`).toBe(0);
+        // « zero chevauchement » ne prouve rien avec une seule etiquette : on exige
+        // qu'au moins un etat dense en porte plusieurs (verifie apres la boucle)
         expect(e.diag.etiquettes.visibles, `${e.nom} : aucune etiquette visible`).toBeGreaterThan(0);
         expect(e.diag.repli, `${e.nom} : la vue est tombee en repli`).toBe(false);
         expect(e.diag.contextesVivants, "plafond de contextes WebGL").toBeLessThanOrEqual(4);
@@ -163,10 +184,77 @@ for (const fichier of modules) {
       expect(Math.abs(v1 - v4), "la phase 1 et la phase 4 rendent la meme image : le phasage ne fait rien")
         .toBeGreaterThan(0.5);
 
+      const dense = etats.filter((e) => e.diag.etiquettes.visibles >= 3);
+      expect(dense.length,
+        "aucun etat ne porte 3 etiquettes ou plus : le controle de chevauchement ne teste rien")
+        .toBeGreaterThan(0);
       expect(erreurs, "aucune erreur de console pendant le pilotage du modele").toEqual([]);
       writeFileSync(join(CAPTURES, `${fichier}-etats.json`),
         JSON.stringify(etats.map((e) => ({ nom: e.nom, variance: Number(e.variance.toFixed(2)),
           triangles: e.diag.triangles, etiquettes: e.diag.etiquettes, params: e.diag.params })), null, 2));
+    });
+
+    test("d · geometrie : positions SVG et 3D recalculees depuis data/ (§ 12.1 d)", async () => {
+      // Sans ce test, deux erreurs geometriques injectees (barres empilees en SVG,
+      // enrobage ignore en 3D) franchissaient les neuf controles sans en allumer un seul.
+      const data = JSON.parse(readFileSync(join(RACINE, "data", "demo-cage.json"), "utf8"));
+
+      // Les attendus sont recalcules ICI, a la main, depuis data/ et la convention publiee.
+      // Ils n'appellent PAS section.js : sinon le test compare le produit a lui-meme et un
+      // canari place dans section.js deplacerait l'attendu avec le resultat. C'est la
+      // « limite et parade » du § 3.3 appliquee a un test de rendu.
+      const attendu = (() => {
+        const { b_cm: b, h_cm: h, enrobage_cm: e, inf, sup } = data.section;
+        const dc = data.cadres.dia_mm / 10;                  // diametre du cadre, en cm
+        const axe = { b: b - 2 * (e + dc / 2), h: h - 2 * (e + dc / 2) };
+        const libre = b - 2 * (e + dc);                      // largeur libre dans le cadre
+        const barres = [];
+        for (const [nappe, bas] of [[inf, true], [sup, false]]) {
+          const d = nappe.dia_mm / 10;
+          const y = bas ? -h / 2 + e + dc + d / 2 : h / 2 - e - dc - d / 2;
+          const dispo = libre - d;
+          for (let i = 0; i < nappe.n; i++)
+            barres.push({ x_cm: nappe.n === 1 ? 0 : -dispo / 2 + (dispo * i) / (nappe.n - 1),
+              y_cm: y, dia_mm: nappe.dia_mm });
+        }
+        return { axe_cadre_cm: axe, barres };
+      })();
+
+      // --- SVG : les cercles de la figure 1, convertis en cm puis compares
+      const svg = await page.evaluate(() => {
+        const s = document.querySelector("figure svg");
+        const vb = s.getAttribute("viewBox").split(" ").map(Number);
+        const cercles = [...s.querySelectorAll("circle")]
+          .filter((c) => c.getAttribute("fill") === "#8c3b2e")
+          .map((c) => ({ cx: +c.getAttribute("cx"), cy: +c.getAttribute("cy"), r: +c.getAttribute("r") }));
+        const cotes = [...s.querySelectorAll("text")].map((t) => t.textContent);
+        return { vb, cercles, cotes };
+      });
+      expect(svg.cercles.length, "nombre de barres dessinees en SVG").toBe(attendu.barres.length);
+      // echelle deduite de deux barres extremes, puis chaque position verifiee
+      const xs = attendu.barres.map((b) => b.x_cm), cxs = svg.cercles.map((c) => c.cx);
+      const k = (Math.max(...cxs) - Math.min(...cxs)) / (Math.max(...xs) - Math.min(...xs));
+      const ox = Math.min(...cxs) - Math.min(...xs) * k;
+      const ecartsX = attendu.barres.map((b, i) => Math.abs((ox + b.x_cm * k) - svg.cercles[i].cx) / k);
+      expect(Math.max(...ecartsX), "position horizontale des barres en SVG (cm)").toBeLessThan(0.01);
+      // les barres ne doivent pas etre empilees : abscisses distinctes quand n > 1
+      const distinctes = new Set(svg.cercles.map((c) => c.cx.toFixed(2))).size;
+      expect(distinctes, "les barres du SVG sont empilees au meme point").toBeGreaterThan(1);
+
+      // --- 3D : positions reelles contre la regle
+      if (await preparerVue()) {
+        const diag = await page.evaluate(() => Civil3D.vues()[0].diagnostic());
+        expect(diag.barres.length, "nombre de barres en 3D").toBe(attendu.barres.length);
+        const pires = attendu.barres.map((b, i) =>
+          Math.hypot(b.x_cm - diag.barres[i].x, b.y_cm - diag.barres[i].y));
+        expect(Math.max(...pires),
+          `position des barres en 3D (cm) — attendu ${JSON.stringify(attendu.barres.map((b) => [b.x_cm, b.y_cm]))}`)
+          .toBeLessThan(0.001);
+        expect(Math.abs(diag.axeCadre.b - attendu.axe_cadre_cm.b), "axe du cadre en 3D").toBeLessThan(0.001);
+        // l'enrobage annonce doit etre celui que la geometrie realise
+        const peau = (data.section.b_cm - diag.axeCadre.b) / 2 - data.cadres.dia_mm / 20;
+        expect(Math.abs(peau - data.section.enrobage_cm), "enrobage realise en 3D").toBeLessThan(0.001);
+      }
     });
 
     test("d · coherence des donnees : le metre affiche = la sortie de calc/", async () => {

@@ -50,6 +50,36 @@ Sommaire et fiches : `cadrage/05-sommaire.md`. Ordre de livraison : § 6 du mêm
 | Tests | `tests/rendu.spec.mjs`, `build/check.mjs` | 9 contrôles, 6 tests de rendu, 8 captures examinées |
 | Page de démonstration | `modules/00-demo-cage.html` | cage d'armatures paramétrique testée |
 
+## Grille d'auto-évaluation § 7.2 — page de démonstration E1
+
+Notée après la passe /devil, qui avait relevé deux critères sous le minimum de 2.
+
+| Critère | Note | Appui |
+|---|:--:|---|
+| Le « pourquoi » est expliqué | 3 | chaque mécanisme est justifié avant d'être montré |
+| Les hypothèses sont explicites | 3 | *était 1* — rayon de cintrage, convention d'enrobage et absence de crochets sont maintenant publiés et balisés V3 |
+| Les formules sont justifiées | 2 | périmètre démontré ; masse volumique posée en constante |
+| L'exemple est vérifié | 3 | deux voies divergentes, étalonnage indépendant, canari rejoué |
+| Le piège est identifié | 3 | trois pièges, dont deux trouvés sur ce livrable même |
+| Lien avec l'exécution | 2 | *était 1* — cadences de façonnage, nombre de cadres comme grandeur de planning |
+| Lien avec le coût et le délai | 2 | *était 0* — prix de l'acier et cadence, en V3 déclarées |
+
+**Minimum 2 partout : tenu.** La page reste une démonstration de socle, pas un module de cours : les
+notes de 2 sur l'exécution et l'économie sont volontaires, ces sujets appartiennent à D1, D3 et C3.
+
+## Passe adversariale /devil (§ 12.2)
+
+Portée par un **sous-agent distinct**, qui n'a pas lu le raisonnement de l'auteur et a recalculé les
+valeurs clés à partir de `data/` seul. Rapport : `QA/E1-socle.md`.
+
+**Verdict de la première passe : 26 défauts — 5 bloquants, 9 majeurs, 12 mineurs.** Le relecteur a
+aussi rétrogradé de lui-même un défaut devenu périmé pendant sa passe, plutôt que de le laisser au
+compte.
+
+Les 5 bloquants et les 9 majeurs sont corrigés (tableau ci-dessous). Les mineurs traités : m1 à m6,
+m9, m10, m11. **Reste ouvert** : m7 (grille § 7.2) — produite ci-dessus ; m8 — corrigé ; aucun mineur
+non traité.
+
 ## Défauts trouvés et corrigés pendant l'Étape 1 (§ R6, § 12.2)
 
 | # | Défaut | Trouvé par | Correction |
@@ -62,6 +92,26 @@ Sommaire et fiches : `cadrage/05-sommaire.md`. Ordre de livraison : § 6 du mêm
 | 6 | Vue éclatée illisible : pièces projetées hors cadre, étiquettes restées sur place | examen de `eclate.png` | éclatement par **couche** (coffrage / armatures / béton) avec direction déclarée ; amplitude 0,35 → 0,16 ; étiquettes solidaires de leur couche |
 | 7 | Variables `{{x::fmt}}` cassées dans les tableaux : `\|` sert de séparateur de colonnes | échec du build | séparateur de format `::` |
 | 8 | `katex@0.18.0` porte un avis de sécurité (GHSA-238p-pmpm-9mq7) | `npm audit` | épinglé en `0.18.10` ; 0 vulnérabilité |
+
+### Corrigés après la passe /devil
+
+| # | Défaut | Gravité | Correction |
+|---|---|---|---|
+| B1 | La 3D dessinait les cadres à **⌀ 4 mm** en les étiquetant « HA8 » : un `/2` appliqué deux fois | bloquant | le paramètre est un diamètre, divisé une seule fois ; un test vérifie le rayon réel du tube |
+| B2 | SVG et 3D plaçaient les barres **4 à 8 mm** l'une de l'autre à partir du même fichier | bloquant | une **règle unique** (`src/civil3d/section.js`), livrée aussi en `assets/section.js`, consommée par les deux |
+| B3 | La figure 1 commettait l'erreur que sa propre légende dénonçait | bloquant | résolu par B2 |
+| B4 | L'axe du cadre était posé **sur** la ligne d'enrobage : enrobage réel 26 mm pour 30 annoncés | bloquant | l'enrobage se mesure à la peau du cadre ; convention publiée dans `data/` et testée |
+| B5 | Le « contre-calcul par deux voies indépendantes » était la même formule à constante arrondie | bloquant | voie A = contour discrétisé + premiers principes ; voie B = formule fermée + coefficient tabulé : les deux chemins diffèrent |
+| M1 | Rayon de cintrage en dur, **dupliqué** Python/JS, jamais publié, et « 2,5 ⌀ » est une règle constructive interdite en § 5.0 | majeur | paramètre de tracé dans `data/`, lu des deux côtés, affiché, balisé V3 |
+| M2 | Les registres de `data/` étaient **vides** alors que la page publiait des V3 | majeur | V3 balisées dans le contenu ; `check.mjs` échoue si une V3 publiée n'a pas sa ligne |
+| M3 | « treize instances », « 13 à 28 », « 11 kg » tapés à la main — que l'exercice de la page rendait faux | majeur | variables ; les valeurs attendues de l'exercice sont **calculées** par `calc/` |
+| M4 | Trois assertions ne pouvaient pas échouer (périmètre retapé, « A ≠ B » satisfait par un arrondi, verdict `pint` vrai par construction) | majeur | cas à solution connue hors formule ; erreurs injectées qui **doivent** déplacer le résultat ; `pint` alimenté par `data/` et vérifiant qu'une formule non homogène lève |
+| M5 | L'étalonnage ne discrétisait que les arcs, soit **6,5 %** du périmètre | majeur | polygonalisation indépendante du contour entier + deux cas à solution connue |
+| M6 | **Canari : deux erreurs géométriques franchissaient les 9 contrôles** | majeur | test géométrique qui recalcule positions et enrobage **dans le test**, sans appeler le code de production ; les deux canaris sont maintenant rouges |
+| M7 | Le garde-fou d'ordre de grandeur n'attrapait qu'un facteur 10 | majeur | renommé `garde_fou_unite`, et doublé d'un contrôle de cohérence interne (masse linéique des cadres) |
+| M8 | Le livrable de l'Étape 1 n'était pas committé | majeur | committé ; `check.mjs` exige désormais un arbre de travail propre |
+| M9 | Cadres sans crochets : simplification non signalée (−2,7 %) | majeur | déclarée dans la page, dans `data/` et dans la sortie de `calc/` |
+| M10 | La règle qui comptait les cadres ne décrivait pas celle qui les plaçait | majeur | règle unique ; et elle était fausse — l'espacement réel **dépassait** le nominal. 14 cadres, et non 13 |
 
 ## Valeurs V2 en attente de vérification par le lecteur
 
@@ -78,6 +128,8 @@ Les sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv` (E0-S01 
 | 2 | Le contour du cadre est une **polyligne dense** (0,007 % sous la formule fermée), pas un arc exact | `src/civil3d/armatures.js` |
 | 3 | Fiches-module des paliers 2 et 3 volontairement sobres, à revoir à l'ouverture de leur palier | `cadrage/05-sommaire.md` |
 | 4 | `print.css` n'imprime pas la 3D : il imprime un substitut textuel. Vérifié par relecture du CSS, **pas** par un test automatique d'impression | `assets/print.css` |
+| 5 | **Cadres sans crochets d'extrémité** : le métré est minorant d'environ 3 %. La longueur d'un crochet est une valeur constructive, interdite en § 5.0 | `data/demo-cage.json` → `conventions` |
+| 6 | Le coffrage modélisé n'a **ni étaiement ni étais de reprise**, et le décoffrage est animé sans condition de résistance | page de démonstration |
 
 ## Dette
 

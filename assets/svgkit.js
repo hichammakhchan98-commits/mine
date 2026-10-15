@@ -118,36 +118,50 @@
 
   // ---------- schemas composes ----------
 
-  /** Coupe de section rectangulaire ferraillee. Toutes les cotes viennent de `s`. */
-  function coupeSection(s, o = {}) {
+  /**
+   * Coupe de section rectangulaire ferraillee.
+   * Les positions ne sont PAS recalculees ici : elles viennent de SectionGeom
+   * (assets/section.js), la meme routine que la 3D. Avant, cette fonction posait les
+   * barres a l'enrobage en ignorant l'epaisseur du cadre, pendant que la 3D la comptait :
+   * deux geometries differentes a partir du meme fichier de donnees.
+   */
+  function coupeSection(d, o = {}) {
+    const SG = (typeof globalThis !== "undefined" && globalThis.SectionGeom) || null;
+    if (!SG) throw new Error("coupeSection : assets/section.js doit etre charge avant svgkit.js");
+    // `d` est le jeu de donnees complet : section, cadres et conventions en viennent tous.
+    const s = d.section, cad = d.cadres, cv = d.conventions;
+    if (!s || !cad || !cv)
+      throw new Error("coupeSection : attend un jeu de donnees { section, cadres, conventions }");
+    const conv = { dia_cadre_mm: cad.dia_mm, rayon_cintrage_mm: cv.rayon_cintrage_mm };
+    const g = SG.positionsArmatures(s, conv);
     const L = o.largeur || 300, H = o.hauteur || 340;
     const b = s.b_cm, h = s.h_cm, e = s.enrobage_cm;
-    const r = repere({ largeur: L, hauteur: H, marge: 56, xmin: 0, xmax: b, ymin: 0, ymax: h });
-    let g = rect(r.x(0), r.y(h), r.l(b), r.l(h), { remplissage: "url(#m-beton)", ep: 1.4 });
-    // cadre
-    const ix = r.x(e), iy = r.y(h - e), il = r.l(b - 2 * e), ih = r.l(h - 2 * e);
-    g += rect(ix, iy, il, ih, { couleur: "#8c3b2e", ep: 1.6, rayon: Math.min(6, r.l(e) * .8) });
-    // barres : positions calculees, jamais placees a l'oeil
-    const barres = [];
-    const pose = (n, dia, yc) => {
-      const dcm = dia / 10, dispo = b - 2 * e - dcm;
-      for (let i = 0; i < n; i++) {
-        const xc = e + dcm / 2 + (n === 1 ? dispo / 2 : (dispo * i) / (n - 1));
-        barres.push({ x: r.x(xc), y: r.y(yc), r: Math.max(2.4, r.l(dcm / 2)) });
-      }
-    };
-    pose(s.inf.n, s.inf.dia_mm, e + s.inf.dia_mm / 20);
-    pose(s.sup.n, s.sup.dia_mm, h - e - s.sup.dia_mm / 20);
-    g += barres.map((p) => cercle(p.x, p.y, p.r, { remplissage: "#8c3b2e" })).join("");
-    // cotes
-    g += cote(r.x(0), r.y(0), r.x(b), r.y(0), `b = ${b} cm`, { decalage: 26 });
-    g += cote(r.x(b), r.y(0), r.x(b), r.y(h), `h = ${h} cm`, { decalage: 30 });
-    g += cote(r.x(0), r.y(h), r.x(e), r.y(h), `${e}`, { decalage: -16 });
-    // puces
-    g += puce(r.x(b / 2), r.y(h) - 18, 1);
-    g += puce(barres[0].x - 14, barres[0].y, 2);
-    g += puce(ix - 13, iy + ih / 2, 3);
-    return { svg: g, largeur: L, hauteur: H, barres };
+    const r = repere({ largeur: L, hauteur: H, marge: 56, xmin: -b / 2, xmax: b / 2, ymin: -h / 2, ymax: h / 2 });
+
+    let out = rect(r.x(-b / 2), r.y(h / 2), r.l(b), r.l(h),
+      { remplissage: "url(#m-beton)", ep: 1.4 });
+
+    // cadre : trace sur son AXE, avec le rayon de cintrage des donnees (et non une
+    // valeur en pixels choisie a l'oeil), epaisseur = diametre reel du cadre
+    const pts = SG.contourCadre(g.axe_cadre_cm.b, g.axe_cadre_cm.h, g.rayon_cintrage_cm, 8, 2);
+    const trace = pts.map((p, i) => `${i ? "L" : "M"}${r.x(p[0])} ${r.y(p[1])}`).join(" ") + " Z";
+    out += chemin(trace, { couleur: "#8c3b2e", ep: Math.max(1.2, r.l(g.dia_cadre_cm)), jointure: "round" });
+
+    // barres : une par position fournie par la regle
+    const barres = g.barres.map((bar) => ({
+      x: r.x(bar.x_cm), y: r.y(bar.y_cm), r: Math.max(2.4, r.l(bar.dia_mm / 20)), dia: bar.dia_mm,
+    }));
+    out += barres.map((p) => cercle(p.x, p.y, p.r, { remplissage: "#8c3b2e" })).join("");
+
+    // cotes, toutes issues des donnees
+    out += cote(r.x(-b / 2), r.y(-h / 2), r.x(b / 2), r.y(-h / 2), `b = ${b} cm`, { decalage: 26 });
+    out += cote(r.x(b / 2), r.y(-h / 2), r.x(b / 2), r.y(h / 2), `h = ${h} cm`, { decalage: 30 });
+    out += cote(r.x(-b / 2), r.y(h / 2), r.x(-b / 2 + e), r.y(h / 2), `${e}`, { decalage: -16 });
+
+    out += puce(r.x(0), r.y(h / 2) - 18, 1);
+    out += puce(barres[0].x - 14, barres[0].y, 2);
+    out += puce(r.x(-g.axe_cadre_cm.b / 2) - 13, r.y(0), 3);
+    return { svg: out, largeur: L, hauteur: H, barres, axe_cadre_cm: g.axe_cadre_cm };
   }
 
   /** Elevation d'une poutre continue : travees issues des donnees + console eventuelle. */
