@@ -26,6 +26,10 @@ function etape(nom, cmd, args) {
 
 console.log("CONTROLE — cours de genie civil (§ 12.1)\n");
 
+/* --- les artefacts generes ne sont pas versionnes : le controle les reconstruit,
+       ce qui garantit aussi qu'un clone neuf produit bien le meme resultat --- */
+etape("4.4 · bundles (civil3d IIFE, regle de section, KaTeX local)", "node", ["build/bundle.mjs"]);
+
 /* --- f, i : calc/ — etalonnage, calculs, tests, verification dimensionnelle --- */
 etape("f,i · calc/ : etalonnage, calculs, tests, unites (pint)", "python3", ["calc/run_all.py"]);
 

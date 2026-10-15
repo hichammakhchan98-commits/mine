@@ -5,3 +5,13 @@ tests/captures/
 test-results/
 __pycache__/
 *.pyc
+
+# Artefacts GENERES : reconstruits par `npm run check`, donc inutiles dans l'historique.
+# Ils restent dans le zip de reprise (qui zippe le repertoire de travail, pas le depot),
+# si bien que le lecteur ouvre les pages hors ligne sans rien reconstruire.
+assets/civil3d.bundle.js
+assets/section.js
+assets/katex/
+calc/sorties/
+modules/
+index.html
