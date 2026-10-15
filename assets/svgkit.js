@@ -1,0 +1,302 @@
+/* svgkit.js — fonctions SVG parametriques (§ 8).
+   Regle R2 : un schema est PRODUIT a partir des donnees, jamais dessine a l'oeil.
+   Aucune cote n'est ecrite en dur ici : tout vient des arguments.
+   Sortie : chaine SVG. Utilisable au build (Node) comme dans le navigateur. */
+
+(function (racine) {
+  "use strict";
+
+  // ---------- outils ----------
+  const ech = (v) => Math.round(v * 100) / 100;          // 2 decimales : SVG plus leger
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  /** Convertisseur metre -> pixel, avec marges. */
+  function repere({ largeur, hauteur, marge = 40, xmin, xmax, ymin, ymax, yInverse = true }) {
+    const dx = xmax - xmin || 1, dy = ymax - ymin || 1;
+    const lu = largeur - 2 * marge, hu = hauteur - 2 * marge;
+    const k = Math.min(lu / dx, hu / dy);
+    const ox = marge + (lu - k * dx) / 2, oy = marge + (hu - k * dy) / 2;
+    return {
+      k,
+      x: (xm) => ech(ox + (xm - xmin) * k),
+      y: (ym) => ech(yInverse ? oy + (ymax - ym) * k : oy + (ym - ymin) * k),
+      l: (m) => ech(m * k),
+    };
+  }
+
+  // ---------- motifs de materiaux : definis UNE SEULE FOIS (§ 8) ----------
+  const MOTIFS = {
+    beton: `<pattern id="m-beton" width="7" height="7" patternUnits="userSpaceOnUse">
+      <rect width="7" height="7" fill="#e7e8e3"/>
+      <circle cx="2" cy="2.5" r=".7" fill="#b9bbb4"/><circle cx="5.4" cy="5" r=".5" fill="#b9bbb4"/></pattern>`,
+    sol: `<pattern id="m-sol" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#efe7d8"/><path d="M0 0v8" stroke="#a08358" stroke-width=".8"/></pattern>`,
+    acier: `<pattern id="m-acier" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#dfe5ea"/><path d="M0 0v6" stroke="#41607d" stroke-width="1"/></pattern>`,
+    remblai: `<pattern id="m-remblai" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="#f3efe6"/><path d="M0 7h10M5 7l-2 3M5 7l2 3" stroke="#a08358"
+      stroke-width=".7" fill="none"/></pattern>`,
+  };
+
+  /** Enveloppe SVG. `motifs` : liste de cles de MOTIFS a inclure. */
+  function svg({ largeur, hauteur, titre, desc, motifs = [], contenu, classe = "" }) {
+    const defs = motifs.map((m) => MOTIFS[m] || "").join("\n");
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${largeur} ${hauteur}" `
+      + `role="img" aria-labelledby="t-${titre ? hash(titre) : "x"}" class="${classe}">`
+      + (titre ? `<title id="t-${hash(titre)}">${esc(titre)}</title>` : "")
+      + (desc ? `<desc>${esc(desc)}</desc>` : "")
+      + (defs ? `<defs>${defs}${fleches()}</defs>` : `<defs>${fleches()}</defs>`)
+      + contenu + "</svg>";
+  }
+  const hash = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0;
+    return Math.abs(h).toString(36); };
+
+  const fleches = () => `
+    <marker id="fl" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0.8 L7.5 4 L0 7.2 z" fill="currentColor"/></marker>
+    <marker id="fl-deb" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M8 0.8 L0.5 4 L8 7.2 z" fill="currentColor"/></marker>`;
+
+  // ---------- primitives ----------
+  const texte = (x, y, t, o = {}) =>
+    `<text x="${ech(x)}" y="${ech(y)}" font-family="${o.mono ? "ui-monospace,monospace" : "sans-serif"}" `
+    + `font-size="${o.taille || 11}" font-weight="${o.gras ? 600 : 400}" `
+    + `fill="${o.couleur || "#14181d"}" text-anchor="${o.ancre || "start"}" `
+    + `dominant-baseline="${o.base || "auto"}"${o.classe ? ` class="${o.classe}"` : ""}>${esc(t)}</text>`;
+
+  const ligne = (x1, y1, x2, y2, o = {}) =>
+    `<line x1="${ech(x1)}" y1="${ech(y1)}" x2="${ech(x2)}" y2="${ech(y2)}" `
+    + `stroke="${o.couleur || "#14181d"}" stroke-width="${o.ep || 1}"`
+    + (o.tirets ? ` stroke-dasharray="${o.tirets}"` : "") + (o.marqueur ? ` marker-end="url(#fl)"` : "")
+    + (o.marqueurDeb ? ` marker-start="url(#fl-deb)"` : "") + ` />`;
+
+  const rect = (x, y, l, h, o = {}) =>
+    `<rect x="${ech(x)}" y="${ech(y)}" width="${ech(l)}" height="${ech(h)}" `
+    + `fill="${o.remplissage || "none"}" stroke="${o.couleur || "#14181d"}" `
+    + `stroke-width="${o.ep || 1}"${o.rayon ? ` rx="${o.rayon}"` : ""} />`;
+
+  const cercle = (x, y, r, o = {}) =>
+    `<circle cx="${ech(x)}" cy="${ech(y)}" r="${ech(r)}" fill="${o.remplissage || "#14181d"}"`
+    + (o.couleur ? ` stroke="${o.couleur}" stroke-width="${o.ep || 1}"` : "") + ` />`;
+
+  const chemin = (d, o = {}) =>
+    `<path d="${d}" fill="${o.remplissage || "none"}" stroke="${o.couleur || "#14181d"}" `
+    + `stroke-width="${o.ep || 1}"` + (o.tirets ? ` stroke-dasharray="${o.tirets}"` : "")
+    + (o.jointure ? ` stroke-linejoin="${o.jointure}"` : "") + ` />`;
+
+  /** Cote avec traits de rappel. `val` est TOUJOURS fournie par les donnees. */
+  function cote(x1, y1, x2, y2, val, o = {}) {
+    const d = o.decalage || 0;
+    const horiz = Math.abs(y2 - y1) < Math.abs(x2 - x1);
+    const [ax, ay, bx, by] = horiz ? [x1, y1 + d, x2, y2 + d] : [x1 + d, y1, x2 + d, y2];
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    return `<g color="${o.couleur || "#3f4852"}">`
+      + ligne(x1, y1, ax, ay, { couleur: "#a8aca4", ep: .6 })
+      + ligne(x2, y2, bx, by, { couleur: "#a8aca4", ep: .6 })
+      + ligne(ax, ay, bx, by, { couleur: o.couleur || "#3f4852", ep: .7, marqueur: 1, marqueurDeb: 1 })
+      + texte(mx + (horiz ? 0 : 6), my - (horiz ? 4 : 0), val,
+        { taille: 10.5, mono: 1, ancre: horiz ? "middle" : "start", couleur: o.couleur || "#3f4852" })
+      + `</g>`;
+  }
+
+  /** Legende numerotee : chaque numero du dessin DOIT y figurer (§ 8, grille de qualite). */
+  function legende(x, y, entrees, o = {}) {
+    const pas = o.pas || 15;
+    return `<g>` + entrees.map((e, i) =>
+      cercle(x + 6, y + i * pas, 6.5, { remplissage: "#fff", couleur: "#14181d", ep: .9 })
+      + texte(x + 6, y + i * pas + .5, String(e.n),
+        { taille: 9, gras: 1, ancre: "middle", base: "middle", classe: "leg-num" })
+      + texte(x + 18, y + i * pas + .5, e.t, { taille: 11, base: "middle", classe: "leg-txt" })
+      ).join("") + `</g>`;
+  }
+
+  /** Puce numerotee a poser sur le dessin. */
+  const puce = (x, y, n) =>
+    cercle(x, y, 7, { remplissage: "#fbfbf9", couleur: "#14181d", ep: .9 })
+    + texte(x, y + .5, String(n), { taille: 9, gras: 1, ancre: "middle", base: "middle", classe: "puce" });
+
+  // ---------- schemas composes ----------
+
+  /** Coupe de section rectangulaire ferraillee. Toutes les cotes viennent de `s`. */
+  function coupeSection(s, o = {}) {
+    const L = o.largeur || 300, H = o.hauteur || 340;
+    const b = s.b_cm, h = s.h_cm, e = s.enrobage_cm;
+    const r = repere({ largeur: L, hauteur: H, marge: 56, xmin: 0, xmax: b, ymin: 0, ymax: h });
+    let g = rect(r.x(0), r.y(h), r.l(b), r.l(h), { remplissage: "url(#m-beton)", ep: 1.4 });
+    // cadre
+    const ix = r.x(e), iy = r.y(h - e), il = r.l(b - 2 * e), ih = r.l(h - 2 * e);
+    g += rect(ix, iy, il, ih, { couleur: "#8c3b2e", ep: 1.6, rayon: Math.min(6, r.l(e) * .8) });
+    // barres : positions calculees, jamais placees a l'oeil
+    const barres = [];
+    const pose = (n, dia, yc) => {
+      const dcm = dia / 10, dispo = b - 2 * e - dcm;
+      for (let i = 0; i < n; i++) {
+        const xc = e + dcm / 2 + (n === 1 ? dispo / 2 : (dispo * i) / (n - 1));
+        barres.push({ x: r.x(xc), y: r.y(yc), r: Math.max(2.4, r.l(dcm / 2)) });
+      }
+    };
+    pose(s.inf.n, s.inf.dia_mm, e + s.inf.dia_mm / 20);
+    pose(s.sup.n, s.sup.dia_mm, h - e - s.sup.dia_mm / 20);
+    g += barres.map((p) => cercle(p.x, p.y, p.r, { remplissage: "#8c3b2e" })).join("");
+    // cotes
+    g += cote(r.x(0), r.y(0), r.x(b), r.y(0), `b = ${b} cm`, { decalage: 26 });
+    g += cote(r.x(b), r.y(0), r.x(b), r.y(h), `h = ${h} cm`, { decalage: 30 });
+    g += cote(r.x(0), r.y(h), r.x(e), r.y(h), `${e}`, { decalage: -16 });
+    // puces
+    g += puce(r.x(b / 2), r.y(h) - 18, 1);
+    g += puce(barres[0].x - 14, barres[0].y, 2);
+    g += puce(ix - 13, iy + ih / 2, 3);
+    return { svg: g, largeur: L, hauteur: H, barres };
+  }
+
+  /** Elevation d'une poutre continue : travees issues des donnees + console eventuelle. */
+  function elevationPoutre(p, o = {}) {
+    const L = o.largeur || 640, H = o.hauteur || 180;
+    const total = p.travees_m.reduce((a, b) => a + b, 0) + (p.console_m || 0);
+    const r = repere({ largeur: L, hauteur: H, marge: 42, xmin: 0, xmax: total, ymin: 0, ymax: Math.max(2, total / 6) });
+    const yh = r.y(1.1), hp = r.l(p.h_m || 0.75);
+    let g = "", x = 0;
+    g += rect(r.x(0), yh - hp / 2, r.l(total), hp, { remplissage: "url(#m-beton)", ep: 1.3 });
+    const appuis = [0];
+    for (const t of p.travees_m) { x += t; appuis.push(x); }
+    appuis.forEach((a, i) => {
+      const ax = r.x(a), ay = yh + hp / 2;
+      g += chemin(`M${ax - 9} ${ay + 15} L${ax} ${ay} L${ax + 9} ${ay + 15} z`,
+        { remplissage: "#41607d", couleur: "#41607d", ep: 1 });
+      g += ligne(ax - 13, ay + 15, ax + 13, ay + 15, { couleur: "#41607d", ep: 1.6 });
+      g += texte(ax, ay + 29, `A${i + 1}`, { taille: 10, ancre: "middle", couleur: "#3f4852" });
+    });
+    let xc = 0;
+    p.travees_m.forEach((t) => {
+      g += cote(r.x(xc), yh - hp / 2, r.x(xc + t), yh - hp / 2, `${t.toFixed(2)} m`, { decalage: -24 });
+      xc += t;
+    });
+    if (p.console_m) {
+      g += cote(r.x(xc), yh - hp / 2, r.x(total), yh - hp / 2, `${p.console_m.toFixed(2)} m`,
+        { decalage: -24, couleur: "#8c3b2e" });
+      g += texte(r.x(xc + p.console_m / 2), yh + hp / 2 + 40, "console", { taille: 10.5, ancre: "middle", couleur: "#8c3b2e" });
+    }
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Diagramme issu d'un calcul : liste de {x, v}. Jamais dessine a la main. */
+  function diagramme(pts, o = {}) {
+    const L = o.largeur || 640, H = o.hauteur || 200;
+    const xs = pts.map((p) => p.x), vs = pts.map((p) => p.v);
+    const vmax = Math.max(...vs.map(Math.abs)) || 1;
+    const r = repere({ largeur: L, hauteur: H, marge: 44, xmin: Math.min(...xs), xmax: Math.max(...xs), ymin: -vmax, ymax: vmax });
+    const y0 = r.y(0);
+    let g = ligne(r.x(Math.min(...xs)), y0, r.x(Math.max(...xs)), y0, { couleur: "#a8aca4", ep: 1 });
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${r.x(p.x)} ${r.y(p.v)}`).join(" ");
+    g += chemin(`${d} L${r.x(xs[xs.length - 1])} ${y0} L${r.x(xs[0])} ${y0} z`,
+      { remplissage: o.remplissage || "rgba(27,79,114,.13)", couleur: "none", ep: 0 });
+    g += chemin(d, { couleur: o.couleur || "#1b4f72", ep: 1.8, jointure: "round" });
+    const iMax = vs.indexOf(Math.max(...vs)), iMin = vs.indexOf(Math.min(...vs));
+    for (const i of new Set([iMax, iMin])) {
+      g += cercle(r.x(pts[i].x), r.y(pts[i].v), 3, { remplissage: o.couleur || "#1b4f72" });
+      g += texte(r.x(pts[i].x), r.y(pts[i].v) + (pts[i].v >= 0 ? -8 : 15),
+        `${pts[i].v.toFixed(1)} ${o.unite || ""}`.trim(),
+        { taille: 10.5, mono: 1, ancre: "middle", gras: 1, couleur: o.couleur || "#1b4f72" });
+    }
+    g += texte(r.x(xs[0]) - 6, y0, "0", { taille: 10, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    if (o.titre) g += texte(L / 2, 20, o.titre, { taille: 12, gras: 1, ancre: "middle" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Gantt : taches {nom, debut, duree, critique}. Unite = jour. */
+  function gantt(taches, o = {}) {
+    const lig = 24, lab = o.labels || 190, L = o.largeur || 700;
+    const H = 52 + taches.length * lig;
+    const fin = Math.max(...taches.map((t) => t.debut + t.duree)) || 1;
+    const k = (L - lab - 30) / fin;
+    const X = (j) => ech(lab + j * k);
+    let g = "";
+    const pasG = fin > 60 ? 10 : fin > 20 ? 5 : 2;
+    for (let j = 0; j <= fin; j += pasG) {
+      g += ligne(X(j), 34, X(j), H - 14, { couleur: "#e7e8e3", ep: 1 });
+      g += texte(X(j), 28, String(j), { taille: 9.5, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    }
+    g += texte(lab - 8, 28, "jour", { taille: 9.5, ancre: "end", couleur: "#6b7682" });
+    taches.forEach((t, i) => {
+      const y = 42 + i * lig;
+      g += texte(lab - 10, y + 7, t.nom, { taille: 11, ancre: "end" });
+      g += rect(X(t.debut), y, Math.max(2, ech(t.duree * k)), 13,
+        { remplissage: t.critique ? "#8c3b2e" : "#41607d", couleur: "none", ep: 0, rayon: 2 });
+      g += texte(X(t.debut + t.duree) + 5, y + 7, `${t.duree} j`,
+        { taille: 9.5, mono: 1, base: "middle", couleur: "#6b7682" });
+    });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Courbe en S : pts {j, prevu, realise?}, en % cumule. */
+  function courbeS(pts, o = {}) {
+    const L = o.largeur || 620, H = o.hauteur || 260;
+    const r = repere({ largeur: L, hauteur: H, marge: 48,
+      xmin: 0, xmax: Math.max(...pts.map((p) => p.j)), ymin: 0, ymax: 100 });
+    let g = "";
+    for (let v = 0; v <= 100; v += 25) {
+      g += ligne(r.x(0), r.y(v), r.x(Math.max(...pts.map((p) => p.j))), r.y(v), { couleur: "#e7e8e3", ep: 1 });
+      g += texte(r.x(0) - 7, r.y(v), `${v} %`, { taille: 9.5, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    }
+    const trace = (cle, coul, tirets) => {
+      const q = pts.filter((p) => p[cle] != null);
+      if (q.length < 2) return "";
+      return chemin(q.map((p, i) => `${i ? "L" : "M"}${r.x(p.j)} ${r.y(p[cle])}`).join(" "),
+        { couleur: coul, ep: 2, tirets, jointure: "round" });
+    };
+    g += trace("prevu", "#41607d", "6 4");
+    g += trace("realise", "#8c3b2e", null);
+    g += texte(L / 2, H - 12, "jours", { taille: 10, ancre: "middle", couleur: "#6b7682" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Histogramme d'effectifs : {j, n}. */
+  function histogramme(pts, o = {}) {
+    const L = o.largeur || 620, H = o.hauteur || 220;
+    const nmax = Math.max(...pts.map((p) => p.n)) || 1;
+    const r = repere({ largeur: L, hauteur: H, marge: 44, xmin: 0, xmax: pts.length, ymin: 0, ymax: nmax * 1.1 });
+    const l = (r.x(1) - r.x(0)) * .82;
+    let g = "";
+    pts.forEach((p, i) => {
+      const h = r.y(0) - r.y(p.n);
+      g += rect(r.x(i) + l * .11, r.y(p.n), l, h, { remplissage: "#41607d", couleur: "none", ep: 0 });
+      if (i % Math.ceil(pts.length / 12) === 0)
+        g += texte(r.x(i) + l / 2, r.y(0) + 13, String(p.j), { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    });
+    g += ligne(r.x(0), r.y(0), r.x(pts.length), r.y(0), { couleur: "#14181d", ep: 1 });
+    const moy = pts.reduce((a, p) => a + p.n, 0) / pts.length;
+    g += ligne(r.x(0), r.y(moy), r.x(pts.length), r.y(moy), { couleur: "#8c3b2e", ep: 1.2, tirets: "5 4" });
+    g += texte(r.x(pts.length) - 4, r.y(moy) - 5, `moyenne ${moy.toFixed(1)}`,
+      { taille: 9.5, mono: 1, ancre: "end", couleur: "#8c3b2e" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Sequence d'execution en etapes numerotees. */
+  function sequence(etapes, o = {}) {
+    const L = o.largeur || 700, cel = L / etapes.length, H = o.hauteur || 150;
+    let g = "";
+    etapes.forEach((e, i) => {
+      const x = i * cel;
+      g += rect(x + 6, 30, cel - 12, H - 62, { remplissage: "#f1f1ed", couleur: "#d5d7d1", ep: 1, rayon: 4 });
+      g += puce(x + cel / 2, 30, i + 1);
+      const mots = String(e).split(" ");
+      let l = "", lignes = [];
+      for (const m of mots) { if ((l + " " + m).trim().length > 16) { lignes.push(l.trim()); l = m; } else l += " " + m; }
+      lignes.push(l.trim());
+      lignes.forEach((t, k) => { g += texte(x + cel / 2, 56 + k * 14, t, { taille: 10.5, ancre: "middle" }); });
+      if (i < etapes.length - 1)
+        g += ligne(x + cel - 4, H - 46, x + cel + 4, H - 46, { couleur: "#6b7682", ep: 1.2, marqueur: 1 });
+    });
+    // Les numeros sont decrits EN PLACE, sous chaque puce : le generateur le declare, pour que
+    // le controle de legende du build (§ 8) n'ait pas a le deviner ni a etre contourne.
+    return { svg: g, largeur: L, hauteur: H,
+      legendeImplicite: etapes.map((e, i) => ({ n: i + 1, t: String(e) })) };
+  }
+
+  const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
+    coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence, MOTIFS, ech };
+
+  if (typeof module !== "undefined" && module.exports) module.exports = API;
+  racine.SVGKit = API;
+})(typeof globalThis !== "undefined" ? globalThis : this);

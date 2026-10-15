@@ -5,8 +5,22 @@
   "description": "Cours complet de genie civil — de la conception a l'execution, au controle et a la direction de projet",
   "type": "module",
   "scripts": {
-    "check": "node build/check-e0.mjs",
-    "empreinte": "node build/check-e0.mjs --empreinte-seule"
+    "build": "node build/build.mjs",
+    "bundle": "node build/bundle.mjs",
+    "calc": "python3 calc/run_all.py",
+    "check": "node build/check.mjs",
+    "check:rendu": "playwright test --config=tests/playwright.config.mjs",
+    "empreinte": "node build/empreinte.mjs",
+    "check:zip": "node build/check-zip.mjs",
+    "tout": "npm run calc && npm run bundle && npm run build && npm run check"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "three": "0.186.1",
+    "esbuild": "0.28.2",
+    "katex": "0.18.10",
+    "@playwright/test": "1.56.1"
+  }
 }

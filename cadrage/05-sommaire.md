@@ -30,7 +30,8 @@
 | B1 | Géotechnique et fondations superficielles, radiers | calcul | C | ⏸ | 2 |
 | B2 | Terrassements et soutènements (paroi, rabattement, talus) | calcul | C | ⏸ | 2 |
 | B3 | Béton armé : poutres, poteaux, dalles, voiles, consoles, fondations | structures | M | ⏸ | 3 |
-| B5a | Charpente métallique — couverture de la gare (version allégée) | structures | M/C | ⏸ | 2 |
+| **B5a-exec** | **Charpente : fabrication, soudage, CND, levage, montage** *(détaché — actif)* | exécution | M | ▶ | 2 |
+| B5a-calc | Charpente métallique — calcul de la couverture (flambement, déversement, vent) | structures | C | ⏸ | 1 |
 | B6 | Séisme et dynamique — analyse de la gare | calcul | C | ⏸ | 2 |
 | B6b | Lire et contrôler un modèle aux éléments finis | calcul | C | ⏸ | 1 |
 | B7a | Bâtiments : conception globale et sécurité incendie | calcul | C/N | ⏸ | 2 |
@@ -53,8 +54,8 @@
 | RC1 | **Revue critique du palier 1** : dossier à corriger (5 à 8 erreurs plantées) | revue | — | ▶ | 1 |
 | R5 | Cas secondaire R+5 : fondamentaux BA + séisme de base | calcul | M/C | ⏸ | 2 |
 
-**Palier 1 : 34 modules, 49 livraisons.** Dont **▶ 22 modules / 28 livraisons livrables maintenant**, et
-**⏸ 12 modules / 21 livraisons** en attente des normes.
+**Palier 1 : 35 modules, 50 livraisons.** Dont **▶ 23 modules / 30 livraisons livrables maintenant**, et
+**⏸ 12 modules / 20 livraisons** en attente des normes.
 
 ### Palier 2 — Ouvrages d'art et structures spéciales
 
@@ -94,10 +95,10 @@
 
 | | Modules | Livraisons |
 |---|---|---|
-| Palier 1 — dont livrables maintenant | 34 — *dont 22* | 49 — *dont 28* |
+| Palier 1 — dont livrables maintenant | 35 — *dont 23* | 50 — *dont 30* |
 | Palier 2 | 12 | 26 |
 | Palier 3 | 8 | 14 |
-| **Total** | **54** | **89** |
+| **Total** | **55** | **90** |
 
 Un module = une livraison, sauf découpage annoncé en parties a, b, c (§ 13.4). Les comptes de livraisons
 tiennent compte de ces découpages.
@@ -237,6 +238,31 @@ Contenu propre : CVC, plomberie, electricite, courants faibles — vus UNIQUEMEN
 Etude de cas (S4) : carnet de reservations de la mezzanine, conflit reservation / poutre, cout d'un
           percement apres coup (V3)
 Exercices : 1 application + 1 cas ouvert   Quiz : 5 questions
+```
+
+### B5a-exec — Charpente : fabrication, soudage, levage *(détaché du B5a, actif)*
+```text
+ID : B5a-exec         Titre : Charpente metallique — fabrication, soudage, CND, levage, montage
+Palier : P1           Type : execution     Niveau : [M] fiche d'expert     Etat : ▶ actif
+Parties : B5a-exec-a (atelier : fabrication, soudage, qualification, CND) ·
+          B5a-exec-b (chantier : logistique, levage, montage, reglage, boulonnage)
+Pourquoi ce module est actif alors que B5a-calc est ⏸ : l'execution ne depend d'AUCUNE norme de
+          calcul. Le § 5.0.2 met explicitement « methodes d'execution, sequences, cadences, effectifs,
+          materiel (V3) » dans ce qui est autorise et prioritaire.
+Socle : S1 a S8        Options : O1 ○ retenu (plans de montage, sans cotes de calcul) · O2 ✓ (n = 5) ·
+          O3 ○ non retenu (le modele du treillis appartient a B5a-calc) · O4 ✓ · O5 ✓ · O6 ○ non retenu ·
+          O7 ✓ (cadences de levage et de montage — non normatif)
+Sans objet : O3 — dupliquer le treillis ici serait cocher une case ; il arrive avec son calcul.
+Partie ⏸ : sections, assemblages dimensionnes, vent et soulevement, feu -> B5a-calc
+Contenu propre : procedes de soudage et leur choix ; qualification des modes operatoires et des
+          soudeurs (PRINCIPE, aucun numero sans V0) ; CND — visuel, ressuage, magnetoscopie, ultrasons,
+          radiographie : ce que chacun voit et ce qu'il ne voit pas, qui les prescrit, qui les lit ;
+          tolerances de fabrication et de montage ; logistique des grandes pieces (transport, stockage,
+          pre-assemblage au sol) ; levage au-dessus d'une voie en exploitation (renvoi B7c-b) ;
+          reglage, boulonnage de chantier, serrage controle ; receptions en atelier et sur site
+Double lecture entreprise / MOE : ✓     Fiche memo S8 : ✓ (points d'arret d'une charpente)
+Exercices : 2 application + 1 probleme + 1 revue critique   Quiz : 7 questions
+Securite (§ 3.4) : levage lourd — dispositions essentielles explicites
 ```
 
 ### B7c — Bâtiments ferroviaires : interfaces *(module ajouté — à valider)*
@@ -596,13 +622,10 @@ Contre-calcul : analyse de section par compatibilite des deformations contre for
    poutre continue par methode des deplacements contre coefficients forfaitaires
 Etalonnage : calc/etalonnage/ — cas a solution fermee + exemple publie V0 (a fournir)
 
-ID : B5a   Titre : Charpente metallique — couverture de la gare (version allegee)   (2 parties)
+ID : B5a-calc   Titre : Charpente metallique — calcul de la couverture de la gare   (1 livraison)
 ⏸ Bloque par : acier (EN 1993), charges-batiments (vent, soulevement)
-Type : structures · Niveau [M] execution / [C] calcul · Options : O1 ✓ · O2 ✓ (n = 6) ·
-   O3 ✓ (treillis 32 m + assemblages) · O4 ✓ · O5 ✓ · O7 ✓
-Partie execution ([M], fiche d'expert) : fabrication, soudage, assemblage, levage au-dessus de la voie,
-   logistique — partiellement ecrivable sans normes, mais garde avec le module pour ne pas le fragmenter
-   a l'excès. A ARBITRER (question 6) : le detacher en module actif « B5a-exec » ?
+Type : structures · Niveau [C] · Options : O1 ✓ · O2 ✓ (n = 4) · O3 ✓ (treillis 32 m + assemblages) ·
+   O5 ✓ · O7 ✓
 
 ID : B6    Titre : Seisme et dynamique — analyse de la gare   (2 parties)
 ⏸ Bloque par : seisme-batiments (RPS 2000 v. 2011 + catalogue communal)
@@ -726,6 +749,7 @@ Puis, dans cet ordre — **le métier du lecteur d'abord**, ce qui inverse l'ord
 | 9 | **C6** Matériel | s'appuie sur C1–C3 |
 | 10 | **C7** Qualité, HSE | s'appuie sur C1–C3 |
 | 11 | **B7c** (a, b) Interfaces ferroviaires | [N] ; a besoin de C1–C3 pour parler de travaux sous exploitation |
+| 11b | **B5a-exec** (a, b) Charpente : atelier et montage | [M] ; suit B7c car le levage au-dessus de la voie en dépend |
 | 12 | **A1** Métier, acteurs, contrats | mieux compris après avoir vu le chantier qu'avant |
 | 13 | **A2a**, **A5a** Fondamentaux qualitatifs | [M]/[C], compressés |
 | 14 | **C4** Second œuvre · **B7b** Lots techniques | plafonnés à 10 % à eux deux |
@@ -737,6 +761,6 @@ Puis, dans cet ordre — **le métier du lecteur d'abord**, ce qui inverse l'ord
 ### À la levée du § 5.0 — ordre de rattachement
 
 `A4` (module pivot) → **tranche verticale structurelle** (module témoin n° 1 dans `B3`, § 7.3, que
-**tu valides** comme la TV) → `A2b`, `A3`, `A5b` → `B1`, `B2` → `B3` (suite) → `B5a` → `B6`, `B6b` →
+**tu valides** comme la TV) → `A2b`, `A3`, `A5b` → `B1`, `B2` → `B3` (suite) → `B5a-calc` → `B6`, `B6b` →
 `B7a` → `R5`. Puis relecture des modules déjà livrés qui portaient un renvoi « ⏸ » ou une valeur V3
 qu'un document V0 peut remplacer (§ 5.0.7d), corrections listées dans `STATE.md`.

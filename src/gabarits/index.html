@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cours complet de génie civil</title>
+<meta name="description" content="De la conception à l'exécution, au contrôle et à la direction de projet.">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/print.css">
+</head>
+<body>
+<div class="page">
+  <nav class="sommaire" aria-label="Sommaire">
+    <h2>Cours</h2>
+    <ol>
+      <li><a href="#modules">Modules livrés</a></li>
+      <li><a href="#phase">Phase en cours</a></li>
+      <li><a href="#etat">État du projet</a></li>
+    </ol>
+  </nav>
+  <main class="corps">
+    <header class="module-tete">
+      <div class="fil">Cours complet de génie civil</div>
+      <h1>De la conception à l'exécution, au contrôle et à la direction de projet</h1>
+      <p class="chapeau">Cas phare : bâtiment voyageurs d'une gare à grande vitesse. Programme fictif
+      et générique, ne reproduisant aucun projet réel.</p>
+      <div class="meta">{{meta}}</div>
+    </header>
+
+    <h2 id="phase">Phase en cours</h2>
+    {{phase}}
+
+    <h2 id="modules">Modules livrés</h2>
+    {{liste}}
+
+    <h2 id="etat">État du projet</h2>
+    {{etat}}
+
+    <footer class="pied">
+      <p>Empreinte des données : <code>{{empreinte}}</code> · build du {{date}}</p>
+      <p>Exemple pédagogique — ne remplace ni une note de calcul d'exécution ni le contrôle d'un bureau
+         d'études ou de contrôle.</p>
+    </footer>
+  </main>
+</div>
+</body>
+</html>

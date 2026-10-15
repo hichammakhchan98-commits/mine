@@ -1,0 +1,207 @@
+/* Charte graphique — cours de genie civil.
+   Sobre et technique : la hierarchie vient de la typographie et du trait, pas de la couleur.
+   Contrastes verifies AA sur fond papier. */
+
+:root {
+  /* encre et papier */
+  --encre:        #14181d;
+  --encre-douce:  #3f4852;
+  --encre-faible: #6b7682;
+  --papier:       #fbfbf9;
+  --papier-creux: #f1f1ed;
+  --filet:        #d5d7d1;
+  --filet-fort:   #a8aca4;
+
+  /* accent : bleu d'encre de calque */
+  --accent:       #1b4f72;
+  --accent-douce: #e8eff5;
+
+  /* materiaux (reprises par civil3d : une seule source de verite visuelle) */
+  --mat-beton:     #b9bbb4;
+  --mat-acier-ha:  #8c3b2e;
+  --mat-charpente: #41607d;
+  --mat-sol:       #a08358;
+  --mat-cable:     #6b5a8e;
+  --mat-coffrage:  #c9a86a;
+
+  /* semantique */
+  --alerte:       #8a3324;
+  --alerte-fond:  #fbeeea;
+  --attente:      #7a5c00;
+  --attente-fond: #fdf6e0;
+  --preuve-v0:    #1f5c3a;
+  --preuve-v3:    #7a5c00;
+
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --mesure: 72ch;        /* largeur de lecture */
+  --gouttiere: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--papier-creux); }
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--encre);
+  font: 400 17px/1.62 var(--serif);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- mise en page : sommaire lateral + corps ---------- */
+
+.page { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 0; min-height: 100vh; }
+
+.sommaire {
+  position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto;
+  padding: 24px 20px; border-right: 1px solid var(--filet);
+  background: var(--papier-creux); font: 400 14px/1.5 var(--sans);
+}
+.sommaire h2 { font: 600 12px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--encre-faible); margin: 0 0 12px; }
+.sommaire ol { list-style: none; margin: 0; padding: 0; }
+.sommaire li { margin: 0 0 2px; }
+.sommaire a { display: block; padding: 4px 8px; border-radius: 4px; color: var(--encre-douce);
+  text-decoration: none; }
+.sommaire a:hover { background: var(--accent-douce); color: var(--accent); }
+.sommaire a.actif { background: var(--accent-douce); color: var(--accent); font-weight: 600; }
+.sommaire .niv2 { padding-left: 18px; font-size: 13px; }
+
+.corps { padding: 40px var(--gouttiere) 96px; }
+.corps > * { max-width: var(--mesure); margin-inline: auto; }
+.corps > .large { max-width: 1040px; }
+
+/* ---------- titres et texte ---------- */
+
+h1 { font: 600 clamp(26px, 4.4vw, 38px)/1.18 var(--sans); letter-spacing: -.015em; margin: 0 0 4px; }
+h2 { font: 600 24px/1.25 var(--sans); margin: 2.2em 0 .5em; padding-bottom: .25em;
+  border-bottom: 1px solid var(--filet); }
+h3 { font: 600 19px/1.3 var(--sans); margin: 1.8em 0 .4em; }
+h4 { font: 600 16px/1.3 var(--sans); margin: 1.5em 0 .3em; color: var(--encre-douce); }
+p { margin: 0 0 1em; }
+a { color: var(--accent); }
+strong { font-weight: 600; }
+code { font: 400 .88em/1.5 var(--mono); background: var(--papier-creux);
+  padding: .1em .32em; border-radius: 3px; }
+pre { font: 400 13px/1.55 var(--mono); background: var(--papier-creux); border: 1px solid var(--filet);
+  border-radius: 6px; padding: 14px 16px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+
+.chapeau { font-size: 19px; color: var(--encre-douce); margin-bottom: 1.6em; }
+
+/* ---------- bandeau d'identification du module ---------- */
+
+.module-tete { border-bottom: 2px solid var(--encre); padding-bottom: 14px; margin-bottom: 28px; }
+.module-tete .fil { font: 500 12px/1.4 var(--sans); letter-spacing: .09em; text-transform: uppercase;
+  color: var(--encre-faible); margin-bottom: 8px; }
+.module-tete .meta { font: 400 13px/1.6 var(--mono); color: var(--encre-faible); margin-top: 10px; }
+
+.etiq { display: inline-block; font: 600 11px/1 var(--sans); letter-spacing: .06em;
+  text-transform: uppercase; padding: 4px 7px; border-radius: 3px; vertical-align: 2px; }
+.etiq-m { background: #e3ebe5; color: #1f5c3a; }
+.etiq-c { background: var(--accent-douce); color: var(--accent); }
+.etiq-n { background: var(--attente-fond); color: var(--attente); }
+.etiq-pause { background: var(--attente-fond); color: var(--attente); }
+
+/* ---------- encarts ---------- */
+
+.encart { border: 1px solid var(--filet); border-left: 3px solid var(--filet-fort);
+  background: var(--papier-creux); border-radius: 0 6px 6px 0;
+  padding: 14px 18px; margin: 1.6em 0; font-size: 16px; }
+.encart > :last-child { margin-bottom: 0; }
+.encart .titre { font: 600 12px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--encre-faible); margin-bottom: 6px; }
+.encart-alerte { border-left-color: var(--alerte); background: var(--alerte-fond); }
+.encart-alerte .titre { color: var(--alerte); }
+.encart-attente { border-left-color: var(--attente); background: var(--attente-fond); }
+.encart-attente .titre { color: var(--attente); }
+.encart-voir { border-left-color: var(--accent); background: var(--accent-douce); }
+.encart-voir .titre { color: var(--accent); }
+
+/* ---------- niveaux de preuve (§ 3.2) ---------- */
+
+.preuve { font: 600 .66em/1 var(--sans); vertical-align: .5em; margin-left: .12em;
+  padding: 1px 3px; border-radius: 2px; cursor: help; }
+.preuve-V0 { background: #e3ebe5; color: var(--preuve-v0); }
+.preuve-V1 { background: var(--accent-douce); color: var(--accent); }
+.preuve-V2 { background: var(--attente-fond); color: var(--attente); }
+.preuve-V3 { background: var(--papier-creux); color: var(--encre-faible); }
+
+/* ---------- figures SVG ---------- */
+
+figure { margin: 2em 0; }
+figure svg { display: block; width: 100%; height: auto; background: var(--papier);
+  border: 1px solid var(--filet); border-radius: 6px; }
+figcaption { font: 400 14px/1.5 var(--sans); color: var(--encre-douce); margin-top: 10px; }
+figcaption .num { font-weight: 600; color: var(--encre); }
+.figure-lecture { margin-top: 12px; font-size: 15px; }
+.figure-lecture ul { margin: .3em 0; padding-left: 1.2em; }
+
+/* ---------- vue 3D ---------- */
+
+.vue3d { position: relative; margin: 2em 0; border: 1px solid var(--filet); border-radius: 6px;
+  overflow: hidden; background: #eceeea; }
+.vue3d-toile { display: block; width: 100%; aspect-ratio: 16 / 10; min-height: 280px; }
+.vue3d-etiquettes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.vue3d-etiq { position: absolute; font: 500 12px/1.25 var(--sans); background: rgba(251,251,249,.94);
+  border: 1px solid var(--filet-fort); border-radius: 3px; padding: 2px 6px; white-space: nowrap;
+  color: var(--encre); pointer-events: auto; cursor: pointer; transform: translate(-50%, -50%); }
+.vue3d-etiq.masquee, .vue3d-etiq.masquee-phase { display: none; }
+.vue3d-etiq .detail { display: none; font-weight: 400; color: var(--encre-douce); }
+.vue3d-etiq.ouverte { z-index: 3; }
+.vue3d-etiq.ouverte .detail { display: block; }
+.vue3d-pilotage { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+  padding: 10px 14px; border-top: 1px solid var(--filet); background: var(--papier-creux);
+  font: 400 13px/1.4 var(--sans); }
+.vue3d-pilotage label { display: flex; align-items: center; gap: 7px; }
+.vue3d-pilotage input[type=range] { width: 110px; }
+.vue3d-pilotage .val { font: 400 12px/1 var(--mono); color: var(--encre-faible); min-width: 4.2em; }
+.vue3d-pilotage button { font: 500 12px/1 var(--sans); padding: 6px 10px; border: 1px solid var(--filet-fort);
+  background: var(--papier); border-radius: 4px; cursor: pointer; color: var(--encre-douce); }
+.vue3d-pilotage button:hover { border-color: var(--accent); color: var(--accent); }
+.vue3d-pilotage button[aria-pressed=true] { background: var(--accent-douce); border-color: var(--accent);
+  color: var(--accent); }
+.vue3d-legende { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 14px;
+  border-top: 1px solid var(--filet); font: 400 12px/1.5 var(--sans); color: var(--encre-douce); }
+.vue3d-legende span { display: flex; align-items: center; gap: 6px; }
+.vue3d-legende i { width: 11px; height: 11px; border-radius: 2px; border: 1px solid rgba(0,0,0,.18); }
+.vue3d-repli { padding: 28px 18px; font: 400 15px/1.5 var(--sans); color: var(--encre-douce);
+  text-align: center; }
+
+/* ---------- tableaux ---------- */
+
+table { width: 100%; border-collapse: collapse; margin: 1.6em 0; font: 400 15px/1.45 var(--sans); }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--filet); vertical-align: top; }
+thead th { font-weight: 600; border-bottom: 1.5px solid var(--filet-fort); background: var(--papier-creux); }
+td.num, th.num { text-align: right; font-family: var(--mono); font-size: 13.5px; }
+
+/* ---------- exercices et fiche memo ---------- */
+
+details.exercice { border: 1px solid var(--filet); border-radius: 6px; margin: 1.2em 0;
+  padding: 12px 16px; background: var(--papier); }
+details.exercice > summary { font: 600 16px/1.35 var(--sans); cursor: pointer; }
+details.exercice > summary::marker { color: var(--accent); }
+details.exercice[open] > summary { margin-bottom: .7em; padding-bottom: .5em;
+  border-bottom: 1px solid var(--filet); }
+
+.memo { border: 1.5px solid var(--encre); border-radius: 6px; padding: 20px 22px; margin: 2em 0; }
+.memo h2 { margin-top: 0; border: none; }
+
+/* ---------- pied ---------- */
+
+.pied { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--filet);
+  font: 400 13px/1.6 var(--mono); color: var(--encre-faible); }
+
+/* ---------- etroit ---------- */
+
+@media (max-width: 860px) {
+  .page { grid-template-columns: 1fr; }
+  .sommaire { position: static; max-height: none; border-right: none;
+    border-bottom: 1px solid var(--filet); }
+  .corps { padding: 28px var(--gouttiere) 72px; }
+  body { font-size: 16px; }
+}

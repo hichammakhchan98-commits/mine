@@ -4,20 +4,20 @@
 
 | Palier | Modules | Livraisons | Dont livrables **maintenant** (§ 5.0) |
 |---|---|---|---|
-| Palier 1 — cas phare gare (y compris Étape 1 socle et Étape 2 tranche verticale) | 34 | 49 | **28** |
+| Palier 1 — cas phare gare (y compris Étape 1 socle et Étape 2 tranche verticale) | 35 | 50 | **30** |
 | Palier 2 — ouvrages d'art et structures spéciales | 12 | 26 | 0 |
 | Palier 3 — autres ouvrages | 8 | 14 | 0 |
-| **Total** | **54** | **89** | **28** |
+| **Total** | **55** | **90** | **30** |
 
-Détail du palier 1 : **22 modules actifs (28 livraisons)** immédiatement, **12 modules suspendus
-(21 livraisons)** qui se rattachent à la levée du § 5.0 — soit **43 % des livraisons du palier 1
+Détail du palier 1 : **23 modules actifs (30 livraisons)** immédiatement, **12 modules suspendus
+(20 livraisons)** qui se rattachent à la levée du § 5.0 — soit **40 % des livraisons du palier 1
 aujourd'hui inaccessibles**, faute de normes.
 
 **Ordre de grandeur d'effort.** Je n'ai pas de mesure fiable avant le premier module : le § 13.2 impose
 de reporter l'effort consommé à chaque fin de module, et c'est à ce moment que l'estimation deviendra
 sérieuse. Avant cela, une seule chose est honnête à dire : une livraison du palier 1 actif est, selon le
 niveau de calibrage, **une à trois séances de travail** en mode B (chargement du zip, module, tests,
-passe /devil, zip de sortie). Le palier 1 actif (28 livraisons) représente donc un ordre de **30 à 60 séances**. Je
+passe /devil, zip de sortie). Le palier 1 actif (30 livraisons) représente donc un ordre de **30 à 60 séances**. Je
 recalibrerai ce chiffre après la tranche verticale, qui est précisément là pour ça — et je te dirai si
 l'écart est grand.
 

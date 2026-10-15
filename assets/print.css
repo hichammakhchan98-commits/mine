@@ -1,0 +1,30 @@
+/* Impression — exercices et fiches memo lisibles sur papier (§ 4.4). */
+@page { size: A4; margin: 16mm 14mm; }
+
+@media print {
+  html, body { background: #fff; color: #000; font-size: 11.5pt; }
+  .page { display: block; }
+  .sommaire, .vue3d-pilotage, .vue3d-legende { display: none !important; }
+  .corps { padding: 0; }
+  .corps > * { max-width: none; }
+
+  /* la 3D ne s'imprime pas : on imprime son substitut textuel */
+  .vue3d { border: 1px solid #999; }
+  .vue3d-toile, .vue3d-etiquettes { display: none !important; }
+  .vue3d::after { content: attr(data-impression); display: block; padding: 10mm 8mm;
+    font: italic 10pt/1.4 serif; color: #333; text-align: center; }
+
+  a { color: #000; text-decoration: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8.5pt; color: #555; }
+
+  /* les corriges s'impriment ouverts */
+  details.exercice { break-inside: avoid; border: 1px solid #999; }
+  details.exercice > summary { list-style: none; }
+  details:not([open]) > *:not(summary) { display: revert !important; }
+
+  .memo { break-before: page; break-inside: avoid; border: 1.5pt solid #000; }
+  h2, h3 { break-after: avoid; }
+  figure, table, .encart { break-inside: avoid; }
+  figure svg { max-height: 95mm; }
+  .pied { break-before: avoid; }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{titre}} — Cours de génie civil</title>
+<meta name="description" content="{{resume}}">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/print.css">
+<link rel="stylesheet" href="../assets/katex/katex.min.css">
+</head>
+<body>
+<div class="page">
+  <nav class="sommaire" aria-label="Sommaire du module">
+    <h2>{{id}}</h2>
+    <ol>{{sommaire}}</ol>
+    <h2 style="margin-top:22px">Cours</h2>
+    <ol><li><a href="../index.html">Tous les modules</a></li></ol>
+  </nav>
+  <main class="corps">
+    <header class="module-tete">
+      <div class="fil">{{fil}}</div>
+      <h1>{{titre}}</h1>
+      <p class="chapeau">{{resume}}</p>
+      <div class="meta">{{meta}}</div>
+    </header>
+    {{corps}}
+    <footer class="pied">
+      <p>{{pied}}</p>
+      <p>Empreinte des données : <code>{{empreinte}}</code> · build du {{date}} · module {{id}}</p>
+      <p>Exemple pédagogique — ne remplace ni une note de calcul d'exécution ni le contrôle d'un bureau
+         d'études ou de contrôle.</p>
+    </footer>
+  </main>
+</div>
+<script src="../assets/civil3d.bundle.js"></script>
+<script src="../assets/svgkit.js"></script>
+<script>{{script}}</script>
+<script>
+(function(){
+  var liens=[].slice.call(document.querySelectorAll('.sommaire a[href^="#"]'));
+  var cibles=liens.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));});
+  function maj(){
+    var y=window.scrollY+120, actif=-1;
+    cibles.forEach(function(c,i){ if(c&&c.offsetTop<=y) actif=i; });
+    liens.forEach(function(a,i){ a.classList.toggle('actif', i===actif); });
+  }
+  window.addEventListener('scroll',maj,{passive:true}); maj();
+})();
+</script>
+</body>
+</html>

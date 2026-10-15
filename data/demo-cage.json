@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "version": "1.0",
+    "role": "Parametres de la PAGE DE DEMONSTRATION du socle (Etape 1, § 5.2). Ce n'est pas un module de cours.",
+    "avertissement": "DEMONSTRATION DE BIBLIOTHEQUE. La geometrie est dessinee a partir de ces parametres ; rien n'est dimensionne, rien n'est verifie. Aucune valeur normative : la phase § 5.0 interdit tout calcul reglementaire.",
+    "niveau_preuve_parametres": "V3",
+    "niveau_preuve_resultats": "V1 — geometrie et masse volumique, recalculables"
+  },
+  "section": {
+    "b_cm": 35,
+    "h_cm": 75,
+    "enrobage_cm": 3,
+    "inf": { "n": 3, "dia_mm": 20 },
+    "sup": { "n": 2, "dia_mm": 16 },
+    "origine": "reprend la section de predimensionnement V3 de la poutre PM1 du cas phare (E0-H06) pour que la demonstration parle du meme ouvrage que le cours"
+  },
+  "troncon": {
+    "L_cm": 200,
+    "role": "un troncon de 2,00 m suffit a montrer la cage, les cadres et le phasage sans alourdir la scene"
+  },
+  "cadres": { "dia_mm": 8, "espacement_cm": 15 },
+  "constantes": {
+    "masse_volumique_acier_kg_m3": 7850,
+    "niveau_preuve": "V1",
+    "note": "constante physique, pas une valeur normative"
+  },
+  "bornes_curseurs": {
+    "note": "les curseurs sont bornes (§ 9.2) ; la recette § 9.4 exige de les tester a leurs bornes sans geometrie degeneree",
+    "L_cm": [100, 400],
+    "espacement_cm": [7, 30],
+    "n_inf": [2, 6],
+    "dia_inf_mm": [12, 25]
+  }
+}
