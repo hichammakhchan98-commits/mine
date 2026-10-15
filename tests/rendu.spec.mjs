@@ -264,10 +264,16 @@ for (const fichier of modules) {
       expect(txt, `la masse d'acier ${attendu} kg doit figurer dans la page`).toContain(attendu);
       if (await preparerVue()) {
         const m3d = await page.evaluate(() => Civil3D.vues()[0].diagnostic().metre);
-        // meme geometrie, deux implementations (python et javascript) : ecart <= 1 %
+        // Meme geometrie, deux implementations (Python et JavaScript). La tolerance etait
+        // de 1 % : une divergence de la regle de cintrage entre les deux (16 mm contre
+        // 20 mm, soit 0,35 %) serait passee sans bruit. A 0,1 %, elle ne passe plus.
         const e = Math.abs(m3d.masseAcier_kg - metre.masse_acier_kg) / metre.masse_acier_kg * 100;
-        expect(e, `metre 3D ${m3d.masseAcier_kg.toFixed(2)} kg contre calc/ ${metre.masse_acier_kg} kg`)
-          .toBeLessThan(1);
+        expect(e, `metre 3D ${m3d.masseAcier_kg.toFixed(3)} kg contre calc/ ${metre.masse_acier_kg} kg`)
+          .toBeLessThan(0.1);
+        // et le perimetre lui-meme, qui est la grandeur ou les deux codes peuvent diverger
+        const ep = Math.abs(m3d.longueurCadre_m - metre.perimetre_cadre_m) / metre.perimetre_cadre_m * 100;
+        expect(ep, `perimetre 3D ${m3d.longueurCadre_m.toFixed(5)} m contre calc/ ${metre.perimetre_cadre_m} m`)
+          .toBeLessThan(0.05);
         expect(m3d.nCadres, "nombre de cadres : 3D contre calc/").toBe(metre.n_cadres);
       }
     });
