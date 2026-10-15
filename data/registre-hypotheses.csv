@@ -1,5 +1,5 @@
 id;hypothese;valeur;unite;fourchette;annee_ref;modules;justification
-H001;rayon de cintrage du cadre;un paramètre de tracé;mm;15 à 30;2026;E1-demo;aucun document normatif fourni : valeur choisie pour la démonstration
+H001;rayon de cintrage du cadre;20;mm;15 à 30;2026;E1-demo;paramètre de tracé, non une règle de cintrage minimal : aucun document normatif fourni
 H002;ratio d'acier d'une poutre dimensionnée;80 à 150 kg/m³;kg/m³;80 à 150;2026;E1-demo;ordre de grandeur usuel, sans valeur réglementaire
 H003;garde-fou d'unité sur le ratio d'acier;fourchette géométrique 30 à 250 kg/m³;kg/m³;30 à 250;2026;E1-demo;borne large, choisie pour n'attraper qu'une erreur de facteur
 H004;prix de l'acier HA façonné et posé;14 à 20 MAD/kg;MAD/kg;14 à 20;2026;E1-demo;aucun bordereau fourni : fourchette large assumée

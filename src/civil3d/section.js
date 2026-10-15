@@ -24,6 +24,8 @@ export function verifierConventions(cv) {
   if (cv.crochets_extremite !== false)
     throw new Error("les crochets d'extremite ne sont pas modelises : "
       + "conventions.crochets_extremite doit valoir false");
+  if (!String(cv.placement_cadres ?? "").includes("premier et dernier cadre a l'enrobage"))
+    throw new Error(`regle de placement « ${cv.placement_cadres} » non implementee`);
   return true;
 }
 

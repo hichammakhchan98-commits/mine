@@ -291,6 +291,33 @@ for (const fichier of modules) {
       expect(espReel, "l'espacement reel doit rester sous le nominal")
         .toBeLessThanOrEqual(data.cadres.espacement_cm + 1e-9);
       expect(Math.abs(metre.espacement_reel_cm - espReel), "espacement reel").toBeLessThan(0.01);
+
+      // La longueur de barre est la troisieme grandeur que les deux voies du contre-calcul
+      // PARTAGENT. Sans ce recalcul independant, une barre fausse des deux cotes passait.
+      const longBarre = (data.troncon.L_cm - 2 * data.section.enrobage_cm) / 100;
+      expect(Math.abs(metre.longueur_barre_m - longBarre),
+        `longueur de barre recalculee depuis data/ : ${longBarre} m`).toBeLessThan(0.001);
+
+      // --- P3 : le bloc economique n'etait teste nulle part. Un cout faux d'un facteur 10
+      // passait les onze controles.
+      const og = data.ordres_de_grandeur;
+      const eco = metre.economie;
+      expect(Math.abs(eco.cout_acier_MAD_min - metre.masse_acier_kg * og.prix_acier_MAD_par_kg[0]),
+        "cout minimal recalcule").toBeLessThan(1);
+      expect(Math.abs(eco.cout_acier_MAD_max - metre.masse_acier_kg * og.prix_acier_MAD_par_kg[1]),
+        "cout maximal recalcule").toBeLessThan(1);
+      expect(Math.abs(eco.heures_ferrailleur_min
+        - metre.masse_acier_kg / og.cadence_ferraillage_kg_par_jour[1] * 8),
+        "heures de ferrailleur, borne basse").toBeLessThan(0.1);
+      expect(Math.abs(eco.heures_ferrailleur_max
+        - metre.masse_acier_kg / og.cadence_ferraillage_kg_par_jour[0] * 8),
+        "heures de ferrailleur, borne haute").toBeLessThan(0.1);
+      // et les montants publies doivent etre ceux-la
+      const txtPage = (await page.locator(".corps").innerText()).replace(/\u00a0/g, " ");
+      expect(txtPage, `le cout ${eco.cout_acier_MAD_min} MAD doit figurer dans la page`)
+        .toContain(String(eco.cout_acier_MAD_min));
+      expect(txtPage, `le cout ${eco.cout_acier_MAD_max} MAD doit figurer dans la page`)
+        .toContain(String(eco.cout_acier_MAD_max));
       const txt = (await page.locator(".corps").innerText()).replace(/ /g, " ");
       const attendu = metre.masse_acier_kg.toFixed(1).replace(".", ",");
       expect(txt, `la masse d'acier ${attendu} kg doit figurer dans la page`).toContain(attendu);

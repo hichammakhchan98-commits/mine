@@ -33,7 +33,9 @@ export function cage({
   cadres = { dia_mm: 8, espacement_cm: 15 },
   betonVisible = true, opaciteBeton = 0.17,
 } = {}) {
-  if (cadres.conventions) verifierConventions(cadres.conventions);
+  // L'appel n'est pas facultatif : sans conventions, la geometrie serait dessinee selon
+  // une regle que rien ne declare.
+  verifierConventions(cadres.conventions);
   const conv = { dia_cadre_mm: cadres.dia_mm, rayon_cintrage_mm: cadres.rayon_cintrage_mm ?? 20 };
   const geo2d = positionsArmatures({ b_cm, h_cm, enrobage_cm, inf, sup }, conv);
   const pose = placementCadres(L_cm, enrobage_cm, cadres.espacement_cm, cadres.dia_mm);

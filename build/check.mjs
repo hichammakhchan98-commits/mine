@@ -55,10 +55,13 @@ try {
   const publie = readdirSync("content").filter((f) => f.endsWith(".md"))
     .map((f) => readFileSync(join("content", f), "utf8")).join("\n");
   const balises = [...publie.matchAll(/⟦V3\|([^|⟧]*)\|([^⟧]*)⟧/g)];
-  const mentions = [...publie.matchAll(/\(V3[,)]/g)];
-  if (mentions.length && !balises.length)
+  // Une mention « (V3 » HORS balise est une V3 non declaree. La condition precedente
+  // (« des mentions ET aucune balise ») cessait d'exiger quoi que ce soit des qu'UNE
+  // balise existait : une valeur publiee « (V3) » en clair passait alors sans registre.
+  const horsBalise = [...publie.replace(/⟦V3\|[^⟧]*⟧/g, "").matchAll(/\(V3[,)\s]/g)];
+  if (horsBalise.length)
     E("3.2 · registre des hypotheses",
-      `${mentions.length} mention(s) « (V3 » dans content/ mais aucune balise ⟦V3|…⟧ : rien n'alimente le registre`);
+      `${horsBalise.length} mention(s) « (V3 » hors balise dans content/ : chaque V3 publiee doit etre balisee`);
   else if (balises.length !== hyp.length)
     E("3.2 · registre des hypotheses",
       `${balises.length} balise(s) V3 dans content/ contre ${hyp.length} ligne(s) de registre`);
@@ -67,9 +70,12 @@ try {
 
 /* --- M8 : le livrable doit etre dans le depot (§ 5.2, et le zip du mode B embarque .git) --- */
 try {
-  const sale = execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim();
-  if (sale) E("5.2 · depot git", `arbre de travail non propre :\n      ${sale.split("\n").join("\n      ")}`);
-  else V("5.2 · depot git propre", "tout le livrable est suivi et committe");
+  // QA/ est exclu : le relecteur hostile y ecrit son rapport PENDANT la passe, ce qui
+  // faisait virer ce controle au rouge par le seul fait d'etre relu.
+  const sale = execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" })
+    .trim().split("\n").filter((l) => l.trim() && !/^.. QA\//.test(l));
+  if (sale.length) E("5.2 · depot git", `arbre de travail non propre :\n      ${sale.join("\n      ")}`);
+  else V("5.2 · depot git propre", "livrable suivi et committe (QA/ exclu : rapports en cours)");
 } catch (e) { E("5.2 · depot git", e.message); }
 
 /* --- garde-fou de la phase § 5.0 : aucune valeur normative ne doit fuir --- */

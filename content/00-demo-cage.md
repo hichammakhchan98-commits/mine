@@ -45,16 +45,16 @@ parle du même ouvrage que le cours, pour que rien ne soit gratuit.
 :::model3d {"id":"cage","titre":"Cage d'armatures paramétrique","init":"demoCage","sous":"Curseurs bornés, plan de coupe, vue éclatée et phasage. Clique une étiquette pour la déplier. Le bouton réinitialise le cadrage."}
 :::
 
-::: encart {"genre":"attente","titre":"Trois simplifications, déclarées (R6)"}
+::: encart {"genre":"attente","titre":"Quatre conventions et simplifications, déclarées (R6)"}
 1. **Les cadres n'ont pas de crochets d'extrémité.** Un cadre réel en porte deux. Le métré ci-dessous
    est donc **minorant d'environ 3 %** sur les cadres. La longueur d'un crochet est une valeur
    constructive : elle n'est pas avancée ici, la phase § 5.0 l'interdit.
-2. **Le rayon de cintrage vaut {{metre-cage.rayon_cintrage_mm}} mm**, lu dans `data/demo-cage.json`.
-   C'est un paramètre de **tracé**, pas un rayon minimal réglementaire — ⟦V3|rayon de cintrage du cadre|un paramètre de tracé|mm|15 à 30|2026|aucun document normatif fourni : valeur choisie pour la démonstration⟧.
+2. **Le rayon de cintrage vaut ⟦V3|rayon de cintrage du cadre|20|mm|15 à 30|2026|paramètre de tracé, non une règle de cintrage minimal : aucun document normatif fourni⟧ mm**,
+   lu dans `data/demo-cage.json`. C'est un paramètre de **tracé**, pas un rayon minimal réglementaire.
    Il porte 1,8 % du périmètre : à coins vifs, le cadre mesurerait davantage.
-3. **L'enrobage vaut aussi le long de l'axe** : l'axe du premier cadre est à
-   {{metre-cage.rayon_cintrage_mm}} mm près de l'about… non — à l'enrobage **plus** le demi-diamètre
-   du cadre, comme en section. Sans ce terme, l'about réel valait 26 mm pour 30 annoncés.
+3. **L'enrobage vaut aussi le long de l'axe.** L'axe du premier cadre est à l'enrobage **plus** le
+   demi-diamètre du cadre de l'about, exactement comme en section. Sans ce terme, la peau du cadre
+   se retrouvait à 26 mm de l'about pour un enrobage annoncé de 30.
 4. **Le coffrage modélisé n'a ni étaiement ni étais de reprise**, et la phase 4 retire les panneaux
    sans dire à quelle condition. Dans la réalité, le décoffrage est subordonné à une résistance
    atteinte, contrôlée sur éprouvettes ; le décoffrage prématuré est l'un des pièges listés au § 7.3.
@@ -104,10 +104,14 @@ si bien que l'écart de masse entre les deux voies n'est pour l'essentiel que ce
 partagent aussi **le nombre de cadres**, **la règle d'axe du cadre** et **les longueurs de barres**.
 
 **Ce que ce contre-calcul n'attrape donc pas** : une erreur commune aux deux voies — un comptage de
-cadres faux, une règle d'axe fausse, une longueur de barre fausse. Ces erreurs-là sont attrapées
-ailleurs : par l'étalonnage, et par des tests qui **recalculent le comptage et les positions dans le
-test lui-même**, sans appeler le code qu'ils contrôlent. C'est la seule parade contre une erreur de
-modèle partagée (§ 3.3).
+cadres faux, une règle d'axe fausse, une longueur de barre fausse.
+
+Il faut être précis sur ce qui les rattrape, parce que désigner un filet qui n'existe pas est pire que
+de n'en désigner aucun. **Ce n'est pas l'étalonnage** : `calc/etalonnage/` ne manipule que des triplets
+(largeur, hauteur, rayon) et ignore tout du comptage, de la règle d'axe et des longueurs. Ce sont des
+**tests qui recalculent ces trois grandeurs dans le test lui-même**, à partir de `data/` et de la
+convention publiée, sans appeler le code qu'ils contrôlent. C'est la seule parade contre une erreur de
+modèle partagée (§ 3.3) : une seconde voie écrite par le même auteur ne suffit jamais.
 
 Résultats : {{metre-cage.contre_calcul.voie_A_kg::n2}} kg contre
 {{metre-cage.contre_calcul.voie_B_kg::n2}} kg, soit un **écart de
