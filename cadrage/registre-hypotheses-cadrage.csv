@@ -1,0 +1,11 @@
+id;hypothese;valeur;unite;fourchette;annee_ref;modules;justification
+E0-H01;Contrainte admissible du sol, site S1 (region de Marrakech);250;kPa;180-320;2026;E0-cadrage;reconnaissance fictive mais coherente : limons sableux denses puis sables graveleux sur conglomerat ; ordre de grandeur usuel pour ce type de profil
+E0-H02;Niveau de la nappe, site S1;18.0;m;15-22;2026;E0-cadrage;site peri-urbain du Haouz, nappe profonde — hypothese de programme
+E0-H03;Contrainte admissible du sol, site S2 (Agadir littoral);120;kPa;80-160;2026;E0-cadrage;sables dunaires laches a moyennement denses sous nappe haute
+E0-H04;Niveau de la nappe, site S2;3.5;m;2.5-5.0;2026;E0-cadrage;site littoral — declenche le volet liquefaction (a verifier) et le rabattement
+E0-H05;Contrainte admissible du sol, site S3 (Casablanca);600;kPa;450-800;2026;E0-cadrage;schistes et quartzites sous faible couverture
+E0-H06;Section de predimensionnement de la poutre PM1 de mezzanine;35 x 75;cm;h = L/10 a L/12;2026;E0-cadrage, TV, B3;elancement usuel pour une poutre continue de 8.00 m de travee — PREDIMENSIONNEMENT, pas un resultat ; sera verifie a la levee du § 5.0
+E0-H07;Hauteur du treillis de couverture du hall;2.20;m;h/L = 1/12 a 1/18;2026;E0-cadrage, B5a;elancement usuel d un treillis a membrures paralleles de 32 m de portee
+E0-H08;Effectif de public de la gare;1800;personnes;1200-2500;2026;E0-cadrage, B7a, B7c;hypothese de PROGRAMME (flux voyageurs), non une valeur reglementaire ; sert au qualitatif de l evacuation
+E0-H09;Annee de reference des prix unitaires;2026;—;—;2026;E0-cadrage, D1;aucun bordereau fourni : tous les prix du cours resteront V3 en fourchettes tant que la question 7 n a pas de reponse
+E0-H10;Nombre de seances par livraison du palier 1 actif;1 a 3;seances;1-3;2026;E0-cadrage;estimation SANS point de comparaison, a recalibrer apres la tranche verticale (§ 13.2)

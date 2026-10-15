@@ -43,7 +43,9 @@ Sommaire et fiches : `cadrage/05-sommaire.md`.
 ## Valeurs V2 en attente de vérification par le lecteur
 
 Aucune valeur V2 normative n'est écrite dans le cours (§ 5.0.6 l'interdit dans cette phase). Les six
-sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv`. Deux demandent une vérification :
+sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv`, et les **10 hypothèses V3** du
+cadrage (sols, prédimensionnements, prix, effort) dans `cadrage/registre-hypotheses-cadrage.csv`, chacune
+avec sa fourchette et son année. Deux sources demandent une vérification :
 
 | id | Point | À vérifier |
 |---|---|---|
@@ -71,7 +73,8 @@ sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv`. Deux demand
 ## Données modifiées depuis la dernière livraison
 
 Création initiale : `data/projet-gare.json`, `data/projet-r5.json`, `data/referentiels.json`,
-registres (en-têtes seuls), pièces de cadrage `cadrage/00` à `cadrage/06`.
+registres `data/` (en-têtes seuls), pièces de cadrage `cadrage/00` à `cadrage/06`, registres du cadrage
+(6 sources, 10 hypothèses V3).
 
 ## Effort consommé (§ 13.2)
 

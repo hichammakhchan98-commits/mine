@@ -60,6 +60,7 @@ const entetes = {
   "data/registre-sources.csv": "id;niveau;enonce_reformule;reference;modules;statut;date",
   "data/registre-hypotheses.csv": "id;hypothese;valeur;unite;fourchette;annee_ref;modules;justification",
   "cadrage/registre-sources-cadrage.csv": "id;niveau;enonce_reformule;reference;modules;statut;date",
+  "cadrage/registre-hypotheses-cadrage.csv": "id;hypothese;valeur;unite;fourchette;annee_ref;modules;justification",
 };
 for (const [f, att] of Object.entries(entetes))
   verifie(`registre ${f}`, () => {

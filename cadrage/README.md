@@ -12,6 +12,7 @@
 | [05-sommaire.md](05-sommaire.md) | Sommaire détaillé + une fiche par module + ordre de livraison | 5.1d, Annexe 1 |
 | [06-volume-arret-coupe.md](06-volume-arret-coupe.md) | Volume, critère d'arrêt, ordre de coupe | 5.1d, 5.5 |
 | [registre-sources-cadrage.csv](registre-sources-cadrage.csv) | Les 6 sources du cadrage avec leur niveau de preuve | 3.2, Annexe 3 |
+| [registre-hypotheses-cadrage.csv](registre-hypotheses-cadrage.csv) | Les 10 hypothèses V3 du cadrage, avec fourchette et année | 3.2, Annexe 3 |
 
 **Aucun contenu de cours ici** : l'Étape 0 est du cadrage (§ 5.1). Rien ne se livre avant ta validation
 (§ 5.1e).
