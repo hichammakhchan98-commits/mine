@@ -3,7 +3,7 @@
     "version": "1.0",
     "statut": "FIGE. Ne change plus sans decision consignee dans DECISIONS.md ; tout changement declenche le build complet et la revue des modules impactes (§ 10.1).",
     "fige_le": "2026-10-15",
-    "commit_fige": "tag git : donnees-gare-v1.0",
+    "commit_fige": "ad792eb — commit de figeage, pousse sur la branche claude/lance-etape-0-mode-b-ijn9r4. Tag local donnees-gare-v1.0 : le proxy git de ce bac a sable n'expose que refs/heads/*, les tags ne sont pas poussables ; le tag voyage dans le zip de reprise (.git inclus).",
     "referentiel_principal": "M",
     "referentiel_charpente": "E-gen1",
     "normes_disponibles": false,

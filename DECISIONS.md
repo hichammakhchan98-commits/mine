@@ -55,7 +55,7 @@ dans `STATE.md` et remplacé par le `check.mjs` complet (§ 12.1 a–k) à l'Ét
 
 **D-005 · Tous les défauts de l'Étape 0 sont acceptés.** Réponse du lecteur : « OK partout ».
 *Impact* : les propositions P-01 à P-15 passent en décisions. Le jeu de données du cas phare est
-**figé en version 1.0** (`data/projet-gare.json`, `fige_le: 2026-10-15`, tag git
+**figé en version 1.0** (`data/projet-gare.json`, `fige_le: 2026-10-15`, commit `ad792eb`, tag local
 `donnees-gare-v1.0`) ; idem pour `projet-r5.json` et `referentiels.json`. Détail :
 
 | Point | Décision actée |
@@ -107,6 +107,13 @@ conséquence immédiate : B6b est suspendu par le § 5.0. À redemander avant so
   sécurité (pollution de prototype, GHSA-238p-pmpm-9mq7). `npm audit` : 0 vulnérabilité.
 - **Séparateur de format des variables : `::` et non `|`**, parce que `|` délimite les cellules de
   tableau en Markdown et cassait les variables placées dans un tableau.
+
+**D-009 · Limite de l'environnement : les tags git ne sont pas poussables.** Le proxy git de ce bac à
+sable n'expose que `refs/heads/*` (`git ls-remote origin` ne montre aucun tag ; la poussée échoue sur
+quatre tentatives avec temporisation). Conséquence : le figeage des données est référencé par son
+**commit** `ad792eb`, qui est poussé et vérifiable. Le tag `donnees-gare-v1.0` existe localement et
+voyage dans le zip de reprise, qui contient `.git`. Le § 5.5 prévoit « un tag par palier » : il sera
+posé localement et porté par le zip, pas sur GitHub.
 
 ---
 

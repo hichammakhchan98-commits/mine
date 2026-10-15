@@ -18,7 +18,7 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 | Jeu de données | Version | État |
 |---|---|---|
-| `data/projet-gare.json` | **1.0** | **FIGÉ** le 15/10/2026 · tag `donnees-gare-v1.0` · site S1 (région de Marrakech) |
+| `data/projet-gare.json` | **1.0** | **FIGÉ** le 15/10/2026 · commit `ad792eb` · tag local `donnees-gare-v1.0` · site S1 (région de Marrakech) |
 | `data/projet-r5.json` | **1.0** | **FIGÉ** — cas secondaire léger |
 | `data/referentiels.json` | **1.0** | **FIGÉ** — option M (béton, séisme) + E 1re génération (acier) |
 | `data/demo-cage.json` | 1.0 | paramètres de la page de démonstration du socle |
@@ -90,6 +90,7 @@ Les sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv` (E0-S01 
 | 5 | Référentiel ferroviaire non identifié (quais, gabarits, caténaire) | CPS du marché |
 | 6 | Le contrôle d'impression est visuel, pas automatisé | à outiller si le besoin se confirme |
 | 7 | Bundle 3D de 763 ko : hors budget par module, mais c'est le poste le plus lourd du cours | à surveiller |
+| 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivront dans le zip, pas sur GitHub | limite de l'environnement |
 
 ## Données modifiées depuis la dernière livraison
 
