@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { materiau } from "./materiaux.js";
 import { cm, mm, CourbePolyligne } from "./geometrie.js";
-import { positionsArmatures, placementCadres, contourCadre, perimetreCadreFerme } from "./section.js";
+import { positionsArmatures, placementCadres, contourCadre, perimetreCadreFerme,
+  verifierConventions } from "./section.js";
 
 /* Helpers d'armatures. Les armatures repetitives (cadres) passent par InstancedMesh (§ 4.4).
    ATTENTION : cette bibliotheque DESSINE une geometrie a partir de parametres.
@@ -32,9 +33,10 @@ export function cage({
   cadres = { dia_mm: 8, espacement_cm: 15 },
   betonVisible = true, opaciteBeton = 0.17,
 } = {}) {
+  if (cadres.conventions) verifierConventions(cadres.conventions);
   const conv = { dia_cadre_mm: cadres.dia_mm, rayon_cintrage_mm: cadres.rayon_cintrage_mm ?? 20 };
   const geo2d = positionsArmatures({ b_cm, h_cm, enrobage_cm, inf, sup }, conv);
-  const pose = placementCadres(L_cm, enrobage_cm, cadres.espacement_cm);
+  const pose = placementCadres(L_cm, enrobage_cm, cadres.espacement_cm, cadres.dia_mm);
   const b = cm(b_cm), h = cm(h_cm), L = cm(L_cm), e = cm(enrobage_cm);
   const groupe = new THREE.Group();
   groupe.name = "cage";

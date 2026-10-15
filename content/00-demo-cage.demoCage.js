@@ -25,7 +25,9 @@
         enrobage_cm: D.section.enrobage_cm,
         inf: { n: p.n_inf, dia_mm: p.dia_inf },
         sup: { n: D.section.sup.n, dia_mm: D.section.sup.dia_mm },
-        cadres: { dia_mm: D.cadres.dia_mm, espacement_cm: p.esp_cm }
+        cadres: { dia_mm: D.cadres.dia_mm, espacement_cm: p.esp_cm,
+                  rayon_cintrage_mm: D.conventions.rayon_cintrage_mm,
+                  conventions: D.conventions }
       });
     }
   });

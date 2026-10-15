@@ -11,6 +11,22 @@
  * Toutes les entrees sont en cm/mm (comme sur un plan) ; toutes les sorties en cm.
  */
 
+/**
+ * Les chaines de `data/.../conventions` ne doivent pas etre decoratives : si elles
+ * decrivent une regle que ce code n'implemente pas, c'est la documentation qui ment.
+ * On refuse de tourner plutot que de laisser les deux diverger.
+ */
+export function verifierConventions(cv) {
+  if (!cv) throw new Error("conventions absentes du jeu de donnees");
+  if (cv.enrobage_mesure_a !== "peau exterieure du cadre")
+    throw new Error(`convention d'enrobage « ${cv.enrobage_mesure_a} » non implementee : `
+      + `ce code mesure l'enrobage a la peau exterieure du cadre`);
+  if (cv.crochets_extremite !== false)
+    throw new Error("les crochets d'extremite ne sont pas modelises : "
+      + "conventions.crochets_extremite doit valoir false");
+  return true;
+}
+
 export function positionsArmatures(s, conv) {
   const b = s.b_cm, h = s.h_cm, e = s.enrobage_cm;
   const dCad = conv.dia_cadre_mm / 10;              // cm
@@ -48,15 +64,18 @@ export function positionsArmatures(s, conv) {
  * Placement des cadres sur un troncon : premier et dernier a l'enrobage de chaque about,
  * les autres repartis a espacement constant. UNE regle pour le comptage ET le placement.
  */
-export function placementCadres(L_cm, enrobage_cm, espacement_nominal_cm) {
-  const utile = L_cm - 2 * enrobage_cm;
+export function placementCadres(L_cm, enrobage_cm, espacement_nominal_cm, dia_cadre_mm = 0) {
+  // L'enrobage se mesure a la PEAU du cadre, le long de l'axe comme en section :
+  // l'axe du premier cadre est donc a enrobage + diametre/2 de l'about.
+  const retrait = enrobage_cm + dia_cadre_mm / 20;
+  const utile = L_cm - 2 * retrait;
   if (utile <= 0) throw new Error(`troncon ${L_cm} cm trop court pour l'enrobage`);
   // l'espacement nominal est un MAXIMUM : arrondi au superieur, sinon l'espacement reel
   // le depasse (194 / 12 = 16,2 cm pour un nominal de 15 cm)
   const n = Math.max(2, Math.ceil(utile / espacement_nominal_cm) + 1);
   const espacement_reel = n > 1 ? utile / (n - 1) : 0;
   const z = [];
-  for (let i = 0; i < n; i++) z.push(-L_cm / 2 + enrobage_cm + i * espacement_reel);
+  for (let i = 0; i < n; i++) z.push(-L_cm / 2 + retrait + i * espacement_reel);
   return { n, espacement_reel_cm: espacement_reel, z_cm: z };
 }
 

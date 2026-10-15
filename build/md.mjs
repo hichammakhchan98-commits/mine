@@ -8,14 +8,26 @@ const RE_BALISE = /⟦(V[0-3])\|([^|⟧]*)\|([^⟧]*)⟧/g;
 
 export function extraireBalises(texte, module) {
   const out = [];
-  for (const m of texte.matchAll(RE_BALISE))
-    out.push({ niveau: m[1], reference: m[2].trim(), enonce: m[3].trim(), module });
+  for (const m of texte.matchAll(RE_BALISE)) {
+    // V0 a V2 : ⟦Vn|reference|enonce⟧
+    // V3      : ⟦V3|hypothese|valeur affichee|unite|fourchette|annee⟧ — les champs
+    //           supplementaires alimentent registre-hypotheses.csv, que le § 3.2 veut
+    //           complet (fourchette ET annee de reference), et non a moitie vide.
+    const champs = m[3].split("|").map((x) => x.trim());
+    out.push({ niveau: m[1], reference: m[2].trim(), enonce: champs[0], champs, module });
+  }
   return out;
 }
 
 function rendreBalises(s) {
-  return s.replace(RE_BALISE, (_, niv, ref, enonce) =>
-    `${esc(enonce)}<sup class="preuve preuve-${niv}" title="${esc(niv + " — " + ref)}">${niv}</sup>`);
+  return s.replace(RE_BALISE, (_, niv, ref, reste) => {
+    const champs = reste.split("|").map((x) => x.trim());
+    const titre = niv === "V3"
+      ? `${niv} — ${ref}` + (champs[3] ? ` · fourchette ${champs[3]}` : "")
+        + (champs[4] ? ` · annee ${champs[4]}` : "")
+      : `${niv} — ${ref}`;
+    return `${esc(champs[0])}<sup class="preuve preuve-${niv}" title="${esc(titre)}">${niv}</sup>`;
+  });
 }
 
 /* ---------- inline ---------- */

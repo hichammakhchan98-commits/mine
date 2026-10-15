@@ -220,26 +220,36 @@ for (const fichier of modules) {
         return { axe_cadre_cm: axe, barres };
       })();
 
-      // --- SVG : les cercles de la figure 1, convertis en cm puis compares
+      // --- SVG : l'echelle se deduit du RECTANGLE DE SECTION, dont les cotes sont connues
+      // par data/. La deduire des barres elles-memes, comme le faisait la version
+      // precedente, absorbait toute homothetie ou translation du groupe de barres :
+      // un decalage de 10 cm en hauteur et un resserrement de 20 % passaient.
       const svg = await page.evaluate(() => {
         const s = document.querySelector("figure svg");
-        const vb = s.getAttribute("viewBox").split(" ").map(Number);
+        const rects = [...s.querySelectorAll("rect")].map((r) => ({
+          x: +r.getAttribute("x"), y: +r.getAttribute("y"),
+          l: +r.getAttribute("width"), h: +r.getAttribute("height") }));
         const cercles = [...s.querySelectorAll("circle")]
           .filter((c) => c.getAttribute("fill") === "#8c3b2e")
           .map((c) => ({ cx: +c.getAttribute("cx"), cy: +c.getAttribute("cy"), r: +c.getAttribute("r") }));
-        const cotes = [...s.querySelectorAll("text")].map((t) => t.textContent);
-        return { vb, cercles, cotes };
+        return { rects, cercles };
       });
       expect(svg.cercles.length, "nombre de barres dessinees en SVG").toBe(attendu.barres.length);
-      // echelle deduite de deux barres extremes, puis chaque position verifiee
-      const xs = attendu.barres.map((b) => b.x_cm), cxs = svg.cercles.map((c) => c.cx);
-      const k = (Math.max(...cxs) - Math.min(...cxs)) / (Math.max(...xs) - Math.min(...xs));
-      const ox = Math.min(...cxs) - Math.min(...xs) * k;
-      const ecartsX = attendu.barres.map((b, i) => Math.abs((ox + b.x_cm * k) - svg.cercles[i].cx) / k);
-      expect(Math.max(...ecartsX), "position horizontale des barres en SVG (cm)").toBeLessThan(0.01);
-      // les barres ne doivent pas etre empilees : abscisses distinctes quand n > 1
-      const distinctes = new Set(svg.cercles.map((c) => c.cx.toFixed(2))).size;
-      expect(distinctes, "les barres du SVG sont empilees au meme point").toBeGreaterThan(1);
+
+      const section = svg.rects.reduce((a, r) => (r.l * r.h > a.l * a.h ? r : a), svg.rects[0]);
+      const kx = section.l / data.section.b_cm, ky = section.h / data.section.h_cm;
+      expect(Math.abs(kx - ky) / kx, "la section SVG n'est pas a l'echelle").toBeLessThan(0.01);
+      const cx0 = section.x + section.l / 2, cy0 = section.y + section.h / 2;
+      const ecarts = attendu.barres.map((b, i) => ({
+        dx: Math.abs((cx0 + b.x_cm * kx) - svg.cercles[i].cx) / kx,
+        dy: Math.abs((cy0 - b.y_cm * ky) - svg.cercles[i].cy) / ky,   // y inverse en SVG
+      }));
+      expect(Math.max(...ecarts.map((e) => e.dx)), "abscisse des barres en SVG (cm)").toBeLessThan(0.02);
+      expect(Math.max(...ecarts.map((e) => e.dy)), "ordonnee des barres en SVG (cm)").toBeLessThan(0.02);
+      // le rayon dessine doit etre celui du diametre reel
+      const ecartsR = attendu.barres.map((b, i) =>
+        Math.abs(svg.cercles[i].r / kx - b.dia_mm / 20));
+      expect(Math.max(...ecartsR), "rayon des barres en SVG (cm)").toBeLessThan(0.05);
 
       // --- 3D : positions reelles contre la regle
       if (await preparerVue()) {
@@ -251,6 +261,15 @@ for (const fichier of modules) {
           `position des barres en 3D (cm) — attendu ${JSON.stringify(attendu.barres.map((b) => [b.x_cm, b.y_cm]))}`)
           .toBeLessThan(0.001);
         expect(Math.abs(diag.axeCadre.b - attendu.axe_cadre_cm.b), "axe du cadre en 3D").toBeLessThan(0.001);
+        // le tube du cadre doit avoir le DIAMETRE annonce : sans cette mesure, le defaut
+        // B1 (un /2 applique deux fois) revient en silence
+        const tube = await page.evaluate(() => {
+          let r = null;
+          Civil3D.vues()[0].contenu.groupe.traverse((o) => { if (o.name === "cadres") r = o.geometry.parameters.radius; });
+          return r;
+        });
+        expect(tube * 2000, `diametre du tube du cadre (mm), attendu ${data.cadres.dia_mm}`)
+          .toBeCloseTo(data.cadres.dia_mm, 3);
         // l'enrobage annonce doit etre celui que la geometrie realise
         const peau = (data.section.b_cm - diag.axeCadre.b) / 2 - data.cadres.dia_mm / 20;
         expect(Math.abs(peau - data.section.enrobage_cm), "enrobage realise en 3D").toBeLessThan(0.001);
@@ -259,6 +278,19 @@ for (const fichier of modules) {
 
     test("d · coherence des donnees : le metre affiche = la sortie de calc/", async () => {
       const metre = JSON.parse(readFileSync(join(RACINE, "calc", "sorties", "metre-cage.json"), "utf8"));
+      const data = JSON.parse(readFileSync(join(RACINE, "data", "demo-cage.json"), "utf8"));
+
+      // Le nombre de cadres est recalcule ICI, a la main. Les deux voies du contre-calcul
+      // le PARTAGENT : un comptage faux des deux cotes y passe inapercu. C'est ce controle,
+      // independant, qui l'attrape.
+      const retrait = data.section.enrobage_cm + data.cadres.dia_mm / 20;
+      const utile = data.troncon.L_cm - 2 * retrait;
+      const nAttendu = Math.max(2, Math.ceil(utile / data.cadres.espacement_cm) + 1);
+      expect(metre.n_cadres, `nombre de cadres recalcule depuis data/ : ${nAttendu}`).toBe(nAttendu);
+      const espReel = utile / (nAttendu - 1);
+      expect(espReel, "l'espacement reel doit rester sous le nominal")
+        .toBeLessThanOrEqual(data.cadres.espacement_cm + 1e-9);
+      expect(Math.abs(metre.espacement_reel_cm - espReel), "espacement reel").toBeLessThan(0.01);
       const txt = (await page.locator(".corps").innerText()).replace(/ /g, " ");
       const attendu = metre.masse_acier_kg.toFixed(1).replace(".", ",");
       expect(txt, `la masse d'acier ${attendu} kg doit figurer dans la page`).toContain(attendu);

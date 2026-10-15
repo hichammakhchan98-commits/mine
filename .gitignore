@@ -3,3 +3,5 @@ tests/captures/
 *.zip
 .DS_Store
 test-results/
+__pycache__/
+*.pyc

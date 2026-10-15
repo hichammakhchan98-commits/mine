@@ -225,7 +225,12 @@ const nettoie = (s) => String(s).replace(/;/g, ",").replace(/\n/g, " ");
 for (const b of balises) {
   if (b.niveau === "V3") {
     nH++;
-    lignesH.push(`H${String(nH).padStart(3, "0")};${nettoie(b.enonce)};;;;;${nettoie(b.module)};${nettoie(b.reference)}`);
+    const [valeur, unite = "", fourchette = "", annee = "", justif = ""] = b.champs.slice(0);
+    if (!fourchette || !annee)
+      erreurs.push(`balise V3 « ${b.reference} » : fourchette et annee de reference sont exigees (§ 3.2)`);
+    lignesH.push([`H${String(nH).padStart(3, "0")}`, nettoie(b.reference), nettoie(valeur),
+      nettoie(unite), nettoie(fourchette), nettoie(annee), nettoie(b.module),
+      nettoie(justif || b.reference)].join(";"));
   } else {
     nS++;
     const statut = b.niveau === "V0" ? "verifie sur source" : b.niveau === "V1" ? "recalcule par script" : "a verifier";

@@ -1,7 +1,7 @@
 {
   "_avertissement": "DEMONSTRATION DE BIBLIOTHEQUE. La geometrie est dessinee a partir de ces parametres ; rien n'est dimensionne, rien n'est verifie. Aucune valeur normative : la phase § 5.0 interdit tout calcul reglementaire.",
   "n_cadres": 14,
-  "espacement_reel_cm": 14.92,
+  "espacement_reel_cm": 14.86,
   "axe_cadre_cm": {
     "b": 28.2,
     "h": 68.2
@@ -27,10 +27,16 @@
     "dans_la_fourchette": true
   },
   "coherence_interne": {
-    "but": "rapports internes : ils bougent des qu'une part du metre derape, la ou le garde-fou d'unite ne voit rien.",
-    "masse_cadres_sur_barres": 0.5108,
-    "masse_par_metre_developpe_cadres_kg_m": 0.3946,
-    "attendu_masse_par_metre_cadres_kg_m": 0.3946
+    "but": "rapports qui BOUGENT quand une part du metre derape. La masse lineique (masse / longueur developpee) n'en est pas un : elle est invariante si la longueur est fausse, numerateur et denominateur derapant ensemble.",
+    "perimetre_sur_coins_vifs": 0.9821,
+    "perimetre_sur_coins_vifs_attendu": [
+      0.9,
+      1.0
+    ],
+    "perimetre_plausible": true,
+    "longueur_sur_n_fois_perimetre": 1.0,
+    "masse_lineique_cadres_kg_m": 0.3946,
+    "masse_lineique_attendue_kg_m": 0.3946
   },
   "comparaison_poutre_dimensionnee": {
     "fourchette_kg_m3": [
@@ -44,13 +50,23 @@
   "contre_calcul": {
     "voie_A": "contour discretise (celui du tube 3D) + aire x longueur x masse volumique",
     "voie_B": "formule fermee du perimetre + coefficient tabule 0,00617 d^2",
+    "ce_que_les_deux_voies_PARTAGENT": [
+      "le nombre de cadres et la regle de placement",
+      "la regle d'axe du cadre (enrobage + diametre/2)",
+      "les longueurs de barres longitudinales",
+      "la masse volumique : 0,00617 derive de pi/4 x 7850 x 1e-6 = 0,0061654, l'ecart de 0,075 % n'est QUE cet arrondi"
+    ],
+    "ce_qu_elles_ne_partagent_PAS": [
+      "le chemin de longueur du cadre : contour discretise contre formule fermee"
+    ],
+    "ce_que_ce_controle_N_ATTRAPE_PAS": "une erreur commune aux deux voies : un nombre de cadres faux, une regle d'axe fausse, une longueur de barre fausse. Ces erreurs-la sont attrapees ailleurs — par l'etalonnage (calc/etalonnage/), et par les tests qui recalculent le comptage et les positions INDEPENDAMMENT, dans le test lui-meme.",
     "perimetre_voie_A_m": 1.89353,
     "perimetre_voie_B_m": 1.89366,
     "ecart_perimetre_pct": 0.0068,
     "voie_A_kg": 30.94,
     "voie_B_kg": 30.96,
     "ecart_pct": 0.077,
-    "tolerance_pct": 5.0,
+    "tolerance_pct": 1.0,
     "verdict": "OK"
   },
   "verification_dimensionnelle": {
@@ -60,6 +76,21 @@
     "les_deux_voies_concordent": true,
     "une_formule_non_homogene_leve": true,
     "verdict": "OK"
+  },
+  "economie": {
+    "_niveau_preuve": "V3",
+    "prix_acier_MAD_par_kg": [
+      14,
+      20
+    ],
+    "cout_acier_MAD_min": 433,
+    "cout_acier_MAD_max": 619,
+    "cadence_ferraillage_kg_par_jour": [
+      90,
+      130
+    ],
+    "heures_ferrailleur_min": 1.9,
+    "heures_ferrailleur_max": 2.8
   },
   "variante_exercice": {
     "_role": "valeurs attendues de l'exercice de la page, calculees et non ecrites a la main",

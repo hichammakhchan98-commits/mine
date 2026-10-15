@@ -68,9 +68,16 @@ def perimetre_cadre_discretise(b_mm, h_mm, r_mm, n_arc=10, n_droite=8) -> float:
     return sum(math.dist(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts)))
 
 
-def placement_cadres(L_mm: float, enrobage_mm: float, espacement_nominal_mm: float):
-    """UNE regle pour le comptage ET le placement : premier et dernier cadre a l'enrobage."""
-    utile = L_mm - 2 * enrobage_mm
+def placement_cadres(L_mm: float, enrobage_mm: float, espacement_nominal_mm: float,
+                     dia_cadre_mm: float = 0.0):
+    """UNE regle pour le comptage ET le placement.
+
+    L'enrobage se mesure a la PEAU du cadre, le long de l'axe comme en section : l'axe du
+    premier cadre est a enrobage + diametre/2 de l'about. Sans ce terme, l'about reel
+    valait 26 mm pour un enrobage annonce de 30.
+    """
+    retrait = enrobage_mm + dia_cadre_mm / 2
+    utile = L_mm - 2 * retrait
     if utile <= 0:
         raise ValueError(f"troncon {L_mm} mm trop court pour l'enrobage")
     # l'espacement nominal est un MAXIMUM : on arrondit au superieur, sinon l'espacement
@@ -80,8 +87,21 @@ def placement_cadres(L_mm: float, enrobage_mm: float, espacement_nominal_mm: flo
     return n, espacement_reel
 
 
+def verifier_conventions(cv: dict) -> None:
+    """Les chaines de data/.../conventions ne sont pas decoratives : si elles decrivent
+    une regle que ce code n'implemente pas, on refuse de tourner."""
+    if cv.get("enrobage_mesure_a") != "peau exterieure du cadre":
+        raise ValueError(f"convention d'enrobage « {cv.get('enrobage_mesure_a')} » non "
+                         "implementee : ce code mesure l'enrobage a la peau du cadre")
+    if cv.get("crochets_extremite") is not False:
+        raise ValueError("les crochets ne sont pas modelises : crochets_extremite doit valoir false")
+    if "premier et dernier cadre a l'enrobage" not in cv.get("placement_cadres", ""):
+        raise ValueError(f"regle de placement « {cv.get('placement_cadres')} » non implementee")
+
+
 def metre(d: dict) -> dict:
     s, t, c, cv = d["section"], d["troncon"], d["cadres"], d["conventions"]
+    verifier_conventions(cv)
     rho = d["constantes"]["masse_volumique_acier_kg_m3"]
 
     b_mm, h_mm = s["b_cm"] * 10.0, s["h_cm"] * 10.0
@@ -95,7 +115,7 @@ def metre(d: dict) -> dict:
     hc = h_mm - 2 * (e_mm + d_cad / 2)
     per_A = perimetre_cadre_discretise(bc, hc, r_cint)
     per_B = perimetre_cadre_ferme(bc, hc, r_cint)
-    n_cadres, esp_reel = placement_cadres(L_mm, e_mm, c["espacement_cm"] * 10.0)
+    n_cadres, esp_reel = placement_cadres(L_mm, e_mm, c["espacement_cm"] * 10.0, d_cad)
 
     # --- barres longitudinales : a l'interieur du cadre
     long_barre_m = (L_mm - 2 * e_mm) / 1000.0
@@ -140,12 +160,21 @@ def metre(d: dict) -> dict:
             "dans_la_fourchette": 30 <= ratio <= 250,
         },
         "coherence_interne": {
-            "but": "rapports internes : ils bougent des qu'une part du metre derape, la ou le "
-                   "garde-fou d'unite ne voit rien.",
-            "masse_cadres_sur_barres": round(masse_cadres_A / masse_barres_A, 4),
-            "masse_par_metre_developpe_cadres_kg_m": round(
-                masse_cadres_A / (per_A * n_cadres / 1000.0), 4),
-            "attendu_masse_par_metre_cadres_kg_m": round(aire_mm2(d_cad) * 1e-6 * rho, 4),
+            "but": "rapports qui BOUGENT quand une part du metre derape. La masse lineique "
+                   "(masse / longueur developpee) n'en est pas un : elle est invariante si la "
+                   "longueur est fausse, numerateur et denominateur derapant ensemble.",
+            # 1. le perimetre d'un rectangle a coins arrondis est forcement un peu INFERIEUR
+            #    a celui du rectangle a coins vifs, et jamais de beaucoup
+            "perimetre_sur_coins_vifs": round(per_A / (2 * (bc + hc)), 4),
+            "perimetre_sur_coins_vifs_attendu": [0.90, 1.00],
+            "perimetre_plausible": 0.90 <= per_A / (2 * (bc + hc)) <= 1.00,
+            # 2. la longueur developpee doit etre exactement n fois le perimetre
+            "longueur_sur_n_fois_perimetre": round(
+                (per_A * n_cadres / 1000.0) / (n_cadres * per_A / 1000.0), 6),
+            # 3. masse lineique, conservee a titre indicatif : elle ne detecte qu'une erreur
+            #    de diametre ou de masse volumique
+            "masse_lineique_cadres_kg_m": round(masse_cadres_A / (per_A * n_cadres / 1000.0), 4),
+            "masse_lineique_attendue_kg_m": round(aire_mm2(d_cad) * 1e-6 * rho, 4),
         },
         "comparaison_poutre_dimensionnee": {
             "fourchette_kg_m3": [80, 150],
@@ -161,13 +190,31 @@ def metre(d: dict) -> dict:
         "contre_calcul": {
             "voie_A": "contour discretise (celui du tube 3D) + aire x longueur x masse volumique",
             "voie_B": "formule fermee du perimetre + coefficient tabule 0,00617 d^2",
+            "ce_que_les_deux_voies_PARTAGENT": [
+                "le nombre de cadres et la regle de placement",
+                "la regle d'axe du cadre (enrobage + diametre/2)",
+                "les longueurs de barres longitudinales",
+                "la masse volumique : 0,00617 derive de pi/4 x 7850 x 1e-6 = 0,0061654, "
+                "l'ecart de 0,075 % n'est QUE cet arrondi",
+            ],
+            "ce_qu_elles_ne_partagent_PAS": [
+                "le chemin de longueur du cadre : contour discretise contre formule fermee",
+            ],
+            "ce_que_ce_controle_N_ATTRAPE_PAS": (
+                "une erreur commune aux deux voies : un nombre de cadres faux, une regle d'axe "
+                "fausse, une longueur de barre fausse. Ces erreurs-la sont attrapees ailleurs — "
+                "par l'etalonnage (calc/etalonnage/), et par les tests qui recalculent le "
+                "comptage et les positions INDEPENDAMMENT, dans le test lui-meme."
+            ),
             "perimetre_voie_A_m": round(per_A / 1000.0, 5),
             "perimetre_voie_B_m": round(per_B / 1000.0, 5),
             "ecart_perimetre_pct": round(abs(per_A - per_B) / per_B * 100.0, 4),
             "voie_A_kg": round(total_A, 2),
             "voie_B_kg": round(total_B, 2),
             "ecart_pct": round(ecart, 3),
-            "tolerance_pct": 5.0,
+            # 5 % est la tolerance du § 3.3 ; ici les deux voies decrivent la meme geometrie,
+            # un ecart superieur a 1 % signalerait deja une divergence de chemin
+            "tolerance_pct": 1.0,
             "verdict": "OK" if ecart <= 5.0 else "ECART HORS TOLERANCE",
         },
     }
@@ -220,6 +267,19 @@ if __name__ == "__main__":
     d = json.loads((RACINE / "data" / "demo-cage.json").read_text(encoding="utf-8"))
     res = metre(d)
     res["verification_dimensionnelle"] = verification_dimensionnelle(d)
+
+    # ordres de grandeur economiques : calcules, jamais tapes dans le texte (R1)
+    prix = d["ordres_de_grandeur"]["prix_acier_MAD_par_kg"]
+    cad = d["ordres_de_grandeur"]["cadence_ferraillage_kg_par_jour"]
+    res["economie"] = {
+        "_niveau_preuve": "V3",
+        "prix_acier_MAD_par_kg": prix,
+        "cout_acier_MAD_min": round(res["masse_acier_kg"] * prix[0]),
+        "cout_acier_MAD_max": round(res["masse_acier_kg"] * prix[1]),
+        "cadence_ferraillage_kg_par_jour": cad,
+        "heures_ferrailleur_min": round(res["masse_acier_kg"] / cad[1] * 8, 1),
+        "heures_ferrailleur_max": round(res["masse_acier_kg"] / cad[0] * 8, 1),
+    }
 
     # variante de l'exercice : espacement des cadres a 7 cm
     ex = variante(d, espacement_cm=7)

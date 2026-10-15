@@ -63,5 +63,28 @@
     "crochets_note": "Le cadre est modelise FERME, SANS crochets d'extremite. Un cadre reel en porte deux. Le metre est donc MINORANT d'environ 3 % sur les cadres. La longueur d'un crochet est une valeur constructive : elle n'est pas avancee ici (§ 5.0).",
     "placement_cadres": "premier et dernier cadre a l'enrobage de chaque about, les autres repartis a espacement constant",
     "placement_note": "Une seule regle gouverne le COMPTAGE et le PLACEMENT. L'espacement reel est donc legerement inferieur ou egal a l'espacement nominal."
+  },
+  "ordres_de_grandeur": {
+    "_role": "Fourchettes V3 publiees par la page. Elles sont ICI pour que les montants soient CALCULES et non ecrits dans le texte.",
+    "niveau_preuve": "V3",
+    "annee_ref": 2026,
+    "prix_acier_MAD_par_kg": [
+      14,
+      20
+    ],
+    "prix_acier_note": "acier HA faconne et pose, fourchette large faute de bordereau fourni",
+    "cadence_ferraillage_kg_par_jour": [
+      90,
+      130
+    ],
+    "cadence_note": "par ferrailleur et par jour de 8 h",
+    "ratio_poutre_dimensionnee_kg_m3": [
+      80,
+      150
+    ],
+    "garde_fou_unite_kg_m3": [
+      30,
+      250
+    ]
   }
 }

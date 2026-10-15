@@ -25,9 +25,11 @@ l'épreuve, chacune vérifiable dans le rapport de contrôle :
    lisent le **même** fichier de données. Change `data/demo-cage.json`, et les trois changent ensemble.
 2. **Génération, pas dessin à la main (R2).** Aucune coordonnée n'est tapée : les figures sortent de
    fonctions paramétriques de `svgkit.js`, la cage sort de `civil3d`.
-3. **Contre-calcul (§ 3.3).** La masse d'acier est calculée **deux fois par deux voies indépendantes**,
-   et l'écart est affiché.
-4. **Étalonnage (§ 3.3).** La routine géométrique est calée sur une solution analytique fermée.
+3. **Contre-calcul (§ 3.3).** La masse d'acier est calculée deux fois par deux chemins **qui
+   divergent sur le périmètre du cadre**. Ce que ces deux voies partagent, et ce qu'elles ne peuvent
+   donc pas attraper, est écrit noir sur blanc plus bas — c'est une limite, pas une garantie.
+4. **Étalonnage (§ 3.3).** La formule fermée du périmètre est confrontée à une polygonalisation
+   indépendante du contour, et à deux cas dont la solution est connue hors de cette formule.
 5. **Hors ligne (§ 4.4).** Aucune requête réseau : la page fonctionne en `file://`, formules comprises.
 
 ## La section, dessinée depuis les données
@@ -48,9 +50,12 @@ parle du même ouvrage que le cours, pour que rien ne soit gratuit.
    est donc **minorant d'environ 3 %** sur les cadres. La longueur d'un crochet est une valeur
    constructive : elle n'est pas avancée ici, la phase § 5.0 l'interdit.
 2. **Le rayon de cintrage vaut {{metre-cage.rayon_cintrage_mm}} mm**, lu dans `data/demo-cage.json`.
-   C'est un paramètre de **tracé**, pas un rayon minimal réglementaire — ⟦V3|rayon de cintrage|fourchette plausible 15 à 30 mm, année 2026⟧.
+   C'est un paramètre de **tracé**, pas un rayon minimal réglementaire — ⟦V3|rayon de cintrage du cadre|un paramètre de tracé|mm|15 à 30|2026|aucun document normatif fourni : valeur choisie pour la démonstration⟧.
    Il porte 1,8 % du périmètre : à coins vifs, le cadre mesurerait davantage.
-3. **Le coffrage modélisé n'a ni étaiement ni étais de reprise**, et la phase 4 retire les panneaux
+3. **L'enrobage vaut aussi le long de l'axe** : l'axe du premier cadre est à
+   {{metre-cage.rayon_cintrage_mm}} mm près de l'about… non — à l'enrobage **plus** le demi-diamètre
+   du cadre, comme en section. Sans ce terme, l'about réel valait 26 mm pour 30 annoncés.
+4. **Le coffrage modélisé n'a ni étaiement ni étais de reprise**, et la phase 4 retire les panneaux
    sans dire à quelle condition. Dans la réalité, le décoffrage est subordonné à une résistance
    atteinte, contrôlée sur éprouvettes ; le décoffrage prématuré est l'un des pièges listés au § 7.3.
    Le sujet est traité au module d'exécution, en attente des normes.
@@ -86,12 +91,23 @@ Le tableau ci-dessous n'est pas saisi : chaque nombre est une variable produite 
 | Volume de béton | {{metre-cage.volume_beton_m3::n3s}} m³ |
 | Ratio | {{metre-cage.ratio_kg_m3::n1}} kg/m³ |
 
-**Contre-calcul.** Les deux voies ne partagent ni le chemin de longueur, ni le chemin de masse.
+**Contre-calcul.** Les deux voies divergent sur le chemin de longueur du cadre.
 
 | | Longueur d'un cadre | Masse |
 |---|---|---|
 | **Voie A** | contour **discrétisé** (droites + arcs), celui-là même que suit le tube de la scène 3D → {{metre-cage.contre_calcul.perimetre_voie_A_m::n3s}} m | aire de la section droite × longueur × masse volumique |
 | **Voie B** | **formule fermée** $P = 2(b-2r) + 2(h-2r) + 2\pi r$ → {{metre-cage.contre_calcul.perimetre_voie_B_m::n3s}} m | coefficient tabulé des plans de ferraillage, $m = 0{,}00617\,d^2$ en kg/m, $d$ en mm |
+
+Elles ne divergent **pas** sur le reste, et c'est une limite qu'il faut écrire plutôt que masquer :
+le coefficient tabulé $0{,}00617$ dérive lui-même de $\pi/4 \times 7850 \times 10^{-6} = 0{,}0061654$,
+si bien que l'écart de masse entre les deux voies n'est pour l'essentiel que cet arrondi. Les deux
+partagent aussi **le nombre de cadres**, **la règle d'axe du cadre** et **les longueurs de barres**.
+
+**Ce que ce contre-calcul n'attrape donc pas** : une erreur commune aux deux voies — un comptage de
+cadres faux, une règle d'axe fausse, une longueur de barre fausse. Ces erreurs-là sont attrapées
+ailleurs : par l'étalonnage, et par des tests qui **recalculent le comptage et les positions dans le
+test lui-même**, sans appeler le code qu'ils contrôlent. C'est la seule parade contre une erreur de
+modèle partagée (§ 3.3).
 
 Résultats : {{metre-cage.contre_calcul.voie_A_kg::n2}} kg contre
 {{metre-cage.contre_calcul.voie_B_kg::n2}} kg, soit un **écart de
@@ -130,13 +146,13 @@ passée des deux côtés.
 
 :::encart {"genre":"alerte","titre":"Ce que l'étalonnage a réellement attrapé"}
 La première version de la cage 3D construisait le cadre comme une courbe de Catmull-Rom passant par
-les coins. Une spline ne suit pas un rectangle à coins arrondis : elle **gonfle entre les points**. Le
-périmètre sortait à 2,386 m au lieu de 1,926 m, soit **+ 23,9 %**, et la masse de cadres à 12,24 kg au
-lieu de 9,88 kg.
+les coins. Une spline ne suit pas un rectangle à coins arrondis : elle **gonfle entre les points**, de
+près de **24 %** sur le périmètre.
 
 À l'écran, rien ne se voyait : la cage avait l'air juste. C'est le croisement entre le métré de `calc/`
-et celui de la 3D qui a révélé l'écart. Le contour est maintenant suivi exactement (droites et arcs),
-à 0,007 % de la formule fermée.
+et celui de la 3D qui a révélé l'écart. Le contour est maintenant suivi exactement (droites et arcs) :
+le périmètre vaut {{metre-cage.perimetre_cadre_m::n3s}} m, à
+{{metre-cage.contre_calcul.ecart_perimetre_pct::n3s}} % de la formule fermée.
 
 **La leçon vaut pour tout le cours : un modèle 3D peut être faux sans en avoir l'air.** C'est pourquoi
 la 3D vient toujours après le calcul, jamais à sa place.
@@ -144,7 +160,7 @@ la 3D vient toujours après le calcul, jamais à sa place.
 
 :::encart {"genre":"alerte","titre":"Le piège que le ratio d'acier enseigne"}
 Le ratio obtenu est de **{{metre-cage.ratio_kg_m3::n1}} kg/m³**, alors que la fourchette usuelle d'une
-poutre **dimensionnée** est de l'ordre de ⟦V3|ratio d'acier d'une poutre dimensionnee|80 à 150 kg/m³, année 2026⟧. L'écart n'est pas une erreur
+poutre **dimensionnée** est de l'ordre de ⟦V3|ratio d'acier d'une poutre dimensionnée|80 à 150 kg/m³|kg/m³|80 à 150|2026|ordre de grandeur usuel, sans valeur réglementaire⟧. L'écart n'est pas une erreur
 de calcul : il vient de ce que cette cage **n'a jamais été dimensionnée**. Les diamètres et le nombre
 de barres sont des paramètres de démonstration.
 
@@ -152,7 +168,7 @@ Le contrôle d'ordre de grandeur de `calc/tests/test_cage.py` a signalé cet éc
 exécution. Deux réactions étaient possibles : élargir la fourchette jusqu'à ce que le test passe, ou
 inventer un ferraillage plus lourd pour y entrer. Les deux sont malhonnêtes — la seconde fabriquerait
 un dimensionnement que la phase § 5.0 interdit. Le contrôle a donc été ramené à ce qu'il sert
-vraiment : **attraper une erreur d'unité ou de facteur** (⟦V3|garde-fou d'unite|fourchette 30 à 250 kg/m³, année 2026⟧), et
+vraiment : **attraper une erreur d'unité ou de facteur** (⟦V3|garde-fou d'unité sur le ratio d'acier|fourchette géométrique 30 à 250 kg/m³|kg/m³|30 à 250|2026|borne large, choisie pour n'attraper qu'une erreur de facteur⟧), et
 l'écart avec une poutre dimensionnée est **rapporté** sans faire échouer le test.
 
 On ne lit pas un ferraillage dimensionné sur un modèle 3D.
@@ -163,13 +179,15 @@ On ne lit pas un ferraillage dimensionné sur un modèle 3D.
 Un métré n'a d'intérêt que s'il se transforme en argent et en jours. Deux ordres de grandeur, tous
 deux **V3 déclarés**, pour montrer le chemin — ils seront repris sérieusement dans les modules D1 et D3 :
 
-- **Coût.** À ⟦V3|prix de l'acier façonné et posé|fourchette 14 à 20 MAD/kg, année 2026⟧, les
-  {{metre-cage.masse_acier_kg::n1}} kg de ce tronçon représentent de l'ordre de 450 à 620 MAD d'acier,
-  pour {{metre-cage.volume_beton_m3::n3s}} m³ de béton. Le ratio de
+- **Coût.** À ⟦V3|prix de l'acier HA façonné et posé|14 à 20 MAD/kg|MAD/kg|14 à 20|2026|aucun bordereau fourni : fourchette large assumée⟧, les
+  {{metre-cage.masse_acier_kg::n1}} kg de ce tronçon représentent
+  **{{metre-cage.economie.cout_acier_MAD_min}} à {{metre-cage.economie.cout_acier_MAD_max}} MAD**
+  d'acier, pour {{metre-cage.volume_beton_m3::n3s}} m³ de béton. Le ratio de
   {{metre-cage.ratio_kg_m3::n1}} kg/m³ est la grandeur qui pilote ce poste : c'est pour cela qu'un
   ratio d'acier se surveille sur un chantier, pas seulement sur une note de calcul.
-- **Délai.** À ⟦V3|cadence de façonnage et pose d'armatures|fourchette 90 à 130 kg par ferrailleur et par jour, année 2026⟧,
-  ce tronçon représente quelques heures d'un ferrailleur. Mais la grandeur qui commande le planning
+- **Délai.** À ⟦V3|cadence de façonnage et pose d'armatures|90 à 130 kg par ferrailleur et par jour|kg/jour|90 à 130|2026|ordre de grandeur de chantier, à recaler sur des attachements réels⟧,
+  ce tronçon représente **{{metre-cage.economie.heures_ferrailleur_min::n1}} à
+  {{metre-cage.economie.heures_ferrailleur_max::n1}} heures** d'un ferrailleur. Mais la grandeur qui commande le planning
   n'est pas la masse : c'est le **nombre de cadres** — {{metre-cage.n_cadres}} ici, et
   {{metre-cage.variante_exercice.n_cadres}} si l'espacement passe à
   {{metre-cage.variante_exercice.espacement_cm}} cm. Un cadre se façonne, se transporte et se pose à
