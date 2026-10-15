@@ -129,3 +129,37 @@ document ou d'une information que le lecteur n'a pas encore.
 | A-03 | **Le logiciel aux éléments finis** pratiqué par le lecteur | nécessaire avant d'écrire B6b (suspendu) |
 | A-04 | **Confirmation des dates** du palier 1 (hypothèse V3 en place) | § 5.5 |
 | A-05 | **Référentiel ferroviaire** (quais, gabarits, caténaire), à fixer par le CPS | nécessaire pour les parties chiffrées de B7c |
+
+---
+
+## 2026-10-15 — Étape 2, tranche verticale de suivi
+
+**D-010 · La fiche du module annonçait un contre-calcul qui n'en était pas un.** Elle prévoyait
+« durée par cadences contre durée par chemin critique ». Ces deux grandeurs ne sont pas comparables :
+la somme des durées et le chemin critique diffèrent **par construction**, et c'est tout l'objet du
+CPM. Les comparer ne vérifie rien ; leur écart est un **résultat** à commenter (le gain du
+recouvrement, 18 % ici), pas un contrôle.
+*Décision* : trois contre-calculs réels à la place.
+1. **Durée de tâche** : cadence unitaire × effectif, contre un **rendement d'équipe** déclaré
+   séparément. Vérifie que deux hypothèses V3 sont mutuellement cohérentes — rien de plus, et le
+   module le dit.
+2. **Durée du cycle** : parcours avant/arrière contre **énumération exhaustive des chemins**. Deux
+   algorithmes pour la même grandeur : ils doivent coïncider exactement.
+3. **Valeur acquise** : par les coûts contre les **quantités relevées** sur le chantier.
+
+**D-011 · La première version du contre-calcul de valeur acquise était tautologique.** Elle
+multipliait les quantités *théoriques* par l'avancement *déclaré* : algébriquement identique à la
+voie A, écart nul par construction. Même piège que le contre-calcul du socle. La voie B part
+désormais des **quantités relevées**, qui ne passent pas par l'avancement déclaré. Un test vérifie
+cette indépendance en changeant l'avancement déclaré et en constatant que la voie B ne bouge pas.
+
+**D-012 · Deux contrôles sonnent volontairement dans ce module, et c'est le sujet.**
+- Le contre-calcul de valeur acquise sort de sa tolérance (1,03 % pour 1 %) : l'avancement déclaré ne
+  colle pas aux relevés. C'est la dérive que le contrôle existe pour attraper.
+- Le contrôle de cohérence du prix horaire sort de sa fourchette (5,2 % contre 15 à 30 %) : le prix
+  horaire d'un compagnon nu et un prix unitaire posé ne décrivent pas la même chose.
+Un module où tous les voyants sont au vert n'apprend rien sur les voyants.
+
+**D-013 · La date d'arrêt du suivi est déduite, plus écrite.** Elle était posée à « fin de la
+semaine 6 » dans les données, ce que le planning contredisait. Elle se calcule maintenant à partir du
+nombre de zones prévues et de la cadence.

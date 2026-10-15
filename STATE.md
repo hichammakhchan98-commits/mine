@@ -1,16 +1,17 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **15/10/2026** · Étape en cours : **1 — socle, LIVRÉ**
+Dernière mise à jour : **15/10/2026** · Étape en cours : **2 — tranche verticale, LIVRÉE**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : Étape 1 — socle. Zip : `cours-genie-civil-P1-E1-socle.zip`
+- **Dernier livrable** : Étape 2 — tranche verticale de suivi (`TV`). Zip : `cours-genie-civil-P1-TV.zip`
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
-- **Prochain module** : **Étape 2 — tranche verticale de suivi** (`TV`, § 5.3 adapté) :
-  cycle de réalisation d'un plancher de mezzanine, de bout en bout.
-  **Le lecteur la valide avant toute duplication** (forme, profondeur, ergonomie, chaîne de données).
+- **EN ATTENTE DE VALIDATION** : la tranche verticale doit être validée par le lecteur
+  **avant toute duplication** (forme, profondeur, ergonomie, chaîne de données, utilité de la 3D).
+- **Prochain module une fois validée** : `D2` — Planification (WBS, cadences, CPM, Gantt, courbe en S,
+  lissage), premier de l'ordre de livraison du palier 1 actif.
 - **Règle absolue** : aucun chiffre n'est repris de la mémoire d'une conversation précédente.
   Seul le zip (ou la branche git) fait foi.
 
@@ -28,8 +29,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 **Palier 1 — 35 modules, 50 livraisons.** ▶ 23 modules / 30 livraisons actifs ·
 ⏸ 12 modules / 20 livraisons suspendus.
 
-- **Livré** : `E1` (socle + page de démonstration).
-- ▶ **actifs, non écrits** : TV, A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
+- **Livré** : `E1` (socle + page de démonstration), `TV` (tranche verticale de suivi).
+- ▶ **actifs, non écrits** : A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
   D1, D2, D3, D4, D6, D7, M3D, REC, RC1
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
@@ -177,6 +178,7 @@ Les sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv` (E0-S01 
 | 5 | Référentiel ferroviaire non identifié (quais, gabarits, caténaire) | CPS du marché |
 | 6 | Le contrôle d'impression est visuel, pas automatisé | à outiller si le besoin se confirme |
 | 7 | Bundle 3D de 763 ko : hors budget par module, mais c'est le poste le plus lourd du cours | à surveiller |
+| 9 | Le module `TV` ne porte **aucun modèle 3D** : le phasage 3D appartient à C3. À réviser si le lecteur juge qu'il en manque un | après validation de la TV |
 | 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivront dans le zip, pas sur GitHub | limite de l'environnement |
 
 ## Données modifiées depuis la dernière livraison
@@ -186,5 +188,7 @@ registres régénérés par le build. Empreinte de `data/` : voir le pied de cha
 
 ## Effort consommé (§ 13.2)
 
-Étape 0 : 1 séance. Étape 1 : 2 séances (socle complet ; 8 défauts trouvés en construisant, puis **50 défauts sur trois passes adversariales**, tous bloquants et majeurs corrigés).
+Étape 0 : 1 séance. Étape 1 : 2 séances (socle ; 8 défauts en construisant, puis **50 défauts sur
+trois passes adversariales**). Étape 2 : 1 séance (tranche verticale ; 6 défauts trouvés en
+construisant, dont un contre-calcul tautologique et une courbe en S écrasée par un rapport d'aspect).
 Hypothèse de budget en place : 2 séances par semaine, ~1,5 séance par livraison (V3, à confirmer).

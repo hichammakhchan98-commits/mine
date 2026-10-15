@@ -16,6 +16,21 @@ const EMPREINTE_ATTENDUE = readFileSync(join(RACINE, "index.html"), "utf8")
 
 const rapport = [];
 
+/* Ce que chaque module promet, et que le controle verifie. Sans cette table, les
+   tests specifiques d'un module s'appliquaient a tous les autres. */
+const ATTENTES = {
+  "00-demo-cage.html": { geometrieSection: true, metre: "metre-cage.json" },
+  "01-tranche-verticale-suivi.html": {
+    valeursPubliees: [
+      ["tranche-plancher.json", (r) => r.quantites.beton_m3.toFixed(1).replace(".", ",")],
+      ["tranche-plancher.json", (r) => String(r.cout_zone.total_fournitures_et_mise_en_oeuvre_MAD)],
+      ["tranche-plancher.json", (r) => r.cycle_zone.duree_j.toFixed(2).replace(".", ",")],
+      ["valeur-acquise.json",   (r) => r.CPI.toFixed(3).replace(".", ",")],
+      ["valeur-acquise.json",   (r) => String(r.contre_calcul.voie_B_par_les_quantites_MAD)],
+    ],
+  },
+};
+
 for (const fichier of modules) {
   test.describe(fichier, () => {
     let page, erreurs, requetesExternes;
@@ -194,7 +209,19 @@ for (const fichier of modules) {
           triangles: e.diag.triangles, etiquettes: e.diag.etiquettes, params: e.diag.params })), null, 2));
     });
 
+    test("d · les valeurs publiees sont celles de calc/, pas du texte", async () => {
+      const att = ATTENTES[fichier]?.valeursPubliees;
+      if (!att) { test.skip(); return; }
+      const txt = (await page.locator(".corps").innerText()).replace(/\u00a0/g, " ");
+      for (const [fic, extraire] of att) {
+        const r = JSON.parse(readFileSync(join(RACINE, "calc", "sorties", fic), "utf8"));
+        const attendu = extraire(r);
+        expect(txt, `la valeur « ${attendu} » (de ${fic}) doit figurer dans la page`).toContain(attendu);
+      }
+    });
+
     test("d · geometrie : positions SVG et 3D recalculees depuis data/ (§ 12.1 d)", async () => {
+      if (!ATTENTES[fichier]?.geometrieSection) { test.skip(); return; }
       // Sans ce test, deux erreurs geometriques injectees (barres empilees en SVG,
       // enrobage ignore en 3D) franchissaient les neuf controles sans en allumer un seul.
       const data = JSON.parse(readFileSync(join(RACINE, "data", "demo-cage.json"), "utf8"));
@@ -277,7 +304,8 @@ for (const fichier of modules) {
     });
 
     test("d · coherence des donnees : le metre affiche = la sortie de calc/", async () => {
-      const metre = JSON.parse(readFileSync(join(RACINE, "calc", "sorties", "metre-cage.json"), "utf8"));
+      if (!ATTENTES[fichier]?.metre) { test.skip(); return; }
+      const metre = JSON.parse(readFileSync(join(RACINE, "calc", "sorties", ATTENTES[fichier].metre), "utf8"));
       const data = JSON.parse(readFileSync(join(RACINE, "data", "demo-cage.json"), "utf8"));
 
       // Le nombre de cadres est recalcule ICI, a la main. Les deux voies du contre-calcul

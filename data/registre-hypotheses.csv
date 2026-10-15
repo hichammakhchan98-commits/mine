@@ -4,3 +4,7 @@ H002;ratio d'acier d'une poutre dimensionnée;80 à 150 kg/m³;kg/m³;80 à 150;
 H003;garde-fou d'unité sur le ratio d'acier;fourchette géométrique 30 à 250 kg/m³;kg/m³;30 à 250;2026;E1-demo;borne large, choisie pour n'attraper qu'une erreur de facteur
 H004;prix de l'acier HA façonné et posé;14 à 20 MAD/kg;MAD/kg;14 à 20;2026;E1-demo;aucun bordereau fourni : fourchette large assumée
 H005;cadence de façonnage et pose d'armatures;90 à 130 kg par ferrailleur et par jour;kg/jour;90 à 130;2026;E1-demo;ordre de grandeur de chantier, à recaler sur des attachements réels
+H006;ratio d'acier d'une dalle;80 kg/m³;kg/m³;65 à 100;2026;TV;ordre de grandeur de plancher courant, sans valeur réglementaire
+H007;ratio d'acier d'une poutre;180 kg/m³;kg/m³;140 à 220;2026;TV;ordre de grandeur de poutre de plancher, sans valeur réglementaire
+H008;prix horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;TV;compagnon nu, charges comprises, sans encadrement
+H009;part de main d'œuvre directe dans un prix posé;15 à 30 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris

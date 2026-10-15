@@ -12,16 +12,23 @@
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   /** Convertisseur metre -> pixel, avec marges. */
-  function repere({ largeur, hauteur, marge = 40, xmin, xmax, ymin, ymax, yInverse = true }) {
+  function repere({ largeur, hauteur, marge = 40, margeDroite, xmin, xmax, ymin, ymax,
+                    yInverse = true, libre = false }) {
     const dx = xmax - xmin || 1, dy = ymax - ymin || 1;
-    const lu = largeur - 2 * marge, hu = hauteur - 2 * marge;
-    const k = Math.min(lu / dx, hu / dy);
-    const ox = marge + (lu - k * dx) / 2, oy = marge + (hu - k * dy) / 2;
+    const md = margeDroite ?? marge;
+    const lu = largeur - marge - md, hu = hauteur - 2 * marge;
+    // `libre` : echelles X et Y independantes. Un PLAN garde son rapport d'aspect — une
+    // coupe ecrasee serait fausse. Un GRAPHIQUE n'en a pas : l'axe des jours et l'axe des
+    // pourcents n'ont aucun rapport commun, et en imposer un tasse la courbe dans un coin.
+    const kx = libre ? lu / dx : Math.min(lu / dx, hu / dy);
+    const ky = libre ? hu / dy : kx;
+    const ox = marge + (libre ? 0 : (lu - kx * dx) / 2);
+    const oy = marge + (libre ? 0 : (hu - ky * dy) / 2);
     return {
-      k,
-      x: (xm) => ech(ox + (xm - xmin) * k),
-      y: (ym) => ech(yInverse ? oy + (ymax - ym) * k : oy + (ym - ymin) * k),
-      l: (m) => ech(m * k),
+      k: kx, kx, ky,
+      x: (xm) => ech(ox + (xm - xmin) * kx),
+      y: (ym) => ech(yInverse ? oy + (ymax - ym) * ky : oy + (ym - ymin) * ky),
+      l: (m) => ech(m * kx),
     };
   }
 
@@ -199,7 +206,8 @@
     const L = o.largeur || 640, H = o.hauteur || 200;
     const xs = pts.map((p) => p.x), vs = pts.map((p) => p.v);
     const vmax = Math.max(...vs.map(Math.abs)) || 1;
-    const r = repere({ largeur: L, hauteur: H, marge: 44, xmin: Math.min(...xs), xmax: Math.max(...xs), ymin: -vmax, ymax: vmax });
+    const r = repere({ largeur: L, hauteur: H, marge: 44, libre: true,
+      xmin: Math.min(...xs), xmax: Math.max(...xs), ymin: -vmax, ymax: vmax });
     const y0 = r.y(0);
     let g = ligne(r.x(Math.min(...xs)), y0, r.x(Math.max(...xs)), y0, { couleur: "#a8aca4", ep: 1 });
     const d = pts.map((p, i) => `${i ? "L" : "M"}${r.x(p.x)} ${r.y(p.v)}`).join(" ");
@@ -220,10 +228,14 @@
 
   /** Gantt : taches {nom, debut, duree, critique}. Unite = jour. */
   function gantt(taches, o = {}) {
-    const lig = 24, lab = o.labels || 190, L = o.largeur || 700;
+    const lig = 24, L = o.largeur || 700;
+    // la colonne d'etiquettes se dimensionne sur le nom le plus long, au lieu d'une
+    // largeur fixe qui tronquait les libelles
+    const lab = o.labels || Math.min(300, Math.max(140,
+      Math.round(Math.max(...taches.map((t) => t.nom.length)) * 6.3) + 16));
     const H = 52 + taches.length * lig;
     const fin = Math.max(...taches.map((t) => t.debut + t.duree)) || 1;
-    const k = (L - lab - 30) / fin;
+    const k = (L - lab - 60) / fin;        // 60 : place pour l'etiquette de duree a droite
     const X = (j) => ech(lab + j * k);
     let g = "";
     const pasG = fin > 60 ? 10 : fin > 20 ? 5 : 2;
@@ -237,7 +249,8 @@
       g += texte(lab - 10, y + 7, t.nom, { taille: 11, ancre: "end" });
       g += rect(X(t.debut), y, Math.max(2, ech(t.duree * k)), 13,
         { remplissage: t.critique ? "#8c3b2e" : "#41607d", couleur: "none", ep: 0, rayon: 2 });
-      g += texte(X(t.debut + t.duree) + 5, y + 7, `${t.duree} j`,
+      const dj = Number(t.duree).toFixed(2).replace(/[.,]?0+$/, "").replace(".", ",");
+      g += texte(X(t.debut + t.duree) + 5, y + 7, `${dj} j`,
         { taille: 9.5, mono: 1, base: "middle", couleur: "#6b7682" });
     });
     return { svg: g, largeur: L, hauteur: H };
@@ -246,7 +259,7 @@
   /** Courbe en S : pts {j, prevu, realise?}, en % cumule. */
   function courbeS(pts, o = {}) {
     const L = o.largeur || 620, H = o.hauteur || 260;
-    const r = repere({ largeur: L, hauteur: H, marge: 48,
+    const r = repere({ largeur: L, hauteur: H, marge: 48, margeDroite: 24, libre: true,
       xmin: 0, xmax: Math.max(...pts.map((p) => p.j)), ymin: 0, ymax: 100 });
     let g = "";
     for (let v = 0; v <= 100; v += 25) {
@@ -261,7 +274,21 @@
     };
     g += trace("prevu", "#41607d", "6 4");
     g += trace("realise", "#8c3b2e", null);
-    g += texte(L / 2, H - 12, "jours", { taille: 10, ancre: "middle", couleur: "#6b7682" });
+    // graduations en abscisse : sans elles, la courbe ne se lit pas dans le temps
+    const jmax = Math.max(...pts.map((p) => p.j));
+    const pasJ = jmax > 60 ? 10 : jmax > 20 ? 5 : 2;
+    for (let j = 0; j <= jmax + 1e-9; j += pasJ) {
+      g += ligne(r.x(j), r.y(0), r.x(j), r.y(0) + 4, { couleur: "#a8aca4", ep: 1 });
+      g += texte(r.x(j), r.y(0) + 16, String(Math.round(j)),
+        { taille: 9.5, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    }
+    g += texte(L / 2, H - 8, "jours ouvres", { taille: 10, ancre: "middle", couleur: "#6b7682" });
+    // legende : sans elle, deux traits de couleurs differentes ne disent rien
+    const yl = 20;
+    g += ligne(L - 150, yl, L - 126, yl, { couleur: "#41607d", ep: 2, tirets: "6 4" });
+    g += texte(L - 120, yl + 3.5, "prévu", { taille: 10.5, couleur: "#3f4852" });
+    g += ligne(L - 74, yl, L - 50, yl, { couleur: "#8c3b2e", ep: 2 });
+    g += texte(L - 44, yl + 3.5, "réalisé", { taille: 10.5, couleur: "#3f4852" });
     return { svg: g, largeur: L, hauteur: H };
   }
 
@@ -269,7 +296,8 @@
   function histogramme(pts, o = {}) {
     const L = o.largeur || 620, H = o.hauteur || 220;
     const nmax = Math.max(...pts.map((p) => p.n)) || 1;
-    const r = repere({ largeur: L, hauteur: H, marge: 44, xmin: 0, xmax: pts.length, ymin: 0, ymax: nmax * 1.1 });
+    const r = repere({ largeur: L, hauteur: H, marge: 44, libre: true,
+      xmin: 0, xmax: pts.length, ymin: 0, ymax: nmax * 1.1 });
     const l = (r.x(1) - r.x(0)) * .82;
     let g = "";
     pts.forEach((p, i) => {
@@ -283,6 +311,49 @@
     g += ligne(r.x(0), r.y(moy), r.x(pts.length), r.y(moy), { couleur: "#8c3b2e", ep: 1.2, tirets: "5 4" });
     g += texte(r.x(pts.length) - 4, r.y(moy) - 5, `moyenne ${moy.toFixed(1)}`,
       { taille: 9.5, mono: 1, ancre: "end", couleur: "#8c3b2e" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /**
+   * Plan de zones de coulage d'un plancher. Toutes les cotes viennent des donnees ;
+   * l'etat d'avancement de chaque zone aussi.
+   * `z` : { longueur_m, largeur_m, nb_zones, entraxe_poutres_m, avancement: [etat...] }
+   * etat : "faite" | "en_cours" | "a_venir"
+   */
+  function planZones(z, o = {}) {
+    const L = o.largeur || 760, H = o.hauteur || 220;
+    const Lt = z.nb_zones * z.longueur_m;
+    const r = repere({ largeur: L, hauteur: H, marge: 46, margeDroite: 86,
+      xmin: 0, xmax: Lt, ymin: 0, ymax: z.largeur_m });
+    const TEINTE = { faite: "#cfe0d4", en_cours: "#fdf1cf", a_venir: "#f1f1ed" };
+    const BORD = { faite: "#1f5c3a", en_cours: "#7a5c00", a_venir: "#a8aca4" };
+    let g = "";
+
+    for (let i = 0; i < z.nb_zones; i++) {
+      const x0 = i * z.longueur_m;
+      const etat = (z.avancement && z.avancement[i]) || "a_venir";
+      g += rect(r.x(x0), r.y(z.largeur_m), r.l(z.longueur_m), r.l(z.largeur_m),
+        { remplissage: TEINTE[etat], couleur: BORD[etat], ep: etat === "a_venir" ? 1 : 1.6 });
+      g += texte(r.x(x0 + z.longueur_m / 2), r.y(z.largeur_m / 2) - 2, `Z${i + 1}`,
+        { taille: 13, gras: 1, ancre: "middle", base: "middle", couleur: BORD[etat] });
+      if (etat !== "a_venir")
+        g += texte(r.x(x0 + z.longueur_m / 2), r.y(z.largeur_m / 2) + 14,
+          etat === "faite" ? "coulee" : "en cours",
+          { taille: 9.5, ancre: "middle", base: "middle", couleur: BORD[etat] });
+    }
+
+    // lignes de poutres, a l'entraxe des donnees
+    if (z.entraxe_poutres_m)
+      for (let x = z.entraxe_poutres_m; x < Lt; x += z.entraxe_poutres_m)
+        g += ligne(r.x(x), r.y(z.largeur_m), r.x(x), r.y(0),
+          { couleur: "#8c3b2e", ep: .8, tirets: "4 3" });
+
+    g += cote(r.x(0), r.y(0), r.x(z.longueur_m), r.y(0), `${z.longueur_m} m`, { decalage: 22 });
+    g += cote(r.x(0), r.y(0), r.x(Lt), r.y(0), `${ech(Lt)} m`, { decalage: 40 });
+    g += cote(r.x(Lt), r.y(0), r.x(Lt), r.y(z.largeur_m), `${z.largeur_m} m`, { decalage: 26 });
+    g += puce(r.x(z.longueur_m * 1.5), r.y(z.largeur_m) - 16, 1);
+    if (z.entraxe_poutres_m)
+      g += puce(r.x(z.entraxe_poutres_m), r.y(z.largeur_m) - 16, 2);
     return { svg: g, largeur: L, hauteur: H };
   }
 
@@ -309,7 +380,8 @@
   }
 
   const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
-    coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence, MOTIFS, ech };
+    coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence,
+    planZones, MOTIFS, ech };
 
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   racine.SVGKit = API;

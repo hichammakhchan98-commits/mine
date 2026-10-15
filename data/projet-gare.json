@@ -218,6 +218,15 @@
           75
         ],
         "note": "section = PREDIMENSIONNEMENT V3 par elancement usuel (h ~ L/11). Aucune verification reglementaire tant que le § 5.0 n'est pas leve."
+      },
+      "zones_de_coulage": {
+        "_role": "Decoupage du plancher de mezzanine en zones coulees en une fois. C'est l'unite de suivi : le cycle, le metre, le cout et l'avancement se comptent par zone.",
+        "nb_zones": 8,
+        "longueur_zone_m": 15.0,
+        "largeur_zone_m": 24.0,
+        "justification_decoupage": "15 m = 2 travees de trame (7,50 m). Une zone de 360 m2 se coule en une demi-journee de pompe et tient dans la capacite d'une equipe ; au-dela, la reprise de betonnage devient le probleme, pas la cadence.",
+        "marquise_exclue": "Le porte-a-faux de marquise (4,50 m) n'est PAS compte dans ces zones : il se coule avec la zone mais releve d'une sequence d'etaiement differente, traitee au module d'execution.",
+        "niveau_preuve": "V3"
       }
     },
     "couverture_metallique": {
@@ -290,9 +299,35 @@
   },
   "elements": {
     "poteaux": [],
-    "poutres": [],
+    "poutres": [
+      {
+        "id": "PM1",
+        "ouvrage": "poutre de plancher de mezzanine",
+        "travees_m": [
+          8.0,
+          8.0,
+          8.0
+        ],
+        "console_m": 4.5,
+        "b_m": 0.35,
+        "h_m": 0.75,
+        "entraxe_m": 7.5,
+        "retombee_sous_dalle_m": 0.5,
+        "longueur_dans_zone_m": 24.0,
+        "niveau_preuve": "V3"
+      }
+    ],
     "voiles": [],
-    "dalles": [],
+    "dalles": [
+      {
+        "id": "DM1",
+        "ouvrage": "dalle de plancher de mezzanine",
+        "epaisseur_m": 0.25,
+        "epaisseur_origine": "predimensionnement V3 par elancement : portee 7,50 m entre poutres, h ~ L/30. AUCUNE verification reglementaire (§ 5.0).",
+        "portee_m": 7.5,
+        "niveau_preuve": "V3"
+      }
+    ],
     "fondations": [],
     "soutenement": [],
     "charpente": []
@@ -308,11 +343,89 @@
     "acier_kg": {},
     "terrassement_m3": {}
   },
-  "cadences": {},
+  "cadences": {
+    "_role": "Cadences unitaires, par compagnon et par jour de 8 h. V3 : aucune ne vient d'un attachement reel.",
+    "annee_ref": 2026,
+    "niveau_preuve": "V3",
+    "coffrage_dalle_m2_j": {
+      "valeur": 30,
+      "fourchette": [
+        25,
+        35
+      ],
+      "note": "tables et etaiement, plancher courant repetitif"
+    },
+    "ferraillage_dalle_kg_j": {
+      "valeur": 300,
+      "fourchette": [
+        250,
+        400
+      ],
+      "note": "treillis et chapeaux, pose a plat"
+    },
+    "ferraillage_poutre_kg_j": {
+      "valeur": 150,
+      "fourchette": [
+        120,
+        180
+      ],
+      "note": "cages, faconnage et pose en place"
+    },
+    "betonnage_m3_h": {
+      "valeur": 30,
+      "fourchette": [
+        25,
+        40
+      ],
+      "note": "pompe a beton, equipe complete"
+    },
+    "rendement_equipe_coffrage_m2_j": {
+      "valeur": 232,
+      "fourchette": [
+        190,
+        280
+      ],
+      "note": "RENDEMENT D'EQUIPE declare separement, pour servir de seconde voie au calcul de duree"
+    }
+  },
   "prix_unitaires_MAD": {
     "annee_ref": 2026,
-    "source": "V3 — fourchettes, aucun bordereau fourni",
-    "postes": {}
+    "source": "V3 — fourchettes, aucun bordereau fourni (question 7 de l'Etape 0 sans reponse)",
+    "niveau_preuve": "V3",
+    "postes": {
+      "beton_m3": {
+        "valeur": 1250,
+        "fourchette": [
+          1100,
+          1450
+        ],
+        "note": "beton pret a l'emploi, pompe, mis en oeuvre"
+      },
+      "acier_kg": {
+        "valeur": 17,
+        "fourchette": [
+          14,
+          20
+        ],
+        "note": "acier HA faconne et pose"
+      },
+      "coffrage_m2": {
+        "valeur": 180,
+        "fourchette": [
+          150,
+          220
+        ],
+        "note": "tables et etaiement, amortissement inclus"
+      },
+      "main_oeuvre_h": {
+        "valeur": 45,
+        "fourchette": [
+          35,
+          60
+        ],
+        "note": "compagnon, charges comprises"
+      }
+    }
   },
   "planning": {
     "taches": [],
@@ -321,8 +434,24 @@
     "date_fin_P1_actif_hypothese": "2027-03-15",
     "date_fin_P1_hypothese_niveau_preuve": "V3 — hypothese declaree, faute de reponse chiffree ; a confirmer (§ 5.5)"
   },
-  "effectifs": {},
-  "materiel": {},
+  "effectifs": {
+    "_role": "Effectifs par poste sur une zone. V3.",
+    "niveau_preuve": "V3",
+    "coffreurs": 8,
+    "ferrailleurs_dalle": 8,
+    "ferrailleurs_poutres": 4,
+    "equipe_betonnage": 5,
+    "grutier": 1,
+    "chef_equipe": 1,
+    "heures_par_jour": 8
+  },
+  "materiel": {
+    "niveau_preuve": "V3",
+    "tables_coffrantes_m2": 420,
+    "etais": 900,
+    "pompe_a_beton": "pompe automotrice, 30 m3/h retenus (V3)",
+    "grue": "grue a tour, voir C1"
+  },
   "multi_sites": {
     "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
     "sites": [
@@ -346,5 +475,59 @@
         "raison": "aucun defaut concurrent n'etait propose pour ce point ; l'option S2 est retenue pour que D7 porte des sols difficiles sans alourdir le cas phare. Reversible d'un mot."
       }
     ]
+  },
+  "ratios_V3": {
+    "_role": "Ratios d'ordre de grandeur. En phase § 5.0, les quantites ne peuvent PAS sortir d'un dimensionnement : elles sortent de ces ratios, declares avec leur fourchette.",
+    "annee_ref": 2026,
+    "acier_dalle_kg_m3": {
+      "valeur": 80,
+      "fourchette": [
+        65,
+        100
+      ]
+    },
+    "acier_poutre_kg_m3": {
+      "valeur": 180,
+      "fourchette": [
+        140,
+        220
+      ]
+    },
+    "coffrage_rives_pct": {
+      "valeur": 4,
+      "fourchette": [
+        2,
+        8
+      ],
+      "note": "rives de dalle et about de zone, en % de la surface coffree"
+    },
+    "part_main_oeuvre_directe_pct": {
+      "valeur": 22,
+      "fourchette": [
+        15,
+        30
+      ],
+      "note": "part de la main d'oeuvre DIRECTE de production dans un prix pose de gros oeuvre. Sert de controle de coherence entre le prix horaire et les prix unitaires, qui sont deux hypotheses V3 independantes."
+    }
+  },
+  "suivi": {
+    "_role": "Avancement constate a une date d'arret, pour l'exemple de valeur acquise. V3 : donnees fabriquees pour la demonstration.",
+    "niveau_preuve": "V3",
+    "zones_prevues_a_date": 4,
+    "zones_realisees_a_date": 3,
+    "avancement_zone_en_cours_pct": 60,
+    "cout_reel_constate_MAD": 1330000,
+    "note": "Le cout reel vient des attachements. Ici il est pose en V3 pour faire tourner la chaine.",
+    "base_du_choix": "Ce cout reel est FABRIQUE pour la demonstration, et choisi sur une base explicite : un chantier en legere difficulte — quelques pour cent de depassement de cout ET un retard d'une demi-zone. Un cas ou tout tombe juste n'apprend rien sur les indicateurs, et un cas ou CPI depasse 1,5 n'existe pas sur un chantier de gros oeuvre. La valeur n'a PAS ete ajustee pour obtenir un resultat : elle a ete posee avant de regarder CPI et SPI, a partir de l'ordre de grandeur du budget de 3,6 zones.",
+    "quantites_relevees": {
+      "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). C'est la seule voie reellement independante de l'avancement declare : elle ne passe pas par lui.",
+      "beton_m3": 352.0,
+      "acier_kg": 30900,
+      "coffrage_m2": 1515.0,
+      "niveau_preuve": "V3 — releves fabriques pour la demonstration",
+      "base_du_choix": "Poses legerement en retrait des quantites theoriques de 3,6 zones, pour que la demonstration montre ce que le controle sert a detecter : un avancement declare un peu optimiste."
+    },
+    "jours_ouvres_par_semaine": 5,
+    "_date_arret": "DEDUITE du planning par calc/, jamais ecrite ici : elle est fixee par le nombre de zones prevues a date."
   }
 }
