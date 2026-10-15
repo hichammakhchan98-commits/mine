@@ -62,12 +62,18 @@ function directive(nom, o, corps, ctx) {
       if (!SVGKit[o.fn]) throw new Error(`figure ${num} : fonction svgkit inconnue « ${o.fn} »`);
       const args = typeof o.args === "string" ? resoudre(o.args) : o.args;
       const r = SVGKit[o.fn](args, o.options ?? {});
-      const legende = o.legende
-        ? SVGKit.legende(o.legendeXY?.[0] ?? 12, o.legendeXY?.[1] ?? 16, o.legende)
-        : "";
+      // La legende est placee PAR LE BUILD, sous le dessin, d'apres le nombre d'entrees.
+      // Elle etait auparavant posee a une coordonnee ecrite a la main dans le contenu :
+      // une cote dessinee a l'oeil, et elle debordait du cadre.
+      const pasLeg = 15;
+      const hLeg = o.legende ? o.legende.length * pasLeg + 14 : 0;
+      const legende = o.legende ? SVGKit.legende(14, r.hauteur + 16, o.legende, { pas: pasLeg }) : "";
       const svg = SVGKit.svg({
-        largeur: r.largeur, hauteur: r.hauteur, titre: o.titre, desc: o.alt ?? o.titre,
-        motifs: o.motifs ?? [], contenu: r.svg + legende,
+        largeur: r.largeur, hauteur: r.hauteur + hLeg, titre: o.titre, desc: o.alt ?? o.titre,
+        motifs: o.motifs ?? [], contenu: r.svg
+          + (o.legende ? SVGKit.ligne(12, r.hauteur + 4, r.largeur - 12, r.hauteur + 4,
+              { couleur: "#d5d7d1", ep: 1 }) : "")
+          + legende,
       });
       // § 8 : chaque numero du dessin doit figurer dans la legende, et inversement.
       const puces = [...r.svg.matchAll(/class="puce"[^>]*>(\d+)</g)].map((m) => Number(m[1]));
