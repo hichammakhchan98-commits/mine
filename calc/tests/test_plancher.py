@@ -7,7 +7,7 @@ from __future__ import annotations
 import json, math, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from plancher import quantites_zone, fourchette_acier
-from cycle_plancher import durees_taches, reseau_zone, cout_zone
+from cycle_plancher import durees_taches, reseau_zone, cout_zone, cadence_rotation
 from cpm import Tache, contre_calcul, voie_A_parcours
 from valeur_acquise import valeur_acquise
 
@@ -25,7 +25,7 @@ d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"
 q = quantites_zone(d)
 q["fourchette_acier"] = fourchette_acier(d, q)
 t = durees_taches(d, q)
-cc = contre_calcul(reseau_zone(t))
+cc = contre_calcul(reseau_zone(t, d["cycle_zone"]))
 c = cout_zone(d, q, t)
 _pl = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
 va = valeur_acquise(d, q, c, _pl["suivi"])
@@ -87,11 +87,11 @@ verifie("les deux algorithmes CPM coincident", cc["ecart_j"] == 0.0,
 verifie("les deux voies designent le meme chemin critique",
         cc["les_deux_voies_designent_le_meme_chemin"])
 verifie("le cycle est plus court que la somme des durees (recouvrement)",
-        cc["voie_A_parcours_avant_arriere_j"] < sum(x.duree for x in reseau_zone(t)))
+        cc["voie_A_parcours_avant_arriere_j"] < sum(x.duree for x in reseau_zone(t, d["cycle_zone"])))
 
 # --- et le CPM doit REAGIR : on allonge une tache critique
 t2 = dict(t); t2["ferraillage_dalle_j"] = t["ferraillage_dalle_j"] + 1.0
-cc2 = contre_calcul(reseau_zone(t2))
+cc2 = contre_calcul(reseau_zone(t2, d["cycle_zone"]))
 verifie("allonger une tache critique allonge le cycle",
         cc2["voie_A_parcours_avant_arriere_j"] > cc["voie_A_parcours_avant_arriere_j"],
         f"{cc2['voie_A_parcours_avant_arriere_j']} j contre {cc['voie_A_parcours_avant_arriere_j']} j")
@@ -132,7 +132,7 @@ verifie("la voie A, elle, en depend bien",
 # --- la courbe en S doit dire la MEME chose que le tableau de valeur acquise
 # (defaut B3 : 59,9 % contre 50,0 % a la meme date, legende affirmant que l'ecart etait SV)
 _arret = _pl["suivi"]["jour_arret"]
-_pts = [x for x in _pl["figures"]["courbe_s"] if abs(x["j"] - _arret) < 1e-9]
+_pts = [x for x in _pl["figures"]["courbe_s"]["points"] if abs(x["j"] - _arret) < 1e-9]
 verifie("la courbe en S porte un point A la date d'arret", len(_pts) == 1,
         f"{len(_pts)} point(s) a j = {_arret}")
 if _pts:
@@ -141,14 +141,19 @@ if _pts:
     _vp, _vaq = va["valeur_planifiee_VP_MAD"] / _bac * 100, va["valeur_acquise_VA_MAD"] / _bac * 100
     verifie("prevu de la courbe = VP/BAC a 0,5 point pres", abs(_pt["prevu"] - _vp) <= 0.5,
             f"{_pt['prevu']} % contre {_vp:.2f} %")
-    verifie("realise de la courbe = VA/BAC a 0,5 point pres", abs(_pt["realise"] - _vaq) <= 0.5,
-            f"{_pt['realise']} % contre {_vaq:.2f} %")
+    _cst = _pl["figures"]["constat_avancement"]
+    verifie("le constat est UN point, pas une courbe", len(_cst) == 1,
+            f"{len(_cst)} point(s) de constat pour 1 releve dans data/")
+    verifie("aucun point de la courbe ne porte un « realise » fabrique",
+            not any("realise" in x for x in _pl["figures"]["courbe_s"]["points"]))
+    verifie("le constat est a la date d'arret", abs(_cst[0]["j"] - _arret) < 1e-9,
+            f"j = {_cst[0]['j']}")
+    verifie("realise du constat = VA/BAC a 0,5 point pres", abs(_cst[0]["realise"] - _vaq) <= 0.5,
+            f"{_cst[0]['realise']} % contre {_vaq:.2f} %")
     _sv = -va["ecart_de_delai_SV_MAD"] / _bac * 100
     verifie("l'ecart vertical de la figure EST bien SV, comme la legende l'affirme",
-            abs((_pt["prevu"] - _pt["realise"]) - _sv) <= 0.5,
-            f"{_pt['prevu'] - _pt['realise']:.2f} points contre {_sv:.2f}")
-    verifie("le constat ne depasse pas la date d'arret",
-            max(x["j"] for x in _pl["figures"]["courbe_s"] if "realise" in x) <= _arret + 1e-9)
+            abs((_pt["prevu"] - _cst[0]["realise"]) - _sv) <= 0.5,
+            f"{_pt['prevu'] - _cst[0]['realise']:.2f} points contre {_sv:.2f}")
 
 # --- le planning doit tenir avec le MATERIEL declare, pas seulement sur le papier
 _cm = _pl["coherence_materiel"]
@@ -164,10 +169,50 @@ verifie("coffrage immobilise = zones simultanees x coffrage de zone",
 verifie("le planning de reference tient avec le parc declare",
         _cm["verdict"] == "OK",
         f"{_cm['coffrage_mobilise_m2']} m2 pour {_cm['stock_declare_m2']} m2 au parc")
-verifie("la variante renforcee, elle, NE tient PAS : le controle sait donc sonner",
-        not _pl["variantes"]["effectif_renforce"]["coffrage_suffisant"]
-        and _pl["variantes"]["effectif_renforce"]["deficit_coffrage_m2"] > 0,
-        f"deficit {_pl['variantes']['effectif_renforce']['deficit_coffrage_m2']} m2")
+# canari : une cadence deliberement trop courte DOIT faire sonner le controle de parc.
+# L'ancienne version s'appuyait sur une variante publiee dont la cadence etait fausse :
+# le controle paraissait savoir sonner parce qu'un autre defaut le faisait sonner.
+_cad_canari = 1.5
+_simult = math.ceil(_pl["cycle_zone"]["duree_j"] / _cad_canari)
+_mob = _simult * q["coffrage_m2"]
+verifie("une cadence trop courte fait sonner le controle de parc : il sait echouer",
+        _mob > _cm["stock_declare_m2"],
+        f"a {_cad_canari} j/zone il faudrait {_mob:.0f} m2 pour {_cm['stock_declare_m2']} au parc")
+
+# --- B1 : la cadence est bornee par TOUTES les equipes dediees, pas par deux sur trois
+_rc = _pl["regle_cadence"]
+_dur_ded = _rc["durees_des_equipes_dediees_j"]
+verifie("la regle de cadence couvre les trois equipes dediees", len(_dur_ded) == 3,
+        ", ".join(sorted(_dur_ded)))
+verifie("cadence = max(equipes dediees) + betonnage, recalcule a la main",
+        abs(_rc["cadence_j"] - (max(_dur_ded.values()) + _pl["durees"]["betonnage_j"])) < 0.01,
+        f"{_rc['cadence_j']} j")
+verifie("le ferraillage des POUTRES est bien dans la regle",
+        "ferraillage_poutres_j" in _dur_ded)
+_vr = _pl["variantes"]["effectif_renforce"]
+verifie("renforcer la seule equipe de dalle fait passer la borne aux POUTRES",
+        _vr["tache_qui_borne_la_cadence"] == "ferraillage_poutres_j",
+        f"borne par {_vr['tache_qui_borne_la_cadence']} a {_vr['cadence_j']} j")
+verifie("et la cible de 25 j n'est alors PAS atteinte", _vr["duree_plancher_j"] > 25,
+        f"{_vr['duree_plancher_j']} j")
+_v2 = _pl["variantes"]["effectif_renforce_deux_equipes"]
+verifie("renforcer les DEUX equipes de ferraillage passe sous la cible",
+        _v2["duree_plancher_j"] < 25, f"{_v2['duree_plancher_j']} j")
+
+# --- B2 : l'histogramme suit le reseau, donc il montre les recouvrements
+_h = {x["j"]: x["n"] for x in _pl["figures"]["effectifs"]}
+_r_zone = voie_A_parcours(reseau_zone(t, d["cycle_zone"]))
+_deb_fep, _fin_cof = _r_zone["tot"]["FEP"][0], _r_zone["tot"]["COF"][1]
+verifie("le reseau comporte bien un recouvrement coffrage / ferraillage de poutres",
+        _deb_fep < _fin_cof, f"FEP demarre a {_deb_fep:.2f}, COF finit a {_fin_cof:.2f}")
+_k = int(math.floor((_deb_fep + _fin_cof) / 2))
+_attendu = d["effectifs"]["coffreurs"] + d["effectifs"]["ferrailleurs_poutres"] \
+    + d["effectifs"]["chef_equipe"] + d["effectifs"]["grutier"]
+verifie("au jour du recouvrement, les DEUX equipes sont comptees",
+        _h.get(_k) == _attendu, f"jour {_k} : {_h.get(_k)} presents, {_attendu} attendus")
+verifie("la pointe publiee est bien le maximum de l'histogramme",
+        _pl["variantes"]["reference"]["pointe_effectif"] == max(_h.values()),
+        f"{_pl['variantes']['reference']['pointe_effectif']} contre {max(_h.values())}")
 
 # --- le contre-calcul du coffrage doit publier la LARGEUR sur laquelle il tient
 _cc1 = _pl["durees"]["contre_calcul_duree_coffrage"]

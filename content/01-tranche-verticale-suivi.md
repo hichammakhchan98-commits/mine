@@ -164,12 +164,19 @@ exhaustive des chemins** du réseau
 
 Ici les deux voies calculent exactement la même grandeur : elles **doivent** coïncider au chiffre
 près. L'énumération est impraticable sur un vrai planning — le nombre de chemins explose — mais elle
-est exacte sur un réseau de quelques tâches, donc idéale comme contre-calcul. Si elles divergeaient,
-c'est le parcours avant/arrière qui serait faux.
+est exacte sur un réseau de quelques tâches, donc utile comme contre-calcul.
 
-Le moteur est par ailleurs **étalonné** sur quatre réseaux dont la durée se pose à la main (une
-chaîne, deux branches parallèles, un recouvrement, une tâche isolée), et il refuse un circuit comme
-un prédécesseur inconnu.
+**Si elles divergeaient, le contrôle ne dirait pas laquelle est fausse** — et il ne faut surtout pas
+désigner un coupable d'avance. Ce module a d'abord publié le contraire : « c'est le parcours
+avant/arrière qui serait faux ». C'était l'inverse de la vérité. Sur un réseau à décalage négatif
+important, c'est l'**énumération** qui rendait 1 jour là où la réponse était 10, parce qu'elle ne
+lisait la fin du projet qu'aux tâches sans successeur. Une « référence » n'est une référence que
+tant qu'elle a été mise à l'épreuve.
+
+C'est à quoi sert l'**étalonnage** : le moteur est confronté à **neuf** réseaux dont la durée se pose
+à la main — chaîne, branches parallèles, recouvrement, tâche isolée, jalons de durée nulle, deux
+départs, deux fins, et les trois régimes à décalage négatif qui l'avaient mis en défaut. Il refuse
+par ailleurs un circuit comme un prédécesseur inconnu.
 :::
 
 ### c. Du cycle au coût
@@ -229,18 +236,40 @@ démarre pas tous les {{tranche-plancher.cycle_zone.duree_j::n2}} jours : la cur
 n'occupent aucune équipe. La cadence est bornée par les tâches qui mobilisent une équipe **dédiée**,
 donc une seule zone à la fois :
 
-$$ \text{cadence} = \max(d_{\text{coffrage}},\ d_{\text{ferraillage de dalle}}) + d_{\text{bétonnage}} $$
+$$ \text{cadence} = \max_{\text{équipes dédiées}} (d_i) + d_{\text{bétonnage}} $$
 
-soit max({{tranche-plancher.durees.coffrage_j::n2}} ; {{tranche-plancher.durees.ferraillage_dalle_j::n2}})
-+ {{tranche-plancher.durees.betonnage_j::n2}} =
-**{{tranche-plancher.planning_plancher.cadence_zone_j::n1}} j**. Le `max` et non la somme, parce que
-coffreurs et ferrailleurs de dalle sont deux équipes distinctes qui travaillent en parallèle sur deux
-zones voisines ; le bétonnage s'ajoute, parce qu'il immobilise la zone et la grue pour tout le monde.
-Deux conséquences immédiates, et ce sont elles qui rendent l'exercice 3 calculable : la cadence
-**ne descend pas** sous {{tranche-plancher.durees.betonnage_j::n2}} + la plus longue des deux tâches
-d'équipe, et renforcer une équipe ne sert que **si c'est elle** qui tient le `max`. Ici c'est le
-ferraillage de dalle ({{tranche-plancher.durees.ferraillage_dalle_j::n2}} j contre
-{{tranche-plancher.durees.coffrage_j::n2}} j au coffrage).
+Les **trois** tâches à équipe dédiée sont le coffrage
+({{tranche-plancher.regle_cadence.durees_des_equipes_dediees_j.coffrage_j::n2}} j), le ferraillage des
+**poutres** ({{tranche-plancher.regle_cadence.durees_des_equipes_dediees_j.ferraillage_poutres_j::n2}} j)
+et le ferraillage de la **dalle**
+({{tranche-plancher.regle_cadence.durees_des_equipes_dediees_j.ferraillage_dalle_j::n2}} j) : chacune
+mobilise une équipe qui ne peut être que sur une zone à la fois. La plus longue borne la rotation ; le
+bétonnage s'ajoute, parce qu'il immobilise la zone, la pompe et la grue pour tout le monde. La cure et
+le décoffrage ne comptent pas : ils n'occupent aucune équipe.
+
+Ici la borne est le **{{tranche-plancher.regle_cadence.tache_qui_borne}}**, et la cadence vaut
+**{{tranche-plancher.planning_plancher.cadence_zone_j::n1}} j**.
+
+:::encart {"genre":"alerte","titre":"Cette formule a été publiée fausse, et voici comment"}
+La première version de ce module écrivait `max(coffrage ; ferraillage de dalle) + bétonnage` : elle
+**oubliait le ferraillage des poutres**. Sur le cas de référence, l'oubli ne se voit pas — le
+ferraillage de dalle est le plus long et masque celui des poutres —, et la cadence de
+{{tranche-plancher.planning_plancher.cadence_zone_j::n1}} j était juste **par coïncidence**.
+
+Elle devenait fausse dès qu'on renforçait l'équipe de dalle, c'est-à-dire exactement dans l'exercice
+que le module propose. Et le module énonçait pourtant la règle qui l'aurait sauvé : *renforcer une
+tâche critique ne garantit un gain que jusqu'au moment où un autre chemin prend le relais.* Il
+l'écrivait en toutes lettres, et sa propre formule la violait.
+
+**La leçon de contrôle** : une formule juste sur le cas publié n'est pas une formule juste. C'est
+pourquoi `calc/tests/` vérifie désormais que la règle couvre les trois équipes, et qu'un renfort de
+l'équipe de dalle fait bien **passer la borne au ferraillage des poutres**.
+:::
+
+Deux conséquences, et ce sont elles qui rendent l'exercice 3 calculable : la cadence ne descend pas
+sous {{tranche-plancher.durees.betonnage_j::n2}} j plus la plus longue des trois tâches d'équipe, et
+renforcer une équipe ne sert que **si c'est elle** qui tient le `max` — après quoi c'est une autre
+qui borne.
 
 :::encart {"genre":"voir","titre":"La contrainte que les plannings de rotation oublient : le parc de coffrage"}
 Le coffrage d'une zone n'est pas libéré au coulage : il reste en place pendant toute la cure et
@@ -254,8 +283,18 @@ soit ⌈{{tranche-plancher.cycle_zone.duree_j::n2}} / {{tranche-plancher.plannin
 joues disponibles simultanément, pour
 ⟦V3|parc de tables coffrantes du chantier|{{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} m²|m²|1 000 à 1 500|2026|parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori⟧
 déclarés : une marge de {{tranche-plancher.coherence_materiel.marge_m2::n0}} m², c'est-à-dire
-**rien**. Et {{tranche-plancher.coherence_materiel.etais_necessaires::n0}} étais, puisque les étais de
-reprise restent sous les zones décoffrées.
+**rien**.
+
+Et les **étais** ne se comptent pas sur les mêmes zones. Une zone décoffrée n'est pas libérée : ses
+étais de reprise restent en place
+⟦V3|maintien des étais de reprise après décoffrage|14 jours|j|7 à 28|2026|le critère réel est une résistance et une redistribution de charges, pas une durée ; aucune valeur normative n'est disponible en § 5.0⟧.
+Le nombre de zones étayées vaut donc ⌈(cycle + maintien) / cadence⌉ =
+**{{tranche-plancher.coherence_materiel.zones_etayees_simultanement}} zones**, et non les
+{{tranche-plancher.coherence_materiel.zones_coffrees_simultanement}} zones coffrées : il faut
+**{{tranche-plancher.coherence_materiel.etais_necessaires::n0}} étais** là où un décompte fait sur les
+seules zones coffrées en annoncerait
+{{tranche-plancher.coherence_materiel.etais_si_on_ne_comptait_que_les_zones_coffrees::n0}}. **Un
+facteur deux sur un poste de location**, et il vient d'une question de définition, pas de calcul.
 
 C'est un **contrôle de cohérence du module**, pas un commentaire : `coherence_materiel.verdict` vaut
 *{{tranche-plancher.coherence_materiel.verdict}}*, et il passerait au rouge si la cadence descendait
@@ -263,7 +302,7 @@ sans que le parc suive. Une cadence annoncée en réunion sans ce calcul est une
 par le parc, pas par le planning — et c'est le parc qui aura raison.
 :::
 
-:::figure {"fn":"histogramme","args":"tranche-plancher.figures.effectifs","titre":"Effectif présent sur le plancher, jour par jour","num":4,"large":true,"voir":["Le creux de démarrage et la décroissance de fin sont normaux : seule la partie centrale est en régime.","La pointe donne le dimensionnement de la base-vie et des moyens — c'est elle qu'il faut regarder, pas la moyenne.","La courbe est dentelée : chaque dent est un changement de poste à l'intérieur d'un cycle."],"erreur":"Lisser cet histogramme en moyenne et dimensionner la base-vie dessus. Le jour de pointe, il manque des vestiaires et des réfectoires pour tout le monde."}
+:::figure {"fn":"histogramme","args":"tranche-plancher.figures.effectifs","titre":"Effectif présent sur le plancher, jour par jour","num":4,"large":true,"voir":["Les jours les plus chargés sont ceux où deux équipes se recouvrent sur deux zones voisines : c'est le recouvrement du cycle, vu côté effectif.","La pointe donne le dimensionnement de la base-vie et des moyens — c'est elle qu'il faut regarder, pas la moyenne.","Les jours à zéro de la fin ne sont pas une erreur : la cure n'occupe personne. Un histogramme qui n'en montre jamais est un histogramme qui compte des présents imaginaires."],"erreur":"Lisser cet histogramme en moyenne et dimensionner la base-vie dessus. Le jour de pointe, il manque des vestiaires et des réfectoires pour tout le monde."}
 :::
 
 ## S5 · Erreurs fréquentes, et ce qu'elles coûtent
@@ -296,7 +335,7 @@ la main — {{valeur-acquise.zones_prevues_equivalentes::n2}} zones étaient pr�
 
 {{valeur-acquise.lecture}}
 
-:::figure {"fn":"courbeS","args":"tranche-plancher.figures.courbe_s","titre":"Courbe en S : avancement prévu et avancement réel à la date d'arrêt","num":5,"large":true,"voir":["La courbe réelle s'arrête à la date d'arrêt : au-delà, il n'y a pas de donnée, et une courbe qui continuerait serait une prévision déguisée en constat.","L'écart vertical à la date d'arrêt est le retard en valeur, pas en jours : c'est SV.","La pente de la courbe réelle, et non sa position, dit si le retard se creuse ou se résorbe."],"erreur":"Prolonger la courbe réelle jusqu'à la fin pour « montrer qu'on rattrape ». Un constat et une prévision ne se tracent pas du même trait."}
+:::figure {"fn":"courbeS","args":"tranche-plancher.figures.courbe_s","titre":"Courbe en S prévue, et le constat à la date d'arrêt","num":5,"large":true,"voir":["Le constat est UN point, pas une courbe : les données ne portent qu'un relevé, celui de la date d'arrêt. Tant qu'il n'y en a qu'un, tracer une ligne reviendrait à publier une prévision déguisée en constat — ce que l'erreur courante ci-dessous interdit.","L'écart vertical entre la courbe et le point est le retard en valeur, pas en jours : c'est SV, et il vaut ici ce que le tableau S6 annonce.","La courbe prévue, elle, est bien une courbe : elle vient du réseau, zone par zone. Sa pente maximale est le moment où le chantier consomme le plus de moyens."],"erreur":"Tracer un « réalisé » en multipliant la courbe prévue par le taux d'avancement constaté. La figure est alors jolie, continue, et ne contient aucune information que le point unique ne portait déjà — c'est exactement l'erreur que cette figure a commise dans sa première version."}
 :::
 
 :::encart {"genre":"voir","titre":"Contre-calcul : l'avancement déclaré colle-t-il aux relevés ?"}
@@ -318,9 +357,12 @@ recoupement qui fait foi se fait **en unités physiques, poste par poste** :
 | Acier | issu d'un **ratio V3** | {{valeur-acquise.recoupement_physique.postes.2.theorique_x_avancement::n0}} kg | {{valeur-acquise.recoupement_physique.postes.2.releve::n0}} kg | {{valeur-acquise.recoupement_physique.postes.2.ecart_pct::n2}} % |
 
 Les deux postes **géométriques** sont sous le pour cent : l'avancement déclaré tient. L'écart vient
-surtout de l'acier — dont le ratio V3 a une fourchette de
-{{tranche-plancher.quantites.fourchette_acier.etendue_pct::n0}} %, soit **quarante fois** l'écart
-constaté. Autrement dit : **l'alarme en dirhams était du bruit promu au rang de signal.**
+surtout de l'acier — dont le ratio V3 ouvre une étendue de
+{{valeur-acquise.recoupement_physique.rapports.etendue_du_ratio_pct::n1}} %, soit
+**{{valeur-acquise.recoupement_physique.rapports.fourchette_du_ratio_sur_ecart_constate::n0}} fois**
+l'écart constaté sur ce poste
+({{valeur-acquise.recoupement_physique.postes.2.ecart_pct::n2}} %). Autrement dit : **l'alarme en
+dirhams était du bruit promu au rang de signal.**
 
 **À quoi ressemblerait un vrai signal.** Le même contrôle, si le relevé de béton était court de 5 % :
 
@@ -383,8 +425,10 @@ au marteau-piqueur.
    coffrage, qui sont géométriques, un écart au-delà de
    {{valeur-acquise.recoupement_physique.seuil_poste_geometrique_pct::n0}} % met en cause
    l'avancement : demandez les attachements. Sur l'**acier**, un écart ne prouve rien — il vient
-   d'un ratio dont la fourchette vaut ± {{tranche-plancher.quantites.fourchette_acier.etendue_pct::n0}} %,
-   soit vingt fois le seuil.
+   d'un ratio dont l'étendue vaut
+   {{valeur-acquise.recoupement_physique.rapports.etendue_du_ratio_pct::n1}} %, soit
+   {{valeur-acquise.recoupement_physique.rapports.fourchette_du_ratio_sur_seuil_geometrique::n0}} fois
+   le seuil.
 4. Les durées viennent-elles des quantités, ou d'un dire d'expert ?
 5. La cadence annoncée tient-elle **en tables** ? ⌈cycle / cadence⌉ zones détiennent du coffrage en
    même temps : comparez au parc avant d'annoncer une date.
@@ -451,21 +495,23 @@ critique** à ce niveau de renfort. Ce n'est pas toujours le cas, et c'est la r�
 relais.** Refaites tourner le réseau avant d'annoncer un gain en réunion — ne le déduisez jamais de
 la seule tâche renforcée.
 
-Effet sur l'ensemble : la cadence passe de {{tranche-plancher.variantes.reference.cadence_j::n2}} à
-{{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j/zone, et le plancher de
+Effet sur l'ensemble, et c'est là que l'exercice se joue : la cadence ne descend **pas** autant que la
+tâche. Elle passe de {{tranche-plancher.variantes.reference.cadence_j::n2}} à
+**{{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j/zone seulement**, parce que la
+borne a changé d'équipe : ce n'est plus le ferraillage de dalle qui tient le `max`, c'est le
+**ferraillage des poutres**
+({{tranche-plancher.variantes.effectif_renforce.ferraillage_poutres_j::n2}} j pour une équipe de
+{{gare.effectifs.ferrailleurs_poutres}}, inchangée). Le plancher passe donc de
 {{tranche-plancher.variantes.reference.duree_plancher_j::n1}} à
-**{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours**. Le prix à payer :
-l'effectif de pointe monte de {{tranche-plancher.variantes.reference.pointe_effectif}} à
+**{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours**, et non à ce que la
+seule tâche renforcée laissait espérer. L'effectif de pointe, lui, monte de
+{{tranche-plancher.variantes.reference.pointe_effectif}} à
 {{tranche-plancher.variantes.effectif_renforce.pointe_effectif}} personnes, et le coffrage mobilisé
-simultanément de {{tranche-plancher.variantes.reference.coffrage_mobilise_m2::n0}} à
-{{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² — parce que la cadence
-tombe sous le cycle d'un cran de plus et qu'une
-**{{tranche-plancher.variantes.effectif_renforce.zones_coffrees_simultanement}}ᵉ** zone détient alors
-du coffrage. Et là,
-le parc ne suit plus : il manque
-**{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m²** de tables. Retenez ce
-cheminement : un effectif change une durée, la durée change une cadence, la cadence change le
-**matériel**. C'est l'objet de l'exercice suivant.
+reste à {{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² pour
+{{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} m² au parc.
+
+Retenez le cheminement : un effectif change une durée, la durée change une cadence — **jusqu'à ce
+qu'une autre équipe prenne la borne**. C'est l'objet de l'exercice suivant.
 :::
 
 :::exercice {"titre":"3 · Défendre une cadence en réunion","niveau":"probleme"}
@@ -473,54 +519,59 @@ Le maître d'ouvrage demande le plancher en 25 jours ouvrés au lieu de
 {{tranche-plancher.planning_plancher.duree_totale_j::n1}}. Vous ne pouvez ni changer les quantités ni
 toucher à la cure. Quels leviers reste-t-il, et lequel défendez-vous ?
 
-**Corrigé.** Trois leviers. Le premier suffit — et c'est le résultat qu'il faut vérifier avant de
-proposer quoi que ce soit de plus lourd.
+**Corrigé.** Trois leviers, et le premier ne suffit **pas** — c'est précisément ce qu'il faut
+vérifier avant d'annoncer quoi que ce soit.
 
-**(a) Renforcer la tâche critique.** Le cycle est piloté par le ferraillage de dalle. Passer de
-{{gare.effectifs.ferrailleurs_dalle}} à 12 ferrailleurs ramène la cadence de
-{{tranche-plancher.variantes.reference.cadence_j::n2}} à
-{{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j/zone et le plancher à
-**{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours** — **sous la cible, sur
-le papier des durées.** Le prix : effectif de pointe à
-{{tranche-plancher.variantes.effectif_renforce.pointe_effectif}} personnes (contre
-{{tranche-plancher.variantes.reference.pointe_effectif}}) et
-{{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² de coffrage mobilisés
-simultanément.
+**(a) Renforcer la tâche qui borne la cadence.** Elle est aujourd'hui le ferraillage de dalle. Passer
+de {{gare.effectifs.ferrailleurs_dalle}} à {{tranche-plancher.variantes.effectif_renforce.ferrailleurs_dalle}}
+ferrailleurs ramène cette tâche à
+{{tranche-plancher.variantes.effectif_renforce.ferraillage_dalle_j::n2}} j — mais la cadence ne tombe
+qu'à **{{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j/zone**, parce que le
+**ferraillage des poutres** ({{tranche-plancher.variantes.effectif_renforce.ferraillage_poutres_j::n2}} j)
+reprend aussitôt la borne. Le plancher tombe à
+**{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours** : **au-dessus de la
+cible de 25**. Quatre ferrailleurs de plus, et la promesse n'est pas tenue.
 
-**Et c'est là que l'exercice se joue vraiment.** Le parc déclaré vaut
-{{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} m² : il manque
-**{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m²** de tables, parce que
-la cadence tombe à {{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j pour un cycle de
-{{tranche-plancher.variantes.effectif_renforce.cycle_j::n2}} j et qu'une
-{{tranche-plancher.variantes.effectif_renforce.zones_coffrees_simultanement}}ᵉ zone détient alors du
-coffrage. Le levier (a) n'est donc **pas gratuit** : il coûte quatre ferrailleurs *et* environ
-{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m² de tables
-supplémentaires, soit l'équivalent d'**une zone** de plus. C'est ce chiffre-là qu'il faut porter en
-réunion, pas la seule durée.
+**(a bis) Renforcer les deux équipes de ferraillage.** C'est le levier qui marche, et il ne se devine
+pas : il se calcule. En portant la dalle à
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.ferrailleurs_dalle}} **et** les poutres à
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.ferrailleurs_poutres}}, la borne revient
+au {{tranche-plancher.variantes.effectif_renforce_deux_equipes.tache_qui_borne_la_cadence}}, la
+cadence tombe à **{{tranche-plancher.variantes.effectif_renforce_deux_equipes.cadence_j::n2}} j/zone**
+et le plancher à **{{tranche-plancher.variantes.effectif_renforce_deux_equipes.duree_plancher_j::n1}}
+jours** — **sous la cible**. Le prix : effectif de pointe à
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.pointe_effectif}} personnes contre
+{{tranche-plancher.variantes.reference.pointe_effectif}}, et
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.coffrage_mobilise_m2::n0}} m² de tables
+immobilisées pour {{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} au parc — le parc
+suit, de justesse.
 
 **(b) Découper en zones plus petites.** Plus de zones, cycle plus court chacune, mais plus de reprises
 de bétonnage et plus de points d'arrêt. On gagne sur le papier, on perd en qualité et en contrôle.
 
 **(c) Dédoubler le front sur deux zones en parallèle.** Le levier le plus puissant, et le plus cher :
-**deux jeux complets** de tables — de l'ordre de
-{{tranche-plancher.coherence_materiel.coffrage_mobilise_m2::n0}} m² de plus, et non les
-{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m² de (a) — et une grue qui
-suive. **Inutile ici** : (a) atteint la cible pour moins d'un tiers de ce supplément de matériel. Le
-rapport entre ces deux chiffres *est* l'argument de la réunion.
+un **second jeu complet** de tables — de l'ordre de
+{{tranche-plancher.coherence_materiel.coffrage_mobilise_m2::n0}} m² de plus — et une grue qui suive.
+**Inutile ici**, puisque (a bis) atteint la cible sans toucher au parc.
 
 **Ce qu'il faut dire en réunion** : « 25 jours est atteignable en portant le ferraillage de dalle à
-12 compagnons : {{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours, pointe à
-{{tranche-plancher.variantes.effectif_renforce.pointe_effectif}} personnes, et
-{{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² de tables immobilisées
-contre {{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} au parc : il me faut
-{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m² de tables en plus. Je
-vérifie la base-vie et le délai d'approvisionnement, et je confirme vendredi. » Pas « on va
-essayer » ; et pas non plus un dédoublement de front qu'on n'a pas eu besoin de calculer.
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.ferrailleurs_dalle}} compagnons **et celui
+des poutres à {{tranche-plancher.variantes.effectif_renforce_deux_equipes.ferrailleurs_poutres}}** :
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.duree_plancher_j::n1}} jours, pointe à
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.pointe_effectif}} personnes,
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.coffrage_mobilise_m2::n0}} m² de tables
+contre {{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} au parc. Renforcer la seule équipe
+de dalle ne donnerait que {{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours :
+je l'ai vérifié. Je confirme la base-vie vendredi. » Pas « on va essayer » ; et surtout pas la
+première réponse venue, qui était fausse de
+{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} contre 25.
 
-*Le piège de cet exercice : proposer d'emblée le levier le plus lourd. La tâche critique se renforce
-d'abord, et le réseau se refait tourner avant toute annonce. Le second piège, plus discret, est de
-s'arrêter à la durée : une cadence tenable en jours peut être intenable en tables, et le parc a
-toujours le dernier mot.*
+
+*Le piège de cet exercice : croire qu'une tâche renforcée se traduit en cadence. Elle ne s'y traduit
+que tant qu'elle **tient la borne** — après quoi une autre équipe la reprend, et le gain s'arrête
+sans prévenir. Refaites tourner le réseau avant toute annonce : c'est trente secondes de calcul
+contre une date intenable annoncée en réunion. Le second piège, plus discret, est de s'arrêter à la
+durée : une cadence tenable en jours peut être intenable en tables, et le parc a le dernier mot.*
 :::
 
 :::exercice {"titre":"4 · Trouver l'erreur dans cette situation de travaux","niveau":"revue critique"}

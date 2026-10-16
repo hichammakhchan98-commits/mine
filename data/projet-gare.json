@@ -453,7 +453,15 @@
     "etais_par_m2": 2.5,
     "etais_note": "densite d'etais par m2 de plancher etaye ; le nombre total se deduit du nombre de zones etayees simultanement",
     "pompe_a_beton": "pompe automotrice, 30 m3/h retenus (V3)",
-    "grue": "grue a tour, voir C1"
+    "grue": "grue a tour, voir C1",
+    "etais_de_reprise_maintenus_j": {
+      "valeur": 14,
+      "fourchette": [
+        7,
+        28
+      ],
+      "note": "duree pendant laquelle les etais de reprise restent en place APRES le decoffrage. Le critere reel est une resistance et une redistribution de charges, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
+    }
   },
   "multi_sites": {
     "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
@@ -520,7 +528,7 @@
     "avancement_zone_en_cours_pct": 60,
     "cout_reel_constate_MAD": 1330000,
     "note": "Le cout reel vient des attachements. Ici il est pose en V3 pour faire tourner la chaine.",
-    "base_du_choix": "Ce cout reel est FABRIQUE pour la demonstration, et choisi sur une base explicite : un chantier en legere difficulte — quelques pour cent de depassement de cout ET un retard d'une demi-zone. Un cas ou tout tombe juste n'apprend rien sur les indicateurs, et un cas ou CPI depasse 1,5 n'existe pas sur un chantier de gros oeuvre. La valeur n'a PAS ete ajustee pour obtenir un resultat : elle a ete posee avant de regarder CPI et SPI, a partir de l'ordre de grandeur du budget de 3,6 zones.",
+    "base_du_choix": "Ce cout reel est FABRIQUE pour la demonstration, et choisi sur une base explicite : un chantier en legere difficulte — quelques pour cent de depassement de cout et un retard de l'ordre d'une zone. La valeur a ete posee AVANT de regarder CPI et SPI, a partir de l'ordre de grandeur du budget de 3,6 zones ; le calcul a ensuite donne CPI 0,94 et un retard de 1,26 zone a la date d'arret. On publie ce que le calcul rend, pas ce que la note esperait : une premiere version de cette note annoncait « une demi-zone » et contredisait la sortie de calc/.",
     "quantites_relevees": {
       "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). C'est la seule voie reellement independante de l'avancement declare : elle ne passe pas par lui.",
       "beton_m3": 352.0,
@@ -532,5 +540,61 @@
     "jours_ouvres_par_semaine": 5,
     "jour_arret_ouvre": 19,
     "_jour_arret": "La date d'arret est la DONNEE ; l'avancement prevu a cette date s'en deduit par le planning, en comptant l'avancement fractionnaire de chaque zone. L'ancienne version posait « 4 zones prevues » et en deduisait la date : la courbe en S et le tableau de valeur acquise mesuraient alors deux choses differentes et se contredisaient de 8 points."
+  },
+  "cycle_zone": {
+    "_role": "Parametres du cycle d'une zone qui ne sortent ni d'une quantite ni d'une cadence : durees physiques ou contractuelles, et taux de recouvrement entre equipes. Ils etaient ecrits en dur dans calc/ : ils pesent 32 % du cycle et la totalite du gain de recouvrement, ils doivent donc etre declares, bornes et registres comme le reste.",
+    "niveau_preuve": "V3",
+    "annee_ref": 2026,
+    "cure_avant_decoffrage_j": {
+      "valeur": 2.0,
+      "fourchette": [
+        1.0,
+        4.0
+      ],
+      "note": "attente de resistance avant decoffrage. Le critere reel est une resistance, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
+    },
+    "decoffrage_j": {
+      "valeur": 0.5,
+      "fourchette": [
+        0.25,
+        1.0
+      ],
+      "note": "depose des tables, etais de reprise maintenus"
+    },
+    "point_arret_visa_ferraillage_j": {
+      "valeur": 0.25,
+      "fourchette": [
+        0.125,
+        0.5
+      ],
+      "note": "visa du ferraillage par la maitrise d'oeuvre avant coulage : un point d'arret est une tache du planning"
+    },
+    "recouvrement_coffrage_ferraillage_poutres_pct": {
+      "valeur": 50,
+      "fourchette": [
+        30,
+        70
+      ],
+      "note": "part du coffrage faite avant que le ferraillage des poutres demarre"
+    },
+    "recouvrement_ferraillage_poutres_dalle_pct": {
+      "valeur": 40,
+      "fourchette": [
+        20,
+        60
+      ],
+      "note": "part du ferraillage des poutres faite avant que celui de la dalle demarre"
+    },
+    "effectif_par_tache": {
+      "_role": "Effectif present sur la zone pendant chaque tache du cycle. Les taches a zero sont voulues : la cure n'occupe personne, et le visa est l'affaire du controle, pas d'une equipe.",
+      "COF": "coffreurs",
+      "FEP": "ferrailleurs_poutres",
+      "FED": "ferrailleurs_dalle",
+      "PTA": 0,
+      "BET": "equipe_betonnage",
+      "CUR": 0,
+      "DEC": 2,
+      "_note_DEC": "le decoffrage mobilise deux compagnons, pas l'equipe de coffrage entiere : celle-ci est deja sur la zone suivante, c'est tout l'objet de la rotation."
+    }
   }
 }

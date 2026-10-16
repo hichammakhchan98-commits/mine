@@ -257,7 +257,12 @@
   }
 
   /** Courbe en S : pts {j, prevu, realise?}, en % cumule. */
-  function courbeS(pts, o = {}) {
+  function courbeS(z, o = {}) {
+    // Deux formes acceptees : un tableau de points, ou { points, constat }. Le constat
+    // est dessine comme un POINT et non comme une courbe : tant qu'un seul releve
+    // existe, tracer une ligne reviendrait a publier une prevision deguisee en constat.
+    const pts = Array.isArray(z) ? z : z.points;
+    const constat = Array.isArray(z) ? null : (z.constat || null);
     const L = o.largeur || 620, H = o.hauteur || 260;
     const r = repere({ largeur: L, hauteur: H, marge: 48, margeDroite: 24, libre: true,
       xmin: 0, xmax: Math.max(...pts.map((p) => p.j)), ymin: 0, ymax: 100 });
@@ -274,6 +279,21 @@
     };
     g += trace("prevu", "#41607d", "6 4");
     g += trace("realise", "#8c3b2e", null);
+    // le constat : un point, un trait d'aplomb jusqu'a la courbe prevue, et l'ecart cote
+    if (constat) for (const c of constat) {
+      const prev = (() => {
+        const av = pts.filter((p) => p.j <= c.j).pop(), ap = pts.find((p) => p.j >= c.j);
+        if (!av || !ap) return null;
+        if (ap.j === av.j) return av.prevu;
+        return av.prevu + (ap.prevu - av.prevu) * (c.j - av.j) / (ap.j - av.j);
+      })();
+      if (prev != null) {
+        g += ligne(r.x(c.j), r.y(prev), r.x(c.j), r.y(c.realise), { couleur: "#8c3b2e", ep: 1.4 });
+        g += texte(r.x(c.j) + 7, r.y((prev + c.realise) / 2), `${(prev - c.realise).toFixed(1).replace(".", ",")} pts`,
+          { taille: 9.5, mono: 1, base: "middle", couleur: "#8c3b2e" });
+      }
+      g += cercle(r.x(c.j), r.y(c.realise), 4.5, { remplissage: "#8c3b2e", couleur: "#ffffff", ep: 1.5 });
+    }
     // graduations en abscisse : sans elles, la courbe ne se lit pas dans le temps
     const jmax = Math.max(...pts.map((p) => p.j));
     const pasJ = jmax > 60 ? 10 : jmax > 20 ? 5 : 2;
@@ -287,8 +307,13 @@
     const yl = 20;
     g += ligne(L - 150, yl, L - 126, yl, { couleur: "#41607d", ep: 2, tirets: "6 4" });
     g += texte(L - 120, yl + 3.5, "prévu", { taille: 10.5, couleur: "#3f4852" });
-    g += ligne(L - 74, yl, L - 50, yl, { couleur: "#8c3b2e", ep: 2 });
-    g += texte(L - 44, yl + 3.5, "réalisé", { taille: 10.5, couleur: "#3f4852" });
+    if (constat) {
+      g += cercle(L - 68, yl, 4.5, { remplissage: "#8c3b2e", couleur: "#ffffff", ep: 1.5 });
+      g += texte(L - 58, yl + 3.5, "constat", { taille: 10.5, couleur: "#3f4852" });
+    } else {
+      g += ligne(L - 74, yl, L - 50, yl, { couleur: "#8c3b2e", ep: 2 });
+      g += texte(L - 44, yl + 3.5, "réalisé", { taille: 10.5, couleur: "#3f4852" });
+    }
     return { svg: g, largeur: L, hauteur: H };
   }
 
@@ -307,6 +332,24 @@
         g += texte(r.x(i) + l / 2, r.y(0) + 13, String(p.j), { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
     });
     g += ligne(r.x(0), r.y(0), r.x(pts.length), r.y(0), { couleur: "#14181d", ep: 1 });
+    // Axe des ordonnees gradue, avec son unite. Sans lui, une legende qui dit « c'est la
+    // pointe qu'il faut lire » demande au lecteur de lire un nombre qui n'est pas ecrit.
+    const pasN = nmax > 40 ? 10 : nmax > 15 ? 5 : 2;
+    for (let v = 0; v <= nmax; v += pasN) {
+      g += ligne(r.x(0) - 4, r.y(v), r.x(pts.length), r.y(v),
+        { couleur: v ? "#eceee9" : "#14181d", ep: 1 });
+      g += texte(r.x(0) - 8, r.y(v), String(v),
+        { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    }
+    // l'unite se pose DANS le cadre : ancree a gauche de l'axe, elle sortait de la vue
+    g += texte(r.x(0) + 2, r.y(nmax) + 10, o.unite || "personnes",
+      { taille: 9, ancre: "start", couleur: "#6b7682" });
+    // la pointe est cotee : c'est le nombre que la legende demande de lire
+    const iMax = pts.findIndex((p) => p.n === nmax);
+    g += ligne(r.x(iMax) + l / 2, r.y(nmax) - 6, r.x(iMax) + l / 2, r.y(nmax) - 16,
+      { couleur: "#8c3b2e", ep: 1 });
+    g += texte(r.x(iMax) + l / 2, r.y(nmax) - 21, `pointe ${nmax}`,
+      { taille: 9.5, mono: 1, ancre: "middle", couleur: "#8c3b2e" });
     const moy = pts.reduce((a, p) => a + p.n, 0) / pts.length;
     g += ligne(r.x(0), r.y(moy), r.x(pts.length), r.y(moy), { couleur: "#8c3b2e", ep: 1.2, tirets: "5 4" });
     g += texte(r.x(pts.length) - 4, r.y(moy) - 5, `moyenne ${moy.toFixed(1)}`,

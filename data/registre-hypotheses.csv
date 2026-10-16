@@ -9,3 +9,4 @@ H007;ratio d'acier d'une poutre;180 kg/m³;kg/m³;140 à 220;2026;TV;ordre de gr
 H008;prix horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;TV;compagnon nu, charges comprises, sans encadrement
 H009;part de main d'œuvre directe dans un prix posé;15 à 30 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris
 H010;parc de tables coffrantes du chantier;1 300 m²;m²;1 000 à 1 500;2026;TV;parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori
+H011;maintien des étais de reprise après décoffrage;14 jours;j;7 à 28;2026;TV;le critère réel est une résistance et une redistribution de charges, pas une durée , aucune valeur normative n'est disponible en § 5.0

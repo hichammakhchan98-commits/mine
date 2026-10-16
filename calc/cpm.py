@@ -72,11 +72,23 @@ def voie_A_parcours(taches: list[Tache]) -> dict:
             succ[p].append((t.id, dec))
     for i in reversed(ordre):                         # arriere : au plus tard
         t = T[i]
-        fin = min([tard[s][0] - dec for s, dec in succ[i]], default=duree)
+        # BORNE A LA FIN DE PROJET. Sans elle, une tache dont le successeur demarre tres
+        # tot a cause d'un decalage negatif important se voit crediter une marge qui
+        # n'existe pas : sur A(10 j) -> B(1 j) avec un decalage de -10, A recevait 9 jours
+        # de marge et le chemin critique ressortait VIDE, alors que A porte a elle seule
+        # la duree du projet. Aucune tache ne peut finir apres la fin du projet.
+        fin = min([tard[s][0] - dec for s, dec in succ[i]] + [duree])
         tard[i] = (fin - t.duree, fin)
 
     marges = {i: round(tard[i][0] - tot[i][0], 6) for i in ordre}
     critiques = [i for i in ordre if abs(marges[i]) < 1e-9]
+    # Deux invariants qu'un parcours juste respecte toujours : aucune marge negative, et
+    # au moins une tache critique. Les violer signale une erreur de parcours, pas un
+    # reseau exotique : on leve, plutot que de publier des marges fausses.
+    if any(m < -1e-9 for m in marges.values()):
+        raise ValueError(f"marge negative : parcours arriere incoherent — {marges}")
+    if not critiques:
+        raise ValueError("aucune tache critique : tout reseau en a au moins une")
     return {"duree": duree, "tot": tot, "tard": tard, "marges": marges, "critiques": critiques}
 
 

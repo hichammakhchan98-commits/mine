@@ -22,7 +22,7 @@ reserves a venir, et elle se laisse tromper par un avancement declare a vue de n
 from __future__ import annotations
 import json, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from plancher import quantites_zone
+from plancher import quantites_zone, fourchette_acier
 from cycle_plancher import durees_taches, cout_zone
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
@@ -52,8 +52,22 @@ def _recoupement(d: dict, q: dict, avancement: float) -> dict:
         out.append({"poste": cle, "unite": unite, "nature": nature,
                     "theorique_x_avancement": round(theo, 1), "releve": rel[cle],
                     "ecart_pct": round(ecart, 2), "signal": alerte})
+    # Les rapports que le texte publie ne se tapent pas a la main : ils se calculent.
+    # Deux d'entre eux ont ete publies faux (« quarante fois », « vingt fois »).
+    acier = next(x for x in out if x["poste"] == "acier_kg")
+    etendue = q.get("fourchette_acier", {}).get("etendue_pct")
+    rapports = {}
+    if etendue:
+        if abs(acier["ecart_pct"]) > 1e-9:
+            rapports["fourchette_du_ratio_sur_ecart_constate"] = round(
+                etendue / abs(acier["ecart_pct"]), 1)
+        rapports["fourchette_du_ratio_sur_seuil_geometrique"] = round(
+            etendue / SEUIL_GEOMETRIQUE_PCT, 1)
+        rapports["etendue_du_ratio_pct"] = etendue
+
     return {
         "postes": out,
+        "rapports": rapports,
         "seuil_poste_geometrique_pct": SEUIL_GEOMETRIQUE_PCT,
         "un_poste_geometrique_derive": signal,
         "lecture": (
@@ -156,6 +170,7 @@ def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict) -> dict:
 if __name__ == "__main__":
     d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"))
     q = quantites_zone(d)
+    q["fourchette_acier"] = fourchette_acier(d, q)
     t = durees_taches(d, q)
     c = cout_zone(d, q, t)
     plan = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))

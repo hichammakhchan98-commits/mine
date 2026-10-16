@@ -46,6 +46,26 @@ if __name__ == "__main__":
         print(f"  {'ok   ' if bon else 'ECHEC'} {nom:58s} A {r['voie_A_parcours_avant_arriere_j']:5.1f} · "
               f"B {r['voie_B_enumeration_des_chemins_j']:5.1f} · attendu {attendu:5.1f}")
 
+    # --- marges et chemin critique, et pas seulement la duree
+    # La duree etait juste sur ces trois reseaux alors que les MARGES etaient fausses et
+    # que le chemin critique ressortait vide : un etalonnage qui ne verifie que la duree
+    # laisse passer la moitie de ce qu'un planificateur lit reellement.
+    print("  marges et chemin critique (decalages negatifs importants)")
+    for nom, taches, crit_attendu, marges_attendues in (
+        ("A(10) -> B(1), dec -10", [Tache("A", "A", 10.0), Tache("B", "B", 1.0, [("A", -10.0)])],
+         ["A"], {"A": 0.0, "B": 9.0}),
+        ("A(10) -> B(1), dec -20", [Tache("A", "A", 10.0), Tache("B", "B", 1.0, [("A", -20.0)])],
+         ["A"], {"A": 0.0, "B": 9.0}),
+        ("A(2) -> B(5), dec -10", [Tache("A", "A", 2.0), Tache("B", "B", 5.0, [("A", -10.0)])],
+         ["B"], {"A": 3.0, "B": 0.0}),
+    ):
+        r = voie_A_parcours(taches)
+        bon = r["critiques"] == crit_attendu and all(
+            abs(r["marges"][k] - v) < 1e-9 for k, v in marges_attendues.items())
+        print(f"     {'ok   ' if bon else 'ECHEC'} {nom} — critiques {r['critiques']} "
+              f"(attendu {crit_attendu}) · marges {r['marges']}")
+        ok = ok and bon
+
     print("  gardes-fous")
     try:
         ordonner([Tache("x", "x", 1, ["y"]), Tache("y", "y", 1, ["x"])])
