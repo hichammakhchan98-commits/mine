@@ -2,7 +2,7 @@
    On fabrique le zip, on le deplie dans un repertoire neuf, et on y rejoue la sequence
    de reprise du § 12.5 B2 : npm ci --ignore-scripts && npm run check. */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -10,7 +10,14 @@ import { join } from "node:path";
 // DEJA EXISTANT sans y toucher : c'est le seul moyen de controler la piece reellement
 // remise au lecteur, et non une copie fraiche du repertoire courant.
 const ARG = process.argv[2];
-const ZIP = ARG || "cours-genie-civil-P1-E1-socle.zip";
+// Le nom du zip n'est pas ecrit ici : il est LU dans la section « Reprise » de STATE.md,
+// qui est la piece que le lecteur rouvre a chaque seance. Un nom en dur restait sur le
+// livrable precedent et faisait verifier le mauvais zip.
+const ZIP = ARG || (() => {
+  const m = readFileSync("STATE.md", "utf8").match(/cours-genie-civil-[\w.-]+\.zip/);
+  if (!m) throw new Error("STATE.md ne nomme aucun zip de reprise (§ 12.5 B3)");
+  return m[0];
+})();
 const sh = (cmd, args, cwd) =>
   execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
