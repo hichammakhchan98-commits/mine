@@ -8,7 +8,7 @@ lui-meme.
 from __future__ import annotations
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
-from cpm import Tache, contre_calcul, voie_A_parcours, ordonner
+from cpm import Tache, contre_calcul, voie_A_parcours, voie_B_enumeration, ordonner
 
 CAS = [
     ("chaine de 3 taches : 2 + 3 + 4 = 9",
@@ -20,6 +20,20 @@ CAS = [
      [Tache("h", "h", 4), Tache("i", "i", 4, [("h", -2)])], 6.0),
     ("tache isolee la plus longue : max(10, 3 + 3) = 10",
      [Tache("j", "j", 10), Tache("k", "k", 3), Tache("l", "l", 3, ["k"])], 10.0),
+
+    # --- Regimes que les quatre cas ci-dessus n'atteignaient JAMAIS, et ou le moteur
+    #     etait faux : la passe adversariale les a trouves. Ils restent ici pour que
+    #     la correction ne puisse plus regresser.
+    ("decalage negatif egal a la duree du predecesseur : A finit a 10, B ne l'avance pas",
+     [Tache("m", "m", 10), Tache("n", "n", 1, [("m", -10)])], 10.0),
+    ("decalage negatif PLUS GRAND que la duree : le debut reste borne a zero",
+     [Tache("o", "o", 10), Tache("p", "p", 1, [("o", -20)])], 10.0),
+    ("tache de duree nulle (un point d'arret instantane)",
+     [Tache("q", "q", 0), Tache("r", "r", 5, ["q"])], 5.0),
+    ("deux fins distinctes : la plus tardive l'emporte",
+     [Tache("s", "s", 3), Tache("t", "t", 7, ["s"]), Tache("u", "u", 1, ["s"])], 10.0),
+    ("deux departs independants qui convergent",
+     [Tache("v", "v", 4), Tache("w", "w", 9), Tache("x2", "x2", 1, ["v", "w"])], 10.0),
 ]
 
 if __name__ == "__main__":
@@ -38,9 +52,15 @@ if __name__ == "__main__":
         print("     ECHEC un circuit a ete accepte"); ok = False
     except ValueError:
         print("     ok    un circuit est refuse")
-    try:
-        voie_A_parcours([Tache("x", "x", 1, ["fantome"])])
-        print("     ECHEC un predecesseur inconnu a ete accepte"); ok = False
-    except ValueError:
-        print("     ok    un predecesseur inconnu est refuse")
+    for nom, f in (("voie A", voie_A_parcours), ("voie B", voie_B_enumeration)):
+        try:
+            f([Tache("x", "x", 1, ["fantome"])])
+            print(f"     ECHEC {nom} : un predecesseur inconnu a ete accepte"); ok = False
+        except ValueError:
+            print(f"     ok    {nom} : un predecesseur inconnu est refuse")
+        try:
+            f([Tache("y", "y", 1, ["z"]), Tache("z", "z", 1, ["y"])])
+            print(f"     ECHEC {nom} : un circuit a ete accepte"); ok = False
+        except ValueError:
+            print(f"     ok    {nom} : un circuit est refuse")
     sys.exit(0 if ok else 1)

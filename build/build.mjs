@@ -8,7 +8,8 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import katex from "katex";
-import { compiler, extraireBalises, controlerBlocsNormatifs } from "./md.mjs";
+import { compiler, extraireBalises, controlerBlocsNormatifs,
+         controlerAccidentsDeGabarit } from "./md.mjs";
 import { empreinteData } from "./empreinte.mjs";
 
 await import("../assets/section.js");   // doit preceder svgkit : il la consomme
@@ -43,6 +44,36 @@ function resoudre(chemin) {
   }
   if (cur === undefined) throw new Error(`valeur absente`);
   return cur;
+}
+
+/* Injection des variables {{chemin::format}} (§ 4.3). Utilisee deux fois : sur le HTML
+   compile, et sur les champs des balises de preuve AVANT extraction, pour qu'une balise
+   V3 puisse lire sa valeur dans data/ au lieu de la recopier a la main (§ 3.2, R1). */
+const FINE = "\u202f";                       // espace fine insecable
+function grouper(txt) {
+  return txt.replace(/^(-?)(\d{4,})(,\d+)?$/, (_, signe, ent, dec = "") =>
+    signe + ent.replace(/\B(?=(\d{3})+$)/g, FINE) + dec);
+}
+
+function substituerDans(texte, f) {
+  return texte.replace(/\{\{([^}]+)\}\}/g, (_, expr) => {
+    // separateur « :: » et non « | » : « | » delimite les cellules de tableau en Markdown
+    const [chemin, fmt] = expr.split("::").map((s) => s.trim());
+    try {
+      let v = resoudre(chemin);
+      if (fmt === "n1") v = Number(v).toFixed(1);
+      else if (fmt === "n2") v = Number(v).toFixed(2);
+      else if (fmt === "n0") v = Math.round(Number(v));
+      else if (fmt === "n3s") v = Number(v).toPrecision(3);
+      // Typographie francaise : virgule decimale, et milliers separes par une espace
+      // fine insecable des 4 chiffres. Sans elle, un cout s'affiche « 2955556 MAD »
+      // a cote d'un « 1 250 » de tableau : le lecteur ne peut plus comparer.
+      return grouper(String(v).replace(/\./g, ","));
+    } catch (e) {
+      erreurs.push(`${f} : variable {{${expr}}} — ${e.message}`);
+      return `<mark>VARIABLE ABSENTE : ${expr}</mark>`;
+    }
+  });
 }
 
 /* ---------- 2. formules : KaTeX PRE-RENDU au build (§ 4.4) ---------- */
@@ -143,7 +174,15 @@ for (const f of readdirSync("content").filter((x) => x.endsWith(".md")).sort()) 
   for (const faute of controlerBlocsNormatifs(corpsSrc, f))
     erreurs.push(`${f} : nombre « ${faute.nombre} » non balise dans un bloc :::normatif — « ${faute.extrait} »`);
 
-  balises.push(...extraireBalises(corpsSrc, fm.id ?? slug));
+  // § 4.3 : accidents de gabarit (variable + chiffre colle, variable dans une formule,
+  // repere de redaction) -> ECHEC
+  for (const faute of controlerAccidentsDeGabarit(corpsSrc, f))
+    erreurs.push(`${f} : ${faute.cause} — « ${faute.extrait} »`);
+
+  // Les champs d'une balise peuvent porter une variable : on les resout avant
+  // extraction, sinon le registre publierait « {{...}} » au lieu de la valeur.
+  balises.push(...extraireBalises(
+    corpsSrc.replace(/⟦[\s\S]*?⟧/g, (b) => substituerDans(b, f)), fm.id ?? slug));
 
   nFigure = 0;
   scripts.length = 0;
@@ -158,21 +197,7 @@ for (const f of readdirSync("content").filter((x) => x.endsWith(".md")).sort()) 
   let { html, titres } = compiler(corpsSrc, ctx);
 
   // injection des variables {{...}} : ECHEC si absente (§ 4.3)
-  const substituer = (texte) => texte.replace(/\{\{([^}]+)\}\}/g, (_, expr) => {
-    // separateur « :: » et non « | » : « | » delimite les cellules de tableau en Markdown
-    const [chemin, fmt] = expr.split("::").map((s) => s.trim());
-    try {
-      let v = resoudre(chemin);
-      if (fmt === "n1") v = Number(v).toFixed(1);
-      else if (fmt === "n2") v = Number(v).toFixed(2);
-      else if (fmt === "n0") v = Math.round(Number(v));
-      else if (fmt === "n3s") v = Number(v).toPrecision(3);
-      return String(v).replace(/\./g, ",");
-    } catch (e) {
-      erreurs.push(`${f} : variable {{${expr}}} — ${e.message}`);
-      return `<mark>VARIABLE ABSENTE : ${expr}</mark>`;
-    }
-  });
+  const substituer = (texte) => substituerDans(texte, f);
   html = substituer(html);
 
   const som = titres.map((t) =>

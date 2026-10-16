@@ -163,3 +163,53 @@ Un module où tous les voyants sont au vert n'apprend rien sur les voyants.
 **D-013 · La date d'arrêt du suivi est déduite, plus écrite.** Elle était posée à « fin de la
 semaine 6 » dans les données, ce que le planning contredisait. Elle se calcule maintenant à partir du
 nombre de zones prévues et de la cadence.
+
+**D-014 · 16/10/2026 — Le seuil de 1 % du recoupement n'appartient qu'aux postes géométriques.**
+*Raison* : la passe /devil a montré que l'alarme de D-012 était du **bruit**. En dirhams, l'écart de
+1,03 % est noyé dans l'incertitude des entrées : l'acier fait 43 % du coût de zone et son ratio V3
+ouvre une fourchette de ± 44 %, soit plus de quarante fois le seuil. En unités physiques, le béton
+est à −0,63 % et le coffrage à −0,82 % : sous le seuil, donc rien à signaler.
+*Décision* : le recoupement fait foi **en m³ et en m²**, poste par poste ; le seuil de 1 % ne
+s'applique qu'au béton et au coffrage, qui sont géométriques, jamais à l'acier ni aux dirhams. La
+fiche mémo publie cette règle et non plus « écart > 1 % → attachements ».
+*Impact* : `calc/valeur_acquise.py` (seuil nommé et publié), fiche mémo S8, D-012 corrigé sur ce
+point — le contrôle de prix horaire, lui, sonne toujours et reste ouvert (dette 10).
+
+**D-015 · 16/10/2026 — Le planning est contraint par le parc de coffrage, et ce contrôle entre dans
+la chaîne.** *Raison* : le planning publié demandait environ 2,5 fois le coffrage que `data/`
+déclarait posséder, et un exercice affirmait le contraire. Le matériel était posé a priori au lieu
+d'être déduit du planning. *Décision* : `⌈cycle / cadence⌉` zones détiennent du coffrage
+simultanément ; `cycle_plancher.py` publie `coherence_materiel` (immobilisé, stock, marge, verdict),
+un test exige que le planning de référence tienne et que la variante renforcée **échoue**, et le parc
+de `data/` passe de 420 à 1 300 m², les étais devenant une densité au m².
+*Impact* : `data/projet-gare.json`, `calc/cycle_plancher.py`, `calc/tests/test_plancher.py`, § d et
+exercices 2 et 3 du module. L'exercice 3 change de conclusion sur un point : renforcer l'équipe tient
+la cible de 25 jours, mais coûte 397 m² de tables en plus — ce qui reste trois fois moins qu'un
+dédoublement de front.
+
+**D-016 · 16/10/2026 — Le build échoue sur les accidents de gabarit.**
+*Raison* : trois erreurs publiées dans ce dépôt ne venaient d'aucun raisonnement faux, mais de la
+mise en forme : un chiffre littéral collé derrière une variable (`{{…::n0}}0 %` affichait « 40 % »
+pour 4), un repère de rédaction laissé dans un corrigé (« un pic d'effectif de **X** personnes »), et
+une variable placée dans une formule, que KaTeX compose littéralement.
+*Décision* : ces trois motifs font **échouer le build** (`controlerAccidentsDeGabarit`), et chaque
+règle porte son canari dans `build/tests/test-gabarit.mjs` — un contrôle qu'aucun cas ne fait sonner
+ne prouve rien. Les champs d'une balise de preuve sont par ailleurs résolus **avant** extraction,
+pour qu'une V3 puisse lire sa valeur dans `data/` au lieu de la recopier.
+*Impact* : `build/md.mjs`, `build/build.mjs`, `build/check.mjs`, `build/tests/`.
+
+**D-017 · 16/10/2026 — La courbe en S est ancrée sur la date d'arrêt.**
+*Raison* : la figure et le tableau de valeur acquise du même module donnaient deux avancements
+différents à la même date, pendant que la légende affirmait que l'écart vertical *était* SV.
+*Décision* : la date d'arrêt est ajoutée aux abscisses de la courbe, et un test exige
+prévu = VP/BAC et réalisé = VA/BAC à 0,5 point près, puis que l'écart vertical soit bien SV
+(15,80 points contre 15,75). *Impact* : `calc/cycle_plancher.py`, `calc/tests/test_plancher.py`.
+
+**D-018 · 16/10/2026 — Un contrôle publie la largeur sur laquelle il tient.**
+*Raison* : le contre-calcul de la durée de coffrage passait avec 3,45 % d'écart, mais seulement parce
+que le rendement d'équipe avait été choisi près du point qui le fait passer : la tolérance n'est
+respectée que sur 27 % de la fourchette déclarée, et le contrôle échoue à sa borne basse.
+*Décision* : `calc/` calcule et le module publie la **plage de rendements qui passe** et la part de
+la fourchette qu'elle couvre. Règle générale pour la suite du cours : un contrôle qui ne dit pas sur
+quelle largeur il tient parle du choix de son auteur, pas des données.
+*Impact* : `calc/cycle_plancher.py`, encart « Pourquoi ceci n'est PAS un contre-calcul ».

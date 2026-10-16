@@ -31,9 +31,12 @@ console.log("CONTROLE — cours de genie civil (§ 12.1)\n");
 etape("4.4 · bundles (civil3d IIFE, regle de section, KaTeX local)", "node", ["build/bundle.mjs"]);
 
 /* --- f, i : calc/ — etalonnage, calculs, tests, verification dimensionnelle --- */
-etape("f,i · calc/ : etalonnage, calculs, tests, unites (pint)", "python3", ["calc/run_all.py"]);
+etape("f,i · calc/ : etalonnage, calculs, tests, unites (pint) des 5 bibliotheques",
+      "python3", ["calc/run_all.py"]);
 
 /* --- la chaine de generation : data/ + calc/ -> modules --- */
+etape("4.3 · controles de source du build (canaris de gabarit)", "node",
+      ["build/tests/test-gabarit.mjs"]);
 etape("4.3 · build (variables, balises, legendes)", "node", ["build/build.mjs"]);
 
 /* --- h : balises de preuve et registres (§ 3.2, Annexe 3) --- */
@@ -73,6 +76,13 @@ try {
 } catch (e) { E("3.2 · registre des hypotheses", e.message); }
 
 /* --- M8 : le livrable doit etre dans le depot (§ 5.2, et le zip du mode B embarque .git) --- */
+/* --- 13.3 : STATE.md reste court (l'historique vit dans git) --- */
+{
+  const n = readFileSync("STATE.md", "utf8").replace(/\n$/, "").split("\n").length;
+  if (n > 150) E("13.3 · STATE.md court", `${n} lignes pour 150 au maximum — l'historique va dans QA/ et dans git`);
+  else V("13.3 · STATE.md court", `${n} lignes sur 150`);
+}
+
 try {
   // QA/ est exclu : le relecteur hostile y ecrit son rapport PENDANT la passe, ce qui
   // faisait virer ce controle au rouge par le seul fait d'etre relu.

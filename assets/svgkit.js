@@ -334,19 +334,30 @@
       const etat = (z.avancement && z.avancement[i]) || "a_venir";
       g += rect(r.x(x0), r.y(z.largeur_m), r.l(z.longueur_m), r.l(z.largeur_m),
         { remplissage: TEINTE[etat], couleur: BORD[etat], ep: etat === "a_venir" ? 1 : 1.6 });
+    }
+
+    // Lignes de poutres AVANT les libelles, et interrompues dans la bande centrale :
+    // elles traversaient les textes « Z1 / coulee », qu'aucun controle ne voyait
+    // puisque le test de chevauchement ne compare que du texte a du texte.
+    if (z.entraxe_poutres_m) {
+      const yh = r.y(z.largeur_m), yb = r.y(0);
+      const c1 = yh + (yb - yh) * 0.30, c2 = yh + (yb - yh) * 0.72;
+      for (let x = z.entraxe_poutres_m; x < Lt - 1e-9; x += z.entraxe_poutres_m) {
+        g += ligne(r.x(x), yh, r.x(x), c1, { couleur: "#8c3b2e", ep: .8, tirets: "4 3" });
+        g += ligne(r.x(x), c2, r.x(x), yb, { couleur: "#8c3b2e", ep: .8, tirets: "4 3" });
+      }
+    }
+
+    for (let i = 0; i < z.nb_zones; i++) {
+      const x0 = i * z.longueur_m;
+      const etat = (z.avancement && z.avancement[i]) || "a_venir";
       g += texte(r.x(x0 + z.longueur_m / 2), r.y(z.largeur_m / 2) - 2, `Z${i + 1}`,
         { taille: 13, gras: 1, ancre: "middle", base: "middle", couleur: BORD[etat] });
       if (etat !== "a_venir")
         g += texte(r.x(x0 + z.longueur_m / 2), r.y(z.largeur_m / 2) + 14,
-          etat === "faite" ? "coulee" : "en cours",
+          etat === "faite" ? "coulée" : "en cours",
           { taille: 9.5, ancre: "middle", base: "middle", couleur: BORD[etat] });
     }
-
-    // lignes de poutres, a l'entraxe des donnees
-    if (z.entraxe_poutres_m)
-      for (let x = z.entraxe_poutres_m; x < Lt; x += z.entraxe_poutres_m)
-        g += ligne(r.x(x), r.y(z.largeur_m), r.x(x), r.y(0),
-          { couleur: "#8c3b2e", ep: .8, tirets: "4 3" });
 
     g += cote(r.x(0), r.y(0), r.x(z.longueur_m), r.y(0), `${z.longueur_m} m`, { decalage: 22 });
     g += cote(r.x(0), r.y(0), r.x(Lt), r.y(0), `${ech(Lt)} m`, { decalage: 40 });

@@ -169,3 +169,35 @@ export function controlerBlocsNormatifs(src, fichier) {
   }
   return fautes;
 }
+
+/* ---------- accidents de gabarit (§ 4.3, R1) ----------
+   Trois accidents ont deja ete publies dans ce depot, et aucun n'etait un defaut de
+   raisonnement : un chiffre litteral colle derriere une variable (« {{…rives_pct}}0 % »
+   affichait 40 % pour 4), un repere de redaction laisse dans un corrige (« un pic
+   d'effectif de X personnes »), et une variable placee a l'interieur d'une formule, que
+   KaTeX compose alors litteralement. Les trois se voient a la source : le build echoue. */
+export function controlerAccidentsDeGabarit(src, fichier) {
+  const fautes = [];
+  const extrait = (i) => src.slice(Math.max(0, i - 50), i + 50).replace(/\s+/g, " ").trim();
+
+  // (a) un chiffre litteral colle derriere une variable : le nombre affiche est faux
+  for (const m of src.matchAll(/\{\{[^}]+\}\}\d/g))
+    fautes.push({ fichier, cause: "chiffre litteral colle derriere une variable", extrait: extrait(m.index) });
+
+  // (b) une variable dans une formule : KaTeX la compose au lieu de la resoudre
+  const spans = [];
+  for (const m of src.matchAll(/\$\$[\s\S]*?\$\$/g)) spans.push(m);
+  for (const m of src.matchAll(/(?<!\$)\$(?!\$)[^$\n]*?\$(?!\$)/g)) spans.push(m);
+  for (const m of spans)
+    if (m[0].includes("{{"))
+      fautes.push({ fichier, cause: "variable {{…}} a l'interieur d'une formule", extrait: m[0].replace(/\s+/g, " ").slice(0, 100) });
+
+  // (c) repere de redaction non remplace, hors formules et hors code
+  let masque = src;
+  for (const m of spans) masque = masque.replace(m[0], " ".repeat(m[0].length));
+  masque = masque.replace(/`[^`\n]*`/g, (c) => " ".repeat(c.length));
+  for (const m of masque.matchAll(/\bXXX\b|\bTODO\b|\bFIXME\b|(?<=[\s(])X(?=[\s).,])/g))
+    fautes.push({ fichier, cause: `repere de redaction « ${m[0]} » non remplace`, extrait: extrait(m.index) });
+
+  return fautes;
+}

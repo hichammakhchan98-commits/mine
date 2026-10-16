@@ -7,8 +7,10 @@ ETAPES = [
     ("Etalonnage perimetre", [sys.executable, str(RACINE / "etalonnage" / "perimetre_cadre.py")]),
     ("Etalonnage CPM",       [sys.executable, str(RACINE / "etalonnage" / "cpm_cas_ferme.py")]),
     ("Calculs cage",         [sys.executable, str(RACINE / "cage.py")]),
+    ("Etalonnage plancher",  [sys.executable, str(RACINE / "etalonnage" / "plancher_cas_ferme.py")]),
     ("Calculs plancher",     [sys.executable, str(RACINE / "cycle_plancher.py")]),
     ("Calculs valeur acquise", [sys.executable, str(RACINE / "valeur_acquise.py")]),
+    ("Verification dimensionnelle", [sys.executable, str(RACINE / "verif_unites.py")]),
     ("Tests cage",           [sys.executable, str(RACINE / "tests" / "test_cage.py")]),
     ("Tests plancher",       [sys.executable, str(RACINE / "tests" / "test_plancher.py")]),
 ]

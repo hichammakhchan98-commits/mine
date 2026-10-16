@@ -123,6 +123,32 @@ for (const fichier of modules) {
       rapport.push({ fichier, figures: res.map((f) => ({ n: f.i, textes: f.textes })) });
     });
 
+    test("b · capture de chaque figure, conservee et non vide", async () => {
+      // § 12.1 b parle de captures « examinees ». Pour un module sans 3D, rien n'etait
+      // archive : la passe adversariale a du produire les images elle-meme, et c'est
+      // ainsi qu'elle a trouve une courbe qui contredisait son propre tableau. Les
+      // figures sont donc capturees ici, et conservees comme artefact de la relecture.
+      const figures = await page.locator("figure:has(svg)");
+      const n = await figures.count();
+      expect(n, "le module doit porter au moins une figure").toBeGreaterThan(0);
+      for (let i = 0; i < n; i++) {
+        const chemin = join(CAPTURES, `${fichier}-figure${i + 1}.png`);
+        await figures.nth(i).screenshot({ path: chemin });
+        // non vide : au moins deux teintes distinctes dans l'image rendue
+        const teintes = await page.evaluate(async (idx) => {
+          const svg = document.querySelectorAll("figure svg")[idx];
+          const b = svg.getBoundingClientRect();
+          return { l: Math.round(b.width), h: Math.round(b.height),
+                   textes: svg.querySelectorAll("text").length,
+                   traces: svg.querySelectorAll("path,line,rect,circle,polyline").length };
+        }, i);
+        expect(teintes.l, `figure ${i + 1} : largeur nulle`).toBeGreaterThan(100);
+        expect(teintes.h, `figure ${i + 1} : hauteur nulle`).toBeGreaterThan(40);
+        expect(teintes.traces, `figure ${i + 1} : aucun trace`).toBeGreaterThan(3);
+        expect(teintes.textes, `figure ${i + 1} : aucun texte`).toBeGreaterThan(0);
+      }
+    });
+
     test("b, c · recette du modele 3D : etats, captures non vides, etiquettes", async () => {
       if (!(await preparerVue())) { test.skip(); return; }
 
@@ -212,11 +238,16 @@ for (const fichier of modules) {
     test("d · les valeurs publiees sont celles de calc/, pas du texte", async () => {
       const att = ATTENTES[fichier]?.valeursPubliees;
       if (!att) { test.skip(); return; }
-      const txt = (await page.locator(".corps").innerText()).replace(/\u00a0/g, " ");
+      // La page separe les milliers par une espace fine insecable (typographie francaise) :
+      // on compare donc des chiffres nus des deux cotes, sinon le test mesurerait la mise
+      // en forme et non la provenance de la valeur.
+      const nus = (x) => String(x).replace(/[\u202f\u00a0 ]/g, "");
+      const txt = nus(await page.locator(".corps").innerText());
       for (const [fic, extraire] of att) {
         const r = JSON.parse(readFileSync(join(RACINE, "calc", "sorties", fic), "utf8"));
         const attendu = extraire(r);
-        expect(txt, `la valeur « ${attendu} » (de ${fic}) doit figurer dans la page`).toContain(attendu);
+        expect(txt, `la valeur « ${attendu} » (de ${fic}) doit figurer dans la page`)
+          .toContain(nus(attendu));
       }
     });
 

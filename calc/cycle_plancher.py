@@ -19,7 +19,7 @@ L'ecart entre les deux est un RESULTAT a commenter (le gain du recouvrement), pa
 un contre-calcul. Consigne dans DECISIONS.md.
 """
 from __future__ import annotations
-import json, pathlib, sys
+import json, math, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from cpm import Tache, contre_calcul
 from plancher import quantites_zone, fourchette_acier
@@ -40,6 +40,16 @@ def durees_taches(d: dict, q: dict) -> dict:
     coffrage_equipe = q["coffrage_m2"] / c["rendement_equipe_coffrage_m2_j"]["valeur"]
     ecart = abs(coffrage - coffrage_equipe) / coffrage * 100
 
+    # Quelle PART de la fourchette declaree du rendement d'equipe passe la tolerance ?
+    # C'est la seule facon honnete de presenter ce controle : il est satisfait par le
+    # point retenu, pas par les donnees. Les bornes se posent sans iteration :
+    # |Q/R - D| <= tol.D  <=>  Q/(D(1+tol)) <= R <= Q/(D(1-tol))
+    tol = 5.0 / 100.0
+    r_lo = q["coffrage_m2"] / (coffrage * (1 + tol))
+    r_hi = q["coffrage_m2"] / (coffrage * (1 - tol))
+    f_lo, f_hi = c["rendement_equipe_coffrage_m2_j"]["fourchette"]
+    couvert = max(0.0, min(r_hi, f_hi) - max(r_lo, f_lo))
+
     return {
         "coffrage_j": round(coffrage, 2),
         "ferraillage_poutres_j": round(ferr_poutres, 2),
@@ -57,6 +67,10 @@ def durees_taches(d: dict, q: dict) -> dict:
                 "seul un attachement reel le dirait."
             ),
             "verdict": "OK" if ecart <= 5.0 else "LES DEUX HYPOTHESES V3 SE CONTREDISENT",
+            # Ce que le controle ne dit pas de lui-meme : sur quelle largeur il tient.
+            "plage_de_rendement_qui_passe_m2_j": [round(r_lo, 1), round(r_hi, 1)],
+            "fourchette_declaree_m2_j": [f_lo, f_hi],
+            "part_de_la_fourchette_qui_passe_pct": round(couvert / (f_hi - f_lo) * 100, 1),
         },
     }
 
@@ -117,7 +131,35 @@ def _coherence_prix_horaire(d: dict, total: float, heures: float, mo: float) -> 
     part = mo / total * 100
     lo, hi = r["fourchette"]
     implique = total * r["valeur"] / 100 / heures
+    # On CHIFFRE chaque cause invoquee, au lieu de les enumerer. Si leur somme
+    # n'explique pas l'ecart, il faut le dire : c'est le cas ici.
+    e = d["effectifs"]
+    h = e["heures_par_jour"]
+    px = d["prix_unitaires_MAD"]["postes"]["main_oeuvre_h"]
+    causes = []
+    base = mo / total * 100
+    causes.append({"cause": "equipes de production seules, prix horaire au point declare",
+                   "part_pct": round(base, 2)})
+    # + encadrement et grutier, presents toute la duree du cycle
+    h_enc = (e["chef_equipe"] + e["grutier"]) * h * 8.56
+    avec_enc = (heures + h_enc) * px["valeur"] / total * 100
+    causes.append({"cause": "+ chef d'equipe et grutier", "part_pct": round(avec_enc, 2)})
+    # + prix horaire au haut de sa fourchette
+    haut = (heures + h_enc) * px["fourchette"][1] / total * 100
+    causes.append({"cause": "+ prix horaire au haut de sa fourchette", "part_pct": round(haut, 2)})
+    reste = r["fourchette"][0] / haut
     return {
+        "causes_chiffrees": causes,
+        "part_apres_toutes_les_causes_pct": round(haut, 2),
+        "facteur_encore_inexplique": round(reste, 1),
+        "ce_qui_reste": (
+            "Les causes invoquees ne suffisent pas : meme en comptant l'encadrement et en "
+            "prenant le haut de la fourchette horaire, la part reste tres en dessous de la "
+            "fourchette attendue. Le suspect le plus probable est ailleurs : des CADENCES "
+            "optimistes d'un facteur deux a trois, qui sont l'entree de TOUTES les durees "
+            "publiees. C'est une hypothese, pas une conclusion — seuls des attachements "
+            "reels la confirmeraient ou l'infirmeraient."
+        ),
         "part_constatee_pct": round(part, 1),
         "fourchette_attendue_pct": [lo, hi],
         "dans_la_fourchette": lo <= part <= hi,
@@ -163,9 +205,9 @@ if __name__ == "__main__":
     cadence = round(max(t["coffrage_j"], t["ferraillage_dalle_j"]) + t["betonnage_j"], 1)
     plan = planning_chantier(d, duree_zone, cadence)
 
-    # --- date d'arret du suivi : DEDUITE du planning, pas ecrite dans les donnees
+    # --- date d'arret : DONNEE. L'avancement prevu a cette date s'en deduit.
     s_ = d["suivi"]
-    jour_arret = plan["debuts"]["Z%d" % s_["zones_prevues_a_date"]] + duree_zone
+    jour_arret = float(s_["jour_arret_ouvre"])
     semaine_arret = jour_arret / s_["jours_ouvres_par_semaine"]
 
     # --- donnees des figures, calculees et non dessinees
@@ -192,16 +234,21 @@ if __name__ == "__main__":
         return tot / plan["nb_zones"] * 100
 
     reel_zones = s_["zones_realisees_a_date"] + s_["avancement_zone_en_cours_pct"] / 100.0
+    prevu_arret = avancement_prevu(jour_arret)
+    zones_prevues_arret = prevu_arret / 100 * plan["nb_zones"]
+
     courbe = []
     pas = plan["duree_totale_j"] / 32
-    for k in range(33):
-        j = k * pas
+    # La date d'arret est AJOUTEE aux abscisses. Sans elle, le dernier point du constat
+    # tombait avant la date d'arret : l'ecart vertical lisible sur la figure n'etait pas
+    # celui du tableau de valeur acquise, alors que la legende affirmait que c'etait SV.
+    abscisses = sorted(set([round(k * pas, 1) for k in range(33)] + [round(jour_arret, 1)]))
+    for j in abscisses:
         pt = {"j": round(j, 1), "prevu": round(avancement_prevu(j), 1)}
         if j <= jour_arret:
-            # l'avancement reel suit la meme forme, ramene au constat de la date d'arret
-            ref = avancement_prevu(jour_arret)
-            pt["realise"] = round(avancement_prevu(j) * (reel_zones / s_["zones_prevues_a_date"])
-                                  if ref else 0.0, 1)
+            # l'avancement reel suit la meme forme, cale sur le constat de la date d'arret
+            pt["realise"] = round(avancement_prevu(j) * (reel_zones / zones_prevues_arret)
+                                  if zones_prevues_arret else 0.0, 1)
         courbe.append(pt)
 
     e = d["effectifs"]
@@ -220,9 +267,79 @@ if __name__ == "__main__":
                 n += e["equipe_betonnage"]
         effectifs_jour.append({"j": k, "n": n + e["chef_equipe"] + e["grutier"]})
 
+    # --- variantes des exercices : leurs valeurs attendues sont CALCULEES, plus affirmees
+    def variante_effectif(n_ferr_dalle):
+        e2 = dict(d["effectifs"]); e2["ferrailleurs_dalle"] = n_ferr_dalle
+        d2 = dict(d); d2["effectifs"] = e2
+        t2 = durees_taches(d2, q)
+        cc2 = contre_calcul(reseau_zone(t2))
+        dz = cc2["voie_A_parcours_avant_arriere_j"]
+        cad = round(max(t2["coffrage_j"], t2["ferraillage_dalle_j"]) + t2["betonnage_j"], 2)
+        pl = planning_chantier(d, dz, cad)
+        pointe = 0
+        for k in range(int(pl["duree_totale_j"]) + 1):
+            n = 0
+            for i in range(pl["nb_zones"]):
+                deb = pl["debuts"]["Z%d" % (i + 1)]
+                if deb <= k < deb + t2["coffrage_j"]:
+                    n += e2["coffreurs"]
+                elif deb <= k < deb + t2["coffrage_j"] + t2["ferraillage_poutres_j"]:
+                    n += e2["ferrailleurs_poutres"]
+                elif deb <= k < deb + dz - 2.5:
+                    n += n_ferr_dalle
+                elif deb <= k < deb + dz:
+                    n += e2["equipe_betonnage"]
+            pointe = max(pointe, n + e2["chef_equipe"] + e2["grutier"])
+        # Le coffrage d'une zone est immobilise du debut du coffrage a la fin du
+        # decoffrage, soit un cycle entier. A une cadence plus courte que le cycle,
+        # plusieurs zones en detiennent en meme temps : c'est une CONTRAINTE, pas une
+        # consequence. Un planning qui demande plus de tables que le parc n'existe pas.
+        simultanees = max(1, math.ceil(dz / cad))      # zones coffrees en meme temps
+        mobilise = round(simultanees * q["coffrage_m2"])
+        stock = d["materiel"]["tables_coffrantes_m2"]
+        return {"ferrailleurs_dalle": n_ferr_dalle,
+                "ferraillage_dalle_j": round(t2["ferraillage_dalle_j"], 2),
+                "cycle_j": round(dz, 2), "cadence_j": cad,
+                "duree_plancher_j": round(pl["duree_totale_j"], 1),
+                "pointe_effectif": pointe,
+                "zones_coffrees_simultanement": simultanees,
+                "coffrage_mobilise_m2": mobilise,
+                "stock_coffrage_declare_m2": stock,
+                "deficit_coffrage_m2": max(0, mobilise - stock),
+                "coffrage_suffisant": mobilise <= stock}
+
+    res_variantes = {
+        "reference": variante_effectif(d["effectifs"]["ferrailleurs_dalle"]),
+        "effectif_renforce": variante_effectif(12),
+        "sous_estimation_si_coffrage_egale_surface_pct": round(
+            (q["coffrage_m2"] - q["surface_m2"]) / q["coffrage_m2"] * 100, 1),
+    }
+
+    # --- coherence du planning avec le materiel declare (§ 4.3)
+    _ref = res_variantes["reference"]
+    etais_zone = q["surface_m2"] * d["materiel"]["etais_par_m2"]
+    coherence_materiel = {
+        "zones_coffrees_simultanement": _ref["zones_coffrees_simultanement"],
+        "coffrage_mobilise_m2": _ref["coffrage_mobilise_m2"],
+        "stock_declare_m2": _ref["stock_coffrage_declare_m2"],
+        "marge_m2": _ref["stock_coffrage_declare_m2"] - _ref["coffrage_mobilise_m2"],
+        "etais_necessaires": round(_ref["zones_coffrees_simultanement"] * etais_zone),
+        "verdict": ("OK" if _ref["coffrage_suffisant"]
+                    else "LE PLANNING DEMANDE PLUS DE COFFRAGE QUE LE PARC DECLARE"),
+        "regle": (
+            "Le coffrage d'une zone est immobilise pendant un cycle entier. Le nombre de "
+            "zones qui en detiennent en meme temps vaut ceil(cycle / cadence). Reduire la "
+            "cadence sans ajouter de tables est impossible : c'est la contrainte que les "
+            "plannings de rotation oublient le plus souvent."
+        ),
+    }
+
     res = {
-        "quantites": q, "durees": t,
+        "quantites": q, "durees": t, "variantes": res_variantes,
+        "coherence_materiel": coherence_materiel,
         "suivi": {"jour_arret": round(jour_arret, 1), "semaine_arret": round(semaine_arret, 1),
+                  "avancement_prevu_pct": round(prevu_arret, 1),
+                  "zones_prevues_equivalentes": round(zones_prevues_arret, 2),
                   "libelle_arret": f"jour {jour_arret:.0f}, soit la fin de la semaine {semaine_arret:.0f}"},
         "figures": {
             "zones": {"longueur_m": z["longueur_zone_m"], "largeur_m": z["largeur_zone_m"],

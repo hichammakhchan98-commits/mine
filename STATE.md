@@ -1,6 +1,6 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **15/10/2026** · Étape en cours : **2 — tranche verticale, LIVRÉE**
+Dernière mise à jour : **16/10/2026** · Étape en cours : **2 — tranche verticale, corrigée après la passe /devil n° 1**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
@@ -41,120 +41,67 @@ Sommaire et fiches : `cadrage/05-sommaire.md`. Ordre de livraison : § 6 du mêm
 
 ## Ce que le socle livre (Étape 1, § 5.2)
 
-| Élément | Fichier | Preuve |
+Charte et impression (`assets/style.css`, `print.css`, contrastes AA) · SVG paramétrique
+(`assets/svgkit.js`, 8 générateurs de figures sur 10 primitives) · 3D (`src/civil3d/`, bundle IIFE 763 ko : scène, orbite,
+matériaux, étiquettes, coupe, éclaté, phasage 4D) · chaîne de build qui **échoue** sur variable
+absente, légende incomplète, nombre normatif non balisé ou accident de gabarit · `calc/` avec
+contre-calcul à deux voies, 3 étalonnages sur solution fermée et vérification `pint` des
+5 bibliothèques · 13 contrôles `npm run check`, 14 tests de rendu, captures de toutes les figures ·
+page de démonstration testée (`modules/00-demo-cage.html`).
+
+## Grilles d'auto-évaluation § 7.2
+
+| Livrable | Minimum 2 partout | Détail |
 |---|---|---|
-| Charte graphique + impression | `assets/style.css`, `assets/print.css` | contrastes AA, feuille d'impression des exercices et fiches mémo |
-| Bibliothèque SVG paramétrique | `assets/svgkit.js` | 8 générateurs, motifs de matériaux définis une seule fois |
-| Bibliothèque 3D | `src/civil3d/`, `assets/civil3d.bundle.js` (763 ko, IIFE) | scène, orbite, matériaux, étiquettes, coupe, éclaté, phasage 4D, armatures, câbles, extrusions |
-| Chaîne de build | `build/build.mjs`, `build/md.mjs` | échoue si une variable manque, si une légende est incomplète, si un nombre d'un bloc `:::normatif` n'est pas balisé |
-| Calculs + étalonnage | `calc/` | contre-calcul par 2 voies, étalonnage sur solution fermée, unités vérifiées (`pint`) |
-| Tests | `tests/rendu.spec.mjs`, `build/check.mjs` | 9 contrôles, 6 tests de rendu, 8 captures examinées |
-| Page de démonstration | `modules/00-demo-cage.html` | cage d'armatures paramétrique testée |
+| Page de démonstration E1 | **tenu** (2 critères remontés de 1 et 0 après la passe) | `QA/grilles-72.md` |
+| Tranche verticale TV | **tenu** (« l'exemple est vérifié » remonté de **1** à 3) | `QA/grilles-72.md` |
 
-## Grille d'auto-évaluation § 7.2 — page de démonstration E1
-
-Notée après la passe /devil, qui avait relevé deux critères sous le minimum de 2.
-
-| Critère | Note | Appui |
-|---|:--:|---|
-| Le « pourquoi » est expliqué | 3 | chaque mécanisme est justifié avant d'être montré |
-| Les hypothèses sont explicites | 3 | *était 1* — rayon de cintrage, convention d'enrobage et absence de crochets sont maintenant publiés et balisés V3 |
-| Les formules sont justifiées | 2 | périmètre démontré ; masse volumique posée en constante |
-| L'exemple est vérifié | 3 | deux voies divergentes, étalonnage indépendant, canari rejoué |
-| Le piège est identifié | 3 | trois pièges, dont deux trouvés sur ce livrable même |
-| Lien avec l'exécution | 2 | *était 1* — cadences de façonnage, nombre de cadres comme grandeur de planning |
-| Lien avec le coût et le délai | 2 | *était 0* — prix de l'acier et cadence, en V3 déclarées |
-
-**Minimum 2 partout : tenu.** La page reste une démonstration de socle, pas un module de cours : les
-notes de 2 sur l'exécution et l'économie sont volontaires, ces sujets appartiennent à D1, D3 et C3.
-
-## Passe adversariale /devil (§ 12.2)
+## Défauts et passe adversariale /devil (§ 12.2)
 
 Portée par un **sous-agent distinct**, qui n'a pas lu le raisonnement de l'auteur et a recalculé les
-valeurs clés à partir de `data/` seul. Rapport : `QA/E1-socle.md`.
+valeurs clés à partir de `data/` seul.
 
-**Trois passes ont été nécessaires.**
+| Étape | En construisant | À la passe /devil | Rapports |
+|---|---|---|---|
+| E1 — socle | 8 | **50** sur trois passes (6 bloquants, 20 majeurs, 24 mineurs) | `QA/E1-socle*.md` |
+| TV — tranche verticale | 6 | **19** (4 bloquants, 9 majeurs, 6 mineurs) | `QA/TV-tranche-verticale.md`, `QA/TV-corrections-passe1.md` |
 
-| Passe | Verdict | Corrigé |
-|---|---|---|
-| 1 | 26 défauts — **5 bloquants**, 9 majeurs, 12 mineurs | tous bloquants et majeurs, m1–m6, m9–m11 |
-| 2 | 14 défauts — **1 bloquant**, 7 majeurs, 6 mineurs. **3 canaris franchissaient les 11 contrôles** | le bloquant, les 7 majeurs, les 6 mineurs |
-| 3 | 10 défauts — **0 bloquant**, 4 majeurs, 6 mineurs. 2 nouveaux canaris rouges (erreur de modèle *partagée*) | les 4 majeurs, les 6 mineurs |
+### Socle E1
 
-**Le § 12.2 est satisfait : zéro bloquant.** Rapports : `QA/E1-socle.md`, `QA/E1-socle-passe2.md`,
-`QA/E1-socle-passe3.md`.
+**Trois passes** : 26 défauts (5 bloquants), puis 14 (1 bloquant, **3 canaris franchissaient les
+11 contrôles**), puis 10 (0 bloquant). **Le § 12.2 est satisfait : zéro bloquant.**
 
 **Ce que ces trois passes ont appris, et qui vaut pour tout le cours.** Deux fois, une correction
 s'est retournée : le contrôle « dépôt propre » ajouté en passe 1 cassait la reprise du mode B sur un
 clone neuf, et le paragraphe de coût ajouté pour combler une note faible réintroduisait un nombre
-tapé à la main **et faux**. Une correction est un changement comme un autre : elle se relit.
+tapé à la main **et faux**. Une correction est un changement comme un autre : elle se relit. Et un
+`replace` scripté dont l'ancre contient une faute **échoue en silence** : depuis, chacun porte un
+`assert`.
 
-**Canaris (§ 12.2, contrôle du relecteur).** 12 joués au total sur les trois passes. Tous rouges à ce
-jour : barres SVG empilées, enrobage 3D ignoré, régression du diamètre de tube, décalage vertical,
-resserrement de 20 %, divergence de règle Python/JS, comptage faux des deux côtés, règle de placement
-faussée des deux côtés, règle d'axe faussée des deux côtés, coût faux d'un facteur 10, V3 publiée
-sans balise, longueur de barre fausse des deux côtés.
+**Canaris (§ 12.2, contrôle du relecteur).** 14 joués au total (12 sur le socle, 2 sur la TV), **tous
+rouges aujourd'hui** — dont T2, qui doublait le planning en franchissant les douze contrôles avant
+correction. Liste détaillée dans les rapports `QA/`.
 
-## Défauts trouvés et corrigés pendant l'Étape 1 (§ R6, § 12.2)
+### Tranche verticale TV — passe 1 corrigée, seconde passe à lancer
 
-| # | Défaut | Trouvé par | Correction |
-|---|---|---|---|
-| 1 | Périmètre du cadre **+23,9 %** : une Catmull-Rom passant par les coins gonfle entre les arcs. Le métré 3D annonçait 12,24 kg de cadres contre 9,88 kg réels | croisement `calc/` ↔ 3D du test `d` | `CourbePolyligne` suivant le contour exact (droites + arcs) ; écart ramené à 0,007 % de la formule fermée |
-| 2 | Phase 1 « coffrage » rendait une **image vide** : le modèle annonçait 4 phases mais ne contenait aucun coffrage | variance de pixels, test `b` | coffrage ajouté (fond de moule + 2 joues) ; phasage par **intervalle** pour que le coffrage disparaisse au décoffrage |
-| 3 | Le phasage n'était **pas appliqué** à la première construction : l'état initial montrait tout, en contradiction avec le curseur | examen de la capture `defaut.png` | outils appliqués dès la première construction |
-| 4 | Étiquettes **flottant dans le vide** du côté retiré par le plan de coupe | examen de `coupe.png` | une étiquette dont l'ancrage est coupé est masquée |
-| 5 | Modèle **débordant du cadre** quand un curseur change l'encombrement | examen de `curseurs-max.png` | recadrage automatique au-delà de 15 % de variation, sans perdre l'orientation choisie |
-| 6 | Vue éclatée illisible : pièces projetées hors cadre, étiquettes restées sur place | examen de `eclate.png` | éclatement par **couche** (coffrage / armatures / béton) avec direction déclarée ; amplitude 0,35 → 0,16 ; étiquettes solidaires de leur couche |
-| 7 | Variables `{{x::fmt}}` cassées dans les tableaux : `\|` sert de séparateur de colonnes | échec du build | séparateur de format `::` |
-| 8 | `katex@0.18.0` porte un avis de sécurité (GHSA-238p-pmpm-9mq7) | `npm audit` | épinglé en `0.18.10` ; 0 vulnérabilité |
+**Tous corrigés** ; journal et preuves : `QA/TV-corrections-passe1.md`. Quatre leçons pour la suite :
+(1) **un corrigé chiffré ne se tape pas** — une division fausse (2,42 pour 2,00) s'est propagée
+jusqu'à inverser la recommandation du module ; (2) **un accident de gabarit est une erreur publiée** —
+`{{…::n0}}0 %` affichait 40 % pour 4, le build échoue désormais sur ce motif, sur une variable placée
+dans une formule et sur un repère de rédaction (`build/tests/test-gabarit.mjs`) ; (3) **un moteur
+juste dans son domaine d'usage n'est pas un moteur juste** — `cpm.py` rendait 1 pour une durée de 10
+hors domaine, et son verdict accusait le bon algorithme (étalonnage porté à **9 cas**) ; (4) **une
+alarme n'est pas un signal** — le recoupement sonnait en dirhams, mais les postes géométriques sont à
+−0,63 % et −0,82 % : le seuil de 1 % n'appartient qu'à eux.
 
-### Corrigés après la passe /devil
-
-| # | Défaut | Gravité | Correction |
-|---|---|---|---|
-| B1 | La 3D dessinait les cadres à **⌀ 4 mm** en les étiquetant « HA8 » : un `/2` appliqué deux fois | bloquant | le paramètre est un diamètre, divisé une seule fois ; un test vérifie le rayon réel du tube |
-| B2 | SVG et 3D plaçaient les barres **4 à 8 mm** l'une de l'autre à partir du même fichier | bloquant | une **règle unique** (`src/civil3d/section.js`), livrée aussi en `assets/section.js`, consommée par les deux |
-| B3 | La figure 1 commettait l'erreur que sa propre légende dénonçait | bloquant | résolu par B2 |
-| B4 | L'axe du cadre était posé **sur** la ligne d'enrobage : enrobage réel 26 mm pour 30 annoncés | bloquant | l'enrobage se mesure à la peau du cadre ; convention publiée dans `data/` et testée |
-| B5 | Le « contre-calcul par deux voies indépendantes » était la même formule à constante arrondie | bloquant | voie A = contour discrétisé + premiers principes ; voie B = formule fermée + coefficient tabulé : les deux chemins diffèrent |
-| M1 | Rayon de cintrage en dur, **dupliqué** Python/JS, jamais publié, et « 2,5 ⌀ » est une règle constructive interdite en § 5.0 | majeur | paramètre de tracé dans `data/`, lu des deux côtés, affiché, balisé V3 |
-| M2 | Les registres de `data/` étaient **vides** alors que la page publiait des V3 | majeur | V3 balisées dans le contenu ; `check.mjs` échoue si une V3 publiée n'a pas sa ligne |
-| M3 | « treize instances », « 13 à 28 », « 11 kg » tapés à la main — que l'exercice de la page rendait faux | majeur | variables ; les valeurs attendues de l'exercice sont **calculées** par `calc/` |
-| M4 | Trois assertions ne pouvaient pas échouer (périmètre retapé, « A ≠ B » satisfait par un arrondi, verdict `pint` vrai par construction) | majeur | cas à solution connue hors formule ; erreurs injectées qui **doivent** déplacer le résultat ; `pint` alimenté par `data/` et vérifiant qu'une formule non homogène lève |
-| M5 | L'étalonnage ne discrétisait que les arcs, soit **6,5 %** du périmètre | majeur | polygonalisation indépendante du contour entier + deux cas à solution connue |
-| M6 | **Canari : deux erreurs géométriques franchissaient les 9 contrôles** | majeur | test géométrique qui recalcule positions et enrobage **dans le test**, sans appeler le code de production ; les deux canaris sont maintenant rouges |
-| M7 | Le garde-fou d'ordre de grandeur n'attrapait qu'un facteur 10 | majeur | renommé `garde_fou_unite`, et doublé d'un contrôle de cohérence interne (masse linéique des cadres) |
-| M8 | Le livrable de l'Étape 1 n'était pas committé | majeur | committé ; `check.mjs` exige désormais un arbre de travail propre |
-| M9 | Cadres sans crochets : simplification non signalée (−2,7 %) | majeur | déclarée dans la page, dans `data/` et dans la sortie de `calc/` |
-| M10 | La règle qui comptait les cadres ne décrivait pas celle qui les plaçait | majeur | règle unique ; et elle était fausse — l'espacement réel **dépassait** le nominal. 14 cadres, et non 13 |
-
-### Corrigés après la passe 2
-
-| # | Défaut | Gravité | Correction |
-|---|---|---|---|
-| N2 | La page affirmait deux voies « indépendantes » : faux pour la masse (0,00617 dérive de π/4 × 7850 × 10⁻⁶) et les deux partagent comptage, règle d'axe et longueurs | bloquant | la page liste ce qu'elles partagent et ce que le contrôle **n'attrape pas** ; le comptage est recalculé dans le test |
-| N1 | L'enrobage n'était pas appliqué le long de l'axe : about réel 26 mm pour 30 annoncés | majeur | premier cadre à `enrobage + ⌀/2` de l'about, des deux côtés |
-| N3 | Registre des hypothèses aux colonnes inversées, `fourchette` et `annee_ref` vides | majeur | balises V3 structurées ; le build échoue sans fourchette ni année |
-| N4 | Le paragraphe de coût ajouté en passe 1 réintroduisait un nombre **faux** (450 pour 433) | majeur | montants calculés par `calc/` |
-| N5 | L'anecdote d'étalonnage publiait les valeurs d'avant correction | majeur | variables |
-| N6 | `calc/__pycache__` versionné : le contrôle « dépôt propre » **échouait sur tout clone neuf** | majeur | ignoré et retiré du suivi |
-| N7, N8 | Aucun test ne mesurait le diamètre du tube ; le test SVG ne comparait jamais `cy` et recalait son échelle sur les barres contrôlées | majeur | diamètre mesuré ; échelle déduite du rectangle de section, `cx`, `cy` et rayon comparés |
-
-### Corrigés après la passe 3
-
-| # | Défaut | Gravité | Correction |
-|---|---|---|---|
-| P1 | La page publiait **un nombre faux** (20 mm au lieu de 34), avec une auto-correction laissée dans le texte, sous un encart « Trois simplifications » qui en listait quatre | majeur | texte repris |
-| P2 | La phrase désignait un filet inexistant : l'étalonnage n'attrape rien de ces erreurs. Et la longueur de barre n'était recalculée nulle part | majeur | phrase corrigée ; recalcul indépendant ajouté |
-| P3 | Le bloc économique n'était testé **nulle part** : un coût faux d'un facteur 10 passait | majeur | montants et heures recalculés, et confrontés au texte publié |
-| P4 | Le contrôle de balisage cessait d'exiger quoi que ce soit dès qu'**une** balise existait | majeur | toute mention « (V3 » hors balise échoue |
+Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10). **Reste à faire : relancer la passe**
+(§ 12.2, « jusqu'à zéro bloquant »), en rejouant T2, T6 et les trois réseaux CPM.
 
 ## Valeurs V2 en attente de vérification par le lecteur
 
-**Aucune dans le cours** : le § 5.0.6 l'interdit dans cette phase, et `npm run check` échoue si une
-balise V2 apparaît dans le contenu tant que `normes_disponibles = false`.
-Les sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv` (E0-S01 et E0-S06 restent
-« à vérifier »).
+**Aucune dans le cours** (§ 5.0.6 ; `npm run check` échoue sur toute balise V2 tant que
+`normes_disponibles = false`). Cadrage : `cadrage/registre-sources-cadrage.csv`, E0-S01 et E0-S06
+restent « à vérifier ».
 
 ## Simplifications déclarées (§ R6)
 
@@ -166,6 +113,8 @@ Les sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv` (E0-S01 
 | 4 | `print.css` n'imprime pas la 3D : il imprime un substitut textuel. Vérifié par relecture du CSS, **pas** par un test automatique d'impression | `assets/print.css` |
 | 5 | **Cadres sans crochets d'extrémité** : le métré est minorant d'environ 3 %. La longueur d'un crochet est une valeur constructive, interdite en § 5.0 | `data/demo-cage.json` → `conventions` |
 | 6 | Le coffrage modélisé n'a **ni étaiement ni étais de reprise**, et le décoffrage est animé sans condition de résistance | page de démonstration |
+| 7 | La vérification dimensionnelle des 5 bibliothèques est **déportée** dans `calc/verif_unites.py` plutôt qu'écrite dans chaque formule : si une formule change sans que le fichier suive, le contrôle ne le voit pas. Les tests recalculent par ailleurs les résultats à la main | `calc/verif_unites.py` |
+| 8 | L'avancement réel de la courbe en S suit la **forme** de l'avancement prévu, calée sur le constat à la date d'arrêt : il n'y a pas de relevé jour par jour dans `data/` | `calc/cycle_plancher.py` |
 
 ## Dette
 
@@ -178,17 +127,24 @@ Les sources du cadrage sont dans `cadrage/registre-sources-cadrage.csv` (E0-S01 
 | 5 | Référentiel ferroviaire non identifié (quais, gabarits, caténaire) | CPS du marché |
 | 6 | Le contrôle d'impression est visuel, pas automatisé | à outiller si le besoin se confirme |
 | 7 | Bundle 3D de 763 ko : hors budget par module, mais c'est le poste le plus lourd du cours | à surveiller |
+| 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivent dans le zip, pas sur GitHub | limite de l'environnement |
 | 9 | Le module `TV` ne porte **aucun modèle 3D** : le phasage 3D appartient à C3. À réviser si le lecteur juge qu'il en manque un | après validation de la TV |
-| 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivront dans le zip, pas sur GitHub | limite de l'environnement |
+| 10 | **Le contrôle de part de main-d'œuvre reste hors fourchette** (5,2 % pour 15 à 30 %) : les cadences V3 sont probablement optimistes d'un facteur 2 à 3, et elles portent **toutes** les durées du cours | premiers attachements réels |
+| 11 | Les chevauchements **texte contre trait** dans les figures ne sont pas détectés automatiquement : le test ne compare que texte contre texte. Trouvé à l'œil sur la figure 1, corrigé à la main | à outiller si le cas se reproduit |
+| 12 | Le contre-calcul n° 1 du coffrage ne passe que sur **27 %** de la fourchette déclarée du rendement d'équipe : il mesure un choix d'auteur, pas une propriété des données. Publié comme tel | attachements réels |
 
 ## Données modifiées depuis la dernière livraison
 
-`projet-gare.json`, `projet-r5.json`, `referentiels.json` figés en 1.0 ; `demo-cage.json` créé ;
-registres régénérés par le build. Empreinte de `data/` : voir le pied de chaque module.
+Jeux figés en 1.0 inchangés dans leurs valeurs de conception. Corrigés depuis la passe /devil TV :
+`materiel.tables_coffrantes_m2` (420 → 1 300, l'ancienne valeur contredisait le planning d'un facteur
+2,5) et `materiel.etais` remplacé par une densité `etais_par_m2`, le total se déduisant du nombre de
+zones étayées. Registres régénérés par le build (10 hypothèses V3).
+Empreinte de `data/` : voir le pied de chaque module.
 
 ## Effort consommé (§ 13.2)
 
-Étape 0 : 1 séance. Étape 1 : 2 séances (socle ; 8 défauts en construisant, puis **50 défauts sur
-trois passes adversariales**). Étape 2 : 1 séance (tranche verticale ; 6 défauts trouvés en
-construisant, dont un contre-calcul tautologique et une courbe en S écrasée par un rapport d'aspect).
-Hypothèse de budget en place : 2 séances par semaine, ~1,5 séance par livraison (V3, à confirmer).
+Étape 0 : 1 séance. Étape 1 : 2 séances (8 défauts en construisant, puis **50 sur trois passes**).
+Étape 2 : 2 séances (6 défauts en construisant, 19 à la passe /devil, tous corrigés).
+Hypothèse de budget : 2 séances par semaine, ~1,5 séance par livraison (V3, à confirmer).
+**Constat de tendance** : la relecture adversariale coûte autant que l'écriture. C'est le prix du
+§ 12.2, et les quatre bloquants de la TV montrent qu'il est justifié.

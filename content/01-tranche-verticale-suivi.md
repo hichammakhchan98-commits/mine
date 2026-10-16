@@ -48,7 +48,7 @@ changez le planning, la trésorerie et la façon dont vous mesurez l'avancement.
 La mezzanine fait {{gare.geometrie.mezzanine.largeur_m::n0}} m de large sur 120 m de long. Le
 découpage retenu :
 
-:::figure {"fn":"planZones","args":"tranche-plancher.figures.zones","titre":"Découpage du plancher de mezzanine en zones de coulage, à la date d'arrêt du suivi","num":1,"large":true,"legende":[{"n":1,"t":"zone de coulage, 15 × 24 m"},{"n":2,"t":"ligne de poutres PM1, entraxe 7,50 m"}],"voir":["Une zone fait deux travées de trame : le découpage suit la structure, il ne la coupe pas n'importe où.","Les lignes de poutres tombent sur les limites de zone : une reprise de bétonnage au droit d'une poutre est plus simple à traiter qu'en milieu de dalle.","L'état de chaque zone est lu dans les données de suivi : la figure est un tableau de bord, pas un dessin."],"erreur":"Découper en zones de surface égale sans regarder où tombent les poutres : la reprise se retrouve en pleine travée, là où l'effort tranchant est le plus fort et où le traitement de la reprise coûte le plus cher."}
+:::figure {"fn":"planZones","args":"tranche-plancher.figures.zones","titre":"Découpage du plancher de mezzanine en zones de coulage, à la date d'arrêt du suivi","num":1,"large":true,"legende":[{"n":1,"t":"zone de coulage, {{tranche-plancher.figures.zones.longueur_m::n0}} × {{tranche-plancher.figures.zones.largeur_m::n0}} m"},{"n":2,"t":"ligne de poutres PM1, entraxe {{tranche-plancher.figures.zones.entraxe_poutres_m::n2}} m"}],"voir":["Une zone fait deux travées de trame : le découpage suit la structure, il ne la coupe pas n'importe où.","Chaque limite de zone tombe sur une ligne de poutres, puisque la zone fait un nombre entier de trames : la reprise de bétonnage se fait au droit d'une poutre, et non en pleine dalle. Les lignes tiretées visibles sont les poutres intermédiaires, au milieu de chaque zone.","L'état de chaque zone est lu dans les données de suivi : la figure est un tableau de bord, pas un dessin."],"erreur":"Découper en zones de surface égale sans regarder où tombent les poutres : la reprise se retrouve en pleine travée, là où l'effort tranchant est le plus fort et où le traitement de la reprise coûte le plus cher."}
 :::
 
 **Ordre de grandeur à retenir** : une zone de {{tranche-plancher.quantites.surface_m2::n0}} m² se coule
@@ -86,8 +86,8 @@ la sous-face de dalle. Ici le rapport est de
 {{tranche-plancher.quantites.coffrage_detail_m2.fond_de_poutres::n0}} m² de fond, plus
 {{tranche-plancher.quantites.coffrage_detail_m2.rives_pct::n0}} % de rives. Prendre 1,00 au lieu de
 {{tranche-plancher.quantites.ratio_coffrage_m2_par_m2::n2}}, c'est sous-estimer le poste de
-{{tranche-plancher.quantites.coffrage_detail_m2.rives_pct::n0}}0 % environ, sur le poste le plus cher
-en main-d'œuvre.
+**{{tranche-plancher.variantes.sous_estimation_si_coffrage_egale_surface_pct::n1}} %**, sur le poste
+le plus cher en main-d'œuvre.
 
 ## S4 · Étude de cas chiffrée : une zone, de bout en bout
 
@@ -99,21 +99,43 @@ $$d = \frac{Q}{c \times n}$$
 
 | Tâche | Quantité | Cadence V3 | Effectif | Durée |
 |---|---:|---:|---:|---:|
-| Coffrage | {{tranche-plancher.quantites.coffrage_m2::n0}} m² | 30 m²/j | {{gare.effectifs.coffreurs}} | {{tranche-plancher.durees.coffrage_j::n2}} j |
-| Ferraillage des poutres | {{tranche-plancher.quantites.acier_poutres_kg::n0}} kg | 150 kg/j | {{gare.effectifs.ferrailleurs_poutres}} | {{tranche-plancher.durees.ferraillage_poutres_j::n2}} j |
-| Ferraillage de la dalle | {{tranche-plancher.quantites.acier_dalle_kg::n0}} kg | 300 kg/j | {{gare.effectifs.ferrailleurs_dalle}} | {{tranche-plancher.durees.ferraillage_dalle_j::n2}} j |
-| Bétonnage | {{tranche-plancher.quantites.beton_m3::n1}} m³ | 30 m³/h | {{gare.effectifs.equipe_betonnage}} | {{tranche-plancher.durees.betonnage_j::n2}} j |
+| Coffrage | {{tranche-plancher.quantites.coffrage_m2::n0}} m² | {{gare.cadences.coffrage_dalle_m2_j.valeur}} m²/j | {{gare.effectifs.coffreurs}} | {{tranche-plancher.durees.coffrage_j::n2}} j |
+| Ferraillage des poutres | {{tranche-plancher.quantites.acier_poutres_kg::n0}} kg | {{gare.cadences.ferraillage_poutre_kg_j.valeur}} kg/j | {{gare.effectifs.ferrailleurs_poutres}} | {{tranche-plancher.durees.ferraillage_poutres_j::n2}} j |
+| Ferraillage de la dalle | {{tranche-plancher.quantites.acier_dalle_kg::n0}} kg | {{gare.cadences.ferraillage_dalle_kg_j.valeur}} kg/j | {{gare.effectifs.ferrailleurs_dalle}} | {{tranche-plancher.durees.ferraillage_dalle_j::n2}} j |
+| Bétonnage | {{tranche-plancher.quantites.beton_m3::n1}} m³ | {{gare.cadences.betonnage_m3_h.valeur}} m³/h | {{gare.effectifs.equipe_betonnage}} | {{tranche-plancher.durees.betonnage_j::n2}} j |
 
-:::encart {"genre":"voir","titre":"Contre-calcul n° 1 : les deux hypothèses se tiennent-elles ?"}
+:::encart {"genre":"attente","titre":"Pourquoi ceci n'est PAS un contre-calcul"}
 La durée de coffrage peut se calculer de deux façons : par la **cadence unitaire** multipliée par
 l'effectif ({{tranche-plancher.durees.contre_calcul_duree_coffrage.voie_A_cadence_unitaire_x_effectif_j::n3}} j),
 ou par un **rendement d'équipe** déclaré séparément
 ({{tranche-plancher.durees.contre_calcul_duree_coffrage.voie_B_rendement_d_equipe_j::n3}} j). Écart :
 **{{tranche-plancher.durees.contre_calcul_duree_coffrage.ecart_pct::n2}} %**.
 
-Ce que ce contrôle prouve, et seulement cela : **les deux hypothèses V3 sont mutuellement
-cohérentes**. Il ne prouve pas qu'elles sont justes. Deux hypothèses fausses de la même façon
-passeraient ce contrôle sans bruit. Seul un attachement réel tranche.
+Il serait tentant d'appeler cela un contre-calcul. **C'en est pas un** : les deux voies partagent
+intégralement la surface de coffrage, la seule grandeur susceptible d'être fausse. Elles ne comparent
+que deux taux, pas deux chemins — si la surface est erronée, elles se trompent ensemble.
+
+Ce que ce contrôle vaut réellement : il vérifie que **deux hypothèses V3 sont mutuellement cohérentes
+au point retenu**. Et il faut dire sur quelle largeur il tient, sinon il se fait passer pour plus
+qu'il n'est. La tolérance de
+{{tranche-plancher.durees.contre_calcul_duree_coffrage.tolerance_pct::n0}} % n'est respectée que si le
+rendement d'équipe tombe entre
+**{{tranche-plancher.durees.contre_calcul_duree_coffrage.plage_de_rendement_qui_passe_m2_j.0::n0}} et
+{{tranche-plancher.durees.contre_calcul_duree_coffrage.plage_de_rendement_qui_passe_m2_j.1::n0}} m²/j** —
+alors que la fourchette déclarée pour cette même hypothèse va de
+{{tranche-plancher.durees.contre_calcul_duree_coffrage.fourchette_declaree_m2_j.0::n0}} à
+{{tranche-plancher.durees.contre_calcul_duree_coffrage.fourchette_declaree_m2_j.1::n0}} m²/j. Le
+contrôle ne passe donc que sur
+**{{tranche-plancher.durees.contre_calcul_duree_coffrage.part_de_la_fourchette_qui_passe_pct::n0}} %
+de ce que les données elles-mêmes donnent pour plausible** : il est satisfait par le point choisi par
+l'auteur, pas par les données. Pris à la borne basse, il échoue.
+
+C'est l'information utile, et elle ne se lit pas sur un verdict « OK ». **Demandez toujours à un
+contrôle quelle est la largeur de ce qui le fait passer** : un contrôle qui ne tient que sur un quart
+du domaine déclaré est un contrôle qui parle du choix de son auteur.
+
+**Ce module a donc deux contre-calculs, pas trois** : celui du cycle (deux algorithmes) et le
+recoupement physique de l'avancement (deux sources).
 :::
 
 ### b. Des durées au cycle
@@ -129,7 +151,7 @@ donne jamais un planning.
 :::figure {"fn":"sequence","args":"tranche-plancher.figures.sequence","titre":"Le cycle d'une zone, dans l'ordre","num":2,"large":true,"voir":["Le point d'arrêt n'est pas une étape administrative glissée entre deux tâches : c'est une tâche du planning, avec une durée, et il est sur le chemin critique.","La cure n'est pas du temps perdu : c'est du temps pendant lequel l'équipe travaille sur la zone suivante.","Le décoffrage laisse les étais de reprise en place — la zone n'est pas « finie » pour autant."]}
 :::
 
-:::figure {"fn":"gantt","args":"tranche-plancher.figures.gantt","titre":"Gantt d'une zone, avec les recouvrements","num":3,"large":true,"voir":["Les barres en brique sont sur le chemin critique : tout retard sur l'une décale la fin de la zone d'autant.","Le ferraillage des poutres commence avant la fin du coffrage : c'est un décalage négatif, pas une erreur de saisie.","Les durées ne sont pas saisies : elles viennent des quantités divisées par les cadences et les effectifs."],"erreur":"Saisir un planning en tapant des durées à dire d'expert, puis vérifier après coup si les effectifs suivent. L'ordre inverse — quantité, cadence, effectif, durée — est le seul qui permette de défendre un planning en réunion."}
+:::figure {"fn":"gantt","args":"tranche-plancher.figures.gantt","titre":"Gantt d'une zone, avec les recouvrements","num":3,"large":true,"voir":["Ici les sept tâches sont critiques — la couleur ne distingue donc rien sur ce réseau : tout retard, où qu'il soit, décale la fin d'autant. C'est la situation d'un cycle en chaîne, sans tâche de réserve.","Le ferraillage des poutres commence avant la fin du coffrage : c'est un décalage négatif, pas une erreur de saisie.","Les durées ne sont pas saisies : elles viennent des quantités divisées par les cadences et les effectifs."],"erreur":"Saisir un planning en tapant des durées à dire d'expert, puis vérifier après coup si les effectifs suivent. L'ordre inverse — quantité, cadence, effectif, durée — est le seul qui permette de défendre un planning en réunion."}
 :::
 
 :::encart {"genre":"voir","titre":"Contre-calcul n° 2 : la durée du cycle, par deux algorithmes"}
@@ -154,33 +176,44 @@ un prédécesseur inconnu.
 
 | Poste | Quantité | Prix unitaire V3 | Montant |
 |---|---:|---:|---:|
-| Béton | {{tranche-plancher.quantites.beton_m3::n1}} m³ | 1 250 MAD/m³ | {{tranche-plancher.cout_zone.beton_MAD::n0}} MAD |
-| Acier | {{tranche-plancher.quantites.acier_kg::n0}} kg | 17 MAD/kg | {{tranche-plancher.cout_zone.acier_MAD::n0}} MAD |
-| Coffrage | {{tranche-plancher.quantites.coffrage_m2::n0}} m² | 180 MAD/m² | {{tranche-plancher.cout_zone.coffrage_MAD::n0}} MAD |
+| Béton | {{tranche-plancher.quantites.beton_m3::n1}} m³ | {{gare.prix_unitaires_MAD.postes.beton_m3.valeur}} MAD/m³ | {{tranche-plancher.cout_zone.beton_MAD::n0}} MAD |
+| Acier | {{tranche-plancher.quantites.acier_kg::n0}} kg | {{gare.prix_unitaires_MAD.postes.acier_kg.valeur}} MAD/kg | {{tranche-plancher.cout_zone.acier_MAD::n0}} MAD |
+| Coffrage | {{tranche-plancher.quantites.coffrage_m2::n0}} m² | {{gare.prix_unitaires_MAD.postes.coffrage_m2.valeur}} MAD/m² | {{tranche-plancher.cout_zone.coffrage_MAD::n0}} MAD |
 | **Total d'une zone** | | | **{{tranche-plancher.cout_zone.total_fournitures_et_mise_en_oeuvre_MAD::n0}} MAD** |
 
 Soit **{{tranche-plancher.cout_zone.cout_au_m2_MAD::n0}} MAD/m²** de plancher, gros œuvre seul.
 
-:::encart {"genre":"alerte","titre":"Le contrôle qui a échoué, et ce qu'il enseigne"}
+:::encart {"genre":"alerte","titre":"Le contrôle qui échoue, et ce qu'il révèle vraiment"}
 La zone mobilise {{tranche-plancher.cout_zone.heures_de_main_oeuvre::n0}} heures de main-d'œuvre
 directe. À ⟦V3|prix horaire d'un compagnon|45 MAD/h|MAD/h|35 à 60|2026|compagnon nu, charges comprises, sans encadrement⟧,
 cela fait {{tranche-plancher.cout_zone.main_oeuvre_MAD::n0}} MAD, soit
 **{{tranche-plancher.cout_zone.coherence_prix_horaire.part_constatee_pct::n1}} %** du total — alors que
-la main-d'œuvre directe de production pèse normalement
+la main-d'œuvre directe pèse normalement
 ⟦V3|part de main d'œuvre directe dans un prix posé|15 à 30 %|%|15 à 30|2026|gros œuvre, prix posé tout compris⟧.
-Le contrôle **sort de la fourchette**.
 
-Ce n'est pas une erreur de calcul. C'est que **les deux hypothèses ne décrivent pas la même chose** :
-le prix horaire est celui d'un compagnon nu ; les heures comptées sont celles des quatre équipes de
-production seules, sans encadrement, grutier, approvisionnement ni moyens ; et les prix unitaires sont
-des prix **posés**, qui portent en plus les matériaux, le matériel, les frais de chantier et la marge.
-Pour que les deux se rejoignent, il faudrait un taux horaire de
-{{tranche-plancher.cout_zone.coherence_prix_horaire.prix_horaire_implique_par_les_prix_unitaires_MAD::n0}} MAD/h,
-soit {{tranche-plancher.cout_zone.coherence_prix_horaire.facteur::n1}} fois le taux déclaré.
+**Première explication, partielle.** Les prix unitaires sont des prix **posés** : la main-d'œuvre y
+est déjà. L'additionner au total la compterait deux fois — c'est l'erreur de métré la plus fréquente,
+et la ligne « main-d'œuvre » ci-dessus est donc un **contrôle**, pas un poste.
 
-**La ligne « main-d'œuvre » n'est donc pas un poste à additionner au total : ce serait compter la
-main-d'œuvre deux fois.** C'est l'erreur de métré la plus fréquente, et c'est exactement ce qu'un
-sous-détail de prix met à plat poste par poste — module D1.
+**Mais cela n'explique pas l'écart.** Chiffrons chaque cause au lieu de les énumérer :
+
+| Ce qu'on ajoute | Part de main-d'œuvre |
+|---|---:|
+| équipes de production seules, prix horaire au point déclaré | {{tranche-plancher.cout_zone.coherence_prix_horaire.causes_chiffrees.0.part_pct::n2}} % |
+| + chef d'équipe et grutier | {{tranche-plancher.cout_zone.coherence_prix_horaire.causes_chiffrees.1.part_pct::n2}} % |
+| + prix horaire au haut de sa fourchette | {{tranche-plancher.cout_zone.coherence_prix_horaire.causes_chiffrees.2.part_pct::n2}} % |
+| **fourchette attendue** | **15 à 30 %** |
+
+Même en empilant toutes les causes invoquées, il reste un facteur
+**{{tranche-plancher.cout_zone.coherence_prix_horaire.facteur_encore_inexplique::n1}}**. Il faut donc
+le dire : **cet écart n'est pas expliqué.** Le suspect le plus probable est ailleurs — des **cadences
+optimistes d'un facteur deux à trois**, qui sont l'entrée de *toutes* les durées publiées dans ce
+module. Ce n'est pas une conclusion, c'est une hypothèse : seuls des attachements réels trancheraient.
+
+**Ce qu'il faut en retenir, et c'est le plus important de ce module.** Un contrôle qui échoue et qu'on
+habille d'une explication plausible est pire qu'un contrôle absent : il donne la paix de l'esprit sans
+la mériter. Ici le contrôle a fait son travail — il désigne les cadences, c'est-à-dire la racine de
+tout le reste. **C'est la première chose à recaler sur vos attachements**, avant les prix.
 :::
 
 ### d. Du coût au planning du plancher
@@ -190,6 +223,46 @@ Les {{tranche-plancher.planning_plancher.nb_zones}} zones s'enchaînent à une c
 attaque la zone suivante pendant que la précédente est en cure. Le plancher complet prend
 **{{tranche-plancher.planning_plancher.duree_totale_j::n1}} jours ouvrés**.
 
+**D'où vient ce {{tranche-plancher.planning_plancher.cadence_zone_j::n1}}, et pourquoi ce n'est pas le
+cycle.** Le cycle d'une zone vaut {{tranche-plancher.cycle_zone.duree_j::n2}} jours, mais une zone ne
+démarre pas tous les {{tranche-plancher.cycle_zone.duree_j::n2}} jours : la cure et le décoffrage
+n'occupent aucune équipe. La cadence est bornée par les tâches qui mobilisent une équipe **dédiée**,
+donc une seule zone à la fois :
+
+$$ \text{cadence} = \max(d_{\text{coffrage}},\ d_{\text{ferraillage de dalle}}) + d_{\text{bétonnage}} $$
+
+soit max({{tranche-plancher.durees.coffrage_j::n2}} ; {{tranche-plancher.durees.ferraillage_dalle_j::n2}})
++ {{tranche-plancher.durees.betonnage_j::n2}} =
+**{{tranche-plancher.planning_plancher.cadence_zone_j::n1}} j**. Le `max` et non la somme, parce que
+coffreurs et ferrailleurs de dalle sont deux équipes distinctes qui travaillent en parallèle sur deux
+zones voisines ; le bétonnage s'ajoute, parce qu'il immobilise la zone et la grue pour tout le monde.
+Deux conséquences immédiates, et ce sont elles qui rendent l'exercice 3 calculable : la cadence
+**ne descend pas** sous {{tranche-plancher.durees.betonnage_j::n2}} + la plus longue des deux tâches
+d'équipe, et renforcer une équipe ne sert que **si c'est elle** qui tient le `max`. Ici c'est le
+ferraillage de dalle ({{tranche-plancher.durees.ferraillage_dalle_j::n2}} j contre
+{{tranche-plancher.durees.coffrage_j::n2}} j au coffrage).
+
+:::encart {"genre":"voir","titre":"La contrainte que les plannings de rotation oublient : le parc de coffrage"}
+Le coffrage d'une zone n'est pas libéré au coulage : il reste en place pendant toute la cure et
+jusqu'au décoffrage, soit **un cycle entier**. À une cadence plus courte que le cycle, plusieurs zones
+en détiennent donc en même temps :
+
+$$ n_{\text{zones coffrées}} = \left\lceil \frac{\text{cycle}}{\text{cadence}} \right\rceil $$
+
+soit ⌈{{tranche-plancher.cycle_zone.duree_j::n2}} / {{tranche-plancher.planning_plancher.cadence_zone_j::n1}}⌉ =
+**{{tranche-plancher.coherence_materiel.zones_coffrees_simultanement}} zones**. Il faut donc **{{tranche-plancher.coherence_materiel.coffrage_mobilise_m2::n0}} m²** de tables et de
+joues disponibles simultanément, pour
+⟦V3|parc de tables coffrantes du chantier|{{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} m²|m²|1 000 à 1 500|2026|parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori⟧
+déclarés : une marge de {{tranche-plancher.coherence_materiel.marge_m2::n0}} m², c'est-à-dire
+**rien**. Et {{tranche-plancher.coherence_materiel.etais_necessaires::n0}} étais, puisque les étais de
+reprise restent sous les zones décoffrées.
+
+C'est un **contrôle de cohérence du module**, pas un commentaire : `coherence_materiel.verdict` vaut
+*{{tranche-plancher.coherence_materiel.verdict}}*, et il passerait au rouge si la cadence descendait
+sans que le parc suive. Une cadence annoncée en réunion sans ce calcul est une cadence qui sera tenue
+par le parc, pas par le planning — et c'est le parc qui aura raison.
+:::
+
 :::figure {"fn":"histogramme","args":"tranche-plancher.figures.effectifs","titre":"Effectif présent sur le plancher, jour par jour","num":4,"large":true,"voir":["Le creux de démarrage et la décroissance de fin sont normaux : seule la partie centrale est en régime.","La pointe donne le dimensionnement de la base-vie et des moyens — c'est elle qu'il faut regarder, pas la moyenne.","La courbe est dentelée : chaque dent est un changement de poste à l'intérieur d'un cycle."],"erreur":"Lisser cet histogramme en moyenne et dimensionner la base-vie dessus. Le jour de pointe, il manque des vestiaires et des réfectoires pour tout le monde."}
 :::
 
@@ -197,7 +270,7 @@ attaque la zone suivante pendant que la précédente est en cure. Le plancher co
 
 | Erreur | Comment elle se voit | Ce qu'elle coûte |
 |---|---|---|
-| Coffrage compté à la surface de dalle | le ratio tombe à 1,00 au lieu de {{tranche-plancher.quantites.ratio_coffrage_m2_par_m2::n2}} | ~{{tranche-plancher.quantites.coffrage_detail_m2.rives_pct::n0}}0 % du poste le plus cher en main-d'œuvre |
+| Coffrage compté à la surface de dalle | le ratio tombe à 1,00 au lieu de {{tranche-plancher.quantites.ratio_coffrage_m2_par_m2::n2}} | {{tranche-plancher.variantes.sous_estimation_si_coffrage_egale_surface_pct::n1}} % du poste le plus cher en main-d'œuvre |
 | Main-d'œuvre additionnée à un prix posé | le total gonfle sans que les quantités bougent | double compte, et une situation rejetée au visa |
 | Durées saisies à dire d'expert | aucun lien entre l'effectif et la durée | un planning indéfendable en réunion |
 | Zone découpée sans regarder les poutres | reprise de bétonnage en pleine travée | traitement de reprise, et un point de contrôle en plus |
@@ -207,7 +280,7 @@ attaque la zone suivante pendant que la précédente est en cure. Le plancher co
 ## S6 · Du planning au reporting : la valeur acquise
 
 À la date d'arrêt — **{{tranche-plancher.suivi.libelle_arret}}**, déduite du planning et non écrite à
-la main — {{valeur-acquise.zones_prevues}} zones étaient prévues,
+la main — {{valeur-acquise.zones_prevues_equivalentes::n2}} zones étaient prévues,
 {{valeur-acquise.zones_realisees_equivalentes::n2}} sont réalisées.
 
 | Indicateur | Valeur |
@@ -226,29 +299,47 @@ la main — {{valeur-acquise.zones_prevues}} zones étaient prévues,
 :::figure {"fn":"courbeS","args":"tranche-plancher.figures.courbe_s","titre":"Courbe en S : avancement prévu et avancement réel à la date d'arrêt","num":5,"large":true,"voir":["La courbe réelle s'arrête à la date d'arrêt : au-delà, il n'y a pas de donnée, et une courbe qui continuerait serait une prévision déguisée en constat.","L'écart vertical à la date d'arrêt est le retard en valeur, pas en jours : c'est SV.","La pente de la courbe réelle, et non sa position, dit si le retard se creuse ou se résorbe."],"erreur":"Prolonger la courbe réelle jusqu'à la fin pour « montrer qu'on rattrape ». Un constat et une prévision ne se tracent pas du même trait."}
 :::
 
-:::encart {"genre":"alerte","titre":"Contre-calcul n° 3 : l'avancement déclaré colle-t-il aux relevés ?"}
-La valeur acquise est calculée **deux fois**. Voie A, par les coûts : budget à l'achèvement ×
-avancement déclaré → {{valeur-acquise.contre_calcul.voie_A_par_les_couts_MAD::n0}} MAD. Voie B, par
-les **quantités relevées sur le chantier** (attachements) × prix unitaires →
-{{valeur-acquise.contre_calcul.voie_B_par_les_quantites_MAD::n0}} MAD.
+:::encart {"genre":"voir","titre":"Contre-calcul : l'avancement déclaré colle-t-il aux relevés ?"}
+La valeur acquise se calcule **deux fois**. Voie A, par les coûts : budget à l'achèvement × avancement
+déclaré → {{valeur-acquise.contre_calcul.voie_A_par_les_couts_MAD::n0}} MAD. Voie B, par les
+**quantités relevées** sur le chantier → {{valeur-acquise.contre_calcul.voie_B_par_les_quantites_MAD::n0}} MAD.
+Écart : {{valeur-acquise.contre_calcul.ecart_pct::n2}} %, au-delà de la tolérance de
+{{valeur-acquise.contre_calcul.tolerance_pct::n0}} %.
 
-**Écart : {{valeur-acquise.contre_calcul.ecart_pct::n2}} %**, au-delà de la tolérance de
-{{valeur-acquise.contre_calcul.tolerance_pct::n0}} %. Le contrôle **sonne**.
+**Et pourtant ce n'est pas un signal.** Voici pourquoi, et c'est le vrai sujet de ce paragraphe.
 
-Traduit en avancement : les relevés impliquent
-{{valeur-acquise.contre_calcul.avancement_implique_par_les_releves_zones::n2}} zones, là où
-{{valeur-acquise.contre_calcul.avancement_declare_zones::n2}} sont déclarées. L'écart est de
-{{valeur-acquise.contre_calcul.ecart_d_avancement_zones::n3}} zone — une poignée de pour cent sur la
-zone en cours, invisible dans un tableau de bord, et pourtant suffisante pour qu'une situation soit
-rejetée au visa.
+Comparer deux montants en dirhams mélange des postes dont la fiabilité n'a rien à voir. Le
+recoupement qui fait foi se fait **en unités physiques, poste par poste** :
 
-C'est **la** dérive que ce contrôle existe pour attraper : un avancement estimé à vue de nez sur la
-zone en cours. Ce que la maîtrise d'œuvre fera : demander les attachements, pas la déclaration.
+| Poste | Nature | Théorique × avancement | Relevé | Écart |
+|---|---|---:|---:|---:|
+| Béton | **géométrique** | {{valeur-acquise.recoupement_physique.postes.0.theorique_x_avancement::n1}} m³ | {{valeur-acquise.recoupement_physique.postes.0.releve::n1}} m³ | {{valeur-acquise.recoupement_physique.postes.0.ecart_pct::n2}} % |
+| Coffrage | **géométrique** | {{valeur-acquise.recoupement_physique.postes.1.theorique_x_avancement::n1}} m² | {{valeur-acquise.recoupement_physique.postes.1.releve::n1}} m² | {{valeur-acquise.recoupement_physique.postes.1.ecart_pct::n2}} % |
+| Acier | issu d'un **ratio V3** | {{valeur-acquise.recoupement_physique.postes.2.theorique_x_avancement::n0}} kg | {{valeur-acquise.recoupement_physique.postes.2.releve::n0}} kg | {{valeur-acquise.recoupement_physique.postes.2.ecart_pct::n2}} % |
 
-**Pourquoi la voie B est indépendante, cette fois.** Une première version multipliait les quantités
-*théoriques* par l'avancement *déclaré* : elle était algébriquement identique à la voie A, et l'écart
-valait zéro par construction. Deux voies ne sont indépendantes que si elles ne partagent pas leur
-entrée décisive. Ici la voie B part des relevés, pas de l'avancement.
+Les deux postes **géométriques** sont sous le pour cent : l'avancement déclaré tient. L'écart vient
+surtout de l'acier — dont le ratio V3 a une fourchette de
+{{tranche-plancher.quantites.fourchette_acier.etendue_pct::n0}} %, soit **quarante fois** l'écart
+constaté. Autrement dit : **l'alarme en dirhams était du bruit promu au rang de signal.**
+
+**À quoi ressemblerait un vrai signal.** Le même contrôle, si le relevé de béton était court de 5 % :
+
+| Poste | Écart | |
+|---|---:|---|
+| Béton | {{valeur-acquise.recoupement_contre_exemple.postes.0.ecart_pct::n2}} % | ← **signal** |
+| Coffrage | {{valeur-acquise.recoupement_contre_exemple.postes.1.ecart_pct::n2}} % | |
+| Acier | {{valeur-acquise.recoupement_contre_exemple.postes.2.ecart_pct::n2}} % | attendu |
+
+Là, le béton décroche alors qu'il est **géométrique** : il ne dépend d'aucune hypothèse. C'est une
+vraie dérive de l'avancement déclaré, et c'est à ce moment-là qu'on demande les attachements.
+
+**La leçon, qui vaut pour tout tableau de bord** : un seuil n'a de sens qu'au regard de l'incertitude
+de ce qu'il mesure. Un contrôle réglé plus fin que ses entrées sonne tout le temps, et un contrôle qui
+sonne tout le temps ne se regarde plus.
+
+**Pourquoi la voie B est indépendante.** Une première version multipliait les quantités *théoriques*
+par l'avancement *déclaré* : algébriquement identique à la voie A, écart nul par construction. Deux
+voies ne sont indépendantes que si elles ne partagent pas leur entrée décisive.
 :::
 
 ## S7 · Double lecture : entreprise et maîtrise d'œuvre
@@ -284,12 +375,19 @@ au marteau-piqueur.
 | Acier — hypothèse de ratio, ± {{tranche-plancher.quantites.fourchette_acier.etendue_pct::n0}} % | {{tranche-plancher.quantites.acier_kg::n0}} kg |
 | Cycle | {{tranche-plancher.cycle_zone.duree_j::n1}} j · cadence {{tranche-plancher.planning_plancher.cadence_zone_j::n1}} j/zone |
 
-**Les quatre contrôles avant de viser une situation**
+**Les cinq contrôles avant de viser une situation**
 
 1. Le ratio de coffrage est-il > 1,00 ? Sinon les joues de poutres ont été oubliées.
 2. La main-d'œuvre est-elle additionnée à un prix posé ? Si oui, double compte.
-3. L'avancement déclaré est-il recoupé par les **quantités relevées** ? Écart > 1 % → attachements.
+3. L'avancement déclaré est-il recoupé **en m³ et en m², jamais en dirhams** ? Sur le béton et le
+   coffrage, qui sont géométriques, un écart au-delà de
+   {{valeur-acquise.recoupement_physique.seuil_poste_geometrique_pct::n0}} % met en cause
+   l'avancement : demandez les attachements. Sur l'**acier**, un écart ne prouve rien — il vient
+   d'un ratio dont la fourchette vaut ± {{tranche-plancher.quantites.fourchette_acier.etendue_pct::n0}} %,
+   soit vingt fois le seuil.
 4. Les durées viennent-elles des quantités, ou d'un dire d'expert ?
+5. La cadence annoncée tient-elle **en tables** ? ⌈cycle / cadence⌉ zones détiennent du coffrage en
+   même temps : comparez au parc avant d'annoncer une date.
 
 **Points d'arrêt à viser (maîtrise d'œuvre)**
 
@@ -307,17 +405,32 @@ perdue.
 
 :::exercice {"titre":"1 · Refaire le métré d'une zone à la main","niveau":"application"}
 Reprenez la géométrie : zone de {{tranche-plancher.quantites.surface_m2::n0}} m²,
-dalle de 25 cm, {{tranche-plancher.quantites.n_poutres}} poutres de 24,00 m, retombée 0,50 m sous
-dalle, largeur 0,35 m.
+dalle de {{gare.elements.dalles.0.epaisseur_m::n2}} m,
+{{tranche-plancher.quantites.n_poutres}} poutres de
+{{gare.elements.poutres.0.longueur_dans_zone_m::n2}} m, retombée
+{{gare.elements.poutres.0.retombee_sous_dalle_m::n2}} m sous dalle, largeur
+{{gare.elements.poutres.0.b_m::n2}} m.
 
 Calculez le volume de béton, puis la surface de coffrage en détaillant sous-face, joues et fond.
 
-**Corrigé.** Dalle : 360 × 0,25 = {{tranche-plancher.quantites.beton_dalle_m3::n1}} m³. Poutres :
-2 × 24,00 × 0,35 × 0,50 = {{tranche-plancher.quantites.beton_poutres_m3::n1}} m³. Total
+**Corrigé.** Dalle : {{tranche-plancher.quantites.surface_m2::n0}} ×
+{{gare.elements.dalles.0.epaisseur_m::n2}} = {{tranche-plancher.quantites.beton_dalle_m3::n1}} m³.
+Poutres : {{tranche-plancher.quantites.n_poutres}} ×
+{{gare.elements.poutres.0.longueur_dans_zone_m::n2}} × {{gare.elements.poutres.0.b_m::n2}} ×
+{{gare.elements.poutres.0.retombee_sous_dalle_m::n2}} =
+{{tranche-plancher.quantites.beton_poutres_m3::n1}} m³. Total
 **{{tranche-plancher.quantites.beton_m3::n1}} m³**.
-Coffrage : sous-face 360 − (2 × 24,00 × 0,35) = {{tranche-plancher.quantites.coffrage_detail_m2.sous_face_dalle::n0}} m² ;
-joues 2 × 24,00 × 0,50 × 2 = {{tranche-plancher.quantites.coffrage_detail_m2.joues_de_poutres::n0}} m² ;
-fond 2 × 24,00 × 0,35 = {{tranche-plancher.quantites.coffrage_detail_m2.fond_de_poutres::n0}} m².
+Coffrage : sous-face {{tranche-plancher.quantites.surface_m2::n0}} −
+({{tranche-plancher.quantites.n_poutres}} × {{gare.elements.poutres.0.longueur_dans_zone_m::n2}} ×
+{{gare.elements.poutres.0.b_m::n2}}) =
+{{tranche-plancher.quantites.coffrage_detail_m2.sous_face_dalle::n0}} m² ;
+joues {{tranche-plancher.quantites.n_poutres}} ×
+{{gare.elements.poutres.0.longueur_dans_zone_m::n2}} ×
+{{gare.elements.poutres.0.retombee_sous_dalle_m::n2}} × 2 =
+{{tranche-plancher.quantites.coffrage_detail_m2.joues_de_poutres::n0}} m² ;
+fond {{tranche-plancher.quantites.n_poutres}} ×
+{{gare.elements.poutres.0.longueur_dans_zone_m::n2}} × {{gare.elements.poutres.0.b_m::n2}} =
+{{tranche-plancher.quantites.coffrage_detail_m2.fond_de_poutres::n0}} m².
 Plus {{tranche-plancher.quantites.coffrage_detail_m2.rives_pct::n0}} % de rives →
 **{{tranche-plancher.quantites.coffrage_m2::n0}} m²**.
 :::
@@ -326,12 +439,33 @@ Plus {{tranche-plancher.quantites.coffrage_detail_m2.rives_pct::n0}} % de rives 
 Les ferrailleurs de dalle passent de {{gare.effectifs.ferrailleurs_dalle}} à 12. Que devient la durée
 de ferraillage de dalle, et le cycle de la zone gagne-t-il autant ?
 
-**Corrigé.** La durée passe de {{tranche-plancher.durees.ferraillage_dalle_j::n2}} j à
-{{tranche-plancher.quantites.acier_dalle_kg::n0}} / (300 × 12) = 2,42 j, soit 0,58 j de moins. Mais le
-cycle **ne gagne pas 0,58 j** : le ferraillage de dalle est sur le chemin critique, donc le gain s'y
-reporte, *jusqu'à ce qu'un autre chemin devienne critique*. C'est la règle qu'il faut retenir :
-**renforcer une tâche critique déplace le problème, elle ne le supprime pas.** Refaites tourner le
-réseau avant d'annoncer un gain en réunion.
+**Corrigé.** La durée de ferraillage de dalle passe de
+{{tranche-plancher.variantes.reference.ferraillage_dalle_j::n2}} j à
+**{{tranche-plancher.variantes.effectif_renforce.ferraillage_dalle_j::n2}} j**.
+
+Le cycle, lui, passe de {{tranche-plancher.variantes.reference.cycle_j::n2}} à
+**{{tranche-plancher.variantes.effectif_renforce.cycle_j::n2}} j** : il gagne exactement ce que la
+tâche a gagné, parce qu'elle est sur le chemin critique **et qu'aucun autre chemin ne devient
+critique** à ce niveau de renfort. Ce n'est pas toujours le cas, et c'est la règle à retenir :
+**renforcer une tâche critique ne garantit un gain que jusqu'au moment où un autre chemin prend le
+relais.** Refaites tourner le réseau avant d'annoncer un gain en réunion — ne le déduisez jamais de
+la seule tâche renforcée.
+
+Effet sur l'ensemble : la cadence passe de {{tranche-plancher.variantes.reference.cadence_j::n2}} à
+{{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j/zone, et le plancher de
+{{tranche-plancher.variantes.reference.duree_plancher_j::n1}} à
+**{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours**. Le prix à payer :
+l'effectif de pointe monte de {{tranche-plancher.variantes.reference.pointe_effectif}} à
+{{tranche-plancher.variantes.effectif_renforce.pointe_effectif}} personnes, et le coffrage mobilisé
+simultanément de {{tranche-plancher.variantes.reference.coffrage_mobilise_m2::n0}} à
+{{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² — parce que la cadence
+tombe sous le cycle d'un cran de plus et qu'une
+**{{tranche-plancher.variantes.effectif_renforce.zones_coffrees_simultanement}}ᵉ** zone détient alors
+du coffrage. Et là,
+le parc ne suit plus : il manque
+**{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m²** de tables. Retenez ce
+cheminement : un effectif change une durée, la durée change une cadence, la cadence change le
+**matériel**. C'est l'objet de l'exercice suivant.
 :::
 
 :::exercice {"titre":"3 · Défendre une cadence en réunion","niveau":"probleme"}
@@ -339,19 +473,54 @@ Le maître d'ouvrage demande le plancher en 25 jours ouvrés au lieu de
 {{tranche-plancher.planning_plancher.duree_totale_j::n1}}. Vous ne pouvez ni changer les quantités ni
 toucher à la cure. Quels leviers reste-t-il, et lequel défendez-vous ?
 
-**Corrigé.** Trois leviers, et un seul est honnête.
-**(a) Augmenter les effectifs.** Le cycle est piloté par la tâche la plus longue, le ferraillage de
-dalle. Passer de {{gare.effectifs.ferrailleurs_dalle}} à 12 ferrailleurs ramène la cadence de
-{{tranche-plancher.planning_plancher.cadence_zone_j::n1}} à environ 2,8 j, soit 8 × 2,8 + cycle ≈
-28 j. Insuffisant, et l'histogramme d'effectifs passe au-dessus de la base-vie.
+**Corrigé.** Trois leviers. Le premier suffit — et c'est le résultat qu'il faut vérifier avant de
+proposer quoi que ce soit de plus lourd.
+
+**(a) Renforcer la tâche critique.** Le cycle est piloté par le ferraillage de dalle. Passer de
+{{gare.effectifs.ferrailleurs_dalle}} à 12 ferrailleurs ramène la cadence de
+{{tranche-plancher.variantes.reference.cadence_j::n2}} à
+{{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j/zone et le plancher à
+**{{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours** — **sous la cible, sur
+le papier des durées.** Le prix : effectif de pointe à
+{{tranche-plancher.variantes.effectif_renforce.pointe_effectif}} personnes (contre
+{{tranche-plancher.variantes.reference.pointe_effectif}}) et
+{{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² de coffrage mobilisés
+simultanément.
+
+**Et c'est là que l'exercice se joue vraiment.** Le parc déclaré vaut
+{{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} m² : il manque
+**{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m²** de tables, parce que
+la cadence tombe à {{tranche-plancher.variantes.effectif_renforce.cadence_j::n2}} j pour un cycle de
+{{tranche-plancher.variantes.effectif_renforce.cycle_j::n2}} j et qu'une
+{{tranche-plancher.variantes.effectif_renforce.zones_coffrees_simultanement}}ᵉ zone détient alors du
+coffrage. Le levier (a) n'est donc **pas gratuit** : il coûte quatre ferrailleurs *et* environ
+{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m² de tables
+supplémentaires, soit l'équivalent d'**une zone** de plus. C'est ce chiffre-là qu'il faut porter en
+réunion, pas la seule durée.
+
 **(b) Découper en zones plus petites.** Plus de zones, cycle plus court chacune, mais plus de reprises
 de bétonnage et plus de points d'arrêt. On gagne sur le papier, on perd en qualité et en contrôle.
-**(c) Dédoubler les équipes sur deux zones en parallèle.** C'est le seul levier qui tienne : deux
-fronts indépendants, chacun à sa cadence. Il faut deux jeux de tables coffrantes —
-{{gare.materiel.tables_coffrantes_m2}} m² de plus — et la grue doit suivre.
-**Ce qu'il faut dire en réunion** : « 25 jours est atteignable en dédoublant le front, au prix d'un
-second jeu de coffrage et d'un pic d'effectif de X personnes. Voici les deux plannings. » Pas « on
-va essayer ».
+
+**(c) Dédoubler le front sur deux zones en parallèle.** Le levier le plus puissant, et le plus cher :
+**deux jeux complets** de tables — de l'ordre de
+{{tranche-plancher.coherence_materiel.coffrage_mobilise_m2::n0}} m² de plus, et non les
+{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m² de (a) — et une grue qui
+suive. **Inutile ici** : (a) atteint la cible pour moins d'un tiers de ce supplément de matériel. Le
+rapport entre ces deux chiffres *est* l'argument de la réunion.
+
+**Ce qu'il faut dire en réunion** : « 25 jours est atteignable en portant le ferraillage de dalle à
+12 compagnons : {{tranche-plancher.variantes.effectif_renforce.duree_plancher_j::n1}} jours, pointe à
+{{tranche-plancher.variantes.effectif_renforce.pointe_effectif}} personnes, et
+{{tranche-plancher.variantes.effectif_renforce.coffrage_mobilise_m2::n0}} m² de tables immobilisées
+contre {{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} au parc : il me faut
+{{tranche-plancher.variantes.effectif_renforce.deficit_coffrage_m2::n0}} m² de tables en plus. Je
+vérifie la base-vie et le délai d'approvisionnement, et je confirme vendredi. » Pas « on va
+essayer » ; et pas non plus un dédoublement de front qu'on n'a pas eu besoin de calculer.
+
+*Le piège de cet exercice : proposer d'emblée le levier le plus lourd. La tâche critique se renforce
+d'abord, et le réseau se refait tourner avant toute annonce. Le second piège, plus discret, est de
+s'arrêter à la durée : une cadence tenable en jours peut être intenable en tables, et le parc a
+toujours le dernier mot.*
 :::
 
 :::exercice {"titre":"4 · Trouver l'erreur dans cette situation de travaux","niveau":"revue critique"}

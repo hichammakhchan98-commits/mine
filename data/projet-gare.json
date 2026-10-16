@@ -447,8 +447,11 @@
   },
   "materiel": {
     "niveau_preuve": "V3",
-    "tables_coffrantes_m2": 420,
-    "etais": 900,
+    "_role": "Le materiel se DEDUIT du planning : a la cadence retenue, plusieurs zones sont coffrees en meme temps. Une valeur posee sans regarder le planning est une valeur fausse.",
+    "tables_coffrantes_m2": 1300,
+    "tables_note": "trois zones se recouvrent a la cadence de 3,4 j pour un cycle de 8,6 j : il faut environ 3 x 424 m2. L'ancienne valeur de 420 m2 ne couvrait qu'une zone et contredisait le planning.",
+    "etais_par_m2": 2.5,
+    "etais_note": "densite d'etais par m2 de plancher etaye ; le nombre total se deduit du nombre de zones etayees simultanement",
     "pompe_a_beton": "pompe automotrice, 30 m3/h retenus (V3)",
     "grue": "grue a tour, voir C1"
   },
@@ -513,7 +516,6 @@
   "suivi": {
     "_role": "Avancement constate a une date d'arret, pour l'exemple de valeur acquise. V3 : donnees fabriquees pour la demonstration.",
     "niveau_preuve": "V3",
-    "zones_prevues_a_date": 4,
     "zones_realisees_a_date": 3,
     "avancement_zone_en_cours_pct": 60,
     "cout_reel_constate_MAD": 1330000,
@@ -528,6 +530,7 @@
       "base_du_choix": "Poses legerement en retrait des quantites theoriques de 3,6 zones, pour que la demonstration montre ce que le controle sert a detecter : un avancement declare un peu optimiste."
     },
     "jours_ouvres_par_semaine": 5,
-    "_date_arret": "DEDUITE du planning par calc/, jamais ecrite ici : elle est fixee par le nombre de zones prevues a date."
+    "jour_arret_ouvre": 19,
+    "_jour_arret": "La date d'arret est la DONNEE ; l'avancement prevu a cette date s'en deduit par le planning, en comptant l'avancement fractionnaire de chaque zone. L'ancienne version posait « 4 zones prevues » et en deduisait la date : la courbe en S et le tableau de valeur acquise mesuraient alors deux choses differentes et se contredisaient de 8 points."
   }
 }

@@ -7,8 +7,10 @@
              exacte sur un reseau de quelques dizaines de taches, donc parfaite comme
              contre-calcul.
 
-Les deux doivent donner EXACTEMENT la meme duree. Si elles different, c'est le
-parcours avant/arriere qui est faux : l'enumeration, elle, ne peut pas se tromper.
+Les deux doivent donner EXACTEMENT la meme duree. Si elles different, l'une des deux
+est fausse — et le controle ne dit PAS laquelle. L'enumeration n'est pas une reference
+par nature : sa premiere version rendait 1 jour la ou la reponse etait 10, sur un
+reseau a fort decalage negatif. C'est l'etalonnage, pas l'intuition, qui tranche.
 
 Conventions : taches a duree fixe, liens fin-debut, decalage (`decalage`) possible
 et negatif autorise (recouvrement). Unite : le jour ouvre.
@@ -58,7 +60,9 @@ def voie_A_parcours(taches: list[Tache]) -> dict:
     tot, tard = {}, {}
     for i in ordre:                                   # avant : au plus tot
         t = T[i]
-        debut = max([tot[p][1] + dec for p, dec in _norm(t.predecesseurs)], default=0.0)
+        # borne a zero, comme la voie B : un decalage negatif important ne peut pas
+        # faire demarrer une tache avant l'origine du planning
+        debut = max(0.0, max([tot[p][1] + dec for p, dec in _norm(t.predecesseurs)], default=0.0))
         tot[i] = (debut, debut + t.duree)
     duree = max(f for _, f in tot.values())
 
@@ -77,26 +81,42 @@ def voie_A_parcours(taches: list[Tache]) -> dict:
 
 
 def voie_B_enumeration(taches: list[Tache]) -> dict:
-    """Enumeration de tous les chemins, du debut a la fin du reseau."""
+    """Enumeration de tous les chemins du reseau.
+
+    Deux corrections par rapport a une enumeration naive, toutes deux necessaires a
+    la JUSTESSE et non a la performance :
+
+    1. La fin de projet se lit a CHAQUE noeud, pas seulement aux noeuds sans
+       successeur. Sur A(10 j) -> B(1 j) avec un decalage de -10, le seul chemin
+       complet mesure 1 jour, alors que A finit a 10 : une enumeration qui ne
+       regarde que les fins de chemin rendait 1 au lieu de 10.
+    2. Une tache ne peut pas commencer avant l'origine : le debut est borne a zero.
+       Sans cette borne, un decalage negatif plus grand que la duree du predecesseur
+       produisait une duree negative.
+    """
     T = {t.id: t for t in taches}
     succ = {t.id: [] for t in taches}
     for t in taches:
         for p, dec in _norm(t.predecesseurs):
+            if p not in T:
+                raise ValueError(f"predecesseur inconnu « {p} » pour la tache « {t.id} »")
             succ[p].append((t.id, dec))
+    ordonner(taches)                                  # refuse un circuit avant de descendre
     departs = [t.id for t in taches if not t.predecesseurs]
+    if not departs:
+        raise ValueError("aucune tache de depart : le reseau est mal forme")
 
-    meilleur, chemin_max = -1.0, []
+    meilleur, chemin_max = 0.0, []
 
-    def descendre(i, longueur, chemin):
+    def descendre(i, debut, chemin):
         nonlocal meilleur, chemin_max
-        longueur += T[i].duree
+        debut = max(0.0, debut)                       # (2) pas de demarrage avant l'origine
+        fin = debut + T[i].duree
         chemin = chemin + [i]
-        if not succ[i]:
-            if longueur > meilleur:
-                meilleur, chemin_max = longueur, chemin
-            return
+        if fin > meilleur:                            # (1) on lit la fin a chaque noeud
+            meilleur, chemin_max = fin, chemin
         for s, dec in succ[i]:
-            descendre(s, longueur + dec, chemin)
+            descendre(s, fin + dec, chemin)
 
     for dep in departs:
         descendre(dep, 0.0, [])
@@ -115,6 +135,7 @@ def contre_calcul(taches: list[Tache], tolerance: float = 1e-9) -> dict:
         "taches_critiques_voie_A": a["critiques"],
         "les_deux_voies_designent_le_meme_chemin":
             set(b["chemin"]) <= set(a["critiques"]),
-        "verdict": "OK" if ecart <= tolerance else "ECART — le parcours avant/arriere est faux",
+        "verdict": "OK" if ecart <= tolerance else
+                   "ECART entre les deux algorithmes — l'un des deux est faux, le controle ne dit pas lequel",
         "detail": a,
     }
