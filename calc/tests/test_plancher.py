@@ -309,13 +309,42 @@ _ids_g = {"coffrage_j": "COF", "decoffrage_j": "DEC", "betonnage_j": "BET",
 _tg_t = [_ids_g[x] for x in d["cycle_zone"]["taches_servies_par_la_grue"]["valeur"]]
 _cf = conflits_de_ressource(_res_z, _pl["planning_plancher"]["debuts"], _tg_t,
                             d["materiel"]["nb_grues"])
-verifie("le planning BRUT demande bien la grue en deux endroits : le controle le voit",
-        len(_cf) > 0, f"{len(_cf)} conflit(s), ex. {_cf[0]['demandes'] if _cf else '-'}")
-verifie("et le module publie ce nombre",
-        _pl["coherence_materiel"]["grue"]["conflits_au_planning_brut"] == len(_cf))
-verifie("decaler le decoffrage dans sa marge les resout tous",
-        _pl["coherence_materiel"]["grue"]["conflits_apres_resolution"] == 0,
-        f"decalage max {_pl['coherence_materiel']['grue']['resolution']['decalage_max_j']} j")
+# le nombre publie doit etre celui que je recalcule ici — quel qu'il soit. L'ancienne
+# version exigeait qu'il soit NON NUL : elle echouait des que le planning devenait
+# faisable, c'est-a-dire qu'elle testait le defaut au lieu de tester le controle.
+verifie("le nombre de conflits publie est celui que ce test recalcule",
+        _pl["coherence_materiel"]["grue"]["conflits_au_planning_brut"] == len(_cf),
+        f"{len(_cf)} conflit(s)" + (f", ex. {_cf[0]['demandes']}" if _cf else ""))
+_dec_g = _pl["coherence_materiel"]["grue"]["resolution"]["decalages_j"]
+_apres = conflits_de_ressource(_res_z, _pl["planning_plancher"]["debuts"], _tg_t,
+                               d["materiel"]["nb_grues"],
+                               decalages={("DEC", k): v for k, v in _dec_g.items()})
+verifie("apres le decalage REELLEMENT applique, il ne reste aucun conflit",
+        len(_apres) == 0 and _pl["coherence_materiel"]["grue"]["conflits_apres_resolution"] == 0,
+        f"{len(_apres)} restant(s) — recalcule ici avec le decoffrage decale, "
+        f"et non en retirant le decoffrage de la liste")
+verifie("le decalage retarde la liberation du coffrage, et le module le compte",
+        _pl["coherence_materiel"]["immobilisation_apres_decalage_j"]
+        > _pl["cycle_zone"]["duree_j"],
+        f"{_pl['cycle_zone']['duree_j']} -> {_pl['coherence_materiel']['immobilisation_apres_decalage_j']} j")
+
+# --- aucune variante RECOMMANDEE au lecteur ne doit depasser le parc sans le dire
+_dep = _pl["coherence_materiel"]["variantes_qui_depassent_le_parc"]
+_contenu = (RACINE / "content" / "01-tranche-verticale-suivi.md").read_text(encoding="utf-8")
+for _v in _dep:
+    verifie(f"la variante « {_v} » depasse le parc : le module doit publier son deficit",
+            f"{_v}.deficit_coffrage_m2" in _contenu,
+            "sinon le module recommande un planning qu'il a lui-meme calcule infaisable")
+
+# --- le verdict publie est celui que calc/ rend, et il est coherent avec ses nombres
+_ccv = va["contre_calcul"]
+verifie("le verdict du contre-calcul est coherent avec l'ecart et la tolerance",
+        (_ccv["ecart_pct"] > _ccv["tolerance_pct"]) == _ccv["verdict"].startswith("ECART"),
+        f"ecart {_ccv['ecart_pct']} %, tolerance {_ccv['tolerance_pct']} %, verdict « {_ccv['verdict']} »")
+verifie("et le module publie ce verdict par variable, sans le recopier a la main",
+        "contre_calcul.verdict" in _contenu
+        and "sous la tolérance" not in _contenu,
+        "un verdict ecrit a la main se desynchronise du calcul des que la donnee bouge")
 verifie("une occupation MOYENNE sous 100 % ne suffisait donc pas",
         _pl["regle_cadence"]["occupation_de_la_grue_j"] < _pl["planning_plancher"]["cadence_zone_j"],
         f"{_pl['regle_cadence']['occupation_de_la_grue_j']} j occupee pour une cadence de "

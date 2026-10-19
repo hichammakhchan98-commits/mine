@@ -1,6 +1,6 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **16/10/2026** · Étape en cours : **2 — tranche verticale, corrigée après la passe /devil n° 1**
+Dernière mise à jour : **19/10/2026** · Étape en cours : **2 — tranche verticale, après cinq passes /devil**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
@@ -41,7 +41,7 @@ Charte et impression (contrastes AA) · SVG paramétrique (`assets/svgkit.js`, 9
 figures) · 3D (`src/civil3d/`, bundle IIFE 765 ko : scène, orbite, matériaux, étiquettes, coupe,
 éclaté, phasage 4D) · build qui **échoue** sur variable absente, légende incomplète, nombre normatif
 non balisé ou accident de gabarit · `calc/` : contre-calcul à deux voies, 3 étalonnages sur solution
-fermée, `pint` sur les 5 bibliothèques · **15 contrôles** `npm run check`, 14 tests de rendu,
+fermée, `pint` sur les 5 bibliothèques · **16 contrôles** `npm run check`, 14 tests de rendu,
 captures de toutes les figures · page de démonstration testée.
 
 ## Grilles d'auto-évaluation § 7.2
@@ -52,13 +52,9 @@ justifications : `QA/grilles-72.md`.
 
 ## Défauts et passe adversariale /devil (§ 12.2)
 
-Portée par un **sous-agent distinct**, qui n'a pas lu le raisonnement de l'auteur et a recalculé les
-valeurs clés à partir de `data/` seul.
-
-| Étape | En construisant | À la passe /devil | Rapports |
-|---|---|---|---|
-| E1 — socle | 8 | **50** sur trois passes (6 bloquants, 20 majeurs, 24 mineurs) | `QA/E1-socle*.md` |
-| TV — tranche verticale | 6 | **19** (4 bloquants, 9 majeurs, 6 mineurs) | `QA/TV-tranche-verticale.md`, `QA/TV-corrections-passe1.md` |
+Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
+valeurs clés depuis `data/` seul. E1 : 8 défauts en construisant, **50 sur trois passes**.
+TV : 6 en construisant, **117 sur cinq passes**. Rapports : `QA/`.
 
 ### Socle E1
 
@@ -67,32 +63,35 @@ valeurs clés à partir de `data/` seul.
 changement comme un autre, elle se relit — deux fois elle s'est retournée. **Canaris** : 14 sur le
 socle et la TV, plus 11 inventés par les relecteurs ; **tous rouges aujourd'hui**.
 
-### Tranche verticale TV — quatre passes, 94 défauts, tous corrigés
+### Tranche verticale TV — cinq passes, 117 défauts
 
 | Passe | Défauts | Bloquants |
 |---|---|---|
 | 1 | 19 | **4** |
-| 2 | 25 | **3** — aucun n'était vu par les 14 contrôles |
+| 2 | 25 | **3** — aucun vu par les contrôles |
 | 3 | 26 | **2** |
 | 4 | 24 | **3** |
+| 5 (bornée) | 23 | **3** — sur ce que le module *dit* de son calcul |
 
 Rapports et journaux : `QA/TV-*.md`.
 
-**Les dix bloquants des quatre passes sont la même chose : des modèles faux sous une arithmétique
-juste.** L'avancement d'une zone était réparti au **prorata uniforme** — or à 60 % du cycle le
-bétonnage n'a pas commencé et le coffrage est entièrement posé ; la **valeur acquise** appliquait ce
-même prorata à des dirhams, douze lignes sous l'encart qui l'interdit ; un **taux de recouvrement**
-était appliqué à son complément, et trois passes l'ont manqué parce que l'autre taux, 50 %, est
-auto-complémentaire. La règle de cadence, elle, est désormais fondée sur les **ressources** et
-complétée par une détection des **conflits instantanés** : une occupation moyenne à 67 % cachait six
-moments où la grue était demandée en deux endroits.
+**Les quinze bloquants sont la même chose : des modèles faux sous une arithmétique juste.**
+L'avancement était réparti au **prorata uniforme** (or à 60 % du cycle le béton n'est pas coulé) ; la
+**valeur acquise** appliquait ce prorata à des dirhams ; un **taux de recouvrement** était appliqué à
+son complément, manqué quatre fois parce que l'autre, 50 %, est auto-complémentaire ; la **grue**
+était vérifiée en moyenne, jamais en conflit. Les trois derniers : des **verdicts écrits à la main**
+contredisant le chiffre d'à côté.
 
 **La leçon vaut pour les cinquante modules à venir** : les contrôles vérifiaient que les nombres se
-suivent, pas que le **modèle** dise ce qu'il prétend. Depuis, toute grandeur décrivant l'état du
-chantier est **dérivée du réseau** et un test refait la dérivation ; tout paramètre déclaré est
-**relu dans le résultat qu'il engendre** ; toute V3 est registrée et vérifiée dans sa fourchette ;
-un module décrivant une opération à risque **doit** porter ses dispositions de sécurité (§ 3.4).
-Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10). **Passe 5 à lancer.**
+suivent, pas que le **modèle** dise ce qu'il prétend. Depuis : toute grandeur d'état est **dérivée du
+réseau** et un test refait la dérivation ; tout paramètre déclaré est **relu dans le résultat qu'il
+engendre** ; tout **verdict publié est une sortie de `calc/`** ; toute V3 est registrée et vérifiée
+dans sa fourchette ; un module à risque porte ses dispositions de sécurité (§ 3.4) ; chaque contrôle
+rendant un verdict porte son canari rouge. Grille § 7.2 : **minimum 2 partout** depuis la passe 5.
+
+**Dette déclarée** (non bloquants des passes 4 et 5) : scalaires V3 sans fourchette hors registre ·
+deux bibliothèques hors vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui
+ne cherche qu'un mot. Part de main-d'œuvre : dette 10.
 
 ## Valeurs V2 en attente de vérification par le lecteur
 
@@ -111,7 +110,7 @@ Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10). **Passe 5 à 
 | 6 | Coffrage modélisé **sans étaiement**, décoffrage animé sans condition de résistance | page de démonstration |
 | 7 | Vérification dimensionnelle **déportée** dans un fichier : si une formule change sans qu'il suive, le contrôle ne le voit pas | `calc/verif_unites.py` |
 | 8 | Un seul relevé d'avancement dans `data/` : le constat est publié comme un point, pas comme une courbe | `calc/cycle_plancher.py` |
-| 9 | L'étalonnage de la valeur acquise confronte les formules à un cas posé d'avance, mais n'appelle pas `valeur_acquise()` : il garde l'arithmétique, pas le branchement | `calc/etalonnage/plancher_cas_ferme.py` |
+| 9 | Le 16ᵉ contrôle de sécurité ne cherche qu'un mot : une section S7c vidée de sa substance mais contenant « sécurité » resterait verte | `build/check.mjs` |
 
 ## Dette
 

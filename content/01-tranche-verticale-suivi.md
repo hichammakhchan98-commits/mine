@@ -351,13 +351,22 @@ décoffrage d'une zone et le coffrage d'une autre, sur la totalité du décoffra
 moyenne sous 100 % ne prouve rien : un moyen peut être libre les trois quarts du temps et demandé
 deux fois le quart restant.
 
-La résolution ne coûte rien, **à condition de l'avoir calculée** : le décoffrage n'est sur le chemin
-critique d'aucune rotation, il se décale dans sa marge de
-{{tranche-plancher.coherence_materiel.grue.resolution.decalage_max_j::n2}} j au plus, et les
+La résolution ne coûte rien **en délai**, à condition de l'avoir calculée. Le décoffrage est la
+dernière tâche du cycle : le décaler allonge le cycle de la zone concernée, mais **ne retarde pas le
+démarrage de la suivante**, qui est bornée par les équipes et la grue, pas par lui. Il se décale donc
+de {{tranche-plancher.coherence_materiel.grue.resolution.decalage_max_j::n2}} j au plus, et les
 {{tranche-plancher.coherence_materiel.grue.conflits_au_planning_brut}} conflits tombent à
 **{{tranche-plancher.coherence_materiel.grue.conflits_apres_resolution}}**. Sans ce calcul, on
 découvre le conflit le jour où deux chefs d'équipe se disputent la grue — et on l'arbitre au plus
 fort, pas au plus urgent.
+
+**Ce décalage n'est pas gratuit pour autant** : il retarde la **libération du coffrage**.
+L'immobilisation passe de {{tranche-plancher.cycle_zone.duree_j::n2}} à
+**{{tranche-plancher.coherence_materiel.immobilisation_apres_decalage_j::n2}} j**, soit
+{{tranche-plancher.coherence_materiel.coffrage_mobilise_apres_decalage_m2::n0}} m² de tables
+immobilisées pour {{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} au parc. Ici ça passe.
+La leçon générale, elle, ne passe jamais à la trappe : **une marge consommée sur une ressource se
+paie sur une autre**, et il faut aller voir laquelle.
 
 C'est un **contrôle de cohérence du module**, pas un commentaire : `coherence_materiel.verdict` vaut
 *{{tranche-plancher.coherence_materiel.verdict}}*, et il passerait au rouge si la cadence descendait
@@ -435,11 +444,15 @@ situation où chaque ligne vaut le même pourcentage, vous savez que personne n'
 :::
 
 :::encart {"genre":"voir","titre":"Contre-calcul : l'avancement déclaré colle-t-il aux relevés ?"}
-La valeur acquise se calcule **deux fois**. Voie A, par les coûts : budget à l'achèvement × avancement
-déclaré → {{valeur-acquise.contre_calcul.voie_A_par_les_couts_MAD::n0}} MAD. Voie B, par les
-**quantités relevées** sur le chantier → {{valeur-acquise.contre_calcul.voie_B_par_les_quantites_MAD::n0}} MAD.
-Écart : {{valeur-acquise.contre_calcul.ecart_pct::n2}} %, sous la tolérance de
-{{valeur-acquise.contre_calcul.tolerance_pct::n0}} %.
+La valeur acquise se calcule **deux fois**. Voie A, par l'**état physique** que le réseau prévoit à
+cette date, valorisé aux prix du marché →
+{{valeur-acquise.contre_calcul.voie_A_par_les_couts_MAD::n0}} MAD. Voie B, par les **quantités
+relevées** sur le chantier → {{valeur-acquise.contre_calcul.voie_B_par_les_quantites_MAD::n0}} MAD.
+Écart : **{{valeur-acquise.contre_calcul.ecart_pct::n2}} %** pour une tolérance de
+{{valeur-acquise.contre_calcul.tolerance_pct::n0}} % — verdict rendu par `calc/` :
+*{{valeur-acquise.contre_calcul.verdict}}*.
+
+**Le contrôle sonne. Il faut donc savoir ce qu'il dit, et ce qu'il ne dit pas.**
 
 Comparer deux montants en dirhams mélange pourtant des postes dont la fiabilité n'a rien à voir. Le
 recoupement qui fait foi se fait **en unités physiques, poste par poste** — et surtout contre l'état
@@ -451,7 +464,8 @@ que le **réseau** prévoit à cette date, pas contre un prorata de l'avancement
 | Coffrage | **géométrique** | {{valeur-acquise.recoupement_physique.postes.1.attendu_par_le_reseau::n1}} m² | {{valeur-acquise.recoupement_physique.postes.1.releve::n1}} m² | {{valeur-acquise.recoupement_physique.postes.1.ecart_pct::n2}} % |
 | Acier | issu d'un **ratio V3** | {{valeur-acquise.recoupement_physique.postes.2.attendu_par_le_reseau::n0}} kg | {{valeur-acquise.recoupement_physique.postes.2.releve::n0}} kg | {{valeur-acquise.recoupement_physique.postes.2.ecart_pct::n2}} % |
 
-Les deux postes **géométriques** sont sous le pour cent : l'avancement déclaré tient. L'acier s'écarte
+Les deux postes **géométriques** sont sous le pour cent : l'avancement déclaré tient, et l'alarme en
+dirhams ne vient donc **pas** de l'avancement. L'acier s'écarte
 davantage, et c'est attendu — son ratio V3 ouvre une étendue de
 {{valeur-acquise.recoupement_physique.rapports.etendue_du_ratio_pct::n1}} %, soit
 **{{valeur-acquise.recoupement_physique.rapports.fourchette_du_ratio_sur_ecart_constate::n0}} fois**
@@ -469,9 +483,21 @@ l'écart constaté sur ce poste
 Là, le béton décroche alors qu'il est **géométrique** : il ne dépend d'aucune hypothèse. C'est une
 vraie dérive de l'avancement déclaré, et c'est à ce moment-là qu'on demande les attachements.
 
+**Ce que l'alarme en dirhams dit réellement.** Elle sonne —
+{{valeur-acquise.contre_calcul.ecart_pct::n2}} % pour {{valeur-acquise.contre_calcul.tolerance_pct::n0}} % —
+et le recoupement physique dit pourquoi : **ce n'est pas l'avancement, c'est l'acier**. Les deux
+postes géométriques sont à {{valeur-acquise.recoupement_physique.postes.0.ecart_pct::n2}} % et
+{{valeur-acquise.recoupement_physique.postes.1.ecart_pct::n2}} % ; l'acier, lui, est à
+{{valeur-acquise.recoupement_physique.postes.2.ecart_pct::n2}} %, et comme il pèse plus de 40 % du
+coût de zone, il emporte à lui seul le dépassement en dirhams.
+
 **La leçon, qui vaut pour tout tableau de bord** : un seuil n'a de sens qu'au regard de l'incertitude
-de ce qu'il mesure. Un contrôle réglé plus fin que ses entrées sonne tout le temps, et un contrôle qui
-sonne tout le temps ne se regarde plus.
+de ce qu'il mesure. Un contrôle réglé plus fin que ses entrées sonne tout le temps, et un contrôle
+qui sonne tout le temps ne se regarde plus. La bonne réaction n'est **ni** de desserrer le seuil pour
+avoir la paix, **ni** de prendre l'alarme pour une dérive : c'est de descendre d'un étage, en unités
+physiques, pour savoir **quel poste** la déclenche. Ici le béton et le coffrage disent que
+l'avancement est juste ; l'acier dit que le ratio V3 est large, ce que le module annonce depuis sa
+première page.
 
 **Pourquoi la voie B est indépendante.** Une première version multipliait les quantités *théoriques*
 par l'avancement *déclaré* : algébriquement identique à la voie A, écart nul par construction. Deux
@@ -672,19 +698,34 @@ recruter.
 désormais la borne. Une **seconde grue** divise cette occupation par deux : cadence
 **{{tranche-plancher.variantes.deux_equipes_et_deux_grues.cadence_j::n2}} j**, plancher
 **{{tranche-plancher.variantes.deux_equipes_et_deux_grues.duree_plancher_j::n1}} j** — **sous la
-cible**, et la borne redevient le ferraillage de dalle. C'est le levier qui marche, et personne ne
-l'aurait proposé en regardant les effectifs.
+cible**, et la borne redevient le ferraillage de dalle. Personne ne l'aurait proposé en regardant les
+effectifs.
+
+**Mais cette réponse ne tient pas encore, et c'est le dernier piège de l'exercice.** À cette cadence,
+**{{tranche-plancher.variantes.deux_equipes_et_deux_grues.zones_coffrees_simultanement}} zones**
+détiennent du coffrage en même temps, soit
+{{tranche-plancher.variantes.deux_equipes_et_deux_grues.coffrage_mobilise_m2::n0}} m² pour
+{{tranche-plancher.coherence_materiel.stock_declare_m2::n0}} m² au parc : il manque
+**{{tranche-plancher.variantes.deux_equipes_et_deux_grues.deficit_coffrage_m2::n0}} m²** de tables.
+Le module l'a calculé — `coherence_materiel.variantes_qui_depassent_le_parc` nomme précisément cette
+variante — et une version précédente de ce corrigé la recommandait **sans le lire**. La réponse
+complète est donc : quatre ferrailleurs de dalle, deux ferrailleurs de poutres, **une seconde grue
+et {{tranche-plancher.variantes.deux_equipes_et_deux_grues.deficit_coffrage_m2::n0}} m² de tables
+supplémentaires**. Trois ressources, pas une.
 
 **(d) Découper en zones plus petites.** Plus de zones, cycle plus court chacune, mais plus de reprises
 de bétonnage et plus de points d'arrêt. On gagne sur le papier, on perd en qualité et en contrôle.
 
 **Ce qu'il faut dire en réunion** : « 25 jours est atteignable, mais pas avec des hommes seuls.
 Ferraillage de dalle à {{tranche-plancher.variantes.deux_equipes_et_deux_grues.ferrailleurs_dalle}},
-poutres à {{tranche-plancher.variantes.deux_equipes_et_deux_grues.ferrailleurs_poutres}}, **et une
-seconde grue** : {{tranche-plancher.variantes.deux_equipes_et_deux_grues.duree_plancher_j::n1}} jours,
-pointe à {{tranche-plancher.variantes.deux_equipes_et_deux_grues.pointe_effectif}} personnes. Sans la
-grue, on plafonne à {{tranche-plancher.variantes.effectif_renforce_deux_equipes.duree_plancher_j::n1}}
-jours quel que soit l'effectif — je l'ai vérifié. Je chiffre la grue et je confirme vendredi. »
+poutres à {{tranche-plancher.variantes.deux_equipes_et_deux_grues.ferrailleurs_poutres}}, **une
+seconde grue et {{tranche-plancher.variantes.deux_equipes_et_deux_grues.deficit_coffrage_m2::n0}} m²
+de tables en plus** : {{tranche-plancher.variantes.deux_equipes_et_deux_grues.duree_plancher_j::n1}}
+jours, pointe à {{tranche-plancher.variantes.deux_equipes_et_deux_grues.pointe_effectif}} personnes.
+Sans la grue on plafonne à
+{{tranche-plancher.variantes.effectif_renforce_deux_equipes.duree_plancher_j::n1}} jours quel que
+soit l'effectif, et sans les tables la cadence ne se tient pas — je l'ai vérifié poste par poste. Je
+chiffre les trois et je confirme vendredi. »
 
 *Le piège de cet exercice : croire qu'une tâche renforcée se traduit en cadence. Elle ne s'y traduit
 que tant qu'elle **tient la borne** — après quoi une autre ressource la reprend, et le gain s'arrête

@@ -253,7 +253,7 @@ def etat_physique_de_zone(q: dict, reseau: list[Tache], frac_cycle: float) -> di
 
 
 def conflits_de_ressource(reseau: list[Tache], debuts: dict, taches: list[str],
-                          nb_moyens: int) -> list[dict]:
+                          nb_moyens: int, decalages: dict | None = None) -> list[dict]:
     """Moments ou un moyen partage est demande en plus d'endroits qu'il n'en existe.
 
     Une occupation MOYENNE sous 100 % ne prouve rien : la grue peut etre libre les trois
@@ -262,11 +262,13 @@ def conflits_de_ressource(reseau: list[Tache], debuts: dict, taches: list[str],
     chaque decoffrage — sans qu'aucun controle les voie.
     """
     r = voie_A_parcours(reseau)
+    dec = decalages or {}
     intervalles = []
     for cle, debut in debuts.items():
         for i in taches:
             deb, fin = r["tot"][i]
-            intervalles.append((debut + deb, debut + fin, f"{cle}/{i}"))
+            d = dec.get((i, cle), 0.0)
+            intervalles.append((debut + deb + d, debut + fin + d, f"{cle}/{i}"))
     bornes = sorted({x for iv in intervalles for x in iv[:2]})
     out = []
     for a_, b_ in zip(bornes, bornes[1:]):
@@ -622,11 +624,23 @@ if __name__ == "__main__":
     _nb_grues = d["materiel"]["nb_grues"]
     _conflits = conflits_de_ressource(reseau, plan["debuts"], _tg, _nb_grues)
     _resolution = decaler_pour_liberer(reseau, plan["debuts"], _tg, _nb_grues, "DEC")
+    # On rejoue la detection avec le decalage REELLEMENT applique, et non en retirant la
+    # tache mobile de la liste : retirer DEC rendait zero par construction, c'est-a-dire
+    # un controle qui ne pouvait pas echouer. Il est verifie par un canari qui bride la
+    # resolution a zero decalage et doit faire remonter les six conflits.
+    _debuts_decales = dict(plan["debuts"])
     _restants = conflits_de_ressource(
-        reseau, plan["debuts"], [x for x in _tg if x != "DEC"], _nb_grues)
+        reseau, plan["debuts"], _tg, _nb_grues,
+        decalages={("DEC", cle): v for cle, v in _resolution["decalages_j"].items()})
 
     coherence_materiel = {
         "zones_coffrees_simultanement": _ref["zones_coffrees_simultanement"],
+        "immobilisation_apres_decalage_j": round(duree_zone + _resolution["decalage_max_j"], 2),
+        "zones_coffrees_apres_decalage": max(1, math.ceil(
+            (duree_zone + _resolution["decalage_max_j"]) / plan["cadence_zone_j"])),
+        "coffrage_mobilise_apres_decalage_m2": round(max(1, math.ceil(
+            (duree_zone + _resolution["decalage_max_j"]) / plan["cadence_zone_j"]))
+            * q["coffrage_m2"]),
         "coffrage_mobilise_m2": _ref["coffrage_mobilise_m2"],
         "stock_declare_m2": _ref["stock_coffrage_declare_m2"],
         "marge_m2": _ref["stock_coffrage_declare_m2"] - _ref["coffrage_mobilise_m2"],
@@ -652,6 +666,12 @@ if __name__ == "__main__":
                 "rotation : il se decale dans sa marge, et la grue suffit."
             ),
         },
+        # Le verdict porte sur toutes les variantes PUBLIEES, pas seulement la reference :
+        # une variante recommandee au lecteur qui depasse le parc est une recommandation
+        # infaisable, et le module en proposait une sans le voir.
+        "variantes_qui_depassent_le_parc": [
+            k for k, v in res_variantes.items()
+            if isinstance(v, dict) and v.get("coffrage_suffisant") is False],
         "verdict": ("LE PLANNING DEMANDE PLUS DE COFFRAGE QUE LE PARC DECLARE"
                     if not _ref["coffrage_suffisant"] else
                     "ETAIEMENT SATURE : aucune zone n'est liberee avant la fin du plancher"

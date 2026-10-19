@@ -336,3 +336,24 @@ de D-025 ne voyait pas. *Décision* : `data/effectifs` et `data/materiel` porten
 "decision"`. Une hypothèse décrit ce qu'on ignore et porte une fourchette ; une décision décrit ce
 qu'on choisit et porte une justification. Les confondre fait croire qu'un effectif se négocie comme
 on borne une incertitude. *Impact* : `data/projet-gare.json`.
+
+**D-031 · 19/10/2026 — Un verdict publié au lecteur est une sortie de `calc/`, jamais une phrase.**
+*Raison* : les trois bloquants de la passe 5 sont trois verdicts **écrits à la main** qui
+contredisaient le chiffre placé juste à côté. Le module publiait « écart de 1,30 %, **sous la
+tolérance de 1 %** » alors que `calc/` rendait « ECART » ; il affirmait que les six conflits de grue
+« tombent à zéro » par une vérification qui **retirait** la tâche décalée au lieu de la rejouer
+décalée, donc rendait zéro par construction ; et son exercice 3 recommandait une variante dont le
+module avait lui-même calculé qu'elle dépasse le parc de tables de 397 m², sans jamais lire ce
+résultat. *Décision* : tout verdict affiché est injecté par variable depuis `calc/` ; une variante
+recommandée au lecteur ne passe le contrôle que si son éventuel déficit est publié ; et **tout
+contrôle qui rend un verdict porte un canari versé au dépôt qui le fait passer au rouge** — celui de
+la résolution de grue bride le décalage à zéro et doit faire remonter les six conflits.
+*Impact* : `calc/cycle_plancher.py`, `calc/tests/test_plancher.py`, § S6 et exercice 3 du module.
+
+**D-032 · 19/10/2026 — Une marge consommée sur une ressource se paie sur une autre.**
+*Raison* : décaler le décoffrage libère la grue, mais retarde la **libération du coffrage** —
+l'immobilisation passe de 8,05 à 9,10 jours. La première version du texte présentait la résolution
+comme gratuite. *Décision* : le module publie les deux effets, vérifie que le parc tient malgré le
+décalage, et en tire la règle générale. Le texte ne dit plus que le décoffrage « n'est pas sur le
+chemin critique » — il l'est, dans le cycle de sa zone — mais que le décaler **ne retarde pas le
+démarrage de la zone suivante**, ce qui est la propriété réellement utilisée.
