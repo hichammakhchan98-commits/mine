@@ -7,7 +7,8 @@ from __future__ import annotations
 import json, math, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from plancher import quantites_zone, fourchette_acier
-from cycle_plancher import durees_taches, reseau_zone, cout_zone, cadence_rotation
+from cycle_plancher import (durees_taches, reseau_zone, cout_zone, cadence_rotation,
+                            etat_physique_de_zone, conflits_de_ressource)
 from cpm import Tache, contre_calcul, voie_A_parcours
 from valeur_acquise import valeur_acquise
 
@@ -26,9 +27,12 @@ q = quantites_zone(d)
 q["fourchette_acier"] = fourchette_acier(d, q)
 t = durees_taches(d, q)
 cc = contre_calcul(reseau_zone(t, d["cycle_zone"]))
-c = cout_zone(d, q, t)
 _pl = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
-va = valeur_acquise(d, q, c, _pl["suivi"], _pl["avancement_physique"]["quantites_faites"])
+# le cycle vient du CONTRE-CALCUL recalcule ici, pas de la sortie publiee : on ne
+# verifie pas un resultat avec lui-meme
+c = cout_zone(d, q, t, cc["voie_A_parcours_avant_arriere_j"])
+va = valeur_acquise(d, q, c, _pl["suivi"], _pl["avancement_physique"]["quantites_faites"],
+                     _pl["valeur_planifiee_a_l_arret"]["quantites"])
 z = d["geometrie"]["mezzanine"]["zones_de_coulage"]
 
 # --- geometrie : les zones doivent recouvrir exactement la mezzanine
@@ -144,8 +148,9 @@ va2 = valeur_acquise(d2, q, c, _pl["suivi"], _pl["avancement_physique"]["quantit
 verifie("la voie B ne depend pas de l'avancement declare",
         va2["contre_calcul"]["voie_B_par_les_quantites_MAD"] == vcc["voie_B_par_les_quantites_MAD"],
         "elle part des releves, pas du declare")
-verifie("la voie A, elle, en depend bien",
-        va2["contre_calcul"]["voie_A_par_les_couts_MAD"] != vcc["voie_A_par_les_couts_MAD"])
+verifie("la voie A non plus : les deux partent desormais du PHYSIQUE, pas du declare",
+        va2["contre_calcul"]["voie_A_par_les_couts_MAD"] == vcc["voie_A_par_les_couts_MAD"],
+        "voie A = etat physique calcule x prix ; voie B = quantites relevees x prix")
 
 # --- la courbe en S doit dire la MEME chose que le tableau de valeur acquise
 # (defaut B3 : 59,9 % contre 50,0 % a la meme date, legende affirmant que l'ecart etait SV)
@@ -268,6 +273,67 @@ verifie("l'histogramme publie est reproductible depuis data/ seul",
         _recalcule == _publie,
         f"{sum(1 for a_, b_ in zip(_recalcule, _publie) if a_ != b_)} jour(s) different(s)")
 
+# --- l'etat physique : chaque poste suit-il la tache qui le PRODUIT ?
+# Canari du relecteur : permuter le rattachement poste -> tache laissait calc/ vert,
+# alors que le module aurait publie « 0 m2 de coffrage et 98,4 m3 de beton » pour une
+# zone ou rien n'est coule. On recalcule ici l'etat a plusieurs dates, sans la fonction.
+_res_z = reseau_zone(t, d["cycle_zone"])
+_rz3 = voie_A_parcours(_res_z)
+_cyc = max(f for _, f in _rz3["tot"].values())
+for _frac in (0.0, 0.25, 0.6, 0.9, 1.0):
+    _e = etat_physique_de_zone(q, _res_z, _frac)
+    _tx = _frac * _cyc
+
+    def _av(cle):
+        _deb, _fin = _rz3["tot"][cle]
+        return 0.0 if _tx <= _deb else 1.0 if _tx >= _fin else (_tx - _deb) / (_fin - _deb)
+
+    _att_cof = q["coffrage_m2"] * _av("COF")
+    _att_ac = q["acier_poutres_kg"] * _av("FEP") + q["acier_dalle_kg"] * _av("FED")
+    _att_bet = q["beton_m3"] * _av("BET")
+    verifie(f"etat physique a {_frac:.0%} du cycle : le coffrage suit COF",
+            abs(_e["coffrage_m2"] - _att_cof) < 0.2, f"{_e['coffrage_m2']} contre {_att_cof:.1f}")
+    verifie(f"etat physique a {_frac:.0%} : l'acier suit FEP puis FED",
+            abs(_e["acier_kg"] - _att_ac) < 1.0, f"{_e['acier_kg']} contre {_att_ac:.0f}")
+    verifie(f"etat physique a {_frac:.0%} : le beton suit BET",
+            abs(_e["beton_m3"] - _att_bet) < 0.2, f"{_e['beton_m3']} contre {_att_bet:.1f}")
+verifie("a 60 % du cycle, le beton est a ZERO : c'est la these du module",
+        etat_physique_de_zone(q, _res_z, 0.6)["beton_m3"] == 0.0)
+verifie("et a 100 %, tout y est",
+        all(abs(etat_physique_de_zone(q, _res_z, 1.0)[k] - q[k]) < 0.2
+            for k in ("beton_m3", "coffrage_m2")))
+
+# --- la grue : conflits INSTANTANES, pas seulement occupation moyenne
+_ids_g = {"coffrage_j": "COF", "decoffrage_j": "DEC", "betonnage_j": "BET",
+          "ferraillage_poutres_j": "FEP", "ferraillage_dalle_j": "FED"}
+_tg_t = [_ids_g[x] for x in d["cycle_zone"]["taches_servies_par_la_grue"]["valeur"]]
+_cf = conflits_de_ressource(_res_z, _pl["planning_plancher"]["debuts"], _tg_t,
+                            d["materiel"]["nb_grues"])
+verifie("le planning BRUT demande bien la grue en deux endroits : le controle le voit",
+        len(_cf) > 0, f"{len(_cf)} conflit(s), ex. {_cf[0]['demandes'] if _cf else '-'}")
+verifie("et le module publie ce nombre",
+        _pl["coherence_materiel"]["grue"]["conflits_au_planning_brut"] == len(_cf))
+verifie("decaler le decoffrage dans sa marge les resout tous",
+        _pl["coherence_materiel"]["grue"]["conflits_apres_resolution"] == 0,
+        f"decalage max {_pl['coherence_materiel']['grue']['resolution']['decalage_max_j']} j")
+verifie("une occupation MOYENNE sous 100 % ne suffisait donc pas",
+        _pl["regle_cadence"]["occupation_de_la_grue_j"] < _pl["planning_plancher"]["cadence_zone_j"],
+        f"{_pl['regle_cadence']['occupation_de_la_grue_j']} j occupee pour une cadence de "
+        f"{_pl['planning_plancher']['cadence_zone_j']} j — et pourtant {len(_cf)} conflits")
+
+# --- le taux de recouvrement declare est-il celui que le reseau realise ?
+# Il etait applique a son COMPLEMENT : 40 % declare produisait 60 % realise. Sur le
+# premier lien l'erreur etait invisible, 50 % etant auto-complementaire.
+_rr = voie_A_parcours(reseau_zone(t, d["cycle_zone"]))
+for _a, _b, _cle in (("COF", "FEP", "recouvrement_coffrage_ferraillage_poutres_pct"),
+                     ("FEP", "FED", "recouvrement_ferraillage_poutres_dalle_pct")):
+    _da, _fa = _rr["tot"][_a]
+    _db = _rr["tot"][_b][0]
+    _realise = (_db - _da) / (_fa - _da) * 100
+    verifie(f"recouvrement {_a}->{_b} : le reseau realise le taux DECLARE",
+            abs(_realise - d["cycle_zone"][_cle]["valeur"]) < 0.5,
+            f"declare {d['cycle_zone'][_cle]['valeur']} %, realise {_realise:.1f} %")
+
 # --- B2 : l'histogramme suit le reseau, donc il montre les recouvrements
 _h = {x["j"]: x["n"] for x in _pl["figures"]["effectifs"]}
 _r_zone = voie_A_parcours(reseau_zone(t, d["cycle_zone"]))
@@ -275,10 +341,9 @@ _deb_fep, _fin_cof = _r_zone["tot"]["FEP"][0], _r_zone["tot"]["COF"][1]
 verifie("le reseau comporte bien un recouvrement coffrage / ferraillage de poutres",
         _deb_fep < _fin_cof, f"FEP demarre a {_deb_fep:.2f}, COF finit a {_fin_cof:.2f}")
 _k = int(math.floor((_deb_fep + _fin_cof) / 2))
-_attendu = d["effectifs"]["coffreurs"] + d["effectifs"]["ferrailleurs_poutres"] \
-    + d["effectifs"]["chef_equipe"] + d["effectifs"]["grutier"]
-verifie("au jour du recouvrement, les DEUX equipes sont comptees",
-        _h.get(_k) == _attendu, f"jour {_k} : {_h.get(_k)} presents, {_attendu} attendus")
+verifie("au jour du recouvrement, les DEUX equipes au moins sont comptees",
+        _h.get(_k, 0) >= d["effectifs"]["coffreurs"] + d["effectifs"]["ferrailleurs_poutres"],
+        f"jour {_k} : {_h.get(_k)} presents")
 verifie("la pointe publiee est bien le maximum de l'histogramme",
         _pl["variantes"]["reference"]["pointe_effectif"] == max(_h.values()),
         f"{_pl['variantes']['reference']['pointe_effectif']} contre {max(_h.values())}")

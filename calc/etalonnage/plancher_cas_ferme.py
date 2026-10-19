@@ -58,8 +58,8 @@ print("ETALONNAGE — identites de la valeur acquise")
 d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"))
 qr = quantites_zone(d)
 t = durees_taches(d, qr)
-c = cout_zone(d, qr, t)
 _tp = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
+c = cout_zone(d, qr, t, _tp["cycle_zone"]["duree_j"])
 plan_suivi = {"zones_prevues_equivalentes": _tp["suivi"]["zones_prevues_equivalentes"]}
 _attendu = _tp["avancement_physique"]["quantites_faites"]
 va = valeur_acquise(d, qr, c, plan_suivi, _attendu)
@@ -78,8 +78,16 @@ d2 = json.loads(json.dumps(d))
 bac = c["total_fournitures_et_mise_en_oeuvre_MAD"] * d["geometrie"]["mezzanine"]["zones_de_coulage"]["nb_zones"]
 d2["suivi"]["zones_realisees_a_date"] = 4
 d2["suivi"]["avancement_zone_en_cours_pct"] = 0
-d2["suivi"]["cout_reel_constate_MAD"] = bac * 4 / 8
-va2 = valeur_acquise(d2, qr, c, {"zones_prevues_equivalentes": 4.0}, _attendu)
+# quatre zones entieres faites et prevues, et le cout reel exactement a leur valeur :
+# l'etat physique et l'etat planifie sont alors les MEMES quantites
+_quatre = {k: v * 4 for k, v in
+           {"beton_m3": qr["beton_m3"], "acier_kg": qr["acier_kg"],
+            "coffrage_m2": qr["coffrage_m2"]}.items()}
+d2["suivi"]["cout_reel_constate_MAD"] = (
+    _quatre["beton_m3"] * d["prix_unitaires_MAD"]["postes"]["beton_m3"]["valeur"]
+    + _quatre["acier_kg"] * d["prix_unitaires_MAD"]["postes"]["acier_kg"]["valeur"]
+    + _quatre["coffrage_m2"] * d["prix_unitaires_MAD"]["postes"]["coffrage_m2"]["valeur"])
+va2 = valeur_acquise(d2, qr, c, {"zones_prevues_equivalentes": 4.0}, _quatre, _quatre)
 dit(abs(va2["CPI"] - 1.0) < 1e-6 and abs(va2["SPI"] - 1.0) < 1e-6,
     "chantier parfaitement a l'heure et au budget : CPI = SPI = 1",
     f"CPI {va2['CPI']} · SPI {va2['SPI']}")
@@ -110,10 +118,12 @@ _d_f = {
                                       "acier_kg": {"valeur": _pu / 3},
                                       "coffrage_m2": {"valeur": _pu / 3}}},
 }
+# 5 unites faites, 6 prevues : chaque unite vaut 100 MAD repartis en trois postes
+_fait = {"beton_m3": 5.0, "acier_kg": 5.0, "coffrage_m2": 5.0}
+_prevu = {"beton_m3": 6.0, "acier_kg": 6.0, "coffrage_m2": 6.0}
 _va_f = valeur_acquise(_d_f, {"beton_m3": 1.0, "acier_kg": 1.0, "coffrage_m2": 1.0},
                        {"total_fournitures_et_mise_en_oeuvre_MAD": _pu},
-                       {"zones_prevues_equivalentes": _n},
-                       {"beton_m3": 5.0, "acier_kg": 5.0, "coffrage_m2": 5.0})
+                       {"zones_prevues_equivalentes": _n}, _fait, _prevu)
 obtenu = {"CPI": _va_f["CPI"], "SPI": _va_f["SPI"],
           "CV": _va_f["ecart_de_cout_CV_MAD"], "SV": _va_f["ecart_de_delai_SV_MAD"],
           "EAC": _va_f["prevision_a_terminaison_EAC_MAD"]}
@@ -121,11 +131,10 @@ for cle, att in attendu.items():
     dit(abs(obtenu[cle] - att) < 0.6, f"{cle} du cas ferme, PAR LA BIBLIOTHEQUE",
         f"{obtenu[cle]:.4f} contre {att:.4f}")
 # et le cas DOIT mordre si la valeur acquise est minoree : c'est le canari C5 du relecteur
-_d_faux = {**_d_f, "suivi": {**_d_f["suivi"], "zones_realisees_a_date": 4}}
-_va_faux = valeur_acquise(_d_faux, {"beton_m3": 1.0, "acier_kg": 1.0, "coffrage_m2": 1.0},
+_va_faux = valeur_acquise(_d_f, {"beton_m3": 1.0, "acier_kg": 1.0, "coffrage_m2": 1.0},
                           {"total_fournitures_et_mise_en_oeuvre_MAD": _pu},
                           {"zones_prevues_equivalentes": _n},
-                          {"beton_m3": 5.0, "acier_kg": 5.0, "coffrage_m2": 5.0})
+                          {"beton_m3": 4.0, "acier_kg": 4.0, "coffrage_m2": 4.0}, _prevu)
 dit(abs(_va_faux["prevision_a_terminaison_EAC_MAD"] - attendu["EAC"]) > 1.0,
     "une unite d'avancement en moins deplace bien l'EAC rendu par la bibliotheque",
     f"EAC {_va_faux['prevision_a_terminaison_EAC_MAD']:.0f} contre {attendu['EAC']:.0f}")

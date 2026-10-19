@@ -67,33 +67,32 @@ valeurs clés à partir de `data/` seul.
 changement comme un autre, elle se relit — deux fois elle s'est retournée. **Canaris** : 14 sur le
 socle et la TV, plus 11 inventés par les relecteurs ; **tous rouges aujourd'hui**.
 
-### Tranche verticale TV — deux passes, 44 défauts, tous corrigés
+### Tranche verticale TV — quatre passes, 94 défauts, tous corrigés
 
-| Passe | Verdict | Ce qu'elle a appris |
+| Passe | Défauts | Bloquants |
 |---|---|---|
-| 1 | 19 défauts — **4 bloquants** | un corrigé chiffré ne se tape pas ; un accident de gabarit est une erreur publiée ; un moteur juste dans son domaine d'usage n'est pas un moteur juste |
-| 2 | 25 défauts — **3 bloquants**, 12 majeurs, 10 mineurs | **aucun des 25 n'était vu par les 14 contrôles** ; 3 corrections de la passe 1 ne tenaient pas, 2 avaient créé un défaut neuf |
-| 3 | 26 défauts — **2 bloquants**, 14 majeurs, 10 mineurs | le modèle d'avancement était faux : **à 60 % du cycle, le béton n'est pas coulé** ; et la règle de cadence déguisait une marge en contrainte |
+| 1 | 19 | **4** |
+| 2 | 25 | **3** — aucun n'était vu par les 14 contrôles |
+| 3 | 26 | **2** |
+| 4 | 24 | **3** |
 
-Journaux : `QA/TV-corrections-passe1.md`, `QA/TV-tranche-verticale-passe2.md`.
+Rapports et journaux : `QA/TV-*.md`.
 
-**Les sept bloquants des trois passes se ressemblent : des modèles faux sous une arithmétique
-juste.** Le dernier est le plus profond. L'avancement d'une zone était réparti **au prorata
-uniforme** : 60 % du béton, 60 % de l'acier, 60 % du coffrage. Or à 60 % du cycle, le réseau du
-module dit que **le bétonnage n'a pas commencé** et que le coffrage est **entièrement posé**. Le
-module publiait 59 m³ pour une zone où rien n'est coulé, et son contrôle « qui fait foi » comparait
-deux calculs partageant cette hypothèse. Un avancement se **dérive du réseau**, poste par poste.
-
-La règle de cadence a été refondée dans la foulée sur les **ressources** : borne = max(équipe la
-plus chargée ; occupation cumulée de la grue), plus une **marge déclarée**. L'ancien « + bétonnage »
-n'était justifié par aucun modèle — c'était cette marge, déguisée en contrainte. D'où l'exercice 3 :
-renforcer les équipes ne suffit pas, c'est la **grue** qui finit par borner.
+**Les dix bloquants des quatre passes sont la même chose : des modèles faux sous une arithmétique
+juste.** L'avancement d'une zone était réparti au **prorata uniforme** — or à 60 % du cycle le
+bétonnage n'a pas commencé et le coffrage est entièrement posé ; la **valeur acquise** appliquait ce
+même prorata à des dirhams, douze lignes sous l'encart qui l'interdit ; un **taux de recouvrement**
+était appliqué à son complément, et trois passes l'ont manqué parce que l'autre taux, 50 %, est
+auto-complémentaire. La règle de cadence, elle, est désormais fondée sur les **ressources** et
+complétée par une détection des **conflits instantanés** : une occupation moyenne à 67 % cachait six
+moments où la grue était demandée en deux endroits.
 
 **La leçon vaut pour les cinquante modules à venir** : les contrôles vérifiaient que les nombres se
 suivent, pas que le **modèle** dise ce qu'il prétend. Depuis, toute grandeur décrivant l'état du
-chantier à une date est **dérivée du réseau** et un test refait la dérivation ; toute V3 de `data/`
-est registrée et vérifiée **dans sa propre fourchette** ; l'affectation des équipes aux tâches est
-contrôlée nommément. Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10).
+chantier est **dérivée du réseau** et un test refait la dérivation ; tout paramètre déclaré est
+**relu dans le résultat qu'il engendre** ; toute V3 est registrée et vérifiée dans sa fourchette ;
+un module décrivant une opération à risque **doit** porter ses dispositions de sécurité (§ 3.4).
+Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10). **Passe 5 à lancer.**
 
 ## Valeurs V2 en attente de vérification par le lecteur
 

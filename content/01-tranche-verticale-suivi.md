@@ -342,6 +342,23 @@ seules zones coffrées en annoncerait
 rapport de **{{tranche-plancher.coherence_materiel.rapport_etais::n2}}** sur un poste de location,
 et il vient d'une question de définition, pas de calcul.
 
+**Et la grue ne se vérifie pas en moyenne.** Son occupation vaut
+{{tranche-plancher.regle_cadence.occupation_de_la_grue_j::n2}} j par zone pour une cadence de
+{{tranche-plancher.planning_plancher.cadence_zone_j::n1}} j : 67 % du temps, donc « ça passe ». C'est
+faux. Le planning brut demande la grue **en deux endroits à la fois**
+{{tranche-plancher.coherence_materiel.grue.conflits_au_planning_brut}} fois — à chaque fois le
+décoffrage d'une zone et le coffrage d'une autre, sur la totalité du décoffrage. Une occupation
+moyenne sous 100 % ne prouve rien : un moyen peut être libre les trois quarts du temps et demandé
+deux fois le quart restant.
+
+La résolution ne coûte rien, **à condition de l'avoir calculée** : le décoffrage n'est sur le chemin
+critique d'aucune rotation, il se décale dans sa marge de
+{{tranche-plancher.coherence_materiel.grue.resolution.decalage_max_j::n2}} j au plus, et les
+{{tranche-plancher.coherence_materiel.grue.conflits_au_planning_brut}} conflits tombent à
+**{{tranche-plancher.coherence_materiel.grue.conflits_apres_resolution}}**. Sans ce calcul, on
+découvre le conflit le jour où deux chefs d'équipe se disputent la grue — et on l'arbitre au plus
+fort, pas au plus urgent.
+
 C'est un **contrôle de cohérence du module**, pas un commentaire : `coherence_materiel.verdict` vaut
 *{{tranche-plancher.coherence_materiel.verdict}}*, et il passerait au rouge si la cadence descendait
 sans que le parc suive. Une cadence annoncée en réunion sans ce calcul est une cadence qui sera tenue
@@ -478,6 +495,38 @@ Le même plancher, vu des deux côtés. C'est la paire de casquettes qui fait l'
 et il est **sur le chemin critique**. Un point d'arrêt qu'on oublie de planifier devient un point
 d'arrêt qu'on subit : l'équipe attend, ou — pire — on coule sans visa et la non-conformité se règle
 au marteau-piqueur.
+
+## S7c · Sécurité : les quatre opérations à risque de ce cycle
+
+Ce module parle de planning et de coûts, mais le cycle qu'il décrit comporte **quatre opérations qui
+tuent** sur les chantiers de bâtiment. Le § 3.4 du cadre de ce cours impose de les nommer. Les
+dispositions ci-dessous sont **essentielles, pas exhaustives** : elles ne remplacent ni le plan
+particulier de sécurité du chantier, ni les obligations réglementaires applicables au marché, ni
+l'analyse de risques propre à l'entreprise. **Aucune valeur normative n'est donnée ici** — la phase
+§ 5.0 l'interdit, et une cote de sécurité approximative serait pire qu'aucune.
+
+| Opération | Le risque | Dispositions essentielles | Ce que la maîtrise d'œuvre vérifie |
+|---|---|---|---|
+| **Étaiement** de la zone | effondrement du plancher frais, qui entraîne les niveaux inférieurs | note de calcul d'étaiement visée, contreventement, sols d'appui portants et plans, serrage et verticalité contrôlés avant tout ferraillage | la note d'étaiement **avant** le montage, et la conformité du montage au plan |
+| **Travail en hauteur** (rives, trémies, bord de dalle) | chute de hauteur | protection collective d'abord — garde-corps en rive et couverture des trémies **dès le coffrage** —, harnais seulement en complément quand le collectif est impossible | la présence des protections **avant** d'autoriser le ferraillage, pas après |
+| **Levage** (tables, cages) | chute de charge, heurt | élingues et accessoires vérifiés, zone d'évolution balisée, pas de levage au-dessus d'un poste occupé, abandon par vent fort | le registre de vérification des appareils et des accessoires |
+| **Décoffrage** | chute de table, effondrement par décoffrage prématuré | critère de résistance **atteint et constaté**, étais de reprise maintenus, dépose ordonnée, zone en dessous interdite | le relevé qui justifie le critère, et la présence effective des étais de reprise |
+
+**Ce que la planification y change, et c'est le lien avec tout ce module.** Les trois accidents
+typiques de ce cycle sont des accidents de **planning**, pas de geste :
+
+1. **décoffrer trop tôt** parce que la cadence annoncée ne tient pas — la cure est le seul poste du
+   cycle qu'on peut raccourcir sans embaucher, et c'est pour cela qu'on y touche ;
+2. **lever au-dessus d'un poste occupé** parce que deux tâches se recouvrent sans qu'on l'ait vu —
+   exactement les {{tranche-plancher.coherence_materiel.grue.conflits_au_planning_brut}} conflits de
+   grue détectés plus haut, qui sont d'abord un problème de sécurité avant d'être un problème de
+   délai ;
+3. **étayer avec un parc insuffisant** parce que le nombre de zones étayées simultanément
+   ({{tranche-plancher.coherence_materiel.zones_etayees_simultanement}} ici) n'a pas été calculé.
+
+Un planning qui ignore les ressources ne produit pas seulement du retard : il produit des situations
+où le geste sûr devient impossible. **C'est la raison la moins discutable de calculer un planning au
+lieu de l'estimer.**
 
 ## S8 · Fiche mémo
 

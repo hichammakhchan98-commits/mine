@@ -132,6 +132,28 @@ try {
   else V("5.2 · depot git propre", "livrable suivi et committe (QA/ exclu : rapports en cours)");
 } catch (e) { E("5.2 · depot git", e.message); }
 
+/* --- 3.4 : un module qui decrit une operation a risque porte ses dispositions de
+   securite. La TV parlait d'etaiement, de decoffrage, de levage et de travail en
+   hauteur sans une ligne de securite ; duplique sur C1-C8, le defaut se duplique. --- */
+try {
+  const RISQUES = ["etaiement", "\u00e9taiement", "decoffrage", "d\u00e9coffrage", "levage",
+                   "travail en hauteur", "fouille", "demolition", "d\u00e9molition"];
+  const fichiers = readdirSync("content").filter((x) => x.endsWith(".md"));
+  const manquants = [];
+  let aRisque = 0;
+  for (const f of fichiers) {
+    const c = readFileSync(join("content", f), "utf8");
+    const bas = c.toLowerCase();
+    if (!RISQUES.some((r) => bas.includes(r))) continue;
+    aRisque++;
+    if (!/s\u00e9curit\u00e9|securite/i.test(c))
+      manquants.push(`${f} : operation a risque sans disposition de securite (\u00a7 3.4)`);
+  }
+  if (manquants.length) E("3.4 · securite des operations a risque", manquants.join(" ; "));
+  else V("3.4 · chaque module a risque porte ses dispositions de securite",
+         `${aRisque} module(s) a risque sur ${fichiers.length}`);
+} catch (e) { E("3.4 · securite", e.message); }
+
 /* --- garde-fou de la phase § 5.0 : aucune valeur normative ne doit fuir --- */
 try {
   const g = JSON.parse(readFileSync("data/projet-gare.json", "utf8"));

@@ -86,7 +86,8 @@ def _recoupement(d: dict, q: dict, attendu: dict) -> dict:
     }
 
 
-def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict, attendu: dict) -> dict:
+def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict, attendu: dict,
+                   planifie: dict | None = None) -> dict:
     """`attendu` est OBLIGATOIRE : c'est l'etat que le reseau prevoit a la date d'arret,
     poste par poste. Le rendre optionnel reviendrait a laisser le recoupement retomber en
     silence sur un prorata uniforme — l'hypothese fausse qu'il est justement charge de
@@ -101,15 +102,27 @@ def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict, attendu: dict) 
     # celle que trace la courbe en S. Compter « 4 zones entieres » d'un cote et un
     # avancement fractionnaire de l'autre faisait diverger la figure et le tableau.
     prevu_zones = planning["zones_prevues_equivalentes"]
+    if planifie is None:                 # etalonnage : cas synthetique sans reseau
+        planifie = {k: v * prevu_zones / max(1e-9, avancement_zones) for k, v in attendu.items()}
 
-    VP = cout_zone_MAD * prevu_zones                   # valeur planifiee
     CR = s["cout_reel_constate_MAD"]                   # cout reel
-
-    # ---- voie A : par les couts
-    VA_A = BAC * (avancement_zones / n_zones)
-
-    # ---- voie B : par les quantites RELEVEES, qui ne passent pas par l'avancement declare
     p = d["prix_unitaires_MAD"]["postes"]
+
+    def valoriser(qte):
+        return (qte["beton_m3"] * p["beton_m3"]["valeur"]
+                + qte["acier_kg"] * p["acier_kg"]["valeur"]
+                + qte["coffrage_m2"] * p["coffrage_m2"]["valeur"])
+
+    # ---- voie A : l'ETAT PHYSIQUE constate, valorise aux prix du marche.
+    # Une version precedente ecrivait `BAC x avancement_en_zones` : elle appliquait a des
+    # dirhams le prorata uniforme que le module condamne, et son ecart au modele physique
+    # atteignait 26 % a 70 % du cycle. La valeur acquise est ce qui est FAIT, pas une
+    # fraction de temps.
+    VA_A = valoriser(attendu)
+    # ---- valeur planifiee : le meme calcul sur l'etat que le planning prevoit
+    VP = valoriser(planifie)
+
+    # ---- voie B : par les quantites RELEVEES, qui ne passent pas par l'etat calcule
     rel = s["quantites_relevees"]
     VA_B = (rel["beton_m3"] * p["beton_m3"]["valeur"]
             + rel["acier_kg"] * p["acier_kg"]["valeur"]
@@ -193,10 +206,11 @@ if __name__ == "__main__":
     q = quantites_zone(d)
     q["fourchette_acier"] = fourchette_acier(d, q)
     t = durees_taches(d, q)
-    c = cout_zone(d, q, t)
     plan = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
+    c = cout_zone(d, q, t, plan["cycle_zone"]["duree_j"])
     va = valeur_acquise(d, q, c, plan["suivi"],
-                        attendu=plan["avancement_physique"]["quantites_faites"])
+                        attendu=plan["avancement_physique"]["quantites_faites"],
+                        planifie=plan["valeur_planifiee_a_l_arret"]["quantites"])
     sortie = RACINE / "calc" / "sorties"
     sortie.mkdir(parents=True, exist_ok=True)
     (sortie / "valeur-acquise.json").write_text(

@@ -443,7 +443,9 @@
     "equipe_betonnage": 5,
     "grutier": 1,
     "chef_equipe": 1,
-    "heures_par_jour": 8
+    "heures_par_jour": 8,
+    "_nature": "decision",
+    "_nature_note": "Un effectif n'est pas une hypothese : c'est une DECISION de conduite de chantier. Il n'a donc pas de fourchette — on ne met pas « entre 6 et 10 coffreurs », on en met 8 et on en repond. Les cadences, elles, sont des hypotheses V3 avec fourchette : elles decrivent ce qu'on ignore. Confondre les deux fait croire qu'on peut negocier un effectif comme on borne une incertitude."
   },
   "materiel": {
     "niveau_preuve": "V3",
@@ -462,7 +464,8 @@
       ],
       "note": "duree pendant laquelle les etais de reprise restent en place APRES le decoffrage. Le critere reel est une resistance et une redistribution de charges, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
     },
-    "nb_grues": 1
+    "nb_grues": 1,
+    "_nature": "decision"
   },
   "multi_sites": {
     "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
@@ -533,7 +536,7 @@
     "quantites_relevees": {
       "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). Elles sont construites sur l'etat PHYSIQUE du chantier — trois zones completes, plus une zone dont le coffrage est pose, le ferraillage presque fini et le beton pas coule — et non sur un prorata uniforme de l'avancement declare. Une version precedente appliquait ce prorata : le recoupement comparait alors deux calculs partageant la meme hypothese, et ne pouvait rien detecter.",
       "beton_m3": 293.4,
-      "acier_kg": 33530.0,
+      "acier_kg": 34007.0,
       "coffrage_m2": 1683.6,
       "niveau_preuve": "V3 — releves fabriques pour la demonstration",
       "base_du_choix": "Poses legerement en retrait de l'etat physique (environ -0,6 % sur le beton, -0,8 % sur le coffrage, -2 % sur l'acier) pour que la demonstration montre ce que le controle sert a detecter : un ecart reel mais sous le seuil sur les postes geometriques, et un ecart plus large sur l'acier, qui vient d'un ratio."

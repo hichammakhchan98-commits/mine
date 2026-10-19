@@ -293,3 +293,46 @@ mention explicite `non_publiee` ; un test vérifie que chaque valeur est dans so
 quatre canaris que la passe 3 avait fait passer (recouvrement à 120 %, maintien d'étais nul, maintien
 saturant, effectifs permutés) sonnent tous désormais. *Impact* : `build/check.mjs`,
 `calc/tests/test_plancher.py`, 27 hypothèses registrées contre 18.
+
+**D-026 · 19/10/2026 — La valeur acquise est ce qui est FAIT, pas une fraction de temps.**
+*Raison* : la passe 4 a montré que `VA = BAC × avancement_en_zones` appliquait à des dirhams le
+prorata uniforme que D-023 venait d'interdire, douze lignes sous l'encart qui l'interdit. L'écart au
+modèle physique atteint 26 % à 70 % du cycle ; il tombe à 2,5 % au seul point publié, parce que 60 %
+du cycle est l'unique fenêtre où le coffrage à 100 % compense le béton à 0 %. *Décision* : VA et VP
+sont la **valorisation de l'état physique** — quantités réellement faites (ou planifiées) × prix —
+et la courbe en S est tracée dans la même unité, sans quoi son écart vertical n'est pas SV.
+*Impact* : `calc/valeur_acquise.py`, `calc/cycle_plancher.py` (`valeur_physique`), le tableau S6, la
+figure 5. CPI passe de 0,941 à 0,951, SPI de 0,741 à 0,709.
+
+**D-027 · 19/10/2026 — Un taux de recouvrement déclaré doit être relu dans le réseau qu'il engendre.**
+*Raison* : le décalage fin-début valait `-r × durée` au lieu de `-(1 − r) × durée`. Le taux était
+donc appliqué à son **complément** : 40 % déclaré produisait 60 % réalisé, et le cycle était 6,3 %
+trop long. Quatre passes l'ont manqué parce que l'autre taux, 50 %, est auto-complémentaire et
+masquait le premier. *Décision* : un test relit chaque taux **dans les dates du réseau** et le
+compare à sa déclaration. Règle générale : tout paramètre déclaré en mots dans `data/` doit avoir un
+test qui le relit dans le résultat. *Impact* : `calc/cycle_plancher.py`, `calc/tests/`, et toutes les
+durées du module, le cycle passant de 8,56 à 8,05 j.
+
+**D-028 · 19/10/2026 — Un moyen partagé se vérifie en conflits, pas en moyenne.**
+*Raison* : la règle de D-024 contrôlait l'occupation **moyenne** de la grue — 67 %, donc « ça
+passe ». Le planning en demandait pourtant deux à la fois six fois, à chaque décoffrage.
+*Décision* : `conflits_de_ressource()` balaie les fronts et liste les moments où la demande dépasse
+le nombre de moyens ; `decaler_pour_liberer()` montre que le décoffrage, qui a de la marge, les
+résout tous pour 1,05 j de décalage. Le module publie les deux. *Impact* : `calc/cycle_plancher.py`,
+`calc/tests/`, § d du module.
+
+**D-029 · 19/10/2026 — Un module qui décrit une opération à risque porte ses dispositions de sécurité.**
+*Raison* : la tranche verticale parlait d'étaiement, de décoffrage, de travail en hauteur et de
+levage sans une seule ligne de sécurité, alors que le § 3.4 l'exige. Dupliqué sur C1 à C8, le défaut
+se serait dupliqué. *Décision* : une section S7c nomme les quatre opérations, leurs dispositions
+essentielles et ce que la maîtrise d'œuvre vérifie — **sans aucune valeur normative**, que la phase
+§ 5.0 interdit — et montre que les trois accidents typiques du cycle sont des accidents de
+**planning**. `npm run check` échoue désormais sur tout module qui mentionne une opération à risque
+sans disposition de sécurité. *Impact* : `content/`, `build/check.mjs` (16ᵉ contrôle).
+
+**D-030 · 19/10/2026 — Un effectif est une décision, pas une hypothèse.**
+*Raison* : les effectifs étaient marqués V3 sans fourchette ni ligne de registre, ce que le contrôle
+de D-025 ne voyait pas. *Décision* : `data/effectifs` et `data/materiel` portent `_nature:
+"decision"`. Une hypothèse décrit ce qu'on ignore et porte une fourchette ; une décision décrit ce
+qu'on choisit et porte une justification. Les confondre fait croire qu'un effectif se négocie comme
+on borne une incertitude. *Impact* : `data/projet-gare.json`.

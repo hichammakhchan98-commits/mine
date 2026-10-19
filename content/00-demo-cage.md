@@ -59,6 +59,12 @@ parle du même ouvrage que le cours, pour que rien ne soit gratuit.
    sans dire à quelle condition. Dans la réalité, le décoffrage est subordonné à une résistance
    atteinte, contrôlée sur éprouvettes ; le décoffrage prématuré est l'un des pièges listés au § 7.3.
    Le sujet est traité au module d'exécution, en attente des normes.
+
+   **Sécurité.** Cette page est une démonstration d'outillage, pas un mode opératoire : la séquence
+   animée ne vaut aucune instruction de chantier. Le décoffrage réel est une opération à risque —
+   effondrement si le critère de résistance n'est pas atteint, chute de table à la dépose — et il
+   relève du plan de sécurité du chantier et des dispositions rappelées au module de la tranche
+   verticale (§ S7c). **Aucune cote de sécurité n'est donnée ici**, la phase § 5.0 l'interdit.
 :::
 
 Ce que la 3D apporte ici et qu'une coupe ne donne pas : **la répartition des cadres sur la longueur**
