@@ -6,7 +6,14 @@ H004;prix de l'acier HA façonné et posé;14 à 20 MAD/kg;MAD/kg;14 à 20;2026;
 H005;cadence de façonnage et pose d'armatures;90 à 130 kg par ferrailleur et par jour;kg/jour;90 à 130;2026;E1-demo;ordre de grandeur de chantier, à recaler sur des attachements réels
 H006;ratio d'acier d'une dalle;80 kg/m³;kg/m³;65 à 100;2026;TV;ordre de grandeur de plancher courant, sans valeur réglementaire
 H007;ratio d'acier d'une poutre;180 kg/m³;kg/m³;140 à 220;2026;TV;ordre de grandeur de poutre de plancher, sans valeur réglementaire
-H008;prix horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;TV;compagnon nu, charges comprises, sans encadrement
-H009;part de main d'œuvre directe dans un prix posé;15 à 30 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris
-H010;parc de tables coffrantes du chantier;1 300 m²;m²;1 000 à 1 500;2026;TV;parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori
-H011;maintien des étais de reprise après décoffrage;14 jours;j;7 à 28;2026;TV;le critère réel est une résistance et une redistribution de charges, pas une durée , aucune valeur normative n'est disponible en § 5.0
+H008;cadence de coffrage de dalle;30 m²/j/compagnon;m²/j;25 à 35;2026;TV;tables et étaiement, plancher courant répétitif
+H009;cadence de ferraillage de dalle;300 kg/j/compagnon;kg/j;250 à 400;2026;TV;treillis et chapeaux, pose à plat
+H010;cadence de ferraillage de poutre;150 kg/j/compagnon;kg/j;120 à 180;2026;TV;cages, façonnage et pose en place
+H011;cadence de bétonnage;30 m³/h;m³/h;25 à 40;2026;TV;pompe à béton, équipe complète
+H012;prix du béton posé;1 250 MAD/m³;MAD/m³;1 100 à 1 450;2026;TV;béton prêt à l'emploi, pompé, mis en œuvre
+H013;prix de l'acier posé;17 MAD/kg;MAD/kg;14 à 20;2026;TV;acier HA façonné et posé
+H014;prix du coffrage posé;180 MAD/m²;MAD/m²;150 à 220;2026;TV;tables et étaiement, amortissement inclus
+H015;prix horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;TV;compagnon nu, charges comprises, sans encadrement
+H016;part de main d'œuvre directe dans un prix posé;15 à 30 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris
+H017;parc de tables coffrantes du chantier;1 300 m²;m²;1 000 à 1 500;2026;TV;parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori
+H018;maintien des étais de reprise après décoffrage;14 jours;j;7 à 28;2026;TV;le critère réel est une résistance et une redistribution de charges, pas une durée , aucune valeur normative n'est disponible en § 5.0

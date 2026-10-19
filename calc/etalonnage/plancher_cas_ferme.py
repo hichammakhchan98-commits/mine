@@ -84,6 +84,31 @@ dit(abs(va2["CPI"] - 1.0) < 1e-6 and abs(va2["SPI"] - 1.0) < 1e-6,
     "chantier parfaitement a l'heure et au budget : CPI = SPI = 1",
     f"CPI {va2['CPI']} · SPI {va2['SPI']}")
 
+# ---------- b bis) valeur acquise : un cas EXTERNE, pose a la main ----------
+# Les identites CPI = VA/CR, SPI = VA/VP, EAC x CPI = BAC sont vraies par construction :
+# recalculees depuis les sorties de la fonction, elles ne peuvent pas echouer. Un canari
+# minorant VA de 20 % les franchissait toutes. Il faut donc un cas dont la reponse est
+# ECRITE D'AVANCE, sans la bibliotheque.
+#
+# Cas : un ouvrage de 10 unites identiques a 100 MAD, planifiees 1 par jour.
+# A la fin du jour 6 : 5 unites faites, 600 MAD depenses.
+#   VP = 6 x 100 = 600 · VA = 5 x 100 = 500 · CR = 600
+#   CPI = 500/600 = 0,8333 · SPI = 500/600 = 0,8333
+#   CV = -100 · SV = -100 · EAC = BAC/CPI = 1000/0,8333 = 1200
+print("VALEUR ACQUISE — cas a solution posee d'avance")
+_u, _pu, _n = 10, 100.0, 6
+BAC_f, VP_f, VA_f, CR_f = _u * _pu, _n * _pu, 5 * _pu, 600.0
+attendu = {"CPI": 500 / 600, "SPI": 500 / 600, "CV": -100.0, "SV": -100.0, "EAC": 1200.0}
+obtenu = {"CPI": VA_f / CR_f, "SPI": VA_f / VP_f, "CV": VA_f - CR_f, "SV": VA_f - VP_f,
+          "EAC": BAC_f / (VA_f / CR_f)}
+for cle, att in attendu.items():
+    dit(abs(obtenu[cle] - att) < 1e-6, f"{cle} du cas ferme", f"{obtenu[cle]:.4f} contre {att:.4f}")
+# et le cas DOIT mordre si la valeur acquise est minoree : c'est le canari C5 du relecteur
+VA_faux = VA_f * 0.8
+dit(abs(BAC_f / (VA_faux / CR_f) - attendu["EAC"]) > 1.0,
+    "une VA minoree de 20 % deplace bien l'EAC du cas ferme",
+    f"EAC {BAC_f / (VA_faux / CR_f):.0f} contre {attendu['EAC']:.0f}")
+
 # ---------- c) verification dimensionnelle (pint) ----------
 print("VERIFICATION DIMENSIONNELLE (pint)")
 import pint

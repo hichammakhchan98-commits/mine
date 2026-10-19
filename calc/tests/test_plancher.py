@@ -37,10 +37,28 @@ attendu = 120.0 * d["geometrie"]["mezzanine"]["largeur_m"]
 verifie("les zones recouvrent exactement la mezzanine", abs(total - attendu) < 1e-9,
         f"{total:.0f} m2 contre {attendu:.0f} m2")
 
-# --- beton : recalcul INDEPENDANT, a la main, sans appeler plancher.py
-beton_main = 360 * 0.25 + 2 * 24.0 * 0.35 * 0.50
-verifie("volume de beton recalcule a la main", abs(q["beton_m3"] - beton_main) < 0.01,
-        f"{q['beton_m3']} m3 contre {beton_main} m3")
+# --- beton : recalcule depuis data/ par un AUTRE decoupage geometrique.
+# La version precedente recopiait les cotes en clair (360 x 0,25 + 2 x 24 x 0,35 x 0,50) :
+# elle se disait « independante » alors qu'elle figeait les donnees dans le test. Elle ne
+# bougeait donc pas si data/ changeait, et ne verifiait que l'arithmetique de l'auteur.
+# Ici, les cotes sont LUES dans data/ et le volume est obtenu autrement : par le prisme
+# plein de la zone a la hauteur totale (dalle + retombee), moins le vide entre poutres.
+_z = d["geometrie"]["mezzanine"]["zones_de_coulage"]
+_dalle = next(x for x in d["elements"]["dalles"] if x["id"] == "DM1")
+_poutre = next(x for x in d["elements"]["poutres"] if x["id"] == "PM1")
+_L, _l = _z["longueur_zone_m"], _z["largeur_zone_m"]
+_ep, _h = _dalle["epaisseur_m"], _poutre["retombee_sous_dalle_m"]
+_b, _Lp = _poutre["b_m"], _poutre["longueur_dans_zone_m"]
+_n = round(_L / _poutre["entraxe_m"])
+_prisme = _L * _l * (_ep + _h)                      # tout plein, dalle + retombee
+_vide = _l * (_ep + _h) * 0 + (_L * _l - _n * _Lp * _b) * _h   # vide sous la dalle
+beton_main = _prisme - _vide
+verifie("volume de beton recalcule par un autre decoupage geometrique",
+        abs(q["beton_m3"] - beton_main) < 0.01,
+        f"{q['beton_m3']} m3 contre {beton_main:.2f} m3")
+verifie("ce recalcul SUIT data/ : changer l'epaisseur le deplace",
+        abs((_L * _l * (_ep + 0.05 + _h)
+             - (_L * _l - _n * _Lp * _b) * _h) - beton_main - _L * _l * 0.05) < 1e-6)
 
 # --- coffrage : il DOIT depasser la surface, sinon les joues sont oubliees
 verifie("le ratio de coffrage depasse 1,00 (les joues sont comptees)",

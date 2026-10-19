@@ -249,7 +249,9 @@
       g += texte(lab - 10, y + 7, t.nom, { taille: 11, ancre: "end" });
       g += rect(X(t.debut), y, Math.max(2, ech(t.duree * k)), 13,
         { remplissage: t.critique ? "#8c3b2e" : "#41607d", couleur: "none", ep: 0, rayon: 2 });
-      const dj = Number(t.duree).toFixed(2).replace(/[.,]?0+$/, "").replace(".", ",");
+      // format UNIFORME : deux decimales partout. Melanger « 1,77 j » et « 3 j » dans
+      // la meme colonne laisse croire a deux precisions differentes.
+      const dj = Number(t.duree).toFixed(2).replace(".", ",");
       g += texte(X(t.debut + t.duree) + 5, y + 7, `${dj} j`,
         { taille: 9.5, mono: 1, base: "middle", couleur: "#6b7682" });
     });
@@ -302,7 +304,7 @@
       g += texte(r.x(j), r.y(0) + 16, String(Math.round(j)),
         { taille: 9.5, mono: 1, ancre: "middle", couleur: "#6b7682" });
     }
-    g += texte(L / 2, H - 8, "jours ouvres", { taille: 10, ancre: "middle", couleur: "#6b7682" });
+    g += texte(L / 2, H - 8, "jours ouvrés", { taille: 10, ancre: "middle", couleur: "#6b7682" });
     // legende : sans elle, deux traits de couleurs differentes ne disent rien
     const yl = 20;
     g += ligne(L - 150, yl, L - 126, yl, { couleur: "#41607d", ep: 2, tirets: "6 4" });
@@ -352,7 +354,7 @@
       { taille: 9.5, mono: 1, ancre: "middle", couleur: "#8c3b2e" });
     const moy = pts.reduce((a, p) => a + p.n, 0) / pts.length;
     g += ligne(r.x(0), r.y(moy), r.x(pts.length), r.y(moy), { couleur: "#8c3b2e", ep: 1.2, tirets: "5 4" });
-    g += texte(r.x(pts.length) - 4, r.y(moy) - 5, `moyenne ${moy.toFixed(1)}`,
+    g += texte(r.x(pts.length) - 4, r.y(moy) - 5, `moyenne ${moy.toFixed(1).replace(".", ",")}`,
       { taille: 9.5, mono: 1, ancre: "end", couleur: "#8c3b2e" });
     return { svg: g, largeur: L, hauteur: H };
   }
@@ -391,6 +393,27 @@
       }
     }
 
+    // Ce que le PLANNING prevoyait a la meme date, en contour : sans lui, le tableau de
+    // bord le plus lisible du module tait l'ecart que tout le § S6 etablit.
+    if (z.avancement_prevu) {
+      for (let i = 0; i < z.nb_zones; i++) {
+        const f = z.avancement_prevu[i];
+        // seules les zones PARTIELLEMENT prevues portent un repere : sur une zone prevue
+        // a 100 %, le trait tomberait sur le bord et se lirait comme une bordure de plus
+        if (!f || f >= 1) continue;
+        const x0 = i * z.longueur_m;
+        // un trait de niveau, pose SOUS le bord haut de la zone : un rectangle plein
+        // cadre masquait les couleurs d'etat qu'il etait cense completer
+        const yh = r.y(z.largeur_m) + 6, yb = r.y(0) - 6;
+        const yT = yb - (yb - yh) * 0.22;        // sous les libelles de zone
+        g += ligne(r.x(x0 + z.longueur_m * f), yh, r.x(x0 + z.longueur_m * f), yb,
+          { couleur: "#41607d", ep: 2 });
+        g += ligne(r.x(x0), yT, r.x(x0 + z.longueur_m * f), yT,
+          { couleur: "#41607d", ep: 1.2, tirets: "4 3" });
+      }
+      g += puce(r.x(z.longueur_m * 4.25), r.y(z.largeur_m) - 16, 3);
+    }
+
     for (let i = 0; i < z.nb_zones; i++) {
       const x0 = i * z.longueur_m;
       const etat = (z.avancement && z.avancement[i]) || "a_venir";
@@ -405,9 +428,66 @@
     g += cote(r.x(0), r.y(0), r.x(z.longueur_m), r.y(0), `${z.longueur_m} m`, { decalage: 22 });
     g += cote(r.x(0), r.y(0), r.x(Lt), r.y(0), `${ech(Lt)} m`, { decalage: 40 });
     g += cote(r.x(Lt), r.y(0), r.x(Lt), r.y(z.largeur_m), `${z.largeur_m} m`, { decalage: 26 });
-    g += puce(r.x(z.longueur_m * 1.5), r.y(z.largeur_m) - 16, 1);
+    // La puce 1 designe une ZONE, la puce 2 une ligne de poutres. Le centre d'une zone
+    // tombe TOUJOURS sur une ligne de poutres (la zone fait un nombre entier de trames) :
+    // la puce 1 se pose donc au quart de la zone, sinon les deux puces se superposent.
+    g += puce(r.x(z.longueur_m * 0.25), r.y(z.largeur_m) - 16, 1);
     if (z.entraxe_poutres_m)
       g += puce(r.x(z.entraxe_poutres_m), r.y(z.largeur_m) - 16, 2);
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Diagramme de rotation : les zones dans le temps, phase par phase, et le coffrage
+      immobilise jour par jour sous le meme axe. C'est la figure qui rend visible d'un
+      coup ce que le Gantt d'UNE zone ne montre pas : la cadence, le recouvrement entre
+      zones, et la contrainte de parc qui en decoule. */
+  function rotation(r, o = {}) {
+    const L = o.largeur || 760, hZ = 15, hBas = 62;
+    const n = r.zones.length;
+    const fin = Math.max(...r.zones.map((z) => z.debut_j + r.cycle_j));
+    const H = 34 + n * hZ + hBas;
+    const gx = 40, lx = L - gx - 96;
+    const X = (j) => ech(gx + j * lx / fin);
+    const PH = { COF: "#7a93ad", FEP: "#c9a227", FED: "#1f5c3a", PTA: "#8c3b2e",
+                 BET: "#41607d", CUR: "#e0ded5", DEC: "#a8aca4" };
+    let g = "";
+    const pasJ = fin > 30 ? 5 : 2;
+    for (let j = 0; j <= fin; j += pasJ) {
+      g += ligne(X(j), 20, X(j), 26 + n * hZ, { couleur: "#eceee9", ep: 1 });
+      g += texte(X(j), 15, String(j), { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    }
+    r.zones.forEach((z, i) => {
+      const y = 24 + i * hZ;
+      g += texte(gx - 6, y + 6, `Z${z.zone}`, { taille: 9.5, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+      z.phases.forEach((ph) => {
+        const x0 = X(z.debut_j + ph.debut_j), x1 = X(z.debut_j + ph.fin_j);
+        g += rect(x0, y, Math.max(1.2, x1 - x0), hZ - 4,
+          { remplissage: PH[ph.id] || "#d5d7d1", couleur: "none", ep: 0 });
+      });
+    });
+    // la cadence : une droite qui joint les debuts de zone, et sa pente EST la cadence
+    g += chemin(r.zones.map((z, i) => `${i ? "L" : "M"}${X(z.debut_j)} ${24 + i * hZ}`).join(" "),
+      { couleur: "#8c3b2e", ep: 1.6, remplissage: "none", tirets: "5 4" });
+    // l'etiquette se pose dans la marge de droite, a mi-pente : posee au dernier debut
+    // de zone, elle passait par-dessus la barre de la zone 8
+    g += texte(L - 8, 24 + (n / 2) * hZ,
+      `cadence ${String(r.cadence_j).replace(".", ",")} j/zone`,
+      { taille: 9.5, mono: 1, ancre: "end", base: "middle", couleur: "#8c3b2e" });
+
+    // bande basse : coffrage immobilise, et le parc declare
+    const yB = 34 + n * hZ, hB = hBas - 26;
+    const mmax = Math.max(r.stock_coffrage_m2, ...r.coffrage_immobilise.map((x) => x.m2)) * 1.08;
+    const Y = (m) => ech(yB + hB - m / mmax * hB);
+    g += chemin(r.coffrage_immobilise.map((x, i) => `${i ? "L" : "M"}${X(x.j)} ${Y(x.m2)}`).join(" "),
+      { couleur: "#41607d", ep: 1.6, remplissage: "none" });
+    g += ligne(X(0), Y(r.stock_coffrage_m2), X(fin), Y(r.stock_coffrage_m2),
+      { couleur: "#8c3b2e", ep: 1.4, tirets: "6 4" });
+    g += texte(X(fin) + 6, Y(r.stock_coffrage_m2), `parc ${r.stock_coffrage_m2} m²`,
+      { taille: 9, mono: 1, base: "middle", couleur: "#8c3b2e" });
+    g += ligne(X(0), Y(0), X(fin), Y(0), { couleur: "#14181d", ep: 1 });
+    g += texte(gx - 6, Y(0), "0", { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    g += texte(gx - 6, yB + 4, "m²", { taille: 9, ancre: "end", couleur: "#6b7682" });
+    g += texte(L / 2, H - 4, "jours ouvrés", { taille: 10, ancre: "middle", couleur: "#6b7682" });
     return { svg: g, largeur: L, hauteur: H };
   }
 
@@ -435,7 +515,7 @@
 
   const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
     coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence,
-    planZones, MOTIFS, ech };
+    planZones, rotation, MOTIFS, ech };
 
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   racine.SVGKit = API;

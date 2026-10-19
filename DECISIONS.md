@@ -213,3 +213,45 @@ respectée que sur 27 % de la fourchette déclarée, et le contrôle échoue à 
 la fourchette qu'elle couvre. Règle générale pour la suite du cours : un contrôle qui ne dit pas sur
 quelle largeur il tient parle du choix de son auteur, pas des données.
 *Impact* : `calc/cycle_plancher.py`, encart « Pourquoi ceci n'est PAS un contre-calcul ».
+
+**D-019 · 19/10/2026 — La cadence de rotation est bornée par TOUTES les équipes dédiées.**
+*Raison* : la règle publiée était `max(coffrage ; ferraillage de dalle) + bétonnage` et oubliait le
+**ferraillage des poutres**. Sur le cas de référence, le ferraillage de dalle est le plus long et
+masque l'oubli : la cadence de 3,41 j était juste **par coïncidence**. Dès qu'on renforce l'équipe de
+dalle — l'exercice même que le module propose — la borne passe aux poutres : cadence 2,93 j et non
+2,41, plancher 28,1 j et non 24,4, c'est-à-dire **au-dessus** de la cible de 25 que le module
+annonçait tenue. Le module énonçait pourtant la règle qui l'aurait sauvé (« renforcer une tâche
+critique ne garantit un gain que jusqu'à ce qu'un autre chemin prenne le relais ») et sa formule la
+violait. *Décision* : `cadence_rotation()` prend le maximum sur les trois tâches à équipe dédiée,
+publie laquelle borne, et les tests vérifient que renforcer la dalle fait bien passer la borne aux
+poutres. L'exercice 3 conclut désormais qu'il faut renforcer **les deux** équipes (23,9 j), et le
+module publie l'erreur comme leçon de contrôle. *Impact* : `calc/cycle_plancher.py`,
+`calc/tests/test_plancher.py`, § d et exercices 2 et 3 du module.
+
+**D-020 · 19/10/2026 — Un constat n'est pas une courbe.**
+*Raison* : la courbe « réalisé » était la courbe prévue multipliée par une constante (0,740 vérifié
+point par point) : vingt points fabriqués à partir d'un seul relevé, tracés en trait plein, sous une
+légende qui interdisait justement de confondre constat et prévision. *Décision* : tant que `data/`
+ne porte qu'un relevé, on publie **un point**, avec l'écart à la courbe prévue coté sur la figure.
+Règle générale : une figure ne publie pas plus d'information que les données n'en portent.
+*Impact* : `calc/cycle_plancher.py`, `assets/svgkit.js` (`courbeS` accepte un constat),
+`calc/tests/test_plancher.py`, figure 5.
+
+**D-021 · 19/10/2026 — Un contrôle doit pouvoir échouer, et partir d'ailleurs que de ce qu'il vérifie.**
+*Raison* : le contrôle « chaque V3 publiée a sa ligne de registre » comparait les balises de
+`content/` à un registre que le build **génère depuis ces mêmes balises** : vrai par construction,
+incapable de détecter une V3 non déclarée — et quatre l'étaient (deux cadences, deux prix).
+De même, le test « recalcul indépendant à la main » du béton recopiait les cotes en clair, donc ne
+bougeait pas si `data/` changeait. *Décision* : un second contrôle part de `data/`, énumère les
+hypothèses V3 (valeur + fourchette), et exige une ligne de registre pour chacune qui est lue par un
+module ; le recalcul du béton lit les cotes dans `data/` et passe par un **autre découpage
+géométrique**. *Impact* : `build/check.mjs`, `calc/tests/test_plancher.py`, sept balises ajoutées.
+
+**D-022 · 19/10/2026 — Les contrôles vérifient les nombres, pas les modèles. C'est la dette la plus lourde.**
+*Raison* : les trois bloquants de la passe 2 ont franchi **14 contrôles verts**. Aucun ne portait sur
+un nombre faux : une règle incomplète, un histogramme bâti sur une hypothèse d'enchaînement fausse,
+une figure qui affirmait plus que ses données. *Décision* : consignée comme dette 13, et traitée
+module par module par des tests qui confrontent une sortie à une **construction indépendante** (les
+dates du réseau pour l'histogramme, l'équipe qui borne pour la cadence, le nombre de relevés pour le
+constat). Aucune solution générale n'est promise : ce serait une promesse qu'on ne tiendrait pas.
+*Impact* : `STATE.md` (dette 13), et la méthode de tous les modules à venir.

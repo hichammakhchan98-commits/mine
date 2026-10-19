@@ -124,6 +124,10 @@ def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict) -> dict:
         "SPI": round(SPI, 3),
         "prevision_a_terminaison_EAC_MAD": round(EAC),
         "derive_prevue_MAD": round(EAC - BAC),
+        # le signe est PORTE par la valeur : ecrit en dur dans le texte, il mentirait
+        # le jour ou le chantier passerait en avance
+        "derive_signe": "+" if EAC >= BAC else "−",
+        "derive_prevue_abs_MAD": abs(round(EAC - BAC)),
         "retard_en_zones": round(avancement_zones - prevu_zones, 2),
         # Le recoupement se fait en UNITES PHYSIQUES, poste par poste. En dirhams, la
         # comparaison serait polluee par l'incertitude des ratios : l'acier fait 43 % du

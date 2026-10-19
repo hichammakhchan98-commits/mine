@@ -21,7 +21,7 @@ un contre-calcul. Consigne dans DECISIONS.md.
 from __future__ import annotations
 import json, math, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from cpm import Tache, contre_calcul
+from cpm import Tache, contre_calcul, voie_A_parcours
 from plancher import quantites_zone, fourchette_acier
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
@@ -338,6 +338,7 @@ if __name__ == "__main__":
                 "realise": round(reel_zones / plan["nb_zones"] * 100, 1)}]
 
     effectifs_jour = histogramme_plancher(d, reseau, plan["debuts"], plan["duree_totale_j"])
+    _rz = voie_A_parcours(reseau)
     # --- variantes des exercices : leurs valeurs attendues sont CALCULEES, plus affirmees
     def variante_effectif(n_ferr_dalle, n_ferr_poutres=None):
         e2 = dict(d["effectifs"]); e2["ferrailleurs_dalle"] = n_ferr_dalle
@@ -417,22 +418,82 @@ if __name__ == "__main__":
         ),
     }
 
+    # --- situation de travaux de l'exercice de revue critique.
+    # Elle etait tapee a la main dans le contenu : douze nombres justes aujourd'hui, et
+    # faux au premier changement de data/. Elle est desormais calculee comme le reste.
+    # NB : surtout pas « av », qui porte deja la liste des etats de zone de la figure 1.
+    # La premiere version de ce bloc l'a ecrasee, et la figure a perdu ses couleurs
+    # d'avancement sans qu'aucun test ne le voie — c'est l'oeil sur la capture qui l'a vu.
+    frac = d["suivi"]["avancement_zone_en_cours_pct"] / 100.0
+    p_ = d["prix_unitaires_MAD"]["postes"]
+    _postes = [
+        ("beton", "m³", q["beton_m3"] * frac, p_["beton_m3"]["valeur"]),
+        ("acier", "kg", q["acier_kg"] * frac, p_["acier_kg"]["valeur"]),
+        ("coffrage", "m²", q["coffrage_m2"] * frac, p_["coffrage_m2"]["valeur"]),
+    ]
+    _mo_h = cout["heures_de_main_oeuvre"] * frac
+    _mo = _mo_h * p_["main_oeuvre_h"]["valeur"]
+    _juste = sum(x[2] * x[3] for x in _postes)
+    situation = {
+        "avancement_declare_pct": round(frac * 100, 1),
+        "postes": [{"poste": n, "unite": u, "quantite": round(x, 1),
+                    "prix_unitaire": pu, "montant_MAD": round(x * pu)} for n, u, x, pu in _postes],
+        "main_oeuvre_h": round(_mo_h),
+        "main_oeuvre_MAD": round(_mo),
+        "total_presente_MAD": round(_juste + _mo),
+        "total_juste_MAD": round(_juste),
+        "double_compte_MAD": round(_mo),
+        "ratio_coffrage_de_la_situation": round(
+            (q["coffrage_m2"] * frac) / (q["surface_m2"] * frac), 3),
+    }
+
     res = {
         "quantites": q, "durees": t, "variantes": res_variantes,
+        "situation_exercice": situation,
         "regle_cadence": regle_cadence,
         "coherence_materiel": coherence_materiel,
         "suivi": {"jour_arret": round(jour_arret, 1), "semaine_arret": round(semaine_arret, 1),
                   "avancement_prevu_pct": round(prevu_arret, 1),
                   "zones_prevues_equivalentes": round(zones_prevues_arret, 2),
-                  "libelle_arret": f"jour {jour_arret:.0f}, soit la fin de la semaine {semaine_arret:.0f}"},
+                  "libelle_arret": (
+                      f"jour {jour_arret:.0f}, soit le {((jour_arret - 1) % 5) + 1:.0f}ᵉ jour "
+                      f"de la semaine {math.floor((jour_arret - 1) / 5) + 1:.0f}")},
         "figures": {
-            "zones": {"longueur_m": z["longueur_zone_m"], "largeur_m": z["largeur_zone_m"],
+            "zones": {"avancement_prevu": [
+                          round(min(1.0, max(0.0, (jour_arret - plan["debuts"]["Z%d" % (i + 1)])
+                                             / duree_zone)), 2)
+                          for i in range(plan["nb_zones"])],
+                      "longueur_m": z["longueur_zone_m"], "largeur_m": z["largeur_zone_m"],
                       "nb_zones": z["nb_zones"], "entraxe_poutres_m": poutre["entraxe_m"],
                       "avancement": av},
             "sequence": [x.nom for x in reseau],
             "gantt": [{"nom": x.nom, "debut": round(cc["detail"]["tot"][x.id][0], 2),
                        "duree": round(x.duree, 2),
                        "critique": x.id in cc["detail"]["critiques"]} for x in reseau],
+            # Diagramme de rotation : les zones DANS LE TEMPS, phase par phase, plus
+            # le coffrage immobilise jour par jour. La figure precedente (sequence)
+            # etait un enchainement de blocs et de fleches sans cote ni duree, qui
+            # dupliquait le Gantt de la zone sans rien ajouter — le § 8 l'interdit.
+            "rotation": {
+                "zones": [
+                    {"zone": i + 1, "debut_j": round(plan["debuts"]["Z%d" % (i + 1)], 2),
+                     "phases": [
+                         {"id": x.id, "nom": x.nom,
+                          "debut_j": round(_rz["tot"][x.id][0], 2),
+                          "fin_j": round(_rz["tot"][x.id][1], 2)}
+                         for x in reseau]}
+                    for i in range(plan["nb_zones"])],
+                "cadence_j": plan["cadence_zone_j"],
+                "cycle_j": duree_zone,
+                "coffrage_par_zone_m2": q["coffrage_m2"],
+                "stock_coffrage_m2": d["materiel"]["tables_coffrantes_m2"],
+                "coffrage_immobilise": [
+                    {"j": k, "m2": round(sum(
+                        1 for i in range(plan["nb_zones"])
+                        if plan["debuts"]["Z%d" % (i + 1)] <= k
+                        < plan["debuts"]["Z%d" % (i + 1)] + duree_zone) * q["coffrage_m2"])}
+                    for k in range(int(math.ceil(plan["duree_totale_j"])) + 1)],
+            },
             "courbe_s": {"points": courbe, "constat": constat},
             "constat_avancement": constat,
             "effectifs": effectifs_jour,

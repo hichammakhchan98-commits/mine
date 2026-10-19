@@ -452,7 +452,7 @@
     "tables_note": "trois zones se recouvrent a la cadence de 3,4 j pour un cycle de 8,6 j : il faut environ 3 x 424 m2. L'ancienne valeur de 420 m2 ne couvrait qu'une zone et contredisait le planning.",
     "etais_par_m2": 2.5,
     "etais_note": "densite d'etais par m2 de plancher etaye ; le nombre total se deduit du nombre de zones etayees simultanement",
-    "pompe_a_beton": "pompe automotrice, 30 m3/h retenus (V3)",
+    "pompe_a_beton": "pompe automotrice ; son debit retenu est cadences.betonnage_m3_h, pour ne pas ecrire deux fois le meme nombre",
     "grue": "grue a tour, voir C1",
     "etais_de_reprise_maintenus_j": {
       "valeur": 14,

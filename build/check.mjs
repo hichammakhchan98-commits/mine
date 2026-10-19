@@ -75,6 +75,40 @@ try {
   else V("3.2 · chaque V3 publiee a sa ligne de registre", `${balises.length} hypothese(s)`);
 } catch (e) { E("3.2 · registre des hypotheses", e.message); }
 
+/* --- Le controle precedent ne peut PAS detecter une V3 non declaree : il compare les
+   balises de content/ au registre, que le build genere depuis ces memes balises. Il est
+   donc vrai par construction. Celui-ci part de data/, qui est independant des balises :
+   toute hypothese V3 (valeur + fourchette) LUE par un module doit avoir sa ligne. --- */
+try {
+  const data = JSON.parse(readFileSync("data/projet-gare.json", "utf8"));
+  const feuilles = [];
+  const parcourir = (o, chemin) => {
+    if (Array.isArray(o)) return o.forEach((v, i) => parcourir(v, `${chemin}.${i}`));
+    if (o && typeof o === "object") {
+      if ("valeur" in o && "fourchette" in o) return feuilles.push({ chemin, valeur: o.valeur });
+      for (const [k, v] of Object.entries(o)) parcourir(v, chemin ? `${chemin}.${k}` : k);
+    }
+  };
+  parcourir(data, "");
+  const contenu = readdirSync("content").filter((f) => f.endsWith(".md"))
+    .map((f) => readFileSync(join("content", f), "utf8")).join("\n");
+  const registre = readFileSync("data/registre-hypotheses.csv", "utf8");
+  // on compare des NOMBRES, pas des sous-chaines : « 30 » se retrouve dans « 300 »
+  const nombres = registre.split("\n").slice(1)
+    .map((l) => (l.split(";")[2] || "").replace(/[\u202f\u00a0\s]/g, "").replace(",", "."))
+    .map((v) => Number((v.match(/-?\d+(?:\.\d+)?/) || [])[0]))
+    .filter((v) => Number.isFinite(v));
+  const lues = feuilles.filter((f) => contenu.includes(`gare.${f.chemin}`));
+  const sansLigne = lues.filter(
+    (f) => !nombres.some((n) => Math.abs(n - Number(f.valeur)) < 1e-9));
+  if (sansLigne.length)
+    E("3.2 · V3 de data/ lues par un module et absentes du registre",
+      sansLigne.map((f) => `${f.chemin} = ${f.valeur}`).join(" ; "));
+  else
+    V("3.2 · chaque V3 de data/ lue par un module est registree",
+      `${lues.length} lue(s) sur ${feuilles.length} declaree(s) dans data/`);
+} catch (e) { E("3.2 · V3 de data/ contre registre", e.message); }
+
 /* --- M8 : le livrable doit etre dans le depot (§ 5.2, et le zip du mode B embarque .git) --- */
 /* --- 13.3 : STATE.md reste court (l'historique vit dans git) --- */
 {

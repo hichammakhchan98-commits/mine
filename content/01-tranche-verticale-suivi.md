@@ -48,7 +48,7 @@ changez le planning, la trésorerie et la façon dont vous mesurez l'avancement.
 La mezzanine fait {{gare.geometrie.mezzanine.largeur_m::n0}} m de large sur 120 m de long. Le
 découpage retenu :
 
-:::figure {"fn":"planZones","args":"tranche-plancher.figures.zones","titre":"Découpage du plancher de mezzanine en zones de coulage, à la date d'arrêt du suivi","num":1,"large":true,"legende":[{"n":1,"t":"zone de coulage, {{tranche-plancher.figures.zones.longueur_m::n0}} × {{tranche-plancher.figures.zones.largeur_m::n0}} m"},{"n":2,"t":"ligne de poutres PM1, entraxe {{tranche-plancher.figures.zones.entraxe_poutres_m::n2}} m"}],"voir":["Une zone fait deux travées de trame : le découpage suit la structure, il ne la coupe pas n'importe où.","Chaque limite de zone tombe sur une ligne de poutres, puisque la zone fait un nombre entier de trames : la reprise de bétonnage se fait au droit d'une poutre, et non en pleine dalle. Les lignes tiretées visibles sont les poutres intermédiaires, au milieu de chaque zone.","L'état de chaque zone est lu dans les données de suivi : la figure est un tableau de bord, pas un dessin."],"erreur":"Découper en zones de surface égale sans regarder où tombent les poutres : la reprise se retrouve en pleine travée, là où l'effort tranchant est le plus fort et où le traitement de la reprise coûte le plus cher."}
+:::figure {"fn":"planZones","args":"tranche-plancher.figures.zones","titre":"Découpage du plancher de mezzanine en zones de coulage, à la date d'arrêt du suivi","num":1,"large":true,"legende":[{"n":1,"t":"zone de coulage, {{tranche-plancher.figures.zones.longueur_m::n0}} × {{tranche-plancher.figures.zones.largeur_m::n0}} m"},{"n":2,"t":"ligne de poutres PM1, entraxe {{tranche-plancher.figures.zones.entraxe_poutres_m::n2}} m"},{"n":3,"t":"trait bleu : le front PRÉVU par le planning à la même date"}],"voir":["Une zone fait deux travées de trame : le découpage suit la structure, il ne la coupe pas n'importe où.","Chaque limite de zone tombe sur une ligne de poutres, puisque la zone fait un nombre entier de trames : la reprise de bétonnage se fait au droit d'une poutre, et non en pleine dalle. Les lignes tiretées visibles sont les poutres intermédiaires, au milieu de chaque zone.","L'état de chaque zone est lu dans les données de suivi : la figure est un tableau de bord, pas un dessin.","Le trait bleu est le front PRÉVU à la même date : le planning attendait Z5 aux deux tiers et Z6 entamée. L'écart entre la couleur et le trait est le retard, et c'est lui que le § S6 chiffre en dirhams : une figure de suivi qui ne montre que le constat cache la moitié de l'information."],"erreur":"Découper en zones de surface égale sans regarder où tombent les poutres : la reprise se retrouve en pleine travée, là où l'effort tranchant est le plus fort et où le traitement de la reprise coûte le plus cher."}
 :::
 
 **Ordre de grandeur à retenir** : une zone de {{tranche-plancher.quantites.surface_m2::n0}} m² se coule
@@ -104,6 +104,16 @@ $$d = \frac{Q}{c \times n}$$
 | Ferraillage de la dalle | {{tranche-plancher.quantites.acier_dalle_kg::n0}} kg | {{gare.cadences.ferraillage_dalle_kg_j.valeur}} kg/j | {{gare.effectifs.ferrailleurs_dalle}} | {{tranche-plancher.durees.ferraillage_dalle_j::n2}} j |
 | Bétonnage | {{tranche-plancher.quantites.beton_m3::n1}} m³ | {{gare.cadences.betonnage_m3_h.valeur}} m³/h | {{gare.effectifs.equipe_betonnage}} | {{tranche-plancher.durees.betonnage_j::n2}} j |
 
+Les quatre cadences de ce tableau sont des hypothèses, et une table Markdown ne permet pas de les
+baliser dans la cellule : elles le sont donc ici, une par une, et c'est à ces quatre lignes que le
+registre renvoie —
+⟦V3|cadence de coffrage de dalle|30 m²/j/compagnon|m²/j|25 à 35|2026|tables et étaiement, plancher courant répétitif⟧,
+⟦V3|cadence de ferraillage de dalle|300 kg/j/compagnon|kg/j|250 à 400|2026|treillis et chapeaux, pose à plat⟧,
+⟦V3|cadence de ferraillage de poutre|150 kg/j/compagnon|kg/j|120 à 180|2026|cages, façonnage et pose en place⟧,
+⟦V3|cadence de bétonnage|30 m³/h|m³/h|25 à 40|2026|pompe à béton, équipe complète⟧.
+Aucune ne vient d'un attachement réel : **ce sont elles qu'il faudra recaler en premier** sur vos
+propres relevés, parce que toutes les durées du module en descendent.
+
 :::encart {"genre":"attente","titre":"Pourquoi ceci n'est PAS un contre-calcul"}
 La durée de coffrage peut se calculer de deux façons : par la **cadence unitaire** multipliée par
 l'effectif ({{tranche-plancher.durees.contre_calcul_duree_coffrage.voie_A_cadence_unitaire_x_effectif_j::n3}} j),
@@ -148,7 +158,7 @@ ferraillage des poutres démarre avant que le coffrage soit terminé, celui de l
 des poutres. C'est tout l'objet du chemin critique, et c'est pour cela qu'additionner des durées ne
 donne jamais un planning.
 
-:::figure {"fn":"sequence","args":"tranche-plancher.figures.sequence","titre":"Le cycle d'une zone, dans l'ordre","num":2,"large":true,"voir":["Le point d'arrêt n'est pas une étape administrative glissée entre deux tâches : c'est une tâche du planning, avec une durée, et il est sur le chemin critique.","La cure n'est pas du temps perdu : c'est du temps pendant lequel l'équipe travaille sur la zone suivante.","Le décoffrage laisse les étais de reprise en place — la zone n'est pas « finie » pour autant."]}
+:::figure {"fn":"rotation","args":"tranche-plancher.figures.rotation","titre":"Rotation des huit zones, et le coffrage qu'elle immobilise","num":2,"large":true,"voir":["Chaque ligne est une zone, chaque couleur une phase : bleu clair le coffrage, jaune le ferraillage des poutres, vert celui de la dalle, brique le point d'arrêt, bleu le bétonnage, puis la cure en gris clair et le décoffrage en gris. Les phases d'une même zone SE RECOUVRENT : c'est ce recouvrement qui fait le cycle.","La droite tiretée joint les débuts de zone : sa pente est la cadence. Une cadence qui fléchit se voit ici avant d'apparaître dans un indicateur.","La courbe du bas est le coffrage immobilisé jour par jour. Elle oscille entre deux et trois zones ouvertes, et ses sommets frôlent la ligne du parc : c'est la contrainte que le planning doit respecter, et elle ne se lit sur aucun Gantt."],"erreur":"Lire la rotation sur un Gantt d'une seule zone. Un Gantt de zone montre le cycle ; il ne montre ni la cadence, ni le nombre de zones ouvertes en même temps, ni le matériel que cela mobilise — c'est-à-dire précisément ce qui décide si le planning est tenable."}
 :::
 
 :::figure {"fn":"gantt","args":"tranche-plancher.figures.gantt","titre":"Gantt d'une zone, avec les recouvrements","num":3,"large":true,"voir":["Ici les sept tâches sont critiques — la couleur ne distingue donc rien sur ce réseau : tout retard, où qu'il soit, décale la fin d'autant. C'est la situation d'un cycle en chaîne, sans tâche de réserve.","Le ferraillage des poutres commence avant la fin du coffrage : c'est un décalage négatif, pas une erreur de saisie.","Les durées ne sont pas saisies : elles viennent des quantités divisées par les cadences et les effectifs."],"erreur":"Saisir un planning en tapant des durées à dire d'expert, puis vérifier après coup si les effectifs suivent. L'ordre inverse — quantité, cadence, effectif, durée — est le seul qui permette de défendre un planning en réunion."}
@@ -187,6 +197,13 @@ par ailleurs un circuit comme un prédécesseur inconnu.
 | Acier | {{tranche-plancher.quantites.acier_kg::n0}} kg | {{gare.prix_unitaires_MAD.postes.acier_kg.valeur}} MAD/kg | {{tranche-plancher.cout_zone.acier_MAD::n0}} MAD |
 | Coffrage | {{tranche-plancher.quantites.coffrage_m2::n0}} m² | {{gare.prix_unitaires_MAD.postes.coffrage_m2.valeur}} MAD/m² | {{tranche-plancher.cout_zone.coffrage_MAD::n0}} MAD |
 | **Total d'une zone** | | | **{{tranche-plancher.cout_zone.total_fournitures_et_mise_en_oeuvre_MAD::n0}} MAD** |
+
+Les trois prix unitaires, déclarés de la même façon :
+⟦V3|prix du béton posé|1 250 MAD/m³|MAD/m³|1 100 à 1 450|2026|béton prêt à l'emploi, pompé, mis en œuvre⟧,
+⟦V3|prix de l'acier posé|17 MAD/kg|MAD/kg|14 à 20|2026|acier HA façonné et posé⟧,
+⟦V3|prix du coffrage posé|180 MAD/m²|MAD/m²|150 à 220|2026|tables et étaiement, amortissement inclus⟧.
+Aucun bordereau n'ayant été fourni (question 7 de l'Étape 0, restée sans réponse), ces trois
+fourchettes sont larges à dessein.
 
 Soit **{{tranche-plancher.cout_zone.cout_au_m2_MAD::n0}} MAD/m²** de plancher, gros œuvre seul.
 
@@ -331,7 +348,7 @@ la main — {{valeur-acquise.zones_prevues_equivalentes::n2}} zones étaient pr�
 | **CPI** | **{{valeur-acquise.CPI::n3}}** |
 | **SPI** | **{{valeur-acquise.SPI::n3}}** |
 | Prévision à terminaison (EAC) | {{valeur-acquise.prevision_a_terminaison_EAC_MAD::n0}} MAD |
-| Dérive prévue | **+{{valeur-acquise.derive_prevue_MAD::n0}} MAD** |
+| Dérive prévue | **{{valeur-acquise.derive_signe}} {{valeur-acquise.derive_prevue_abs_MAD::n0}} MAD** |
 
 {{valeur-acquise.lecture}}
 
@@ -574,32 +591,47 @@ contre une date intenable annoncée en réunion. Le second piège, plus discret,
 durée : une cadence tenable en jours peut être intenable en tables, et le parc a le dernier mot.*
 :::
 
-:::exercice {"titre":"4 · Trouver l'erreur dans cette situation de travaux","niveau":"revue critique"}
-Un sous-traitant présente la situation suivante pour la zone 4, déclarée à 60 % :
+:::exercice {"titre":"4 · Viser, ou refuser de viser, une situation de travaux","niveau":"revue critique"}
+Un sous-traitant présente la situation suivante pour la zone en cours, qu'il déclare à
+{{tranche-plancher.situation_exercice.avancement_declare_pct::n0}} % :
 
 | Poste | Quantité déclarée | Prix unitaire | Montant |
 |---|---:|---:|---:|
-| Béton | 59,0 m³ | 1 250 | 73 750 |
-| Acier | 5 227 kg | 17 | 88 859 |
-| Coffrage | 255 m² | 180 | 45 900 |
-| Main-d'œuvre | 241 h | 45 | 10 845 |
-| **Total** | | | **219 354** |
+| Béton | {{tranche-plancher.situation_exercice.postes.0.quantite::n1}} m³ | {{tranche-plancher.situation_exercice.postes.0.prix_unitaire}} | {{tranche-plancher.situation_exercice.postes.0.montant_MAD::n0}} |
+| Acier | {{tranche-plancher.situation_exercice.postes.1.quantite::n0}} kg | {{tranche-plancher.situation_exercice.postes.1.prix_unitaire}} | {{tranche-plancher.situation_exercice.postes.1.montant_MAD::n0}} |
+| Coffrage | {{tranche-plancher.situation_exercice.postes.2.quantite::n0}} m² | {{tranche-plancher.situation_exercice.postes.2.prix_unitaire}} | {{tranche-plancher.situation_exercice.postes.2.montant_MAD::n0}} |
+| Main-d'œuvre | {{tranche-plancher.situation_exercice.main_oeuvre_h::n0}} h | {{gare.prix_unitaires_MAD.postes.main_oeuvre_h.valeur}} | {{tranche-plancher.situation_exercice.main_oeuvre_MAD::n0}} |
+| **Total** | | | **{{tranche-plancher.situation_exercice.total_presente_MAD::n0}}** |
 
-Trois choses ne vont pas. Lesquelles ?
+**Trois points appellent une vérification. Deux sont des erreurs, un est correct — lequel ?**
+Dites aussi ce que vous visez, et ce que vous refusez de viser.
 
 **Corrigé.**
-1. **La main-d'œuvre est additionnée** à des prix unitaires qui sont des prix posés : double compte de
-   10 845 MAD. Le total correct est 208 509 MAD.
-2. **Le coffrage est sous-compté.** 60 % de {{tranche-plancher.quantites.coffrage_m2::n0}} m² font
-   255 m² — ce qui est juste *si* le ratio retenu est le bon. Mais 255 / (0,60 × 360) = 1,18 :
-   cohérent. Le vrai problème est ailleurs → voir 3.
-3. **L'avancement de 60 % n'est recoupé par rien.** C'est une déclaration, pas un relevé. Le contrôle
-   du § S6 montre qu'à l'échelle du plancher, l'écart entre déclaration et relevés atteint déjà
-   {{valeur-acquise.contre_calcul.ecart_pct::n2}} %. **Ce qu'il faut exiger avant de viser : les
-   attachements**, pas un pourcentage.
 
-*Le point 2 est un leurre : les chiffres sont cohérents entre eux. Savoir reconnaître ce qui est juste
-fait partie du contrôle — un visa qui refuse tout ne vaut pas mieux qu'un visa qui accepte tout.*
+1. **Erreur — la main-d'œuvre est additionnée** à des prix unitaires qui sont des **prix posés** : la
+   main-d'œuvre y est déjà. Double compte de
+   {{tranche-plancher.situation_exercice.double_compte_MAD::n0}} MAD. Le total à viser est
+   **{{tranche-plancher.situation_exercice.total_juste_MAD::n0}} MAD**, et la ligne de main-d'œuvre
+   redevient ce qu'elle aurait toujours dû être : un **contrôle**, pas un poste.
+
+2. **Correct, et c'est le piège.** Le coffrage paraît surévalué : on attendrait
+   {{tranche-plancher.situation_exercice.avancement_declare_pct::n0}} % de la surface de dalle, soit
+   moins que les {{tranche-plancher.situation_exercice.postes.2.quantite::n0}} m² annoncés. Mais le
+   rapport coffrage/surface de cette situation vaut
+   **{{tranche-plancher.situation_exercice.ratio_coffrage_de_la_situation::n2}}**, exactement le ratio
+   du métré : les joues de poutres sont comptées, et elles doivent l'être. **Rien à redire.** Savoir
+   reconnaître ce qui est juste fait partie du contrôle : un visa qui refuse tout ne vaut pas mieux
+   qu'un visa qui accepte tout, et il coûte la confiance de l'entreprise.
+
+3. **Erreur — l'avancement n'est recoupé par rien.** {{tranche-plancher.situation_exercice.avancement_declare_pct::n0}} %
+   est une **déclaration**, pas un relevé : les trois quantités du tableau en descendent toutes, donc
+   aucune ne le contrôle. Le § S6 montre comment le recouper — en m³ et en m², poste par poste, sur
+   les quantités **relevées**. **Ce qu'il faut exiger avant de viser : les attachements.**
+
+*Ce qu'on vise : les trois postes de fournitures, à {{tranche-plancher.situation_exercice.total_juste_MAD::n0}} MAD,
+sous réserve des attachements. Ce qu'on refuse : la ligne de main-d'œuvre, et le pourcentage tant
+qu'il n'est pas adossé à un relevé. Et on le dit par écrit — un visa partiel non motivé se transforme
+en litige trois mois plus tard.*
 :::
 
 ## S7b · Quiz
