@@ -37,13 +37,12 @@ Sommaire, fiches et ordre de livraison : `cadrage/05-sommaire.md`.
 
 ## Ce que le socle livre (Étape 1, § 5.2)
 
-Charte et impression (`assets/style.css`, `print.css`, contrastes AA) · SVG paramétrique
-(`assets/svgkit.js`, 8 générateurs de figures sur 10 primitives) · 3D (`src/civil3d/`, bundle IIFE 763 ko : scène, orbite,
-matériaux, étiquettes, coupe, éclaté, phasage 4D) · chaîne de build qui **échoue** sur variable
-absente, légende incomplète, nombre normatif non balisé ou accident de gabarit · `calc/` avec
-contre-calcul à deux voies, 3 étalonnages sur solution fermée et vérification `pint` des
-5 bibliothèques · 13 contrôles `npm run check`, 14 tests de rendu, captures de toutes les figures ·
-page de démonstration testée (`modules/00-demo-cage.html`).
+Charte et impression (contrastes AA) · SVG paramétrique (`assets/svgkit.js`, 9 générateurs de
+figures) · 3D (`src/civil3d/`, bundle IIFE 765 ko : scène, orbite, matériaux, étiquettes, coupe,
+éclaté, phasage 4D) · build qui **échoue** sur variable absente, légende incomplète, nombre normatif
+non balisé ou accident de gabarit · `calc/` : contre-calcul à deux voies, 3 étalonnages sur solution
+fermée, `pint` sur les 5 bibliothèques · **15 contrôles** `npm run check`, 14 tests de rendu,
+captures de toutes les figures · page de démonstration testée.
 
 ## Grilles d'auto-évaluation § 7.2
 
@@ -64,10 +63,9 @@ valeurs clés à partir de `data/` seul.
 ### Socle E1
 
 **Trois passes** : 26 défauts (5 bloquants), puis 14 (1 bloquant, **3 canaris franchissaient les
-11 contrôles**), puis 10 (0 bloquant). **Zéro bloquant à l'arrivée.** Leçon retenue : une correction
-est un changement comme un autre, elle se relit — deux fois une correction s'est retournée (le
-contrôle « dépôt propre » cassait la reprise mode B ; un paragraphe ajouté réintroduisait un nombre
-faux). **Canaris** : 14 joués en tout (12 socle, 2 TV), **tous rouges aujourd'hui**.
+11 contrôles**), puis 10 (0 bloquant). **Zéro bloquant à l'arrivée.** Leçon : une correction est un
+changement comme un autre, elle se relit — deux fois elle s'est retournée. **Canaris** : 14 sur le
+socle et la TV, plus 11 inventés par les relecteurs ; **tous rouges aujourd'hui**.
 
 ### Tranche verticale TV — deux passes, 44 défauts, tous corrigés
 
@@ -75,28 +73,32 @@ faux). **Canaris** : 14 joués en tout (12 socle, 2 TV), **tous rouges aujourd'h
 |---|---|---|
 | 1 | 19 défauts — **4 bloquants** | un corrigé chiffré ne se tape pas ; un accident de gabarit est une erreur publiée ; un moteur juste dans son domaine d'usage n'est pas un moteur juste |
 | 2 | 25 défauts — **3 bloquants**, 12 majeurs, 10 mineurs | **aucun des 25 n'était vu par les 14 contrôles** ; 3 corrections de la passe 1 ne tenaient pas, 2 avaient créé un défaut neuf |
+| 3 | 26 défauts — **2 bloquants**, 14 majeurs, 10 mineurs | le modèle d'avancement était faux : **à 60 % du cycle, le béton n'est pas coulé** ; et la règle de cadence déguisait une marge en contrainte |
 
 Journaux : `QA/TV-corrections-passe1.md`, `QA/TV-tranche-verticale-passe2.md`.
 
-**Les trois bloquants de la passe 2 se ressemblent** : ce sont des **modèles faux sous une
-arithmétique juste**. La règle de cadence oubliait une des trois équipes dédiées — juste par
-coïncidence sur le cas publié, fausse dès qu'on renforce l'équipe de dalle, et la cible de 25 jours
-que le module annonçait tenue ne l'était pas. L'histogramme d'effectifs supposait les tâches en file
-indienne, donc ne pouvait pas montrer le recouvrement dont le module fait sa démonstration. La courbe
-« réalisé » était la courbe prévue multipliée par une constante : vingt points fabriqués depuis un
-seul relevé.
+**Les sept bloquants des trois passes se ressemblent : des modèles faux sous une arithmétique
+juste.** Le dernier est le plus profond. L'avancement d'une zone était réparti **au prorata
+uniforme** : 60 % du béton, 60 % de l'acier, 60 % du coffrage. Or à 60 % du cycle, le réseau du
+module dit que **le bétonnage n'a pas commencé** et que le coffrage est **entièrement posé**. Le
+module publiait 59 m³ pour une zone où rien n'est coulé, et son contrôle « qui fait foi » comparait
+deux calculs partageant cette hypothèse. Un avancement se **dérive du réseau**, poste par poste.
+
+La règle de cadence a été refondée dans la foulée sur les **ressources** : borne = max(équipe la
+plus chargée ; occupation cumulée de la grue), plus une **marge déclarée**. L'ancien « + bétonnage »
+n'était justifié par aucun modèle — c'était cette marge, déguisée en contrainte. D'où l'exercice 3 :
+renforcer les équipes ne suffit pas, c'est la **grue** qui finit par borner.
 
 **La leçon vaut pour les cinquante modules à venir** : les contrôles vérifiaient que les nombres se
-suivent, pas que le **modèle** dise ce qu'il prétend. Depuis : la règle de cadence est testée équipe
-par équipe, l'histogramme est confronté aux dates du réseau, le constat est publié comme un **point**
-tant qu'il n'y a qu'un relevé, et un contrôle part de `data/` au lieu des balises pour détecter une
-V3 non déclarée. Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10).
+suivent, pas que le **modèle** dise ce qu'il prétend. Depuis, toute grandeur décrivant l'état du
+chantier à une date est **dérivée du réseau** et un test refait la dérivation ; toute V3 de `data/`
+est registrée et vérifiée **dans sa propre fourchette** ; l'affectation des équipes aux tâches est
+contrôlée nommément. Le contrôle de part de main-d'œuvre **reste ouvert** (dette 10).
 
 ## Valeurs V2 en attente de vérification par le lecteur
 
-**Aucune dans le cours** (§ 5.0.6 ; `npm run check` échoue sur toute balise V2 tant que
-`normes_disponibles = false`). Cadrage : `cadrage/registre-sources-cadrage.csv`, E0-S01 et E0-S06
-restent « à vérifier ».
+**Aucune** (§ 5.0.6 ; `npm run check` échoue sur toute balise V2 tant que
+`normes_disponibles = false`). Cadrage : `cadrage/registre-sources-cadrage.csv`, E0-S01 et E0-S06 « à vérifier ».
 
 ## Simplifications déclarées (§ R6)
 
@@ -132,17 +134,17 @@ restent « à vérifier ».
 
 ## Données modifiées depuis la dernière livraison
 
-Jeux figés en 1.0, valeurs de conception inchangées. Corrigé depuis les passes /devil :
-`materiel.tables_coffrantes_m2` (420 → 1 300, l'ancienne valeur contredisait le planning),
-`materiel.etais` remplacé par une densité au m² plus une durée de maintien des étais de reprise,
-`suivi.base_du_choix` (la note annonçait une demi-zone de retard là où le calcul en rend 1,26), et le
-nouveau bloc `cycle_zone` — cure, décoffrage, point d'arrêt et les deux taux de recouvrement, qui
-vivaient en dur dans `calc/`. Registres régénérés : **18 hypothèses V3**.
+Jeux figés en 1.0, valeurs de conception inchangées. Corrigé par les passes /devil : le parc de
+tables (420 → 1 300, l'ancienne valeur contredisait le planning), les étais (densité au m² + durée
+de maintien), `suivi.quantites_relevees` (refaits sur l'état **physique** et non sur un prorata),
+`materiel.nb_grues`, et le bloc `cycle_zone` — cure, décoffrage, point d'arrêt, deux taux de
+recouvrement, marge de rotation, tâches servies par la grue, effectif par tâche — qui vivait en dur
+dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
 
 ## Effort consommé (§ 13.2)
 
-Étape 0 : 1 séance. Étape 1 : 2 séances (8 défauts en construisant, puis **50 sur trois passes**).
-Étape 2 : 2 séances (6 défauts en construisant, 19 à la passe /devil, tous corrigés).
-Hypothèse de budget : 2 séances par semaine, ~1,5 séance par livraison (V3, à confirmer).
-**Constat de tendance** : la relecture adversariale coûte autant que l'écriture. C'est le prix du
-§ 12.2, et les quatre bloquants de la TV montrent qu'il est justifié.
+Étape 0 : 1 séance. Étape 1 : 2 séances (8 défauts, puis **50 sur trois passes**). Étape 2 :
+3 séances (6 défauts en construisant, **70 sur trois passes**, tous corrigés).
+Hypothèse de budget : 2 séances/semaine, ~1,5 séance par livraison (V3, à confirmer).
+**Constat** : la relecture adversariale coûte autant que l'écriture — et les 7 bloquants de la TV,
+dont aucun n'était vu par les contrôles, montrent qu'il n'y a pas d'économie à faire dessus.

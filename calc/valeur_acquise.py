@@ -28,12 +28,19 @@ from cycle_plancher import durees_taches, cout_zone
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 
 
-def _recoupement(d: dict, q: dict, avancement: float) -> dict:
-    """Recoupement en unites physiques : releve contre theorique x avancement declare.
+def _recoupement(d: dict, q: dict, attendu: dict) -> dict:
+    """Recoupement en unites physiques : releve contre etat ATTENDU au meme instant.
 
-    Separer les postes GEOMETRIQUES (beton, coffrage) du poste issu d'un RATIO (acier)
-    est le coeur du controle : un ecart sur les premiers est un signal, un ecart sur le
-    second est attendu.
+    Deux choses font ce controle, et la seconde a manque longtemps.
+
+    1. Separer les postes GEOMETRIQUES (beton, coffrage) du poste issu d'un RATIO
+       (acier) : un ecart sur les premiers est un signal, un ecart sur le second est
+       attendu.
+    2. Comparer a l'etat que le RESEAU prevoit a cette date, et non a un prorata
+       uniforme de l'avancement declare. Le prorata partage son hypothese avec le
+       declare : il ne peut donc rien detecter. Pire, il est physiquement faux — a
+       60 % du cycle d'une zone, le betonnage n'a pas commence et le coffrage est
+       entierement pose.
     """
     # 1 % est defendable sur un poste GEOMETRIQUE, et sur lui seul : le beton et le
     # coffrage se mesurent sur plan, leur incertitude est celle du releve, pas d'une
@@ -45,12 +52,12 @@ def _recoupement(d: dict, q: dict, avancement: float) -> dict:
               ("acier_kg", "kg", "ratio V3")]
     out, signal = [], False
     for cle, unite, nature in postes:
-        theo = q[cle] * avancement
+        theo = attendu[cle]
         ecart = (rel[cle] - theo) / theo * 100
         alerte = nature == "geometrique" and abs(ecart) > SEUIL_GEOMETRIQUE_PCT
         signal = signal or alerte
         out.append({"poste": cle, "unite": unite, "nature": nature,
-                    "theorique_x_avancement": round(theo, 1), "releve": rel[cle],
+                    "attendu_par_le_reseau": round(theo, 1), "releve": rel[cle],
                     "ecart_pct": round(ecart, 2), "signal": alerte})
     # Les rapports que le texte publie ne se tapent pas a la main : ils se calculent.
     # Deux d'entre eux ont ete publies faux (« quarante fois », « vingt fois »).
@@ -79,7 +86,11 @@ def _recoupement(d: dict, q: dict, avancement: float) -> dict:
     }
 
 
-def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict) -> dict:
+def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict, attendu: dict) -> dict:
+    """`attendu` est OBLIGATOIRE : c'est l'etat que le reseau prevoit a la date d'arret,
+    poste par poste. Le rendre optionnel reviendrait a laisser le recoupement retomber en
+    silence sur un prorata uniforme — l'hypothese fausse qu'il est justement charge de
+    debusquer."""
     s = d["suivi"]
     n_zones = d["geometrie"]["mezzanine"]["zones_de_coulage"]["nb_zones"]
     cout_zone_MAD = cout["total_fournitures_et_mise_en_oeuvre_MAD"]
@@ -134,15 +145,15 @@ def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict) -> dict:
         # cout et son ratio V3 le fait varier de plus ou moins 10 %, soit dix fois le seuil.
         # En m3 et en m2, le beton et le coffrage sont GEOMETRIQUES : un ecart y est un
         # vrai signal. En kg, l'ecart est attendu et n'en est pas un — le module le dit.
-        "recoupement_physique": _recoupement(d, q, avancement_zones),
+        "recoupement_physique": _recoupement(d, q, attendu),
         # Contre-exemple : le MEME controle sur un releve de beton court de 5 %. Sans lui,
         # le module montrerait un controle qui ne sonne jamais, et n'apprendrait pas a
         # distinguer un signal d'un bruit.
         "recoupement_contre_exemple": _recoupement(
             {**d, "suivi": {**s, "quantites_relevees": {
                 **s["quantites_relevees"],
-                "beton_m3": round(q["beton_m3"] * avancement_zones * 0.95, 1)}}},
-            q, avancement_zones),
+                "beton_m3": round(attendu["beton_m3"] * 0.95, 1)}}},
+            q, attendu),
         "contre_calcul": {
             "voie_A_par_les_couts_MAD": round(VA_A),
             "voie_B_par_les_quantites_MAD": round(VA_B),
@@ -164,9 +175,15 @@ def valeur_acquise(d: dict, q: dict, cout: dict, planning: dict) -> dict:
                 "situation de travaux, et la plus difficile a voir dans un tableau de bord."
             ),
         },
+        # Phrase PUBLIEE : elle porte donc ses accents et ses virgules decimales. Les
+        # commentaires et les cles de ce fichier restent en ASCII, le texte destine au
+        # lecteur ne le peut pas.
         "lecture": (
-            f"CPI = {CPI:.3f} : chaque dirham depense produit {CPI:.2f} dirham de valeur. "
-            f"SPI = {SPI:.3f} : l'avancement vaut {SPI:.0%} de ce qui etait planifie a cette date."
+            f"CPI = {CPI:.3f}".replace(".", ",")
+            + f" : chaque dirham dépensé produit {CPI:.2f}".replace(".", ",")
+            + " dirham de valeur. "
+            + f"SPI = {SPI:.3f}".replace(".", ",")
+            + f" : l'avancement vaut {SPI:.0%} de ce qui était planifié à cette date."
         ),
     }
 
@@ -178,7 +195,8 @@ if __name__ == "__main__":
     t = durees_taches(d, q)
     c = cout_zone(d, q, t)
     plan = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
-    va = valeur_acquise(d, q, c, plan["suivi"])
+    va = valeur_acquise(d, q, c, plan["suivi"],
+                        attendu=plan["avancement_physique"]["quantites_faites"])
     sortie = RACINE / "calc" / "sorties"
     sortie.mkdir(parents=True, exist_ok=True)
     (sortie / "valeur-acquise.json").write_text(

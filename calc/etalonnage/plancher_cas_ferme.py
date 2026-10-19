@@ -59,10 +59,10 @@ d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"
 qr = quantites_zone(d)
 t = durees_taches(d, qr)
 c = cout_zone(d, qr, t)
-plan_suivi = {"zones_prevues_equivalentes":
-              json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json")
-                         .read_text(encoding="utf-8"))["suivi"]["zones_prevues_equivalentes"]}
-va = valeur_acquise(d, qr, c, plan_suivi)
+_tp = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
+plan_suivi = {"zones_prevues_equivalentes": _tp["suivi"]["zones_prevues_equivalentes"]}
+_attendu = _tp["avancement_physique"]["quantites_faites"]
+va = valeur_acquise(d, qr, c, plan_suivi, _attendu)
 dit(abs(va["CPI"] - va["valeur_acquise_VA_MAD"] / va["cout_reel_CR_MAD"]) < 1e-3,
     "CPI = VA / CR", f"{va['CPI']}")
 dit(abs(va["SPI"] - va["valeur_acquise_VA_MAD"] / va["valeur_planifiee_VP_MAD"]) < 1e-3,
@@ -79,7 +79,7 @@ bac = c["total_fournitures_et_mise_en_oeuvre_MAD"] * d["geometrie"]["mezzanine"]
 d2["suivi"]["zones_realisees_a_date"] = 4
 d2["suivi"]["avancement_zone_en_cours_pct"] = 0
 d2["suivi"]["cout_reel_constate_MAD"] = bac * 4 / 8
-va2 = valeur_acquise(d2, qr, c, {"zones_prevues_equivalentes": 4.0})
+va2 = valeur_acquise(d2, qr, c, {"zones_prevues_equivalentes": 4.0}, _attendu)
 dit(abs(va2["CPI"] - 1.0) < 1e-6 and abs(va2["SPI"] - 1.0) < 1e-6,
     "chantier parfaitement a l'heure et au budget : CPI = SPI = 1",
     f"CPI {va2['CPI']} · SPI {va2['SPI']}")
@@ -99,15 +99,36 @@ print("VALEUR ACQUISE — cas a solution posee d'avance")
 _u, _pu, _n = 10, 100.0, 6
 BAC_f, VP_f, VA_f, CR_f = _u * _pu, _n * _pu, 5 * _pu, 600.0
 attendu = {"CPI": 500 / 600, "SPI": 500 / 600, "CV": -100.0, "SV": -100.0, "EAC": 1200.0}
-obtenu = {"CPI": VA_f / CR_f, "SPI": VA_f / VP_f, "CV": VA_f - CR_f, "SV": VA_f - VP_f,
-          "EAC": BAC_f / (VA_f / CR_f)}
+# On APPELLE la bibliotheque sur ce cas, au lieu de reecrire ses formules : un
+# etalonnage qui recalcule lui-meme ne teste que l'arithmetique du relecteur.
+_d_f = {
+    "geometrie": {"mezzanine": {"zones_de_coulage": {"nb_zones": _u}}},
+    "suivi": {"zones_realisees_a_date": 5, "avancement_zone_en_cours_pct": 0,
+              "cout_reel_constate_MAD": CR_f,
+              "quantites_relevees": {"beton_m3": 5.0, "acier_kg": 5.0, "coffrage_m2": 5.0}},
+    "prix_unitaires_MAD": {"postes": {"beton_m3": {"valeur": _pu / 3},
+                                      "acier_kg": {"valeur": _pu / 3},
+                                      "coffrage_m2": {"valeur": _pu / 3}}},
+}
+_va_f = valeur_acquise(_d_f, {"beton_m3": 1.0, "acier_kg": 1.0, "coffrage_m2": 1.0},
+                       {"total_fournitures_et_mise_en_oeuvre_MAD": _pu},
+                       {"zones_prevues_equivalentes": _n},
+                       {"beton_m3": 5.0, "acier_kg": 5.0, "coffrage_m2": 5.0})
+obtenu = {"CPI": _va_f["CPI"], "SPI": _va_f["SPI"],
+          "CV": _va_f["ecart_de_cout_CV_MAD"], "SV": _va_f["ecart_de_delai_SV_MAD"],
+          "EAC": _va_f["prevision_a_terminaison_EAC_MAD"]}
 for cle, att in attendu.items():
-    dit(abs(obtenu[cle] - att) < 1e-6, f"{cle} du cas ferme", f"{obtenu[cle]:.4f} contre {att:.4f}")
+    dit(abs(obtenu[cle] - att) < 0.6, f"{cle} du cas ferme, PAR LA BIBLIOTHEQUE",
+        f"{obtenu[cle]:.4f} contre {att:.4f}")
 # et le cas DOIT mordre si la valeur acquise est minoree : c'est le canari C5 du relecteur
-VA_faux = VA_f * 0.8
-dit(abs(BAC_f / (VA_faux / CR_f) - attendu["EAC"]) > 1.0,
-    "une VA minoree de 20 % deplace bien l'EAC du cas ferme",
-    f"EAC {BAC_f / (VA_faux / CR_f):.0f} contre {attendu['EAC']:.0f}")
+_d_faux = {**_d_f, "suivi": {**_d_f["suivi"], "zones_realisees_a_date": 4}}
+_va_faux = valeur_acquise(_d_faux, {"beton_m3": 1.0, "acier_kg": 1.0, "coffrage_m2": 1.0},
+                          {"total_fournitures_et_mise_en_oeuvre_MAD": _pu},
+                          {"zones_prevues_equivalentes": _n},
+                          {"beton_m3": 5.0, "acier_kg": 5.0, "coffrage_m2": 5.0})
+dit(abs(_va_faux["prevision_a_terminaison_EAC_MAD"] - attendu["EAC"]) > 1.0,
+    "une unite d'avancement en moins deplace bien l'EAC rendu par la bibliotheque",
+    f"EAC {_va_faux['prevision_a_terminaison_EAC_MAD']:.0f} contre {attendu['EAC']:.0f}")
 
 # ---------- c) verification dimensionnelle (pint) ----------
 print("VERIFICATION DIMENSIONNELLE (pint)")

@@ -186,7 +186,7 @@ dit(avancement.dimensionless, "avancement en zones = VA / cout de zone",
     f"{avancement.magnitude:.3f} zones")
 _poste = next(x for x in _va["recoupement_physique"]["postes"] if x["poste"] == "beton_m3")
 releve = _poste["releve"] * u.m**3
-theorique = _poste["theorique_x_avancement"] * u.m**3
+theorique = _poste["attendu_par_le_reseau"] * u.m**3
 ecart = ((releve - theorique) / theorique).to(u.dimensionless)
 dit(ecart.dimensionless, "ecart de recoupement = (releve - theorique) / theorique",
     f"{ecart.magnitude * 100:+.2f} %")

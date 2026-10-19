@@ -255,3 +255,41 @@ module par module par des tests qui confrontent une sortie à une **construction
 dates du réseau pour l'histogramme, l'équipe qui borne pour la cadence, le nombre de relevés pour le
 constat). Aucune solution générale n'est promise : ce serait une promesse qu'on ne tiendrait pas.
 *Impact* : `STATE.md` (dette 13), et la méthode de tous les modules à venir.
+
+**D-023 · 19/10/2026 — Un avancement se dérive du réseau ; il ne se répartit pas au prorata.**
+*Raison* : la passe 3 a montré que le module appliquait l'avancement déclaré d'une zone à **chaque
+poste** — 60 % du béton, 60 % de l'acier, 60 % du coffrage. Or son propre cycle dit qu'à 60 % du
+cycle le bétonnage n'a **pas commencé** et que le coffrage est **entièrement posé**. Le module
+publiait donc 59 m³ de béton pour une zone où rien n'est coulé, et sous-comptait le coffrage de 40 %.
+Pire : les relevés de `data/` avaient été fabriqués sur ce même prorata, de sorte que le recoupement
+« qui fait foi » comparait deux calculs partageant l'hypothèse fausse — il ne pouvait rien détecter.
+*Décision* : `etat_physique_de_zone()` rattache chaque poste à la tâche qui le produit et lit son
+avancement dans le réseau à la date voulue ; `suivi.quantites_relevees` est refait sur cet état ; le
+recoupement compare au **réseau** et non à un prorata ; `valeur_acquise()` exige désormais
+l'argument `attendu` (le rendre optionnel aurait laissé le défaut revenir en silence). Le module en
+tire un encart — « 60 % d'une zone, ce n'est pas 60 % de chaque poste » — et l'exercice 4 a changé
+de corrigé : le béton demandé **n'existe pas**, et le coffrage est sous-facturé.
+*Impact* : `calc/cycle_plancher.py`, `calc/valeur_acquise.py`, `data/projet-gare.json`, § S6,
+exercice 4, fiche mémo.
+
+**D-024 · 19/10/2026 — La cadence est fixée par une ressource, et la marge est publiée séparément.**
+*Raison* : la règle `max(équipes dédiées) + bétonnage` n'était justifiée par aucun modèle. Le
+« + bétonnage » était en réalité une marge de conduite de chantier, déguisée en contrainte ; et la
+liste blanche des équipes excluait le décoffrage sur une justification que `data/` contredit.
+*Décision* : la borne est `max(équipe la plus chargée ; occupation cumulée des moyens partagés ÷
+nombre de moyens)`, les tâches servies par la grue sont **déclarées dans `data/`** (elles changent
+selon qu'on coule à la pompe ou à la benne), et la cadence retenue est `borne × (1 + marge)` avec la
+marge déclarée en V3. *Impact* : l'exercice 3 a de nouveau changé de réponse, et c'est la bonne :
+renforcer les deux équipes de ferraillage plafonne à 25,2 j parce que **la grue** devient la
+ressource qui borne ; seule une seconde grue passe sous la cible (23,0 j). Un levier matériel que
+personne ne trouve en regardant les effectifs.
+
+**D-025 · 19/10/2026 — Toute hypothèse V3 de `data/` est registrée, et vérifiée dans sa fourchette.**
+*Raison* : le contrôle de D-021 ne regardait que les V3 citées en variable dans `content/` — huit sur
+vingt. Les douze autres transitent par `calc/` et arrivent tout autant dans le module. Et aucune
+n'était confrontée à sa **propre fourchette** : une valeur pouvait en sortir sans que rien ne bouge.
+*Décision* : toute feuille `{valeur, fourchette}` de `data/` doit avoir sa ligne de registre, sauf
+mention explicite `non_publiee` ; un test vérifie que chaque valeur est dans son intervalle. Les
+quatre canaris que la passe 3 avait fait passer (recouvrement à 120 %, maintien d'étais nul, maintien
+saturant, effectifs permutés) sonnent tous désormais. *Impact* : `build/check.mjs`,
+`calc/tests/test_plancher.py`, 27 hypothèses registrées contre 18.

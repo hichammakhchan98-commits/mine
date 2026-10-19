@@ -453,7 +453,7 @@
     "etais_par_m2": 2.5,
     "etais_note": "densite d'etais par m2 de plancher etaye ; le nombre total se deduit du nombre de zones etayees simultanement",
     "pompe_a_beton": "pompe automotrice ; son debit retenu est cadences.betonnage_m3_h, pour ne pas ecrire deux fois le meme nombre",
-    "grue": "grue a tour, voir C1",
+    "grue": "grue a tour unique desservant le plancher ; voir C1. Le nombre de grues divise le temps d'occupation par zone : c'est un levier de cadence, et souvent le dernier disponible quand les equipes sont deja renforcees.",
     "etais_de_reprise_maintenus_j": {
       "valeur": 14,
       "fourchette": [
@@ -461,7 +461,8 @@
         28
       ],
       "note": "duree pendant laquelle les etais de reprise restent en place APRES le decoffrage. Le critere reel est une resistance et une redistribution de charges, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
-    }
+    },
+    "nb_grues": 1
   },
   "multi_sites": {
     "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
@@ -530,12 +531,12 @@
     "note": "Le cout reel vient des attachements. Ici il est pose en V3 pour faire tourner la chaine.",
     "base_du_choix": "Ce cout reel est FABRIQUE pour la demonstration, et choisi sur une base explicite : un chantier en legere difficulte — quelques pour cent de depassement de cout et un retard de l'ordre d'une zone. La valeur a ete posee AVANT de regarder CPI et SPI, a partir de l'ordre de grandeur du budget de 3,6 zones ; le calcul a ensuite donne CPI 0,94 et un retard de 1,26 zone a la date d'arret. On publie ce que le calcul rend, pas ce que la note esperait : une premiere version de cette note annoncait « une demi-zone » et contredisait la sortie de calc/.",
     "quantites_relevees": {
-      "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). C'est la seule voie reellement independante de l'avancement declare : elle ne passe pas par lui.",
-      "beton_m3": 352.0,
-      "acier_kg": 30900,
-      "coffrage_m2": 1515.0,
+      "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). Elles sont construites sur l'etat PHYSIQUE du chantier — trois zones completes, plus une zone dont le coffrage est pose, le ferraillage presque fini et le beton pas coule — et non sur un prorata uniforme de l'avancement declare. Une version precedente appliquait ce prorata : le recoupement comparait alors deux calculs partageant la meme hypothese, et ne pouvait rien detecter.",
+      "beton_m3": 293.4,
+      "acier_kg": 33530.0,
+      "coffrage_m2": 1683.6,
       "niveau_preuve": "V3 — releves fabriques pour la demonstration",
-      "base_du_choix": "Poses legerement en retrait des quantites theoriques de 3,6 zones, pour que la demonstration montre ce que le controle sert a detecter : un avancement declare un peu optimiste."
+      "base_du_choix": "Poses legerement en retrait de l'etat physique (environ -0,6 % sur le beton, -0,8 % sur le coffrage, -2 % sur l'acier) pour que la demonstration montre ce que le controle sert a detecter : un ecart reel mais sous le seuil sur les postes geometriques, et un ecart plus large sur l'acier, qui vient d'un ratio."
     },
     "jours_ouvres_par_semaine": 5,
     "jour_arret_ouvre": 19,
@@ -595,6 +596,21 @@
       "CUR": 0,
       "DEC": 2,
       "_note_DEC": "le decoffrage mobilise deux compagnons, pas l'equipe de coffrage entiere : celle-ci est deja sur la zone suivante, c'est tout l'objet de la rotation."
+    },
+    "marge_de_rotation_pct": {
+      "valeur": 14,
+      "fourchette": [
+        0,
+        30
+      ],
+      "note": "marge ajoutee a la borne theorique de rotation. La borne suppose les equipes saturees a 100 %, ce qu'aucun chantier ne tient : alea, approvisionnement, reprise. A zero, le planning est theoriquement faisable et pratiquement intenable."
+    },
+    "taches_servies_par_la_grue": {
+      "valeur": [
+        "coffrage_j",
+        "decoffrage_j"
+      ],
+      "note": "La grue monte et descend les tables et les cages. Elle ne sert PAS au coulage : le beton arrive par pompe automotrice (materiel.pompe_a_beton). Si le chantier coulait a la benne, il faudrait ajouter betonnage_j ici — et la cadence changerait."
     }
   }
 }

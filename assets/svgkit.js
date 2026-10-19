@@ -393,25 +393,20 @@
       }
     }
 
-    // Ce que le PLANNING prevoyait a la meme date, en contour : sans lui, le tableau de
-    // bord le plus lisible du module tait l'ecart que tout le § S6 etablit.
-    if (z.avancement_prevu) {
+    // Ce que le PLANNING prevoyait a la meme date, en CATEGORIES : un lisere sous la
+    // zone, plein si elle devait etre finie, tirete si elle devait etre en cours. Une
+    // fraction de TEMPS portee sur un axe de LONGUEUR ne voudrait rien dire : une zone a
+    // 63 % de son cycle n'est pas batie sur 63 % de sa longueur.
+    if (z.etat_prevu) {
+      const yP = r.y(0) + 7;
       for (let i = 0; i < z.nb_zones; i++) {
-        const f = z.avancement_prevu[i];
-        // seules les zones PARTIELLEMENT prevues portent un repere : sur une zone prevue
-        // a 100 %, le trait tomberait sur le bord et se lirait comme une bordure de plus
-        if (!f || f >= 1) continue;
+        const e = z.etat_prevu[i];
+        if (e === "a_venir") continue;
         const x0 = i * z.longueur_m;
-        // un trait de niveau, pose SOUS le bord haut de la zone : un rectangle plein
-        // cadre masquait les couleurs d'etat qu'il etait cense completer
-        const yh = r.y(z.largeur_m) + 6, yb = r.y(0) - 6;
-        const yT = yb - (yb - yh) * 0.22;        // sous les libelles de zone
-        g += ligne(r.x(x0 + z.longueur_m * f), yh, r.x(x0 + z.longueur_m * f), yb,
-          { couleur: "#41607d", ep: 2 });
-        g += ligne(r.x(x0), yT, r.x(x0 + z.longueur_m * f), yT,
-          { couleur: "#41607d", ep: 1.2, tirets: "4 3" });
+        g += ligne(r.x(x0) + 3, yP, r.x(x0 + z.longueur_m) - 3, yP,
+          { couleur: "#41607d", ep: 2.4, tirets: e === "en_cours" ? "5 4" : null });
       }
-      g += puce(r.x(z.longueur_m * 4.25), r.y(z.largeur_m) - 16, 3);
+      g += puce(r.x(z.longueur_m * 4.5), yP + 15, 3);
     }
 
     for (let i = 0; i < z.nb_zones; i++) {
@@ -442,7 +437,7 @@
       coup ce que le Gantt d'UNE zone ne montre pas : la cadence, le recouvrement entre
       zones, et la contrainte de parc qui en decoule. */
   function rotation(r, o = {}) {
-    const L = o.largeur || 760, hZ = 15, hBas = 62;
+    const L = o.largeur || 760, hZ = 26, hBas = 62;
     const n = r.zones.length;
     const fin = Math.max(...r.zones.map((z) => z.debut_j + r.cycle_j));
     const H = 34 + n * hZ + hBas;
@@ -456,18 +451,27 @@
       g += ligne(X(j), 20, X(j), 26 + n * hZ, { couleur: "#eceee9", ep: 1 });
       g += texte(X(j), 15, String(j), { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
     }
+    // Les phases se RECOUVRENT dans le temps : peintes l'une sur l'autre sur la meme
+    // ligne, les dernieres masquaient les premieres et le coffrage s'y lisait moitie
+    // moins long qu'il ne dure — la figure contredisait le Gantt sous une legende qui
+    // annonce justement le recouvrement. Chaque phase recoit donc sa COUCHE : une bande
+    // fine, decalee verticalement, de sorte que deux phases simultanees se voient
+    // toutes les deux.
+    const nPh = r.zones[0].phases.length;
+    const hPh = (hZ - 5) / nPh;
     r.zones.forEach((z, i) => {
       const y = 24 + i * hZ;
-      g += texte(gx - 6, y + 6, `Z${z.zone}`, { taille: 9.5, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
-      z.phases.forEach((ph) => {
+      g += texte(gx - 6, y + hZ / 2 - 2, `Z${z.zone}`,
+        { taille: 9.5, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+      z.phases.forEach((ph, k) => {
         const x0 = X(z.debut_j + ph.debut_j), x1 = X(z.debut_j + ph.fin_j);
-        g += rect(x0, y, Math.max(1.2, x1 - x0), hZ - 4,
+        g += rect(x0, y + k * hPh, Math.max(1.2, x1 - x0), Math.max(1.4, hPh - 0.4),
           { remplissage: PH[ph.id] || "#d5d7d1", couleur: "none", ep: 0 });
       });
     });
     // la cadence : une droite qui joint les debuts de zone, et sa pente EST la cadence
     g += chemin(r.zones.map((z, i) => `${i ? "L" : "M"}${X(z.debut_j)} ${24 + i * hZ}`).join(" "),
-      { couleur: "#8c3b2e", ep: 1.6, remplissage: "none", tirets: "5 4" });
+      { couleur: "#8c3b2e", ep: 1.4, remplissage: "none", tirets: "5 4" });
     // l'etiquette se pose dans la marge de droite, a mi-pente : posee au dernier debut
     // de zone, elle passait par-dessus la barre de la zone 8
     g += texte(L - 8, 24 + (n / 2) * hZ,

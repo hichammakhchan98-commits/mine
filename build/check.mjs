@@ -85,7 +85,8 @@ try {
   const parcourir = (o, chemin) => {
     if (Array.isArray(o)) return o.forEach((v, i) => parcourir(v, `${chemin}.${i}`));
     if (o && typeof o === "object") {
-      if ("valeur" in o && "fourchette" in o) return feuilles.push({ chemin, valeur: o.valeur });
+      if ("valeur" in o && "fourchette" in o)
+        return feuilles.push({ chemin, valeur: o.valeur, nonPubliee: o.non_publiee === true });
       for (const [k, v] of Object.entries(o)) parcourir(v, chemin ? `${chemin}.${k}` : k);
     }
   };
@@ -98,7 +99,12 @@ try {
     .map((l) => (l.split(";")[2] || "").replace(/[\u202f\u00a0\s]/g, "").replace(",", "."))
     .map((v) => Number((v.match(/-?\d+(?:\.\d+)?/) || [])[0]))
     .filter((v) => Number.isFinite(v));
-  const lues = feuilles.filter((f) => contenu.includes(`gare.${f.chemin}`));
+  // TOUTE hypothese V3 de data/ doit etre registree, qu'elle soit lue directement par
+  // une variable {{gare.*}} ou qu'elle transite par calc/. Ne retenir que les premieres
+  // laissait douze hypotheses sur vingt hors de tout registre — dont les cinq du cycle,
+  // qui pesent un tiers de sa duree. Une hypothese qui n'atteint aucun module se declare
+  // explicitement « non_publiee ».
+  const lues = feuilles.filter((f) => !f.nonPubliee);
   const sansLigne = lues.filter(
     (f) => !nombres.some((n) => Math.abs(n - Number(f.valeur)) < 1e-9));
   if (sansLigne.length)

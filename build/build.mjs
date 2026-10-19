@@ -68,7 +68,13 @@ function substituerDans(texte, f) {
       // Typographie francaise : virgule decimale, et milliers separes par une espace
       // fine insecable des 4 chiffres. Sans elle, un cout s'affiche « 2955556 MAD »
       // a cote d'un « 1 250 » de tableau : le lecteur ne peut plus comparer.
-      return grouper(String(v).replace(/\./g, ","));
+      //
+      // La conversion ne s'applique QU'AUX NOMBRES. Appliquee a toute chaine, elle
+      // transformait les points d'une phrase publiee en virgules : la ligne de lecture
+      // du § S6 sortait avec sa ponctuation detruite.
+      if (typeof v === "number" || (typeof v === "string" && /^-?\d+(?:[.,]\d+)?$/.test(v)))
+        return grouper(String(v).replace(/\./g, ","));
+      return String(v);
     } catch (e) {
       erreurs.push(`${f} : variable {{${expr}}} — ${e.message}`);
       return `<mark>VARIABLE ABSENTE : ${expr}</mark>`;

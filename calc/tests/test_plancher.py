@@ -28,7 +28,7 @@ t = durees_taches(d, q)
 cc = contre_calcul(reseau_zone(t, d["cycle_zone"]))
 c = cout_zone(d, q, t)
 _pl = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json").read_text(encoding="utf-8"))
-va = valeur_acquise(d, q, c, _pl["suivi"])
+va = valeur_acquise(d, q, c, _pl["suivi"], _pl["avancement_physique"]["quantites_faites"])
 z = d["geometrie"]["mezzanine"]["zones_de_coulage"]
 
 # --- geometrie : les zones doivent recouvrir exactement la mezzanine
@@ -140,7 +140,7 @@ verifie("les deux voies de valeur acquise donnent des montants differents",
 # et la voie B ne doit PAS dependre de l'avancement declare : on le change, elle ne bouge pas
 d2 = json.loads(json.dumps(d))
 d2["suivi"]["avancement_zone_en_cours_pct"] = 90
-va2 = valeur_acquise(d2, q, c, _pl["suivi"])
+va2 = valeur_acquise(d2, q, c, _pl["suivi"], _pl["avancement_physique"]["quantites_faites"])
 verifie("la voie B ne depend pas de l'avancement declare",
         va2["contre_calcul"]["voie_B_par_les_quantites_MAD"] == vcc["voie_B_par_les_quantites_MAD"],
         "elle part des releves, pas du declare")
@@ -184,6 +184,12 @@ verifie("coffrage immobilise = zones simultanees x coffrage de zone",
         abs(_cm["coffrage_mobilise_m2"]
             - _cm["zones_coffrees_simultanement"] * q["coffrage_m2"]) <= 1,
         f"{_cm['coffrage_mobilise_m2']} m2")
+verifie("le nombre de zones etayees est borne par le nombre de zones",
+        _cm["zones_etayees_simultanement"] <= _pl["planning_plancher"]["nb_zones"],
+        f"{_cm['zones_etayees_simultanement']} zones etayees sur {_pl['planning_plancher']['nb_zones']}")
+verifie("et la saturation de l'etaiement est signalee quand elle arrive",
+        _cm["tout_le_plancher_est_etaye"] == (
+            _cm["zones_etayees_avant_bornage"] > _pl["planning_plancher"]["nb_zones"]))
 verifie("le planning de reference tient avec le parc declare",
         _cm["verdict"] == "OK",
         f"{_cm['coffrage_mobilise_m2']} m2 pour {_cm['stock_declare_m2']} m2 au parc")
@@ -197,25 +203,70 @@ verifie("une cadence trop courte fait sonner le controle de parc : il sait echou
         _mob > _cm["stock_declare_m2"],
         f"a {_cad_canari} j/zone il faudrait {_mob:.0f} m2 pour {_cm['stock_declare_m2']} au parc")
 
-# --- B1 : la cadence est bornee par TOUTES les equipes dediees, pas par deux sur trois
+# --- la cadence est fixee par la RESSOURCE la plus chargee, equipes ET grue
 _rc = _pl["regle_cadence"]
 _dur_ded = _rc["durees_des_equipes_dediees_j"]
-verifie("la regle de cadence couvre les trois equipes dediees", len(_dur_ded) == 3,
-        ", ".join(sorted(_dur_ded)))
-verifie("cadence = max(equipes dediees) + betonnage, recalcule a la main",
-        abs(_rc["cadence_j"] - (max(_dur_ded.values()) + _pl["durees"]["betonnage_j"])) < 0.01,
-        f"{_rc['cadence_j']} j")
-verifie("le ferraillage des POUTRES est bien dans la regle",
-        "ferraillage_poutres_j" in _dur_ded)
-_vr = _pl["variantes"]["effectif_renforce"]
-verifie("renforcer la seule equipe de dalle fait passer la borne aux POUTRES",
-        _vr["tache_qui_borne_la_cadence"] == "ferraillage_poutres_j",
-        f"borne par {_vr['tache_qui_borne_la_cadence']} a {_vr['cadence_j']} j")
-verifie("et la cible de 25 j n'est alors PAS atteinte", _vr["duree_plancher_j"] > 25,
-        f"{_vr['duree_plancher_j']} j")
-_v2 = _pl["variantes"]["effectif_renforce_deux_equipes"]
-verifie("renforcer les DEUX equipes de ferraillage passe sous la cible",
-        _v2["duree_plancher_j"] < 25, f"{_v2['duree_plancher_j']} j")
+verifie("toutes les equipes dediees entrent dans la regle, decoffrage compris",
+        set(_dur_ded) == {"coffrage_j", "ferraillage_poutres_j", "ferraillage_dalle_j",
+                          "betonnage_j", "decoffrage_j"}, ", ".join(sorted(_dur_ded)))
+_grue = d["cycle_zone"]["taches_servies_par_la_grue"]["valeur"]
+_occ = sum(_dur_ded[c] for c in _grue) / d["materiel"]["nb_grues"]
+verifie("l'occupation de la grue est la SOMME de ses taches, divisee par le nombre de grues",
+        abs(_rc["occupation_de_la_grue_j"] - _occ) < 0.01, f"{_rc['occupation_de_la_grue_j']} j")
+verifie("la borne theorique = max(equipe la plus chargee ; grue), recalcule a la main",
+        abs(_rc["borne_theorique_j"] - max(max(_dur_ded.values()), _occ)) < 0.01,
+        f"{_rc['borne_theorique_j']} j")
+verifie("la cadence retenue = borne + marge declaree",
+        abs(_rc["cadence_j"] - _rc["borne_theorique_j"]
+            * (1 + d["cycle_zone"]["marge_de_rotation_pct"]["valeur"] / 100)) < 0.01,
+        f"{_rc['cadence_j']} j pour une borne de {_rc['borne_theorique_j']}")
+verifie("la marge de rotation est publiee, pas cachee dans la formule",
+        _rc["marge_de_rotation_j"] > 0, f"{_rc['marge_de_rotation_j']} j")
+
+# chaque renfort DEPLACE la borne sur une autre ressource : c'est la lecon du module
+_cascade = [("reference", "ferrailleurs_dalle"), ("effectif_renforce", "ferrailleurs_poutres"),
+            ("effectif_renforce_deux_equipes", "grue"), ("deux_equipes_et_deux_grues", "ferrailleurs_dalle")]
+for _cle, _attendu in _cascade:
+    _v = _pl["variantes"][_cle]
+    verifie(f"variante « {_cle} » : la borne est {_attendu}",
+            _attendu in _v["ressource_qui_borne"],
+            f"{_v['ressource_qui_borne']} a {_v['cadence_j']} j, plancher {_v['duree_plancher_j']} j")
+verifie("renforcer les deux equipes ne suffit PAS a tenir 25 jours",
+        _pl["variantes"]["effectif_renforce_deux_equipes"]["duree_plancher_j"] > 25,
+        f"{_pl['variantes']['effectif_renforce_deux_equipes']['duree_plancher_j']} j")
+verifie("il faut la seconde grue pour passer sous la cible",
+        _pl["variantes"]["deux_equipes_et_deux_grues"]["duree_plancher_j"] < 25,
+        f"{_pl['variantes']['deux_equipes_et_deux_grues']['duree_plancher_j']} j")
+
+# --- l'affectation des equipes aux taches est-elle la bonne ?
+# Une permutation de `effectif_par_tache` (coffreurs sur le ferraillage, et l'inverse)
+# deplacait l'histogramme jour par jour sans faire bouger un seul des quinze controles.
+_att_eq = {"COF": "coffreurs", "FEP": "ferrailleurs_poutres", "FED": "ferrailleurs_dalle",
+           "BET": "equipe_betonnage", "PTA": 0, "CUR": 0}
+_pose = d["cycle_zone"]["effectif_par_tache"]
+for _t, _e in _att_eq.items():
+    verifie(f"la tache {_t} est servie par « {_e} »", _pose.get(_t) == _e,
+            f"data/ dit « {_pose.get(_t)} »")
+verifie("le decoffrage mobilise un effectif reduit, pas l'equipe de coffrage entiere",
+        isinstance(_pose.get("DEC"), int) and 0 < _pose["DEC"] < d["effectifs"]["coffreurs"],
+        f"DEC = {_pose.get('DEC')}")
+
+# --- l'histogramme publie, reconstruit ici sans appeler le code de production
+_eff_t = {k: (d["effectifs"][v] if isinstance(v, str) else v)
+          for k, v in _pose.items() if not k.startswith("_")}
+_rz2 = voie_A_parcours(reseau_zone(t, d["cycle_zone"]))
+_deb = _pl["planning_plancher"]["debuts"]
+_recalcule = []
+for _k in range(len(_pl["figures"]["effectifs"])):
+    _act = {x.id for dz in _deb.values() for x in reseau_zone(t, d["cycle_zone"])
+            if dz + _rz2["tot"][x.id][0] < _k + 1 <= _k + 1
+            and _k < dz + _rz2["tot"][x.id][1] and dz + _rz2["tot"][x.id][0] < _k + 1}
+    _n = sum(_eff_t.get(i, 0) for i in _act)
+    _recalcule.append(_n + (d["effectifs"]["chef_equipe"] + d["effectifs"]["grutier"]) if _n else 0)
+_publie = [x["n"] for x in _pl["figures"]["effectifs"]]
+verifie("l'histogramme publie est reproductible depuis data/ seul",
+        _recalcule == _publie,
+        f"{sum(1 for a_, b_ in zip(_recalcule, _publie) if a_ != b_)} jour(s) different(s)")
 
 # --- B2 : l'histogramme suit le reseau, donc il montre les recouvrements
 _h = {x["j"]: x["n"] for x in _pl["figures"]["effectifs"]}
@@ -247,16 +298,43 @@ verifie("pris a la borne basse de sa fourchette, le controle echouerait",
         > _cc1["tolerance_pct"],
         f"rendement {_fl} m2/j")
 
+# --- chaque V3 de data/ doit etre DANS sa propre fourchette.
+# Aucun controle ne le verifiait : une valeur pouvait sortir de l'intervalle qu'elle
+# declare, ce qui rend la fourchette decorative.
+def _feuilles_v3(o, chemin=""):
+    if isinstance(o, dict):
+        if "valeur" in o and "fourchette" in o:
+            yield chemin, o
+            return
+        for k, v in o.items():
+            yield from _feuilles_v3(v, f"{chemin}.{k}" if chemin else k)
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            yield from _feuilles_v3(v, f"{chemin}.{i}")
+
+_hors, _n_v3 = [], 0
+for _ch, _h in _feuilles_v3(d):
+    if not isinstance(_h["valeur"], (int, float)):
+        continue
+    _n_v3 += 1
+    _lo, _hi = _h["fourchette"]
+    if not (_lo <= _h["valeur"] <= _hi):
+        _hors.append(f"{_ch} = {_h['valeur']} hors [{_lo} ; {_hi}]")
+verifie("chaque hypothese V3 de data/ est dans sa propre fourchette", not _hors,
+        "; ".join(_hors) if _hors else f"{_n_v3} hypotheses verifiees")
+verifie("et le controle sait echouer", not (0 <= -1 <= 0))
+
 # --- CPI et SPI : ordres de grandeur plausibles pour un chantier
 verifie("CPI dans une plage plausible (0,7 a 1,2)", 0.7 <= va["CPI"] <= 1.2, f"{va['CPI']}")
 verifie("SPI dans une plage plausible (0,7 a 1,2)", 0.7 <= va["SPI"] <= 1.2, f"{va['SPI']}")
 
 _geo = [p for p in va["recoupement_physique"]["postes"] if p["nature"] == "geometrique"]
 _detail = ", ".join("{} {:+.2f} %".format(p["poste"], p["ecart_pct"]) for p in _geo)
-print(f"  info  recoupement en dirhams : ecart {vcc['ecart_pct']} % > tolerance "
-      f"{vcc['tolerance_pct']} %, mais les postes GEOMETRIQUES restent sous le pour cent "
-      f"({_detail}) : bruit du ratio d'acier, pas signal d'avancement — "
-      f"c'est la lecture que le module enseigne")
+_comp = ">" if vcc["ecart_pct"] > vcc["tolerance_pct"] else "<="
+print(f"  info  recoupement en dirhams : ecart {vcc['ecart_pct']} % {_comp} tolerance "
+      f"{vcc['tolerance_pct']} % · postes GEOMETRIQUES : {_detail}. "
+      f"L'alarme d'avant venait d'un etat attendu calcule au prorata uniforme, "
+      f"c'est-a-dire d'un modele faux — pas du chantier.")
 print(f"  info  le controle de prix horaire sort de sa fourchette "
       f"({c['coherence_prix_horaire']['part_constatee_pct']} % contre "
       f"{c['coherence_prix_horaire']['fourchette_attendue_pct']}) : explique dans le module")

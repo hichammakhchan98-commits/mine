@@ -75,36 +75,63 @@ def durees_taches(d: dict, q: dict) -> dict:
     }
 
 
-def cadence_rotation(t: dict) -> dict:
+def cadence_rotation(t: dict, cz: dict, nb_grues: int = 1) -> dict:
     """Cadence de rotation d'une zone : tous les combien une zone redemarre.
 
-    Elle est bornee par la plus longue des taches qui mobilisent une equipe DEDIEE —
-    une equipe ne peut etre que sur une zone a la fois — plus le betonnage, qui
-    immobilise la zone, la pompe et la grue pour tout le monde.
+    Elle n'est pas « la plus longue tache » : elle est fixee par la RESSOURCE la plus
+    chargee. Deux familles de ressources, et elles ne se comptent pas pareil.
 
-    La premiere version de cette regle oubliait le ferraillage des POUTRES. Sans effet
-    sur le cas de reference, ou le ferraillage de dalle est plus long et masque
-    l'oubli ; decisif des qu'on renforce l'equipe de dalle, puisque c'est alors le
-    ferraillage des poutres qui prend le relais. Le module enonce justement cette
-    regle — « renforcer une tache critique ne garantit un gain que jusqu'a ce qu'un
-    autre chemin prenne le relais » — et sa propre formule la violait.
+    - Une equipe DEDIEE ne fait qu'une tache : elle est occupee la duree de sa tache.
+      La rotation ne peut donc pas etre plus courte que la plus longue de ces durees.
+    - Un moyen PARTAGE sert a plusieurs taches : il est occupe la SOMME de leurs
+      durees. Ici la grue sert au coffrage, au coulage et au decoffrage.
+
+    La borne theorique est le maximum de ces deux lectures. Elle suppose les equipes
+    saturees a 100 %, ce qu'aucun chantier ne tient : la cadence RETENUE y ajoute une
+    marge declaree, et le module publie l'ecart entre les deux au lieu de le cacher
+    dans une formule.
+
+    Une premiere version ecrivait `max(coffrage ; ferraillage de dalle) + betonnage`.
+    Elle oubliait le ferraillage des poutres — sans effet sur le cas de reference, ou
+    le ferraillage de dalle le masque, mais faux des qu'on renforce l'equipe de dalle.
+    Et son « + betonnage » n'etait justifie par aucun modele de ressources : c'etait la
+    marge, deguisee en contrainte.
     """
-    dediees = {
-        "coffrage_j": "coffreurs",
-        "ferraillage_poutres_j": "ferrailleurs_poutres",
-        "ferraillage_dalle_j": "ferrailleurs_dalle",
-    }
-    durees = {cle: t[cle] for cle in dediees}
-    cle_max = max(durees, key=durees.get)
-    cad = durees[cle_max] + t["betonnage_j"]
+    equipes = {"coffrage_j": "coffreurs", "ferraillage_poutres_j": "ferrailleurs_poutres",
+               "ferraillage_dalle_j": "ferrailleurs_dalle", "betonnage_j": "equipe_betonnage",
+               "decoffrage_j": "equipe_de_decoffrage"}
+    durees = {cle: t.get(cle, cz["decoffrage_j"]["valeur"] if cle == "decoffrage_j" else 0.0)
+              for cle in equipes}
+    cle_equipe = max(durees, key=durees.get)
+    borne_equipes = durees[cle_equipe]
+
+    # Les taches servies par la grue sont DECLAREES dans data/ : les ecrire ici
+    # cacherait une hypothese de conduite de chantier (coulage a la pompe ou a la benne)
+    # dans le code, alors qu'elle change la cadence.
+    taches_grue = cz["taches_servies_par_la_grue"]["valeur"]
+    borne_grue = sum(durees[c] for c in taches_grue) / max(1, nb_grues)
+
+    borne = max(borne_equipes, borne_grue)
+    qui = "equipe " + equipes[cle_equipe] if borne_equipes >= borne_grue else "grue (partagee)"
+
+    marge_pct = cz["marge_de_rotation_pct"]["valeur"]
+    retenue = round(borne * (1 + marge_pct / 100.0), 2)
     return {
-        "cadence_j": round(cad, 2),
-        "tache_qui_borne": cle_max,
-        "equipe_qui_borne": dediees[cle_max],
+        "cadence_j": retenue,
+        "borne_theorique_j": round(borne, 2),
+        "ressource_qui_borne": qui,
+        "tache_qui_borne": cle_equipe if borne_equipes >= borne_grue else "grue",
+        "equipe_qui_borne": equipes[cle_equipe],
+        "marge_de_rotation_pct": marge_pct,
+        "marge_de_rotation_j": round(retenue - borne, 2),
         "durees_des_equipes_dediees_j": {k: round(v, 2) for k, v in durees.items()},
-        "regle": ("max(taches a equipe dediee) + betonnage. Le betonnage s'ajoute parce "
-                  "qu'il immobilise la zone entiere ; la cure et le decoffrage ne "
-                  "comptent pas, ils n'occupent aucune equipe."),
+        "occupation_de_la_grue_j": round(borne_grue, 2),
+        "nb_grues": nb_grues,
+        "regle": (
+            "max(plus longue tache d'une equipe dediee ; somme des taches de la grue), "
+            "puis marge de rotation declaree. La borne suppose les equipes saturees ; "
+            "la marge est un choix de conduite de chantier, pas une contrainte."
+        ),
     }
 
 
@@ -158,19 +185,66 @@ def histogramme_plancher(d: dict, reseau: list[Tache], debuts: dict, duree_total
     base = d["effectifs"]
     jours = []
     for k in range(int(math.ceil(duree_totale)) + 1):
-        n, zone_active = 0, False
-        for cle, debut_zone in debuts.items():
+        # On compte des EQUIPES DISTINCTES, pas une somme sur les zones. Chaque tache a
+        # une equipe dediee — c'est la base de la regle de cadence — et une equipe ne
+        # peut pas etre a deux endroits : la compter deux fois le jour ou elle passe
+        # d'une zone a la suivante gonflerait l'effectif d'un tiers.
+        #
+        # Et l'appartenance a une journee se lit par INTERSECTION avec [k, k+1), non par
+        # « contient l'instant k » : echantillonner aux entiers faisait disparaitre six
+        # betonnages sur huit, une tache de 0,41 j tombant rarement sur un entier.
+        actives = set()
+        for debut_zone in debuts.values():
             for tache in reseau:
                 deb, fin = r["tot"][tache.id]
-                if debut_zone + deb <= k < debut_zone + fin:
-                    n += eff.get(tache.id, 0)
-                    if eff.get(tache.id, 0):
-                        zone_active = True
-        # l'encadrement n'est present que si une equipe de production l'est
-        if zone_active:
+                if debut_zone + deb < k + 1 and k < debut_zone + fin:
+                    actives.add(tache.id)
+        n = sum(eff.get(i, 0) for i in actives)
+        if n:                      # l'encadrement n'est la que si une equipe l'est
             n += base["chef_equipe"] + base["grutier"]
-        jours.append({"j": k, "n": n})
+        jours.append({"j": k, "n": n, "taches": sorted(actives)})
     return jours
+
+
+def etat_physique_de_zone(q: dict, reseau: list[Tache], frac_cycle: float) -> dict:
+    """Ce qui est REELLEMENT fait dans une zone a une fraction de son cycle.
+
+    Le reflexe est de prendre un prorata uniforme : « la zone est a 60 %, donc 60 % du
+    beton, 60 % de l'acier, 60 % du coffrage ». C'est impossible, et le cycle du module
+    le dit lui-meme : a 60 % du cycle, le betonnage n'a pas commence. Un avancement se
+    DERIVE du reseau, poste par poste ; il ne se repartit pas.
+
+    Chaque poste est rattache a la tache qui le produit, et son avancement est celui de
+    cette tache a la date voulue.
+    """
+    r = voie_A_parcours(reseau)
+    cycle = max(f for _, f in r["tot"].values())
+    t_x = frac_cycle * cycle
+
+    def avancement(cle):
+        deb, fin = r["tot"][cle]
+        if t_x >= fin:
+            return 1.0
+        if t_x <= deb:
+            return 0.0
+        return (t_x - deb) / (fin - deb)
+
+    # le coffrage est POSE pendant COF : des que COF est finie, il est entierement en place
+    a_cof, a_fep, a_fed, a_bet = (avancement(x) for x in ("COF", "FEP", "FED", "BET"))
+    return {
+        "fraction_du_cycle": round(frac_cycle, 3),
+        "date_dans_le_cycle_j": round(t_x, 2),
+        "avancement_par_tache": {"COF": round(a_cof, 3), "FEP": round(a_fep, 3),
+                                 "FED": round(a_fed, 3), "BET": round(a_bet, 3)},
+        "coffrage_m2": round(q["coffrage_m2"] * a_cof, 1),
+        "acier_kg": round(q["acier_poutres_kg"] * a_fep + q["acier_dalle_kg"] * a_fed),
+        "beton_m3": round(q["beton_m3"] * a_bet, 1),
+        "prorata_uniforme_serait": {
+            "coffrage_m2": round(q["coffrage_m2"] * frac_cycle, 1),
+            "acier_kg": round(q["acier_kg"] * frac_cycle),
+            "beton_m3": round(q["beton_m3"] * frac_cycle, 1),
+        },
+    }
 
 
 def cout_zone(d: dict, q: dict, t: dict) -> dict:
@@ -283,7 +357,7 @@ if __name__ == "__main__":
     cout = cout_zone(d, q, t)
     duree_zone = cc["voie_A_parcours_avant_arriere_j"]
     # la cadence de rotation : une zone tous les N jours, bornee par la tache la plus longue
-    regle_cadence = cadence_rotation(t)
+    regle_cadence = cadence_rotation(t, d["cycle_zone"], d["materiel"]["nb_grues"])
     cadence = round(regle_cadence["cadence_j"], 1)
     plan = planning_chantier(d, duree_zone, cadence)
 
@@ -340,7 +414,8 @@ if __name__ == "__main__":
     effectifs_jour = histogramme_plancher(d, reseau, plan["debuts"], plan["duree_totale_j"])
     _rz = voie_A_parcours(reseau)
     # --- variantes des exercices : leurs valeurs attendues sont CALCULEES, plus affirmees
-    def variante_effectif(n_ferr_dalle, n_ferr_poutres=None):
+    def variante_effectif(n_ferr_dalle, n_ferr_poutres=None, n_grues=None):
+        n_grues = n_grues or d["materiel"]["nb_grues"]
         e2 = dict(d["effectifs"]); e2["ferrailleurs_dalle"] = n_ferr_dalle
         if n_ferr_poutres is not None:
             e2["ferrailleurs_poutres"] = n_ferr_poutres
@@ -348,7 +423,7 @@ if __name__ == "__main__":
         t2 = durees_taches(d2, q)
         cc2 = contre_calcul(reseau_zone(t2, d["cycle_zone"]))
         dz = cc2["voie_A_parcours_avant_arriere_j"]
-        rc2 = cadence_rotation(t2)
+        rc2 = cadence_rotation(t2, d["cycle_zone"], n_grues)
         cad = rc2["cadence_j"]
         pl = planning_chantier(d, dz, cad)
         # meme construction que l'histogramme publie : sur les DATES du reseau, et non
@@ -363,6 +438,9 @@ if __name__ == "__main__":
         mobilise = round(simultanees * q["coffrage_m2"])
         stock = d["materiel"]["tables_coffrantes_m2"]
         return {"ferrailleurs_dalle": n_ferr_dalle,
+                "nb_grues": n_grues,
+                "borne_theorique_j": rc2["borne_theorique_j"],
+                "ressource_qui_borne": rc2["ressource_qui_borne"],
                 "ferrailleurs_poutres": e2["ferrailleurs_poutres"],
                 "ferraillage_poutres_j": round(t2["ferraillage_poutres_j"], 2),
                 "tache_qui_borne_la_cadence": rc2["tache_qui_borne"],
@@ -385,6 +463,9 @@ if __name__ == "__main__":
         "effectif_renforce": variante_effectif(12),
         # Renforcer les DEUX equipes de ferraillage : la seule variante qui tienne.
         "effectif_renforce_deux_equipes": variante_effectif(12, 6),
+        # Les equipes renforcees, la GRUE devient la ressource qui borne : c'est le
+        # dernier levier, et le seul qui atteigne la cible.
+        "deux_equipes_et_deux_grues": variante_effectif(12, 6, 2),
         "sous_estimation_si_coffrage_egale_surface_pct": round(
             (q["coffrage_m2"] - q["surface_m2"]) / q["coffrage_m2"] * 100, 1),
     }
@@ -396,25 +477,58 @@ if __name__ == "__main__":
     # d'etais, et c'est l'erreur que le module enseigne par ailleurs a ne pas commettre.
     etais_zone = q["surface_m2"] * d["materiel"]["etais_par_m2"]
     maintien = d["materiel"]["etais_de_reprise_maintenus_j"]["valeur"]
-    zones_etayees = max(1, math.ceil(
-        (duree_zone + maintien) / plan["cadence_zone_j"]))
+    # borne par le nombre de zones : sans elle, un maintien d'etais au haut de sa propre
+    # fourchette faisait publier « 11 zones etayees » sur un plancher qui en compte 8
+    _brut = math.ceil((duree_zone + maintien) / plan["cadence_zone_j"])
+    zones_etayees = max(1, min(plan["nb_zones"], _brut))
+    etais_satures = _brut > plan["nb_zones"]
     coherence_materiel = {
         "zones_coffrees_simultanement": _ref["zones_coffrees_simultanement"],
         "coffrage_mobilise_m2": _ref["coffrage_mobilise_m2"],
         "stock_declare_m2": _ref["stock_coffrage_declare_m2"],
         "marge_m2": _ref["stock_coffrage_declare_m2"] - _ref["coffrage_mobilise_m2"],
         "zones_etayees_simultanement": zones_etayees,
+        "zones_etayees_avant_bornage": _brut,
+        "tout_le_plancher_est_etaye": etais_satures,
         "etais_necessaires": round(zones_etayees * etais_zone),
         "etais_si_on_ne_comptait_que_les_zones_coffrees": round(
             _ref["zones_coffrees_simultanement"] * etais_zone),
+        "rapport_etais": round(zones_etayees / _ref["zones_coffrees_simultanement"], 2),
         "duree_de_maintien_des_etais_de_reprise_j": maintien,
-        "verdict": ("OK" if _ref["coffrage_suffisant"]
-                    else "LE PLANNING DEMANDE PLUS DE COFFRAGE QUE LE PARC DECLARE"),
+        "verdict": ("LE PLANNING DEMANDE PLUS DE COFFRAGE QUE LE PARC DECLARE"
+                    if not _ref["coffrage_suffisant"] else
+                    "ETAIEMENT SATURE : aucune zone n'est liberee avant la fin du plancher"
+                    if etais_satures else "OK"),
         "regle": (
             "Le coffrage d'une zone est immobilise pendant un cycle entier. Le nombre de "
             "zones qui en detiennent en meme temps vaut ceil(cycle / cadence). Reduire la "
             "cadence sans ajouter de tables est impossible : c'est la contrainte que les "
             "plannings de rotation oublient le plus souvent."
+        ),
+    }
+
+    # --- etat PHYSIQUE a la date d'arret : ce qui est reellement fait, poste par poste.
+    # Un avancement se derive du reseau ; il ne se repartit pas au prorata.
+    _etat = etat_physique_de_zone(q, reseau, s_["avancement_zone_en_cours_pct"] / 100.0)
+    _nz = s_["zones_realisees_a_date"]
+    avancement_physique = {
+        "zones_completes": _nz,
+        "zone_en_cours": _etat,
+        "quantites_faites": {
+            "beton_m3": round(_nz * q["beton_m3"] + _etat["beton_m3"], 1),
+            "coffrage_m2": round(_nz * q["coffrage_m2"] + _etat["coffrage_m2"], 1),
+            "acier_kg": round(_nz * q["acier_kg"] + _etat["acier_kg"]),
+        },
+        "quantites_si_prorata_uniforme": {
+            "beton_m3": round((_nz + _etat["fraction_du_cycle"]) * q["beton_m3"], 1),
+            "coffrage_m2": round((_nz + _etat["fraction_du_cycle"]) * q["coffrage_m2"], 1),
+            "acier_kg": round((_nz + _etat["fraction_du_cycle"]) * q["acier_kg"]),
+        },
+        "lecture": (
+            "Le prorata uniforme est impossible : a cette date, le betonnage de la zone "
+            "en cours n'a pas commence et son coffrage est entierement pose. Les deux "
+            "colonnes different de plus de 60 % sur le beton et sur le coffrage, pour un "
+            "meme avancement declare."
         ),
     }
 
@@ -445,10 +559,25 @@ if __name__ == "__main__":
         "double_compte_MAD": round(_mo),
         "ratio_coffrage_de_la_situation": round(
             (q["coffrage_m2"] * frac) / (q["surface_m2"] * frac), 3),
+        # Ce que la situation presentee demande en trop ou en moins, poste par poste,
+        # une fois confrontee a l'etat que le RESEAU prevoit a la meme date.
+        "confrontation_au_reseau": {
+            "beton_m3_reel": _etat["beton_m3"],
+            "beton_m3_demande": round(q["beton_m3"] * frac, 1),
+            "beton_MAD_demande_en_trop": round(
+                (q["beton_m3"] * frac - _etat["beton_m3"]) * p_["beton_m3"]["valeur"]),
+            "coffrage_m2_reel": _etat["coffrage_m2"],
+            "coffrage_m2_demande": round(q["coffrage_m2"] * frac, 1),
+            "coffrage_MAD_non_demande": round(
+                (_etat["coffrage_m2"] - q["coffrage_m2"] * frac) * p_["coffrage_m2"]["valeur"]),
+            "acier_kg_reel": _etat["acier_kg"],
+            "acier_kg_demande": round(q["acier_kg"] * frac),
+        },
     }
 
     res = {
         "quantites": q, "durees": t, "variantes": res_variantes,
+        "avancement_physique": avancement_physique,
         "situation_exercice": situation,
         "regle_cadence": regle_cadence,
         "coherence_materiel": coherence_materiel,
@@ -459,9 +588,14 @@ if __name__ == "__main__":
                       f"jour {jour_arret:.0f}, soit le {((jour_arret - 1) % 5) + 1:.0f}ᵉ jour "
                       f"de la semaine {math.floor((jour_arret - 1) / 5) + 1:.0f}")},
         "figures": {
-            "zones": {"avancement_prevu": [
-                          round(min(1.0, max(0.0, (jour_arret - plan["debuts"]["Z%d" % (i + 1)])
-                                             / duree_zone)), 2)
+            # Etat PREVU par zone, en categories et non en fraction. Une fraction de
+            # TEMPS portee sur un axe de LONGUEUR ne veut rien dire : une zone a 63 % de
+            # son cycle n'est pas construite sur 63 % de sa longueur — elle est coffree
+            # en entier et pas betonnee du tout (c'est tout l'objet du § S6).
+            "zones": {"etat_prevu": [
+                          ("faite" if jour_arret >= plan["debuts"]["Z%d" % (i + 1)] + duree_zone
+                           else "en_cours" if jour_arret > plan["debuts"]["Z%d" % (i + 1)]
+                           else "a_venir")
                           for i in range(plan["nb_zones"])],
                       "longueur_m": z["longueur_zone_m"], "largeur_m": z["largeur_zone_m"],
                       "nb_zones": z["nb_zones"], "entraxe_poutres_m": poutre["entraxe_m"],

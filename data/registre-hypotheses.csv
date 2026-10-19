@@ -10,10 +10,19 @@ H008;cadence de coffrage de dalle;30 m²/j/compagnon;m²/j;25 à 35;2026;TV;tabl
 H009;cadence de ferraillage de dalle;300 kg/j/compagnon;kg/j;250 à 400;2026;TV;treillis et chapeaux, pose à plat
 H010;cadence de ferraillage de poutre;150 kg/j/compagnon;kg/j;120 à 180;2026;TV;cages, façonnage et pose en place
 H011;cadence de bétonnage;30 m³/h;m³/h;25 à 40;2026;TV;pompe à béton, équipe complète
-H012;prix du béton posé;1 250 MAD/m³;MAD/m³;1 100 à 1 450;2026;TV;béton prêt à l'emploi, pompé, mis en œuvre
-H013;prix de l'acier posé;17 MAD/kg;MAD/kg;14 à 20;2026;TV;acier HA façonné et posé
-H014;prix du coffrage posé;180 MAD/m²;MAD/m²;150 à 220;2026;TV;tables et étaiement, amortissement inclus
-H015;prix horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;TV;compagnon nu, charges comprises, sans encadrement
-H016;part de main d'œuvre directe dans un prix posé;15 à 30 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris
-H017;parc de tables coffrantes du chantier;1 300 m²;m²;1 000 à 1 500;2026;TV;parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori
-H018;maintien des étais de reprise après décoffrage;14 jours;j;7 à 28;2026;TV;le critère réel est une résistance et une redistribution de charges, pas une durée , aucune valeur normative n'est disponible en § 5.0
+H012;rendement d'équipe au coffrage;232 m²/j;m²/j;190 à 280;2026;TV;rendement d'équipe complète, déclaré séparément de la cadence unitaire pour servir de seconde voie
+H013;rives de dalle et abouts de zone;4 %;%;2 à 8;2026;TV;en pourcentage de la surface coffrée
+H014;part de main d'œuvre directe dans un prix posé;22 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris , sert à recouper le prix horaire et les prix unitaires
+H015;prix du béton posé;1 250 MAD/m³;MAD/m³;1 100 à 1 450;2026;TV;béton prêt à l'emploi, pompé, mis en œuvre
+H016;prix de l'acier posé;17 MAD/kg;MAD/kg;14 à 20;2026;TV;acier HA façonné et posé
+H017;prix du coffrage posé;180 MAD/m²;MAD/m²;150 à 220;2026;TV;tables et étaiement, amortissement inclus
+H018;prix horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;TV;compagnon nu, charges comprises, sans encadrement
+H019;part de main d'œuvre directe dans un prix posé;15 à 30 %;%;15 à 30;2026;TV;gros œuvre, prix posé tout compris
+H020;cure avant décoffrage;2 jours;j;1 à 4;2026;TV;le critère réel est une résistance, pas une durée , aucune valeur normative n'est disponible en § 5.0
+H021;durée du décoffrage d'une zone;0,5 jour;j;0,25 à 1;2026;TV;dépose des tables, étais de reprise maintenus
+H022;durée du point d'arrêt de visa du ferraillage;0,25 jour;j;0,125 à 0,5;2026;TV;visa de la maîtrise d'œuvre avant coulage : un point d'arrêt est une tâche du planning
+H023;recouvrement coffrage / ferraillage des poutres;50 %;%;30 à 70;2026;TV;part du coffrage faite avant que le ferraillage des poutres démarre
+H024;recouvrement ferraillage des poutres / de la dalle;40 %;%;20 à 60;2026;TV;part du ferraillage des poutres faite avant que celui de la dalle démarre
+H025;marge de rotation sur la borne théorique;14 %;%;0 à 30;2026;TV;écart entre la borne de saturation des équipes et la cadence annoncée , à zéro, le planning est théoriquement faisable et pratiquement intenable
+H026;parc de tables coffrantes du chantier;1 300 m²;m²;1 000 à 1 500;2026;TV;parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori
+H027;maintien des étais de reprise après décoffrage;14 jours;j;7 à 28;2026;TV;le critère réel est une résistance et une redistribution de charges, pas une durée , aucune valeur normative n'est disponible en § 5.0
