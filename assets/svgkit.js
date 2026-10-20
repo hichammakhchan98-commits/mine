@@ -231,8 +231,15 @@
     const lig = 24, L = o.largeur || 700;
     // la colonne d'etiquettes se dimensionne sur le nom le plus long, au lieu d'une
     // largeur fixe qui tronquait les libelles
-    const lab = o.labels || Math.min(300, Math.max(140,
-      Math.round(Math.max(...taches.map((t) => t.nom.length)) * 6.3) + 16));
+    // Largeur d'etiquette plafonnee a 300 px : au-dela, le libelle est RACCOURCI
+    // ici meme, avec une ellipse. Plafonner la colonne sans raccourcir le texte le
+    // faisait deborder par la gauche et sortir de la vue : « PSOU · Raccordement du
+    // passage souterrain » s'affichait « SOU · Raccordement… ».
+    const PLAFOND = 300, PAR_CAR = 6.3;
+    const lab = o.labels || Math.min(PLAFOND, Math.max(140,
+      Math.round(Math.max(...taches.map((t) => t.nom.length)) * PAR_CAR) + 16));
+    const nCarMax = Math.floor((lab - 14) / PAR_CAR);
+    const court = (n) => (n.length <= nCarMax ? n : n.slice(0, Math.max(3, nCarMax - 1)) + "…");
     const H = 52 + taches.length * lig;
     const fin = Math.max(...taches.map((t) => t.debut + t.duree)) || 1;
     const k = (L - lab - 60) / fin;        // 60 : place pour l'etiquette de duree a droite
@@ -252,7 +259,7 @@
     g += texte(lab - 8, 28, "jour", { taille: 9.5, ancre: "end", couleur: "#6b7682" });
     taches.forEach((t, i) => {
       const y = 42 + i * lig;
-      g += texte(lab - 10, y + 7, t.nom, { taille: 11, ancre: "end" });
+      g += texte(lab - 10, y + 7, court(t.nom), { taille: 11, ancre: "end" });
       g += rect(X(t.debut), y, Math.max(2, ech(t.duree * k)), 13,
         { remplissage: t.critique ? "#8c3b2e" : "#41607d", couleur: "none", ep: 0, rayon: 2 });
       // format UNIFORME : deux decimales partout. Melanger « 1,77 j » et « 3 j » dans
@@ -285,6 +292,14 @@
       return chemin(q.map((p, i) => `${i ? "L" : "M"}${r.x(p.j)} ${r.y(p[cle])}`).join(" "),
         { couleur: coul, ep: 2, tirets, jointure: "round" });
     };
+    // Les paliers sont fournis par calc/ (il les CHERCHE), jamais devines par la
+    // legende : la version precedente commentait un palier qui n'etait pas celui-la.
+    for (const pal of (o.paliers || [])) {
+      g += rect(r.x(pal.de_j), r.y(100), r.x(pal.a_j) - r.x(pal.de_j), r.y(0) - r.y(100),
+        { remplissage: "#e9e6de", couleur: "none", ep: 0 });
+      g += texte((r.x(pal.de_j) + r.x(pal.a_j)) / 2, r.y(100) - 4, pal.etiquette || "palier",
+        { taille: 8.5, mono: 1, ancre: "middle", couleur: "#8a7f66" });
+    }
     g += trace("prevu", "#41607d", "6 4");
     g += trace("realise", "#8c3b2e", null);
     // le constat : un point, un trait d'aplomb jusqu'a la courbe prevue, et l'ecart cote
@@ -319,10 +334,13 @@
     const yl = 20;
     g += ligne(L - 150, yl, L - 126, yl, { couleur: "#41607d", ep: 2, tirets: "6 4" });
     g += texte(L - 120, yl + 3.5, "prévu", { taille: 10.5, couleur: "#3f4852" });
+    // Chaque entree de legende doit exister dans le dessin (§ 8). La version
+    // precedente dessinait toujours « realise », meme sans aucune serie realisee :
+    // une entree orpheline, que le controle de legende du build ne voyait pas.
     if (constat) {
       g += cercle(L - 68, yl, 4.5, { remplissage: "#8c3b2e", couleur: "#ffffff", ep: 1.5 });
       g += texte(L - 58, yl + 3.5, "constat", { taille: 10.5, couleur: "#3f4852" });
-    } else {
+    } else if (pts.filter((p) => p.realise != null).length >= 2) {
       g += ligne(L - 74, yl, L - 50, yl, { couleur: "#8c3b2e", ep: 2 });
       g += texte(L - 44, yl + 3.5, "réalisé", { taille: 10.5, couleur: "#3f4852" });
     }
@@ -330,9 +348,14 @@
   }
 
   /** Histogramme d'effectifs : {j, n}. */
+  /** Histogramme d'effectifs. `serie2` superpose un CONTOUR (planning lisse) : la
+      legende du module l'annoncait, et le generateur ne le dessinait pas. `moyenne`
+      vient de calc/ : la version precedente la recalculait ici sur tous les jours,
+      et contredisait la moyenne sur les jours travailles publiee a cote. */
   function histogramme(pts, o = {}) {
     const L = o.largeur || 620, H = o.hauteur || 220;
-    const nmax = Math.max(...pts.map((p) => p.n)) || 1;
+    const s2 = Array.isArray(o.serie2) ? o.serie2 : null;
+    const nmax = Math.max(...pts.map((p) => p.n), ...(s2 || []).map((p) => p.n)) || 1;
     const r = repere({ largeur: L, hauteur: H, marge: 44, libre: true,
       xmin: 0, xmax: pts.length, ymin: 0, ymax: nmax * 1.1 });
     const l = (r.x(1) - r.x(0)) * .82;
@@ -353,20 +376,57 @@
       g += texte(r.x(0) - 8, r.y(v), String(v),
         { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
     }
-    // l'unite se pose DANS le cadre : ancree a gauche de l'axe, elle sortait de la vue
-    g += texte(r.x(0) + 2, r.y(nmax) + 10, o.unite || "personnes",
-      { taille: 9, ancre: "start", couleur: "#6b7682" });
+    // Les deux etiquettes flottantes — l'unite et la moyenne — se posent du cote le
+    // PLUS VIDE de l'histogramme. Posees toujours a gauche, elles se superposaient aux
+    // barres sur un profil charge au debut ; posees toujours a droite, sur un profil
+    // charge a la fin. Le cote se choisit donc sur les donnees.
+    const n4 = Math.max(1, Math.round(pts.length / 4));
+    const chargeG = pts.slice(0, n4).reduce((a, x) => a + x.n, 0) / n4;
+    const chargeD = pts.slice(-n4).reduce((a, x) => a + x.n, 0) / n4;
+    const aGauche = chargeG <= chargeD;
+    const xEtq = aGauche ? r.x(0) + 4 : r.x(pts.length) - 4;
+    const ancreEtq = aGauche ? "start" : "end";
+    const yUnite = r.y(nmax) + 10;
     // la pointe est cotee : c'est le nombre que la legende demande de lire
     const iMax = pts.findIndex((p) => p.n === nmax);
     g += ligne(r.x(iMax) + l / 2, r.y(nmax) - 6, r.x(iMax) + l / 2, r.y(nmax) - 16,
       { couleur: "#8c3b2e", ep: 1 });
     g += texte(r.x(iMax) + l / 2, r.y(nmax) - 21, `pointe ${nmax}`,
       { taille: 9.5, mono: 1, ancre: "middle", couleur: "#8c3b2e" });
-    const moy = pts.reduce((a, p) => a + p.n, 0) / pts.length;
-    g += ligne(r.x(0), r.y(moy), r.x(pts.length), r.y(moy), { couleur: "#8c3b2e", ep: 1.2, tirets: "5 4" });
-    g += texte(r.x(pts.length) - 4, r.y(moy) - 5, `moyenne ${moy.toFixed(1).replace(".", ",")}`,
-      { taille: 9.5, mono: 1, ancre: "end", couleur: "#8c3b2e" });
-    return { svg: g, largeur: L, hauteur: H };
+    // ... et l'etiquette d'unite descend d'une ligne si la cote de pointe la croise
+    const xPointe = r.x(iMax) + l / 2;
+    const croise = Math.abs(xPointe - xEtq) < 90;
+    g += texte(xEtq, yUnite + (croise ? 14 : 0), o.unite || "personnes",
+      { taille: 9, ancre: ancreEtq, couleur: "#6b7682" });
+    // Contour de la seconde serie : trace APRES les barres, pour rester lisible.
+    if (s2) {
+      let d = "";
+      s2.forEach((p, i) => {
+        const x0 = r.x(i) + l * .11, x1 = x0 + l;
+        d += `${i ? "L" : "M"}${x0.toFixed(1)} ${r.y(p.n).toFixed(1)}L${x1.toFixed(1)} ${r.y(p.n).toFixed(1)}`;
+      });
+      g += chemin(d, { couleur: "#8c3b2e", ep: 1.6, remplissage: "none" });
+      // deux pastilles de serie, posees sous l'axe : la signature de `legende` est
+      // (x, y, entrees, options), et non (entrees, position)
+      g += rect(r.x(0) + 2, H - 20, 14, 7, { remplissage: "#41607d", couleur: "none", ep: 0 });
+      g += texte(r.x(0) + 21, H - 13, o.nom1 || "avant lissage", { taille: 10, couleur: "#3f4852" });
+      const x2 = r.x(0) + 26 + (o.nom1 || "avant lissage").length * 5.6;
+      g += ligne(x2, H - 16.5, x2 + 16, H - 16.5, { couleur: "#8c3b2e", ep: 1.8 });
+      g += texte(x2 + 21, H - 13, o.nom2 || "apres lissage", { taille: 10, couleur: "#3f4852" });
+    }
+    // La moyenne n'est PAS recalculee ici : elle est fournie par calc/, avec sa
+    // definition. Deux definitions differentes du meme mot dans une meme page, c'est
+    // le defaut que la passe adversariale de D2 a trouve (B3).
+    if (o.moyenne != null) {
+      const moy = o.moyenne;
+      g += ligne(r.x(0), r.y(moy), r.x(pts.length), r.y(moy), { couleur: "#5d6b3a", ep: 1.2, tirets: "5 4" });
+      // Etiquette posee AU DEBUT de la ligne, juste au-dessus : a droite, elle se
+      // superposait aux barres de fin de chantier et devenait illisible.
+      g += texte(xEtq, r.y(moy) - 5,
+        `${o.libelle_moyenne || "moyenne"} ${String(moy).replace(".", ",")}`,
+        { taille: 9.5, mono: 1, ancre: ancreEtq, couleur: "#5d6b3a" });
+    }
+    return { svg: g, largeur: L, hauteur: H + (s2 ? 26 : 0) };
   }
 
   /**
@@ -549,7 +609,7 @@
         g += ligne(cx, y - 6, cx, y, { couleur: "#d5d7d1", ep: 1 });
         g += rect(x, y, boite, lig - 6, { remplissage: TEINTE[t.famille], couleur: BORD[t.famille], ep: 1, rayon: 3 });
         g += texte(x + 5, y + (lig - 6) / 2, t.id, { taille: 9, mono: 1, base: "middle", couleur: BORD[t.famille] });
-        g += texte(x + boite - 5, y + (lig - 6) / 2, `${Number(t.duree).toFixed(0)} j`,
+        g += texte(x + boite - 5, y + (lig - 6) / 2, `${Number(t.duree).toFixed(1).replace(".", ",")} j`,
           { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: BORD[t.famille] });
       });
     });
@@ -560,54 +620,81 @@
       Le chemin critique est trace en brique et en trait epais ; les autres liens en
       gris fin. Une fleche qui remonte est impossible : si le trace en montre une,
       le reseau contient un circuit. */
+  /** Reseau de taches par rang topologique. Les rangs se replient en SERPENTIN quand
+      ils ne tiennent pas en largeur : une rangee unique de neuf rangs superposait les
+      boites et faisait passer les liens derriere elles — un reseau qui ne montrait plus
+      ses dependances, ce qui est tout ce qu'un reseau a a montrer. */
   function reseau(z, o = {}) {
-    // la directive :::figure n'appelle un generateur qu'avec (args, options) : le reseau
-    // recoit donc ses noeuds ET ses liens dans un seul objet
     const noeuds = Array.isArray(z) ? z : z.noeuds;
     const liens = Array.isArray(z) ? (o.liens || []) : z.liens;
-    const L = o.largeur || 760, lB = 86, hB = 30;
+    const L = o.largeur || 940, lB = 96, hB = 34, gapX = 34, gapY = 30;
     const pred = {}; noeuds.forEach((n) => pred[n.id] = []);
     liens.forEach((l) => { if (pred[l.vers]) pred[l.vers].push(l.de); });
     const rang = {};
-    const calc = (id, vus) => {
+    const calcRang = (id, vus) => {
       if (rang[id] != null) return rang[id];
       if (vus.includes(id)) return 0;
-      const r = pred[id].length ? Math.max(...pred[id].map((p) => calc(p, vus.concat(id)) + 1)) : 0;
+      const r = pred[id].length ? Math.max(...pred[id].map((p) => calcRang(p, vus.concat(id)) + 1)) : 0;
       rang[id] = r; return r;
     };
-    noeuds.forEach((n) => calc(n.id, []));
+    noeuds.forEach((n) => calcRang(n.id, []));
     const cols = {};
     noeuds.forEach((n) => (cols[rang[n.id]] = cols[rang[n.id]] || []).push(n));
-    const nCol = Math.max(...Object.keys(cols).map(Number)) + 1;
-    const hMax = Math.max(...Object.values(cols).map((c) => c.length));
-    const pasX = (L - lB - 16) / Math.max(1, nCol - 1), pasY = hB + 16;
-    const H = 24 + hMax * pasY;
-    const pos = {};
-    Object.entries(cols).forEach(([r, ns]) => ns.forEach((n, k) => {
-      pos[n.id] = { x: 8 + Number(r) * pasX, y: 12 + k * pasY + (hMax - ns.length) * pasY / 2 };
-    }));
+    const rangs = Object.keys(cols).map(Number).sort((a, b) => a - b);
+    // combien de rangs tiennent sur une rangee, et donc combien de rangees
+    const parRangee = Math.max(2, Math.floor((L - 16 + gapX) / (lB + gapX)));
+    const rangees = [];
+    for (let i = 0; i < rangs.length; i += parRangee) rangees.push(rangs.slice(i, i + parRangee));
+    const hRangee = (rs) => Math.max(...rs.map((r) => cols[r].length)) * (hB + 14);
+
+    const pos = {}; let y0 = 12, H = 12;
+    rangees.forEach((rs) => {
+      const h = hRangee(rs);
+      rs.forEach((r, k) => {
+        const ns = cols[r], dec = (h - ns.length * (hB + 14)) / 2;
+        ns.forEach((n, j) => {
+          pos[n.id] = { x: 8 + k * (lB + gapX), y: y0 + dec + j * (hB + 14) };
+        });
+      });
+      y0 += h + gapY; H = y0;
+    });
+    H += 6;
+
     let g = "";
+    // Les liens sont traces AVANT les boites, et routes PAR LE DESSUS quand ils
+    // changent de rangee : sous les boites, une fleche ne se voit pas.
     liens.forEach((l) => {
       const a = pos[l.de], b = pos[l.vers];
       if (!a || !b) return;
       const crit = l.critique;
-      g += chemin(`M${ech(a.x + lB)} ${ech(a.y + hB / 2)} C${ech(a.x + lB + pasX * .3)} ${ech(a.y + hB / 2)} ${ech(b.x - pasX * .3)} ${ech(b.y + hB / 2)} ${ech(b.x)} ${ech(b.y + hB / 2)}`,
-        { couleur: crit ? "#8c3b2e" : "#c4c7c0", ep: crit ? 1.8 : 1, remplissage: "none" });
+      const style = { couleur: crit ? "#8c3b2e" : "#8e948b", ep: crit ? 1.8 : 1.1,
+                      remplissage: "none", marqueur: 1 };
+      const ax = a.x + lB, ay = a.y + hB / 2, bx = b.x, by = b.y + hB / 2;
+      if (bx >= ax) {
+        const dx = Math.max(16, (bx - ax) * .5);
+        g += chemin(`M${ech(ax)} ${ech(ay)} C${ech(ax + dx)} ${ech(ay)} ${ech(bx - dx)} ${ech(by)} ${ech(bx)} ${ech(by)}`, style);
+      } else {
+        // retour a la ligne : on sort a droite, on descend entre les rangees, on rentre a gauche
+        const yMid = (a.y + hB + b.y) / 2;
+        g += chemin(`M${ech(ax)} ${ech(ay)} L${ech(ax + 14)} ${ech(ay)} L${ech(ax + 14)} ${ech(yMid)} `
+          + `L${ech(bx - 14)} ${ech(yMid)} L${ech(bx - 14)} ${ech(by)} L${ech(bx)} ${ech(by)}`, style);
+      }
     });
     noeuds.forEach((n) => {
       const p = pos[n.id];
       g += rect(p.x, p.y, lB, hB, {
         remplissage: n.critique ? "#f3d9d4" : "#f1f1ed",
         couleur: n.critique ? "#8c3b2e" : "#a8aca4", ep: n.critique ? 1.6 : 1, rayon: 3 });
-      g += texte(p.x + 6, p.y + 11, n.id, { taille: 9.5, mono: 1, gras: 1, base: "middle",
+      g += texte(p.x + 6, p.y + 12, n.id, { taille: 9.5, mono: 1, gras: 1, base: "middle",
         couleur: n.critique ? "#8c3b2e" : "#14181d" });
-      g += texte(p.x + lB - 6, p.y + 11, `${Number(n.duree).toFixed(0)} j`,
+      g += texte(p.x + lB - 6, p.y + 12, `${Number(n.duree).toFixed(0)} j`,
         { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
-      g += texte(p.x + 6, p.y + 22, n.marge > 0 ? `marge ${Number(n.marge).toFixed(0)} j` : "critique",
+      g += texte(p.x + 6, p.y + 25, n.marge > 0 ? `marge ${Number(n.marge).toFixed(0)} j` : "critique",
         { taille: 8.5, mono: 1, base: "middle", couleur: n.critique ? "#8c3b2e" : "#6b7682" });
     });
     return { svg: g, largeur: L, hauteur: H };
   }
+
 
   /** Ligne d'equilibre : le temps en abscisse, les zones en ordonnee.
       Une tache repetitive y devient une DROITE dont la pente est la cadence. Deux
@@ -667,9 +754,30 @@
       legendeImplicite: etapes.map((e, i) => ({ n: i + 1, t: String(e) })) };
   }
 
+  /* Options acceptees par chaque generateur. Le build ECHOUE sur une option inconnue :
+     la legende d'une figure de D2 annoncait une serie que le generateur ne connaissait
+     pas, l'option etait ignoree en silence, et la figure ne montrait pas ce que la
+     legende promettait. Une option ignoree est un defaut, pas une tolerance. */
+  const OPTIONS_COMMUNES = ["largeur", "hauteur", "unite", "titre"];
+  const OPTIONS = {
+    coupeSection: ["cotes", "aciers", "enrobage"],
+    elevationPoutre: ["appuis", "cotes", "aciers"],
+    diagramme: ["couleur", "remplissage", "zero", "nom"],
+    gantt: ["labels", "jalons"],
+    courbeS: ["paliers"],
+    histogramme: ["serie2", "moyenne", "libelle_moyenne", "nom1", "nom2"],
+    sequence: [],
+    planZones: ["etat", "legendeEtats"],
+    rotation: ["zones", "cycle"],
+    wbs: ["racine", "couleurs"],
+    reseau: ["rangs"],
+    ligneEquilibre: ["zones"],
+  };
+
   const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
     coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence,
-    planZones, rotation, wbs, reseau, ligneEquilibre, MOTIFS, ech };
+    planZones, rotation, wbs, reseau, ligneEquilibre, MOTIFS, ech,
+    OPTIONS, OPTIONS_COMMUNES };
 
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   racine.SVGKit = API;

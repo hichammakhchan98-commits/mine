@@ -97,8 +97,41 @@ function directive(nom, o, corps, ctx) {
       nFigure++;
       const num = o.num ?? nFigure;
       if (!SVGKit[o.fn]) throw new Error(`figure ${num} : fonction svgkit inconnue « ${o.fn} »`);
+      // Une cle inconnue est un DEFAUT, pas une tolerance : une directive de D2
+      // passait « serie2 » au premier niveau, le generateur ne le voyait pas, et la
+      // legende promettait une serie que la figure ne dessinait pas (bloquant B2).
+      const CLES_FIGURE = ["fn", "args", "options", "num", "titre", "alt", "legende",
+                           "motifs", "voir", "erreur", "large"];
+      const inconnues = Object.keys(o).filter((k) => !CLES_FIGURE.includes(k));
+      if (inconnues.length)
+        throw new Error(`figure ${num} : cle(s) de directive inconnue(s) « ${inconnues.join(", ")} »`
+          + ` — les options du generateur se passent dans « options »`);
+      const admises = (SVGKit.OPTIONS?.[o.fn] ?? []).concat(SVGKit.OPTIONS_COMMUNES ?? []);
+      if (SVGKit.OPTIONS && !(o.fn in SVGKit.OPTIONS))
+        throw new Error(`figure ${num} : le generateur « ${o.fn} » ne declare pas ses options`);
+      const mauvaises = Object.keys(o.options ?? {}).filter((k) => !admises.includes(k));
+      if (mauvaises.length)
+        throw new Error(`figure ${num} : option(s) « ${mauvaises.join(", ")} » inconnue(s) de `
+          + `« ${o.fn} » — admises : ${admises.join(", ")}`);
       const args = typeof o.args === "string" ? resoudre(o.args) : o.args;
-      const r = SVGKit[o.fn](args, o.options ?? {});
+      // Une OPTION peut lire data/ ou calc/ comme « args » le fait, en s'ecrivant
+      // {"$": "chemin.pointe"}. Les variables {{...}} ne conviennent pas ici : elles
+      // sont substituees sur le HTML deja compile, donc APRES le generateur, qui
+      // recevait alors le texte de la variable au lieu de sa valeur — en silence.
+      const resoudreOptions = (obj) => Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => {
+          if (v && typeof v === "object" && !Array.isArray(v) && typeof v.$ === "string") {
+            if (Object.keys(v).length !== 1)
+              throw new Error(`figure ${num} : option « ${k} » — {"$": …} ne prend pas d'autre cle`);
+            return [k, resoudre(v.$)];
+          }
+          if (typeof v === "string" && /\{\{/.test(v))
+            throw new Error(`figure ${num} : option « ${k} » contient une variable {{…}}, qui `
+              + `n'est pas resolue a cet endroit — ecrire {"$": "chemin"}`);
+          return [k, v];
+        }));
+      const opts = resoudreOptions(o.options ?? {});
+      const r = SVGKit[o.fn](args, opts);
       // La legende est placee PAR LE BUILD, sous le dessin, d'apres le nombre d'entrees.
       // Elle etait auparavant posee a une coordonnee ecrite a la main dans le contenu :
       // une cote dessinee a l'oeil, et elle debordait du cadre.

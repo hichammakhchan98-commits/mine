@@ -1,966 +1,1046 @@
 {
-  "meta": {
-    "version": "1.0",
-    "statut": "FIGE. Ne change plus sans decision consignee dans DECISIONS.md ; tout changement declenche le build complet et la revue des modules impactes (§ 10.1).",
-    "fige_le": "2026-10-15",
-    "commit_fige": "ad792eb — commit de figeage, pousse sur la branche claude/lance-etape-0-mode-b-ijn9r4. Tag local donnees-gare-v1.0 : le proxy git de ce bac a sable n'expose que refs/heads/*, les tags ne sont pas poussables ; le tag voyage dans le zip de reprise (.git inclus).",
-    "referentiel_principal": "M",
-    "referentiel_charpente": "E-gen1",
-    "normes_disponibles": false,
-    "phase": "5.0 — sans calculs normatifs",
-    "cas": "phare",
-    "date_proposition": "2026-10-15",
-    "avertissement": "Programme fictif et generique. Ne reproduit aucun projet reel. Exemple pedagogique.",
-    "validation": "« OK partout » du lecteur, 15/10/2026 — tous les defauts de l'Etape 0 acceptes"
-  },
-  "site": {
-    "option_retenue": "S1",
-    "options": {
-      "S1": {
-        "ville": "Region de Marrakech (commune peri-urbaine fictive)",
-        "sismicite_qualitative": "moderee",
-        "reclassement_2024": "la prefecture de Marrakech figure parmi les 80 communes du decret 2.24.766 (8 communes) : traiter les DEUX zonages, l'un en cas principal, l'autre en annexe comparative (§ 3.1)",
-        "zone_sismique": {
-          "acceleration": null,
-          "vitesse": null,
-          "note": "⏸ en attente des normes — a lire dans le catalogue communal officiel en vigueur, jamais de memoire"
-        },
-        "classe_sol": null,
-        "classe_sol_descriptive": "alluvions limono-sableuses denses du Haouz sur substratum conglomeratique",
-        "nappe_m": 18.0,
-        "q_adm_kPa": 250,
-        "coupe_geotechnique_V3": [
-          {
-            "de_m": 0.0,
-            "a_m": 1.2,
-            "nature": "remblais et limons de surface",
-            "SPT_N": 8
-          },
-          {
-            "de_m": 1.2,
-            "a_m": 6.5,
-            "nature": "limons sableux denses",
-            "SPT_N": 24,
-            "pressiometre_pl_MPa": 1.1,
-            "Em_MPa": 14
-          },
-          {
-            "de_m": 6.5,
-            "a_m": 14.0,
-            "nature": "sables graveleux",
-            "SPT_N": 42,
-            "pressiometre_pl_MPa": 2.4,
-            "Em_MPa": 32
-          },
-          {
-            "de_m": 14.0,
-            "a_m": 25.0,
-            "nature": "conglomerat altere puis sain",
-            "SPT_N": ">50",
-            "pressiometre_pl_MPa": 4.5,
-            "Em_MPa": 70
-          }
-        ],
-        "laboratoire_V3": {
-          "IP": 12,
-          "VBS": 0.9,
-          "gonflement": "non significatif",
-          "sulfates_mg_kg": 420,
-          "agressivite": "faible"
-        },
-        "liquefaction": "sans objet (nappe profonde, sols denses)",
-        "consequence_fondations": "fondations superficielles / radier envisageables — a confirmer par calcul apres levee du § 5.0",
-        "niveau_preuve": "V3"
-      },
-      "S2": {
-        "ville": "Agadir (site littoral fictif)",
-        "sismicite_qualitative": "forte",
-        "zone_sismique": {
-          "acceleration": null,
-          "vitesse": null,
-          "note": "⏸ en attente des normes"
-        },
-        "classe_sol": null,
-        "classe_sol_descriptive": "sables dunaires laches a moyennement denses, nappe haute",
-        "nappe_m": 3.5,
-        "q_adm_kPa": 120,
-        "coupe_geotechnique_V3": [
-          {
-            "de_m": 0.0,
-            "a_m": 4.0,
-            "nature": "sables dunaires laches",
-            "SPT_N": 11
-          },
-          {
-            "de_m": 4.0,
-            "a_m": 12.0,
-            "nature": "sables moyennement denses, saturees",
-            "SPT_N": 19,
-            "CPT_qc_MPa": 6.5
-          },
-          {
-            "de_m": 12.0,
-            "a_m": 28.0,
-            "nature": "marnes sableuses compactes",
-            "SPT_N": 45,
-            "pressiometre_pl_MPa": 2.8,
-            "Em_MPa": 40
-          }
-        ],
-        "liquefaction": "A VERIFIER — sables saturees laches sous nappe haute + sismicite forte : declencheur du volet liquefaction et interaction sol-structure (B1)",
-        "consequence_fondations": "fondations profondes (pieux fores) ou amelioration de sols (B1b) probables",
-        "interet_pedagogique": "active B1 profondes, B1b, liquefaction, ISS, corrosion en ambiance marine — le plus riche, le plus couteux",
-        "niveau_preuve": "V3"
-      },
-      "S3": {
-        "ville": "Casablanca (site fictif)",
-        "sismicite_qualitative": "faible",
-        "zone_sismique": {
-          "acceleration": null,
-          "vitesse": null,
-          "note": "⏸ en attente des normes"
-        },
-        "classe_sol": null,
-        "classe_sol_descriptive": "schistes et quartzites du socle sous faible couverture",
-        "nappe_m": 12.0,
-        "q_adm_kPa": 600,
-        "coupe_geotechnique_V3": [
-          {
-            "de_m": 0.0,
-            "a_m": 2.5,
-            "nature": "remblais et argiles de decomposition",
-            "SPT_N": 14
-          },
-          {
-            "de_m": 2.5,
-            "a_m": 8.0,
-            "nature": "schistes alteres",
-            "SPT_N": ">50",
-            "pressiometre_pl_MPa": 3.5,
-            "Em_MPa": 60
-          },
-          {
-            "de_m": 8.0,
-            "a_m": 20.0,
-            "nature": "schistes sains",
-            "pressiometre_pl_MPa": ">6",
-            "Em_MPa": 140
-          }
-        ],
-        "liquefaction": "sans objet",
-        "consequence_fondations": "semelles isolees, excavation en rocher (sautage ou BRH) pour le niveau technique",
-        "interet_pedagogique": "le plus pauvre en geotechnique et en seisme — ecarte sauf demande",
-        "niveau_preuve": "V3"
-      }
-    }
-  },
-  "geometrie": {
-    "emprise_m": [
-      120,
-      40
+ "meta": {
+  "version": "1.0",
+  "statut": "FIGE. Ne change plus sans decision consignee dans DECISIONS.md ; tout changement declenche le build complet et la revue des modules impactes (§ 10.1).",
+  "fige_le": "2026-10-15",
+  "commit_fige": "ad792eb — commit de figeage, pousse sur la branche claude/lance-etape-0-mode-b-ijn9r4. Tag local donnees-gare-v1.0 : le proxy git de ce bac a sable n'expose que refs/heads/*, les tags ne sont pas poussables ; le tag voyage dans le zip de reprise (.git inclus).",
+  "referentiel_principal": "M",
+  "referentiel_charpente": "E-gen1",
+  "normes_disponibles": false,
+  "phase": "5.0 — sans calculs normatifs",
+  "cas": "phare",
+  "date_proposition": "2026-10-15",
+  "avertissement": "Programme fictif et generique. Ne reproduit aucun projet reel. Exemple pedagogique.",
+  "validation": "« OK partout » du lecteur, 15/10/2026 — tous les defauts de l'Etape 0 acceptes"
+ },
+ "site": {
+  "option_retenue": "S1",
+  "options": {
+   "S1": {
+    "ville": "Region de Marrakech (commune peri-urbaine fictive)",
+    "sismicite_qualitative": "moderee",
+    "reclassement_2024": "la prefecture de Marrakech figure parmi les 80 communes du decret 2.24.766 (8 communes) : traiter les DEUX zonages, l'un en cas principal, l'autre en annexe comparative (§ 3.1)",
+    "zone_sismique": {
+     "acceleration": null,
+     "vitesse": null,
+     "note": "⏸ en attente des normes — a lire dans le catalogue communal officiel en vigueur, jamais de memoire"
+    },
+    "classe_sol": null,
+    "classe_sol_descriptive": "alluvions limono-sableuses denses du Haouz sur substratum conglomeratique",
+    "nappe_m": 18.0,
+    "q_adm_kPa": 250,
+    "coupe_geotechnique_V3": [
+     {
+      "de_m": 0.0,
+      "a_m": 1.2,
+      "nature": "remblais et limons de surface",
+      "SPT_N": 8
+     },
+     {
+      "de_m": 1.2,
+      "a_m": 6.5,
+      "nature": "limons sableux denses",
+      "SPT_N": 24,
+      "pressiometre_pl_MPa": 1.1,
+      "Em_MPa": 14
+     },
+     {
+      "de_m": 6.5,
+      "a_m": 14.0,
+      "nature": "sables graveleux",
+      "SPT_N": 42,
+      "pressiometre_pl_MPa": 2.4,
+      "Em_MPa": 32
+     },
+     {
+      "de_m": 14.0,
+      "a_m": 25.0,
+      "nature": "conglomerat altere puis sain",
+      "SPT_N": ">50",
+      "pressiometre_pl_MPa": 4.5,
+      "Em_MPa": 70
+     }
     ],
-    "trame_longitudinale_m": 7.5,
-    "nb_travees_longitudinales": 16,
-    "decoupage_transversal_m": {
-      "nef_laterale_cote_ville": 4.0,
-      "hall_portee_libre": 32.0,
-      "nef_laterale_cote_voies": 4.0
+    "laboratoire_V3": {
+     "IP": 12,
+     "VBS": 0.9,
+     "gonflement": "non significatif",
+     "sulfates_mg_kg": 420,
+     "agressivite": "faible"
     },
-    "niveaux": [
-      {
-        "nom": "niveau technique",
-        "altitude_m": -4.0,
-        "emprise_partielle_m": [
-          40,
-          20
-        ],
-        "usage": "locaux techniques, stockage, raccordement du passage souterrain vers les quais",
-        "h_libre_m": 3.2
-      },
-      {
-        "nom": "RDC — hall voyageurs",
-        "altitude_m": 0.0,
-        "usage": "hall double hauteur, billetterie, commerces, controle d'acces",
-        "h_libre_m": 9.0
-      },
-      {
-        "nom": "mezzanine",
-        "altitude_m": 5.0,
-        "emprise_partielle_m": [
-          120,
-          24
-        ],
-        "usage": "salles d'attente, restauration, bureaux d'exploitation",
-        "h_libre_m": 4.0
-      },
-      {
-        "nom": "sous-face de couverture",
-        "altitude_m": 12.5,
-        "usage": "treillis metalliques de couverture du hall"
-      }
+    "liquefaction": "sans objet (nappe profonde, sols denses)",
+    "consequence_fondations": "fondations superficielles / radier envisageables — a confirmer par calcul apres levee du § 5.0",
+    "niveau_preuve": "V3"
+   },
+   "S2": {
+    "ville": "Agadir (site littoral fictif)",
+    "sismicite_qualitative": "forte",
+    "zone_sismique": {
+     "acceleration": null,
+     "vitesse": null,
+     "note": "⏸ en attente des normes"
+    },
+    "classe_sol": null,
+    "classe_sol_descriptive": "sables dunaires laches a moyennement denses, nappe haute",
+    "nappe_m": 3.5,
+    "q_adm_kPa": 120,
+    "coupe_geotechnique_V3": [
+     {
+      "de_m": 0.0,
+      "a_m": 4.0,
+      "nature": "sables dunaires laches",
+      "SPT_N": 11
+     },
+     {
+      "de_m": 4.0,
+      "a_m": 12.0,
+      "nature": "sables moyennement denses, saturees",
+      "SPT_N": 19,
+      "CPT_qc_MPa": 6.5
+     },
+     {
+      "de_m": 12.0,
+      "a_m": 28.0,
+      "nature": "marnes sableuses compactes",
+      "SPT_N": 45,
+      "pressiometre_pl_MPa": 2.8,
+      "Em_MPa": 40
+     }
     ],
-    "sous_sols": 1,
-    "mezzanine": {
-      "largeur_m": 24.0,
-      "position": "bande continue le long de la facade cote voies",
-      "poutre_type_module_temoin": {
-        "id": "PM1",
-        "type": "poutre continue de plancher, 3 travees + console de marquise",
-        "travees_m": [
-          8.0,
-          8.0,
-          8.0
-        ],
-        "console_m": 4.5,
-        "entraxe_m": 7.5,
-        "section_bxh_cm": [
-          35,
-          75
-        ],
-        "note": "section = PREDIMENSIONNEMENT V3 par elancement usuel (h ~ L/11). Aucune verification reglementaire tant que le § 5.0 n'est pas leve."
-      },
-      "zones_de_coulage": {
-        "_role": "Decoupage du plancher de mezzanine en zones coulees en une fois. C'est l'unite de suivi : le cycle, le metre, le cout et l'avancement se comptent par zone.",
-        "nb_zones": 8,
-        "longueur_zone_m": 15.0,
-        "largeur_zone_m": 24.0,
-        "justification_decoupage": "15 m = 2 travees de trame (7,50 m). Une zone de 360 m2 se coule en une demi-journee de pompe et tient dans la capacite d'une equipe ; au-dela, la reprise de betonnage devient le probleme, pas la cadence.",
-        "marquise_exclue": "Le porte-a-faux de marquise (4,50 m) n'est PAS compte dans ces zones : il se coule avec la zone mais releve d'une sequence d'etaiement differente, traitee au module d'execution.",
-        "niveau_preuve": "V3"
-      }
+    "liquefaction": "A VERIFIER — sables saturees laches sous nappe haute + sismicite forte : declencheur du volet liquefaction et interaction sol-structure (B1)",
+    "consequence_fondations": "fondations profondes (pieux fores) ou amelioration de sols (B1b) probables",
+    "interet_pedagogique": "active B1 profondes, B1b, liquefaction, ISS, corrosion en ambiance marine — le plus riche, le plus couteux",
+    "niveau_preuve": "V3"
+   },
+   "S3": {
+    "ville": "Casablanca (site fictif)",
+    "sismicite_qualitative": "faible",
+    "zone_sismique": {
+     "acceleration": null,
+     "vitesse": null,
+     "note": "⏸ en attente des normes"
     },
-    "couverture_metallique": {
-      "portee_libre_m": 32.0,
-      "systeme": "treillis plans a membrures paralleles sur poteaux de rive, entraxe 7.5 m",
-      "hauteur_treillis_m": 2.2,
-      "elancement_V3": "h/L ~ 1/14.5 — ordre de grandeur de predimensionnement",
-      "couverture": "bac acier + isolation + etancheite, lanterneaux zenithaux",
-      "note": "⏸ vent, soulevement, flambement, deversement, assemblages : en attente des normes"
-    },
-    "marquise": {
-      "porte_a_faux_m": 4.5,
-      "position": "prolongement des poutres de mezzanine au-dessus du parvis cote voies",
-      "note": "console du module temoin n° 1 (§ 7.3)"
-    },
-    "circulations": {
-      "acces_quais": "passage souterrain (2 escaliers fixes + 2 escalators + 1 ascenseur par quai)",
-      "escalators": 4,
-      "ascenseurs": 3,
-      "escaliers_fixes": 4,
-      "noyaux": 2
-    },
-    "quais_desservis": 3,
-    "porte_a_faux": [
-      {
-        "element": "marquise",
-        "longueur_m": 4.5
-      }
-    ]
-  },
-  "batiment": {
-    "usage": "etablissement recevant du public — batiment voyageurs de gare a grande vitesse",
-    "effectif_public_V3": 1800,
-    "classe_importance": null,
-    "classe_importance_note": "⏸ a lire dans le RPS (classe des batiments recevant du public) — jamais de memoire",
-    "classe_exposition": null,
-    "classe_exposition_note": "⏸ a fixer avec la norme beton applicable (ambiance, carbonatation, chlorures)",
-    "resistance_feu_min": null,
-    "resistance_feu_note": "⏸ a fixer par le reglement de securite incendie applicable et le CPS",
-    "contraintes_exploitation": [
-      "exploitation ferroviaire maintenue pendant les travaux (phasage, plages horaires, consignations)",
-      "interfaces voie, quais, catenaire, signalisation, courants faibles, information voyageurs",
-      "co-activite avec les lots systemes et avec un autre maitre d'ouvrage (gestionnaire d'infrastructure)"
-    ]
-  },
-  "materiaux": {
-    "beton": {
-      "classe": null,
-      "classe_note": "⏸ en attente des normes",
-      "enrobage_mm": {},
-      "superstructure_basse": "beton arme coule en place"
-    },
-    "acier_ha": null,
-    "charpente": {
-      "nuance": null,
-      "note": "⏸ en attente des normes ; couverture en acier de construction, assemblages boulonnes de chantier"
-    },
-    "autres": {
-      "facades": "murs-rideaux vitres + panneaux isolants",
-      "couverture": "bac acier double peau"
-    }
-  },
-  "charges": {
-    "G": {},
-    "Q": {},
-    "vent": {},
-    "neige": null,
-    "sismique": {},
-    "note": "⏸ BLOQUE par le § 5.0 — aucune descente de charges, aucune combinaison avant levee"
-  },
-  "elements": {
-    "poteaux": [],
-    "poutres": [
-      {
-        "id": "PM1",
-        "ouvrage": "poutre de plancher de mezzanine",
-        "travees_m": [
-          8.0,
-          8.0,
-          8.0
-        ],
-        "console_m": 4.5,
-        "b_m": 0.35,
-        "h_m": 0.75,
-        "entraxe_m": 7.5,
-        "retombee_sous_dalle_m": 0.5,
-        "longueur_dans_zone_m": 24.0,
-        "niveau_preuve": "V3"
-      }
+    "classe_sol": null,
+    "classe_sol_descriptive": "schistes et quartzites du socle sous faible couverture",
+    "nappe_m": 12.0,
+    "q_adm_kPa": 600,
+    "coupe_geotechnique_V3": [
+     {
+      "de_m": 0.0,
+      "a_m": 2.5,
+      "nature": "remblais et argiles de decomposition",
+      "SPT_N": 14
+     },
+     {
+      "de_m": 2.5,
+      "a_m": 8.0,
+      "nature": "schistes alteres",
+      "SPT_N": ">50",
+      "pressiometre_pl_MPa": 3.5,
+      "Em_MPa": 60
+     },
+     {
+      "de_m": 8.0,
+      "a_m": 20.0,
+      "nature": "schistes sains",
+      "pressiometre_pl_MPa": ">6",
+      "Em_MPa": 140
+     }
     ],
-    "voiles": [],
-    "dalles": [
-      {
-        "id": "DM1",
-        "ouvrage": "dalle de plancher de mezzanine",
-        "epaisseur_m": 0.25,
-        "epaisseur_origine": "predimensionnement V3 par elancement : portee 7,50 m entre poutres, h ~ L/30. AUCUNE verification reglementaire (§ 5.0).",
-        "portee_m": 7.5,
-        "niveau_preuve": "V3"
-      }
-    ],
-    "fondations": [],
-    "soutenement": [],
-    "charpente": []
-  },
-  "armatures": {
-    "nomenclature": [],
-    "masse_totale_kg": null
-  },
-  "quantites": {
-    "note": "a remplir en ordre de grandeur (V3, par ratios) pour la tranche verticale de suivi — § 5.3 adapte",
-    "beton_m3": {},
-    "coffrage_m2": {},
-    "acier_kg": {},
-    "terrassement_m3": {}
-  },
-  "cadences": {
-    "_role": "Cadences unitaires, par compagnon et par jour de 8 h. V3 : aucune ne vient d'un attachement reel.",
-    "annee_ref": 2026,
-    "niveau_preuve": "V3",
-    "coffrage_dalle_m2_j": {
-      "valeur": 30,
-      "fourchette": [
-        25,
-        35
-      ],
-      "note": "tables et etaiement, plancher courant repetitif"
-    },
-    "ferraillage_dalle_kg_j": {
-      "valeur": 300,
-      "fourchette": [
-        250,
-        400
-      ],
-      "note": "treillis et chapeaux, pose a plat"
-    },
-    "ferraillage_poutre_kg_j": {
-      "valeur": 150,
-      "fourchette": [
-        120,
-        180
-      ],
-      "note": "cages, faconnage et pose en place"
-    },
-    "betonnage_m3_h": {
-      "valeur": 30,
-      "fourchette": [
-        25,
-        40
-      ],
-      "note": "pompe a beton, equipe complete"
-    },
-    "rendement_equipe_coffrage_m2_j": {
-      "valeur": 232,
-      "fourchette": [
-        190,
-        280
-      ],
-      "note": "RENDEMENT D'EQUIPE declare separement, pour servir de seconde voie au calcul de duree"
-    }
-  },
-  "prix_unitaires_MAD": {
-    "annee_ref": 2026,
-    "source": "V3 — fourchettes, aucun bordereau fourni (question 7 de l'Etape 0 sans reponse)",
-    "niveau_preuve": "V3",
-    "postes": {
-      "beton_m3": {
-        "valeur": 1250,
-        "fourchette": [
-          1100,
-          1450
-        ],
-        "note": "beton pret a l'emploi, pompe, mis en oeuvre"
-      },
-      "acier_kg": {
-        "valeur": 17,
-        "fourchette": [
-          14,
-          20
-        ],
-        "note": "acier HA faconne et pose"
-      },
-      "coffrage_m2": {
-        "valeur": 180,
-        "fourchette": [
-          150,
-          220
-        ],
-        "note": "tables et etaiement, amortissement inclus"
-      },
-      "main_oeuvre_h": {
-        "valeur": 45,
-        "fourchette": [
-          35,
-          60
-        ],
-        "note": "compagnon, charges comprises"
-      }
-    }
-  },
-  "planning": {
-    "_role": "Reseau de taches du chantier de la gare. Le plancher de mezzanine (module TV) n'y est qu'une tache parmi vingt-cinq : D2 change d'echelle, pas de methode.",
-    "niveau_preuve": "V3",
-    "calendrier": {
-      "jours_ouvres_par_semaine": 5,
-      "heures_par_jour": 8,
-      "origine": "2026-11-02",
-      "jours_non_ouvres_par_mois_intemperies": {
-        "valeur": 1.5,
-        "fourchette": [
-          0.5,
-          3.0
-        ],
-        "note": "moyenne annuelle region de Marrakech, pluie et vent fort empechant grue et betonnage. V3 : aucune statistique meteo fournie."
-      }
-    },
-    "contraintes_exploitation": {
-      "_role": "Une gare se construit a cote d'une voie exploitee. Les taches qui surplombent ou coupent la voie ne se font PAS quand le planning le voudrait : elles se font quand l'exploitant consigne.",
-      "fenetre_jours": {
-        "valeur": 3,
-        "fourchette": [
-          2,
-          5
-        ],
-        "note": "duree d'une consignation accordee, en jours ouvres consecutifs"
-      },
-      "periode_entre_fenetres_jours": {
-        "valeur": 20,
-        "fourchette": [
-          15,
-          30
-        ],
-        "note": "une fenetre par mois calendaire environ, demandee six mois a l'avance"
-      },
-      "premiere_fenetre_jour": 40,
-      "taches_soumises": [
-        "CHLV",
-        "PSOU"
-      ],
-      "part_levage_sous_consignation_pct": {
-        "valeur": 35,
-        "fourchette": [
-          25,
-          50
-        ],
-        "note": "part du tonnage de charpente levee au-dessus ou a proximite immediate de la voie exploitee, donc soumise a consignation"
-      }
-    },
-    "ratios_quantites_V3": {
-      "_role": "En phase § 5.0, aucune quantite ne sort d'un dimensionnement. Celles du chantier sortent de la geometrie et de ces ratios, declares avec leur fourchette.",
-      "decapage_m": {
-        "valeur": 0.3,
-        "fourchette": [
-          0.2,
-          0.5
-        ],
-        "note": "terre vegetale et remblais superficiels"
-      },
-      "surprofondeur_forme_m": {
-        "valeur": 0.4,
-        "fourchette": [
-          0.3,
-          0.6
-        ],
-        "note": "forme et beton de proprete sous dallage"
-      },
-      "foisonnement_pct": {
-        "valeur": 25,
-        "fourchette": [
-          15,
-          35
-        ],
-        "note": "augmentation de volume des deblais transportes"
-      },
-      "semelle_m3_par_poteau": {
-        "valeur": 2.5,
-        "fourchette": [
-          1.5,
-          4.0
-        ],
-        "note": "semelle isolee + amorce ; PREDIMENSIONNEMENT V3, le calcul appartient a B1 (suspendu)"
-      },
-      "poteau_section_m2": {
-        "valeur": 0.25,
-        "fourchette": [
-          0.16,
-          0.36
-        ],
-        "note": "0,50 x 0,50 m ; PREDIMENSIONNEMENT V3 par elancement, le calcul appartient a B3 (suspendu)"
-      },
-      "dalle_niveau_technique_m": {
-        "valeur": 0.3,
-        "fourchette": [
-          0.25,
-          0.4
-        ]
-      },
-      "radier_niveau_technique_m": {
-        "valeur": 0.4,
-        "fourchette": [
-          0.3,
-          0.6
-        ]
-      },
-      "voile_epaisseur_m": {
-        "valeur": 0.25,
-        "fourchette": [
-          0.2,
-          0.3
-        ]
-      },
-      "charpente_kg_m2": {
-        "valeur": 65,
-        "fourchette": [
-          45,
-          90
-        ],
-        "note": "treillis de 32 m de portee + pannes, masse rapportee a la surface couverte"
-      },
-      "facade_hauteur_m": {
-        "valeur": 9.0,
-        "fourchette": [
-          8.0,
-          12.5
-        ],
-        "note": "hauteur vitree moyenne du hall"
-      }
-    },
-    "cadences_chantier_V3": {
-      "annee_ref": 2026,
-      "charpente_t_j_atelier": {
-        "valeur": 9,
-        "fourchette": [
-          5,
-          15
-        ],
-        "note": "pre-assemblage au sol + levage, grue mobile"
-      },
-      "couverture_m2_j_atelier": {
-        "valeur": 250,
-        "fourchette": [
-          150,
-          400
-        ],
-        "note": "pannes, bac, etancheite"
-      },
-      "dalle_pleine_m2_j_atelier": {
-        "valeur": 120,
-        "fourchette": [
-          80,
-          180
-        ],
-        "note": "radier et plancher plein, cycle complet coffrage-ferraillage-coulage, hors cure"
-      },
-      "facade_m2_j_atelier": {
-        "valeur": 60,
-        "fourchette": [
-          40,
-          90
-        ],
-        "note": "murs-rideaux, pose a la nacelle"
-      },
-      "poteau_unites_j_atelier": {
-        "valeur": 3,
-        "fourchette": [
-          2,
-          5
-        ],
-        "note": "poteau de 9 m : coffrage grimpant, etaiement, securite en hauteur"
-      },
-      "semelle_unites_j_atelier": {
-        "valeur": 4,
-        "fourchette": [
-          2.5,
-          6
-        ],
-        "note": "semelle isolee, cycle complet : implantation, coffrage bois, cage, coulage. Le volume n'est PAS le moteur — le nombre d'unites l'est."
-      },
-      "terrassement_m3_j_atelier": {
-        "valeur": 450,
-        "fourchette": [
-          300,
-          700
-        ],
-        "note": "pelle 30 t + rotation de camions, trajet court"
-      },
-      "voile_m2_j_atelier": {
-        "valeur": 60,
-        "fourchette": [
-          40,
-          90
-        ],
-        "note": "banches, cycle d'un jour"
-      },
-      "_role": "Cadences d'ATELIER (equipe complete), distinctes des cadences unitaires par compagnon du module TV. L'unite le dit : m3/j d'atelier, et non m3/j/compagnon."
-    },
-    "delais_imposes_V3": {
-      "_role": "Durees qu'aucun effectif ne raccourcit. Les confondre avec des durees calculees est l'erreur de planning la plus couteuse : on y met des hommes, et rien ne bouge.",
-      "etudes_et_visa_charpente_j": {
-        "valeur": 40,
-        "fourchette": [
-          25,
-          60
-        ],
-        "note": "plans d'execution, note de calcul, visa de la maitrise d'oeuvre, approbation"
-      },
-      "fabrication_charpente_j": {
-        "valeur": 60,
-        "fourchette": [
-          45,
-          90
-        ],
-        "note": "atelier : debit, soudage, controles non destructifs, galvanisation, transport"
-      },
-      "sechage_avant_second_oeuvre_j": {
-        "valeur": 20,
-        "fourchette": [
-          14,
-          30
-        ],
-        "note": "sechage du gros oeuvre avant chapes et cloisons"
-      }
-    },
-    "forfaits_V3": {
-      "_role": "Durees DECLAREES, faute de quantites a diviser. Chacune porte sa fourchette : c'est la seule honnetete possible.",
-      "installation_chantier_j": {
-        "valeur": 15,
-        "fourchette": [
-          10,
-          25
-        ]
-      },
-      "montage_grue_j": {
-        "valeur": 5,
-        "fourchette": [
-          3,
-          8
-        ]
-      },
-      "implantation_j": {
-        "valeur": 3,
-        "fourchette": [
-          2,
-          5
-        ]
-      },
-      "soutenement_j": {
-        "valeur": 18,
-        "fourchette": [
-          12,
-          30
-        ]
-      },
-      "etancheite_remblais_j": {
-        "valeur": 12,
-        "fourchette": [
-          8,
-          20
-        ]
-      },
-      "noyaux_escaliers_j": {
-        "valeur": 25,
-        "fourchette": [
-          18,
-          40
-        ]
-      },
-      "marquise_j": {
-        "valeur": 14,
-        "fourchette": [
-          10,
-          22
-        ]
-      },
-      "passage_souterrain_j": {
-        "valeur": 9,
-        "fourchette": [
-          6,
-          15
-        ],
-        "note": "raccordement sous consignation : la duree est courte, l'attente de la fenetre ne l'est pas"
-      },
-      "quais_equipements_j": {
-        "valeur": 30,
-        "fourchette": [
-          20,
-          45
-        ]
-      },
-      "second_oeuvre_lots_techniques_j": {
-        "valeur": 75,
-        "fourchette": [
-          55,
-          110
-        ],
-        "note": "forfait de synthese : le detail appartient a C4 et B7b"
-      },
-      "essais_mise_en_service_j": {
-        "valeur": 15,
-        "fourchette": [
-          10,
-          25
-        ]
-      },
-      "reception_j": {
-        "valeur": 10,
-        "fourchette": [
-          7,
-          15
-        ]
-      }
-    },
-    "effectifs_chantier_V3": {
-      "_role": "Nombre d'ATELIERS en parallele, et non nombre de compagnons : c'est ce qui multiplie une cadence d'atelier.",
-      "ateliers_terrassement": 2,
-      "ateliers_fondations": 2,
-      "ateliers_voiles": 1,
-      "ateliers_poteaux": 2,
-      "ateliers_charpente": 1,
-      "ateliers_couverture": 1,
-      "ateliers_facade": 2,
-      "compagnons_par_atelier": {
-        "terrassement": 4,
-        "fondations": 8,
-        "voiles": 8,
-        "poteaux": 6,
-        "charpente": 10,
-        "couverture": 6,
-        "facade": 5
-      },
-      "effectif_par_tache": {
-        "_role": "Effectif present sur le chantier pendant la tache. Pour les taches calculees il se deduit des ateliers ; pour les taches declarees il est pose en V3. L'histogramme n'a de sens que si les deux sont dans la meme unite : des compagnons presents.",
-        "INST": 6,
-        "GRUE": 4,
-        "TOPO": 2,
-        "SOUT": 10,
-        "ETAN": 8,
-        "NOYX": 12,
-        "CHET": 0,
-        "CHFA": 0,
-        "MARQ": 10,
-        "PSOU": 8,
-        "QUAI": 14,
-        "SECH": 0,
-        "SECO": 45,
-        "ESSA": 8,
-        "RECE": 4,
-        "_note_zero": "CHET, CHFA et SECH sont a zero : les etudes, la fabrication en atelier et le sechage n'occupent personne SUR LE CHANTIER. Les compter gonflerait l'histogramme d'un effectif qui n'est pas la."
-      }
-    },
-    "date_fin_P1_demandee_au_lecteur": "2026-10-31",
-    "date_fin_P1_actif_hypothese": "2027-03-15",
-    "date_fin_P1_hypothese_niveau_preuve": "V0 — date fixee par le lecteur le 20/10/2026 (decision D-034)"
-  },
-  "effectifs": {
-    "_role": "Effectifs par poste sur une zone. V3.",
-    "niveau_preuve": "V3",
-    "coffreurs": 8,
-    "ferrailleurs_dalle": 8,
-    "ferrailleurs_poutres": 4,
-    "equipe_betonnage": 5,
-    "grutier": 1,
-    "chef_equipe": 1,
-    "heures_par_jour": 8,
-    "_nature": "decision",
-    "_nature_note": "Un effectif n'est pas une hypothese : c'est une DECISION de conduite de chantier. Il n'a donc pas de fourchette — on ne met pas « entre 6 et 10 coffreurs », on en met 8 et on en repond. Les cadences, elles, sont des hypotheses V3 avec fourchette : elles decrivent ce qu'on ignore. Confondre les deux fait croire qu'on peut negocier un effectif comme on borne une incertitude."
-  },
-  "materiel": {
-    "niveau_preuve": "V3",
-    "_role": "Le materiel se DEDUIT du planning : a la cadence retenue, plusieurs zones sont coffrees en meme temps. Une valeur posee sans regarder le planning est une valeur fausse.",
-    "tables_coffrantes_m2": 1300,
-    "tables_note": "trois zones se recouvrent a la cadence de 3,4 j pour un cycle de 8,6 j : il faut environ 3 x 424 m2. L'ancienne valeur de 420 m2 ne couvrait qu'une zone et contredisait le planning.",
-    "etais_par_m2": 2.5,
-    "etais_note": "densite d'etais par m2 de plancher etaye ; le nombre total se deduit du nombre de zones etayees simultanement",
-    "pompe_a_beton": "pompe automotrice ; son debit retenu est cadences.betonnage_m3_h, pour ne pas ecrire deux fois le meme nombre",
-    "grue": "grue a tour unique desservant le plancher ; voir C1. Le nombre de grues divise le temps d'occupation par zone : c'est un levier de cadence, et souvent le dernier disponible quand les equipes sont deja renforcees.",
-    "etais_de_reprise_maintenus_j": {
-      "valeur": 14,
-      "fourchette": [
-        7,
-        28
-      ],
-      "note": "duree pendant laquelle les etais de reprise restent en place APRES le decoffrage. Le critere reel est une resistance et une redistribution de charges, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
-    },
-    "nb_grues": 1,
-    "_nature": "decision"
-  },
-  "multi_sites": {
-    "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
-    "sites": [
-      {
-        "id": "S-GV",
-        "nom": "Gare a grande vitesse (cas phare)",
-        "emprise_m": [
-          120,
-          40
-        ]
-      },
-      {
-        "id": "S-RER",
-        "nom": "Gare de RER (site secondaire, pour D7 uniquement)",
-        "emprise_m": [
-          45,
-          18
-        ],
-        "statut": "esquisse — pas de modules de calcul dedies",
-        "site_geotechnique": "S2 — Agadir (sables laches, nappe a 3,5 m, sismicite forte)",
-        "raison": "aucun defaut concurrent n'etait propose pour ce point ; l'option S2 est retenue pour que D7 porte des sols difficiles sans alourdir le cas phare. Reversible d'un mot."
-      }
-    ]
-  },
-  "ratios_V3": {
-    "_role": "Ratios d'ordre de grandeur. En phase § 5.0, les quantites ne peuvent PAS sortir d'un dimensionnement : elles sortent de ces ratios, declares avec leur fourchette.",
-    "annee_ref": 2026,
-    "acier_dalle_kg_m3": {
-      "valeur": 80,
-      "fourchette": [
-        65,
-        100
-      ]
-    },
-    "acier_poutre_kg_m3": {
-      "valeur": 180,
-      "fourchette": [
-        140,
-        220
-      ]
-    },
-    "coffrage_rives_pct": {
-      "valeur": 4,
-      "fourchette": [
-        2,
-        8
-      ],
-      "note": "rives de dalle et about de zone, en % de la surface coffree"
-    },
-    "part_main_oeuvre_directe_pct": {
-      "valeur": 22,
-      "fourchette": [
-        15,
-        30
-      ],
-      "note": "part de la main d'oeuvre DIRECTE de production dans un prix pose de gros oeuvre. Sert de controle de coherence entre le prix horaire et les prix unitaires, qui sont deux hypotheses V3 independantes."
-    }
-  },
-  "suivi": {
-    "_role": "Avancement constate a une date d'arret, pour l'exemple de valeur acquise. V3 : donnees fabriquees pour la demonstration.",
-    "niveau_preuve": "V3",
-    "zones_realisees_a_date": 3,
-    "avancement_zone_en_cours_pct": 60,
-    "cout_reel_constate_MAD": 1330000,
-    "note": "Le cout reel vient des attachements. Ici il est pose en V3 pour faire tourner la chaine.",
-    "base_du_choix": "Ce cout reel est FABRIQUE pour la demonstration, et choisi sur une base explicite : un chantier en legere difficulte — quelques pour cent de depassement de cout et un retard de l'ordre d'une zone. La valeur a ete posee AVANT de regarder CPI et SPI, a partir de l'ordre de grandeur du budget de 3,6 zones ; le calcul a ensuite donne CPI 0,94 et un retard de 1,26 zone a la date d'arret. On publie ce que le calcul rend, pas ce que la note esperait : une premiere version de cette note annoncait « une demi-zone » et contredisait la sortie de calc/.",
-    "quantites_relevees": {
-      "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). Elles sont construites sur l'etat PHYSIQUE du chantier — trois zones completes, plus une zone dont le coffrage est pose, le ferraillage presque fini et le beton pas coule — et non sur un prorata uniforme de l'avancement declare. Une version precedente appliquait ce prorata : le recoupement comparait alors deux calculs partageant la meme hypothese, et ne pouvait rien detecter.",
-      "beton_m3": 293.4,
-      "acier_kg": 34007.0,
-      "coffrage_m2": 1683.6,
-      "niveau_preuve": "V3 — releves fabriques pour la demonstration",
-      "base_du_choix": "Poses legerement en retrait de l'etat physique (environ -0,6 % sur le beton, -0,8 % sur le coffrage, -2 % sur l'acier) pour que la demonstration montre ce que le controle sert a detecter : un ecart reel mais sous le seuil sur les postes geometriques, et un ecart plus large sur l'acier, qui vient d'un ratio."
-    },
-    "jours_ouvres_par_semaine": 5,
-    "jour_arret_ouvre": 19,
-    "_jour_arret": "La date d'arret est la DONNEE ; l'avancement prevu a cette date s'en deduit par le planning, en comptant l'avancement fractionnaire de chaque zone. L'ancienne version posait « 4 zones prevues » et en deduisait la date : la courbe en S et le tableau de valeur acquise mesuraient alors deux choses differentes et se contredisaient de 8 points."
-  },
-  "cycle_zone": {
-    "_role": "Parametres du cycle d'une zone qui ne sortent ni d'une quantite ni d'une cadence : durees physiques ou contractuelles, et taux de recouvrement entre equipes. Ils etaient ecrits en dur dans calc/ : ils pesent 32 % du cycle et la totalite du gain de recouvrement, ils doivent donc etre declares, bornes et registres comme le reste.",
-    "niveau_preuve": "V3",
-    "annee_ref": 2026,
-    "cure_avant_decoffrage_j": {
-      "valeur": 2.0,
-      "fourchette": [
-        1.0,
-        4.0
-      ],
-      "note": "attente de resistance avant decoffrage. Le critere reel est une resistance, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
-    },
-    "decoffrage_j": {
-      "valeur": 0.5,
-      "fourchette": [
-        0.25,
-        1.0
-      ],
-      "note": "depose des tables, etais de reprise maintenus"
-    },
-    "point_arret_visa_ferraillage_j": {
-      "valeur": 0.25,
-      "fourchette": [
-        0.125,
-        0.5
-      ],
-      "note": "visa du ferraillage par la maitrise d'oeuvre avant coulage : un point d'arret est une tache du planning"
-    },
-    "recouvrement_coffrage_ferraillage_poutres_pct": {
-      "valeur": 50,
-      "fourchette": [
-        30,
-        70
-      ],
-      "note": "part du coffrage faite avant que le ferraillage des poutres demarre"
-    },
-    "recouvrement_ferraillage_poutres_dalle_pct": {
-      "valeur": 40,
-      "fourchette": [
-        20,
-        60
-      ],
-      "note": "part du ferraillage des poutres faite avant que celui de la dalle demarre"
-    },
-    "effectif_par_tache": {
-      "_role": "Effectif present sur la zone pendant chaque tache du cycle. Les taches a zero sont voulues : la cure n'occupe personne, et le visa est l'affaire du controle, pas d'une equipe.",
-      "COF": "coffreurs",
-      "FEP": "ferrailleurs_poutres",
-      "FED": "ferrailleurs_dalle",
-      "PTA": 0,
-      "BET": "equipe_betonnage",
-      "CUR": 0,
-      "DEC": 2,
-      "_note_DEC": "le decoffrage mobilise deux compagnons, pas l'equipe de coffrage entiere : celle-ci est deja sur la zone suivante, c'est tout l'objet de la rotation."
-    },
-    "marge_de_rotation_pct": {
-      "valeur": 14,
-      "fourchette": [
-        0,
-        30
-      ],
-      "note": "marge ajoutee a la borne theorique de rotation. La borne suppose les equipes saturees a 100 %, ce qu'aucun chantier ne tient : alea, approvisionnement, reprise. A zero, le planning est theoriquement faisable et pratiquement intenable."
-    },
-    "taches_servies_par_la_grue": {
-      "valeur": [
-        "coffrage_j",
-        "decoffrage_j"
-      ],
-      "note": "La grue monte et descend les tables et les cages. Elle ne sert PAS au coulage : le beton arrive par pompe automotrice (materiel.pompe_a_beton). Si le chantier coulait a la benne, il faudrait ajouter betonnage_j ici — et la cadence changerait."
-    }
+    "liquefaction": "sans objet",
+    "consequence_fondations": "semelles isolees, excavation en rocher (sautage ou BRH) pour le niveau technique",
+    "interet_pedagogique": "le plus pauvre en geotechnique et en seisme — ecarte sauf demande",
+    "niveau_preuve": "V3"
+   }
   }
+ },
+ "geometrie": {
+  "emprise_m": [
+   120,
+   40
+  ],
+  "trame_longitudinale_m": 7.5,
+  "nb_travees_longitudinales": 16,
+  "decoupage_transversal_m": {
+   "nef_laterale_cote_ville": 4.0,
+   "hall_portee_libre": 32.0,
+   "nef_laterale_cote_voies": 4.0
+  },
+  "niveaux": [
+   {
+    "nom": "niveau technique",
+    "altitude_m": -4.0,
+    "emprise_partielle_m": [
+     40,
+     20
+    ],
+    "usage": "locaux techniques, stockage, raccordement du passage souterrain vers les quais",
+    "h_libre_m": 3.2
+   },
+   {
+    "nom": "RDC — hall voyageurs",
+    "altitude_m": 0.0,
+    "usage": "hall double hauteur, billetterie, commerces, controle d'acces",
+    "h_libre_m": 9.0
+   },
+   {
+    "nom": "mezzanine",
+    "altitude_m": 5.0,
+    "emprise_partielle_m": [
+     120,
+     24
+    ],
+    "usage": "salles d'attente, restauration, bureaux d'exploitation",
+    "h_libre_m": 4.0
+   },
+   {
+    "nom": "sous-face de couverture",
+    "altitude_m": 12.5,
+    "usage": "treillis metalliques de couverture du hall"
+   }
+  ],
+  "sous_sols": 1,
+  "mezzanine": {
+   "largeur_m": 24.0,
+   "position": "bande continue le long de la facade cote voies",
+   "poutre_type_module_temoin": {
+    "id": "PM1",
+    "type": "poutre continue de plancher, 3 travees + console de marquise",
+    "travees_m": [
+     8.0,
+     8.0,
+     8.0
+    ],
+    "console_m": 4.5,
+    "entraxe_m": 7.5,
+    "section_bxh_cm": [
+     35,
+     75
+    ],
+    "note": "section = PREDIMENSIONNEMENT V3 par elancement usuel (h ~ L/11). Aucune verification reglementaire tant que le § 5.0 n'est pas leve."
+   },
+   "zones_de_coulage": {
+    "_role": "Decoupage du plancher de mezzanine en zones coulees en une fois. C'est l'unite de suivi : le cycle, le metre, le cout et l'avancement se comptent par zone.",
+    "nb_zones": 8,
+    "longueur_zone_m": 15.0,
+    "largeur_zone_m": 24.0,
+    "justification_decoupage": "15 m = 2 travees de trame (7,50 m). Une zone de 360 m2 se coule en une demi-journee de pompe et tient dans la capacite d'une equipe ; au-dela, la reprise de betonnage devient le probleme, pas la cadence.",
+    "marquise_exclue": "Le porte-a-faux de marquise (4,50 m) n'est PAS compte dans ces zones : il se coule avec la zone mais releve d'une sequence d'etaiement differente, traitee au module d'execution.",
+    "niveau_preuve": "V3"
+   }
+  },
+  "couverture_metallique": {
+   "portee_libre_m": 32.0,
+   "systeme": "treillis plans a membrures paralleles sur poteaux de rive, entraxe 7.5 m",
+   "hauteur_treillis_m": 2.2,
+   "elancement_V3": "h/L ~ 1/14.5 — ordre de grandeur de predimensionnement",
+   "couverture": "bac acier + isolation + etancheite, lanterneaux zenithaux",
+   "note": "⏸ vent, soulevement, flambement, deversement, assemblages : en attente des normes"
+  },
+  "marquise": {
+   "porte_a_faux_m": 4.5,
+   "position": "prolongement des poutres de mezzanine au-dessus du parvis cote voies",
+   "note": "console du module temoin n° 1 (§ 7.3)"
+  },
+  "circulations": {
+   "acces_quais": "passage souterrain (2 escaliers fixes + 2 escalators + 1 ascenseur par quai)",
+   "escalators": 4,
+   "ascenseurs": 3,
+   "escaliers_fixes": 4,
+   "noyaux": 2
+  },
+  "quais_desservis": 3,
+  "porte_a_faux": [
+   {
+    "element": "marquise",
+    "longueur_m": 4.5
+   }
+  ]
+ },
+ "batiment": {
+  "usage": "etablissement recevant du public — batiment voyageurs de gare a grande vitesse",
+  "effectif_public_V3": 1800,
+  "classe_importance": null,
+  "classe_importance_note": "⏸ a lire dans le RPS (classe des batiments recevant du public) — jamais de memoire",
+  "classe_exposition": null,
+  "classe_exposition_note": "⏸ a fixer avec la norme beton applicable (ambiance, carbonatation, chlorures)",
+  "resistance_feu_min": null,
+  "resistance_feu_note": "⏸ a fixer par le reglement de securite incendie applicable et le CPS",
+  "contraintes_exploitation": [
+   "exploitation ferroviaire maintenue pendant les travaux (phasage, plages horaires, consignations)",
+   "interfaces voie, quais, catenaire, signalisation, courants faibles, information voyageurs",
+   "co-activite avec les lots systemes et avec un autre maitre d'ouvrage (gestionnaire d'infrastructure)"
+  ]
+ },
+ "materiaux": {
+  "beton": {
+   "classe": null,
+   "classe_note": "⏸ en attente des normes",
+   "enrobage_mm": {},
+   "superstructure_basse": "beton arme coule en place"
+  },
+  "acier_ha": null,
+  "charpente": {
+   "nuance": null,
+   "note": "⏸ en attente des normes ; couverture en acier de construction, assemblages boulonnes de chantier"
+  },
+  "autres": {
+   "facades": "murs-rideaux vitres + panneaux isolants",
+   "couverture": "bac acier double peau"
+  }
+ },
+ "charges": {
+  "G": {},
+  "Q": {},
+  "vent": {},
+  "neige": null,
+  "sismique": {},
+  "note": "⏸ BLOQUE par le § 5.0 — aucune descente de charges, aucune combinaison avant levee"
+ },
+ "elements": {
+  "poteaux": [],
+  "poutres": [
+   {
+    "id": "PM1",
+    "ouvrage": "poutre de plancher de mezzanine",
+    "travees_m": [
+     8.0,
+     8.0,
+     8.0
+    ],
+    "console_m": 4.5,
+    "b_m": 0.35,
+    "h_m": 0.75,
+    "entraxe_m": 7.5,
+    "retombee_sous_dalle_m": 0.5,
+    "longueur_dans_zone_m": 24.0,
+    "niveau_preuve": "V3"
+   }
+  ],
+  "voiles": [],
+  "dalles": [
+   {
+    "id": "DM1",
+    "ouvrage": "dalle de plancher de mezzanine",
+    "epaisseur_m": 0.25,
+    "epaisseur_origine": "predimensionnement V3 par elancement : portee 7,50 m entre poutres, h ~ L/30. AUCUNE verification reglementaire (§ 5.0).",
+    "portee_m": 7.5,
+    "niveau_preuve": "V3"
+   }
+  ],
+  "fondations": [],
+  "soutenement": [],
+  "charpente": []
+ },
+ "armatures": {
+  "nomenclature": [],
+  "masse_totale_kg": null
+ },
+ "quantites": {
+  "note": "a remplir en ordre de grandeur (V3, par ratios) pour la tranche verticale de suivi — § 5.3 adapte",
+  "beton_m3": {},
+  "coffrage_m2": {},
+  "acier_kg": {},
+  "terrassement_m3": {}
+ },
+ "cadences": {
+  "_role": "Cadences unitaires, par compagnon et par jour de 8 h. V3 : aucune ne vient d'un attachement reel.",
+  "annee_ref": 2026,
+  "niveau_preuve": "V3",
+  "coffrage_dalle_m2_j": {
+   "valeur": 30,
+   "fourchette": [
+    25,
+    35
+   ],
+   "note": "tables et etaiement, plancher courant repetitif"
+  },
+  "ferraillage_dalle_kg_j": {
+   "valeur": 300,
+   "fourchette": [
+    250,
+    400
+   ],
+   "note": "treillis et chapeaux, pose a plat"
+  },
+  "ferraillage_poutre_kg_j": {
+   "valeur": 150,
+   "fourchette": [
+    120,
+    180
+   ],
+   "note": "cages, faconnage et pose en place"
+  },
+  "betonnage_m3_h": {
+   "valeur": 30,
+   "fourchette": [
+    25,
+    40
+   ],
+   "note": "pompe a beton, equipe complete"
+  },
+  "rendement_equipe_coffrage_m2_j": {
+   "valeur": 232,
+   "fourchette": [
+    190,
+    280
+   ],
+   "note": "RENDEMENT D'EQUIPE declare separement, pour servir de seconde voie au calcul de duree"
+  }
+ },
+ "prix_unitaires_MAD": {
+  "annee_ref": 2026,
+  "source": "V3 — fourchettes, aucun bordereau fourni (question 7 de l'Etape 0 sans reponse)",
+  "niveau_preuve": "V3",
+  "postes": {
+   "beton_m3": {
+    "valeur": 1250,
+    "fourchette": [
+     1100,
+     1450
+    ],
+    "note": "beton pret a l'emploi, pompe, mis en oeuvre"
+   },
+   "acier_kg": {
+    "valeur": 17,
+    "fourchette": [
+     14,
+     20
+    ],
+    "note": "acier HA faconne et pose"
+   },
+   "coffrage_m2": {
+    "valeur": 180,
+    "fourchette": [
+     150,
+     220
+    ],
+    "note": "tables et etaiement, amortissement inclus"
+   },
+   "main_oeuvre_h": {
+    "valeur": 45,
+    "fourchette": [
+     35,
+     60
+    ],
+    "note": "compagnon, charges comprises"
+   }
+  }
+ },
+ "planning": {
+  "_role": "Reseau de taches du chantier de la gare. Le plancher de mezzanine (module TV) n'y est qu'une tache parmi les vingt-sept : D2 change d'echelle, pas de methode.",
+  "niveau_preuve": "V3",
+  "calendrier": {
+   "jours_ouvres_par_semaine": 5,
+   "heures_par_jour": 8,
+   "origine": "2026-11-02",
+   "jours_non_ouvres_par_mois_intemperies": {
+    "valeur": 1.5,
+    "fourchette": [
+     0.5,
+     3.0
+    ],
+    "note": "moyenne annuelle region de Marrakech, pluie et vent fort empechant grue et betonnage. V3 : aucune statistique meteo fournie."
+   }
+  },
+  "contraintes_exploitation": {
+   "_role": "Une gare se construit a cote d'une voie exploitee. Les taches qui surplombent ou coupent la voie ne se font PAS quand le planning le voudrait : elles se font quand l'exploitant consigne.",
+   "fenetre_jours": {
+    "valeur": 3,
+    "fourchette": [
+     2,
+     5
+    ],
+    "note": "duree d'une consignation accordee, en jours ouvres consecutifs"
+   },
+   "periode_entre_fenetres_jours": {
+    "valeur": 20,
+    "fourchette": [
+     15,
+     30
+    ],
+    "note": "une fenetre par mois calendaire environ, demandee six mois a l'avance"
+   },
+   "premiere_fenetre_jour": {
+    "valeur": 40,
+    "fourchette": [
+     25,
+     60
+    ],
+    "note": "jour ouvre de la premiere consignation accordee. Ce parametre fixe la PHASE de toutes les fenetres : il decale la tache consignee et, par elle, la date de fin. Il n'etait pas declare avant la passe adversariale de D2."
+   },
+   "taches_soumises": [
+    "CHLV",
+    "PSOU"
+   ],
+   "part_levage_sous_consignation_pct": {
+    "valeur": 35,
+    "fourchette": [
+     25,
+     50
+    ],
+    "note": "part du tonnage de charpente levee au-dessus ou a proximite immediate de la voie exploitee, donc soumise a consignation"
+   }
+  },
+  "ratios_quantites_V3": {
+   "_role": "En phase § 5.0, aucune quantite ne sort d'un dimensionnement. Celles du chantier sortent de la geometrie et de ces ratios, declares avec leur fourchette.",
+   "decapage_m": {
+    "valeur": 0.3,
+    "fourchette": [
+     0.2,
+     0.5
+    ],
+    "note": "terre vegetale et remblais superficiels"
+   },
+   "surprofondeur_forme_m": {
+    "valeur": 0.4,
+    "fourchette": [
+     0.3,
+     0.6
+    ],
+    "note": "forme et beton de proprete sous dallage"
+   },
+   "foisonnement_pct": {
+    "valeur": 25,
+    "fourchette": [
+     15,
+     35
+    ],
+    "note": "augmentation de volume des deblais transportes"
+   },
+   "semelle_m3_par_poteau": {
+    "valeur": 2.5,
+    "fourchette": [
+     1.5,
+     4.0
+    ],
+    "note": "semelle isolee + amorce ; PREDIMENSIONNEMENT V3, le calcul appartient a B1 (suspendu)"
+   },
+   "poteau_section_m2": {
+    "valeur": 0.25,
+    "fourchette": [
+     0.16,
+     0.36
+    ],
+    "note": "0,50 x 0,50 m ; PREDIMENSIONNEMENT V3 par elancement, le calcul appartient a B3 (suspendu)"
+   },
+   "dalle_niveau_technique_m": {
+    "valeur": 0.3,
+    "fourchette": [
+     0.25,
+     0.4
+    ]
+   },
+   "radier_niveau_technique_m": {
+    "valeur": 0.4,
+    "fourchette": [
+     0.3,
+     0.6
+    ]
+   },
+   "voile_epaisseur_m": {
+    "valeur": 0.25,
+    "fourchette": [
+     0.2,
+     0.3
+    ]
+   },
+   "charpente_kg_m2": {
+    "valeur": 65,
+    "fourchette": [
+     45,
+     90
+    ],
+    "note": "treillis de 32 m de portee + pannes, masse rapportee a la surface couverte"
+   },
+   "facade_hauteur_m": {
+    "valeur": 9.0,
+    "fourchette": [
+     8.0,
+     12.5
+    ],
+    "note": "hauteur vitree moyenne du hall"
+   }
+  },
+  "cadences_chantier_V3": {
+   "annee_ref": 2026,
+   "charpente_t_j_atelier": {
+    "valeur": 9,
+    "fourchette": [
+     5,
+     15
+    ],
+    "note": "pre-assemblage au sol + levage, grue mobile"
+   },
+   "couverture_m2_j_atelier": {
+    "valeur": 250,
+    "fourchette": [
+     150,
+     400
+    ],
+    "note": "pannes, bac, etancheite"
+   },
+   "dalle_pleine_m2_j_atelier": {
+    "valeur": 120,
+    "fourchette": [
+     80,
+     180
+    ],
+    "note": "radier et plancher plein, cycle complet coffrage-ferraillage-coulage, hors cure"
+   },
+   "facade_m2_j_atelier": {
+    "valeur": 60,
+    "fourchette": [
+     40,
+     90
+    ],
+    "note": "murs-rideaux, pose a la nacelle"
+   },
+   "poteau_unites_j_atelier": {
+    "valeur": 3,
+    "fourchette": [
+     2,
+     5
+    ],
+    "note": "poteau de 9 m : coffrage grimpant, etaiement, securite en hauteur"
+   },
+   "semelle_unites_j_atelier": {
+    "valeur": 4,
+    "fourchette": [
+     2.5,
+     6
+    ],
+    "note": "semelle isolee, cycle complet : implantation, coffrage bois, cage, coulage. Le volume n'est PAS le moteur — le nombre d'unites l'est."
+   },
+   "terrassement_m3_j_atelier": {
+    "valeur": 450,
+    "fourchette": [
+     300,
+     700
+    ],
+    "note": "pelle 30 t + rotation de camions, trajet court"
+   },
+   "voile_m2_j_atelier": {
+    "valeur": 60,
+    "fourchette": [
+     40,
+     90
+    ],
+    "note": "banches, cycle d'un jour"
+   },
+   "_role": "Cadences d'ATELIER (equipe complete), distinctes des cadences unitaires par compagnon du module TV. L'unite le dit : m3/j d'atelier, et non m3/j/compagnon."
+  },
+  "delais_imposes_V3": {
+   "_role": "Durees qu'aucun effectif ne raccourcit. Les confondre avec des durees calculees est l'erreur de planning la plus couteuse : on y met des hommes, et rien ne bouge.",
+   "etudes_et_visa_charpente_j": {
+    "valeur": 40,
+    "fourchette": [
+     25,
+     60
+    ],
+    "note": "plans d'execution, note de calcul, visa de la maitrise d'oeuvre, approbation"
+   },
+   "fabrication_charpente_j": {
+    "valeur": 60,
+    "fourchette": [
+     45,
+     90
+    ],
+    "note": "atelier : debit, soudage, controles non destructifs, galvanisation, transport"
+   },
+   "sechage_avant_second_oeuvre_j": {
+    "valeur": 20,
+    "fourchette": [
+     14,
+     30
+    ],
+    "note": "sechage du gros oeuvre avant chapes et cloisons"
+   }
+  },
+  "forfaits_V3": {
+   "_role": "Durees DECLAREES, faute de quantites a diviser. Chacune porte sa fourchette : c'est la seule honnetete possible.",
+   "installation_chantier_j": {
+    "valeur": 15,
+    "fourchette": [
+     10,
+     25
+    ]
+   },
+   "montage_grue_j": {
+    "valeur": 5,
+    "fourchette": [
+     3,
+     8
+    ]
+   },
+   "implantation_j": {
+    "valeur": 3,
+    "fourchette": [
+     2,
+     5
+    ]
+   },
+   "soutenement_j": {
+    "valeur": 18,
+    "fourchette": [
+     12,
+     30
+    ]
+   },
+   "etancheite_remblais_j": {
+    "valeur": 12,
+    "fourchette": [
+     8,
+     20
+    ]
+   },
+   "noyaux_escaliers_j": {
+    "valeur": 25,
+    "fourchette": [
+     18,
+     40
+    ]
+   },
+   "marquise_j": {
+    "valeur": 14,
+    "fourchette": [
+     10,
+     22
+    ]
+   },
+   "passage_souterrain_j": {
+    "valeur": 9,
+    "fourchette": [
+     6,
+     15
+    ],
+    "note": "raccordement sous consignation : la duree est courte, l'attente de la fenetre ne l'est pas"
+   },
+   "quais_equipements_j": {
+    "valeur": 30,
+    "fourchette": [
+     20,
+     45
+    ]
+   },
+   "second_oeuvre_lots_techniques_j": {
+    "valeur": 75,
+    "fourchette": [
+     55,
+     110
+    ],
+    "note": "forfait de synthese : le detail appartient a C4 et B7b"
+   },
+   "essais_mise_en_service_j": {
+    "valeur": 15,
+    "fourchette": [
+     10,
+     25
+    ]
+   },
+   "reception_j": {
+    "valeur": 10,
+    "fourchette": [
+     7,
+     15
+    ]
+   }
+  },
+  "effectifs_chantier_V3": {
+   "_role": "Nombre d'ATELIERS en parallele, et non nombre de compagnons : c'est ce qui multiplie une cadence d'atelier.",
+   "ateliers_terrassement": 2,
+   "ateliers_fondations": 2,
+   "ateliers_voiles": 1,
+   "ateliers_poteaux": 2,
+   "ateliers_charpente": 1,
+   "ateliers_couverture": 1,
+   "ateliers_facade": 2,
+   "compagnons_par_atelier": {
+    "terrassement": 4,
+    "fondations": 8,
+    "voiles": 8,
+    "poteaux": 6,
+    "charpente": 10,
+    "couverture": 6,
+    "facade": 5
+   },
+   "effectif_par_tache": {
+    "_role": "Effectif present sur le chantier pendant la tache. Pour les taches calculees il se deduit des ateliers ; pour les taches declarees il est pose en V3. L'histogramme n'a de sens que si les deux sont dans la meme unite : des compagnons presents.",
+    "INST": 6,
+    "GRUE": 4,
+    "TOPO": 2,
+    "SOUT": 10,
+    "ETAN": 8,
+    "NOYX": 12,
+    "CHET": 0,
+    "CHFA": 0,
+    "MARQ": 10,
+    "PSOU": 8,
+    "QUAI": 14,
+    "SECH": 0,
+    "SECO": 45,
+    "ESSA": 8,
+    "RECE": 4,
+    "_note_zero": "CHET, CHFA et SECH sont a zero : les etudes, la fabrication en atelier et le sechage n'occupent personne SUR LE CHANTIER. Les compter gonflerait l'histogramme d'un effectif qui n'est pas la."
+   }
+  },
+  "date_fin_P1_demandee_au_lecteur": "2026-10-31",
+  "date_fin_P1_actif_hypothese": "2027-03-15",
+  "date_fin_P1_hypothese_niveau_preuve": "V0 — date fixee par le lecteur le 20/10/2026 (decision D-034)",
+  "recouvrements_pct": {
+   "_role": "Recouvrements entre taches, en POURCENTAGE de la duree du predecesseur et non en jours. Un decalage en jours ignore la duree qu'il recouvre : la passe adversariale de D2 a trouve deux liens ou le successeur demarrait AVANT son predecesseur, parce que le decapage, dont la duree est calculee, etait tombe a 1,6 j pour un decalage pose a -2 j. Un pourcentage ne peut pas produire cela, et un controle le verifie.",
+   "grue_sur_installation": {
+    "valeur": 60,
+    "fourchette": [
+     40,
+     80
+    ],
+    "note": "la grue se monte des que l'aire de levage et son massif sont prets"
+   },
+   "topographie_sur_installation": {
+    "valeur": 85,
+    "fourchette": [
+     60,
+     95
+    ],
+    "note": "l'implantation suit l'acces et le bornage, sans attendre la base-vie"
+   },
+   "soutenement_sur_decapage": {
+    "valeur": 50,
+    "fourchette": [
+     30,
+     70
+    ],
+    "note": "la paroi se realise depuis la plateforme decapee : le decapage la precede"
+   },
+   "fouille_sur_soutenement": {
+    "valeur": 45,
+    "fourchette": [
+     25,
+     65
+    ],
+    "note": "la fouille suit le soutenement et ne le precede JAMAIS (§ 3.4). Le recouvrement mesure l'avance que la paroi garde sur l'approfondissement, pas l'inverse."
+   },
+   "radier_sur_fondations": {
+    "valeur": 35,
+    "fourchette": [
+     20,
+     50
+    ],
+    "note": "le radier demarre sur la partie deja fondee"
+   },
+   "mezzanine_sur_poteaux": {
+    "valeur": 35,
+    "fourchette": [
+     20,
+     50
+    ],
+    "note": "la premiere zone de plancher se coffre des que ses poteaux portent"
+   },
+   "facade_sur_levage": {
+    "valeur": 10,
+    "fourchette": [
+     5,
+     20
+    ],
+    "note": "la facade demarre quand la premiere file de charpente est posee et stable"
+   }
+  },
+  "taches_servies_par_la_grue": {
+   "_role": "Taches qui demandent la grue a tour du chantier. C'est une DECISION de conduite, pas une hypothese : elle n'a pas de fourchette. Elle sert au controle de conflit de ressource, qui compare la demande au parc (materiel.nb_grues) jour par jour — et non en moyenne.",
+   "_nature": "decision",
+   "valeur": [
+    "FOND",
+    "RADT",
+    "VOIL",
+    "PHNT",
+    "POTR",
+    "MEZZ",
+    "NOYX",
+    "MARQ"
+   ]
+  }
+ },
+ "effectifs": {
+  "_role": "Effectifs par poste sur une zone. V3.",
+  "niveau_preuve": "V3",
+  "coffreurs": 8,
+  "ferrailleurs_dalle": 8,
+  "ferrailleurs_poutres": 4,
+  "equipe_betonnage": 5,
+  "grutier": 1,
+  "chef_equipe": 1,
+  "heures_par_jour": 8,
+  "_nature": "decision",
+  "_nature_note": "Un effectif n'est pas une hypothese : c'est une DECISION de conduite de chantier. Il n'a donc pas de fourchette — on ne met pas « entre 6 et 10 coffreurs », on en met 8 et on en repond. Les cadences, elles, sont des hypotheses V3 avec fourchette : elles decrivent ce qu'on ignore. Confondre les deux fait croire qu'on peut negocier un effectif comme on borne une incertitude."
+ },
+ "materiel": {
+  "niveau_preuve": "V3",
+  "_role": "Le materiel se DEDUIT du planning : a la cadence retenue, plusieurs zones sont coffrees en meme temps. Une valeur posee sans regarder le planning est une valeur fausse.",
+  "tables_coffrantes_m2": 1300,
+  "tables_note": "trois zones se recouvrent a la cadence de 3,4 j pour un cycle de 8,6 j : il faut environ 3 x 424 m2. L'ancienne valeur de 420 m2 ne couvrait qu'une zone et contredisait le planning.",
+  "etais_par_m2": 2.5,
+  "etais_note": "densite d'etais par m2 de plancher etaye ; le nombre total se deduit du nombre de zones etayees simultanement",
+  "pompe_a_beton": "pompe automotrice ; son debit retenu est cadences.betonnage_m3_h, pour ne pas ecrire deux fois le meme nombre",
+  "grue": "grue a tour unique desservant le plancher ; voir C1. Le nombre de grues divise le temps d'occupation par zone : c'est un levier de cadence, et souvent le dernier disponible quand les equipes sont deja renforcees.",
+  "etais_de_reprise_maintenus_j": {
+   "valeur": 14,
+   "fourchette": [
+    7,
+    28
+   ],
+   "note": "duree pendant laquelle les etais de reprise restent en place APRES le decoffrage. Le critere reel est une resistance et une redistribution de charges, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
+  },
+  "nb_grues": 1,
+  "_nature": "decision"
+ },
+ "multi_sites": {
+  "note": "D7 — le lecteur pilote plusieurs sites. Proposition : la gare GV (site principal) + une gare de RER (site secondaire).",
+  "sites": [
+   {
+    "id": "S-GV",
+    "nom": "Gare a grande vitesse (cas phare)",
+    "emprise_m": [
+     120,
+     40
+    ]
+   },
+   {
+    "id": "S-RER",
+    "nom": "Gare de RER (site secondaire, pour D7 uniquement)",
+    "emprise_m": [
+     45,
+     18
+    ],
+    "statut": "esquisse — pas de modules de calcul dedies",
+    "site_geotechnique": "S2 — Agadir (sables laches, nappe a 3,5 m, sismicite forte)",
+    "raison": "aucun defaut concurrent n'etait propose pour ce point ; l'option S2 est retenue pour que D7 porte des sols difficiles sans alourdir le cas phare. Reversible d'un mot."
+   }
+  ]
+ },
+ "ratios_V3": {
+  "_role": "Ratios d'ordre de grandeur. En phase § 5.0, les quantites ne peuvent PAS sortir d'un dimensionnement : elles sortent de ces ratios, declares avec leur fourchette.",
+  "annee_ref": 2026,
+  "acier_dalle_kg_m3": {
+   "valeur": 80,
+   "fourchette": [
+    65,
+    100
+   ]
+  },
+  "acier_poutre_kg_m3": {
+   "valeur": 180,
+   "fourchette": [
+    140,
+    220
+   ]
+  },
+  "coffrage_rives_pct": {
+   "valeur": 4,
+   "fourchette": [
+    2,
+    8
+   ],
+   "note": "rives de dalle et about de zone, en % de la surface coffree"
+  },
+  "part_main_oeuvre_directe_pct": {
+   "valeur": 22,
+   "fourchette": [
+    15,
+    30
+   ],
+   "note": "part de la main d'oeuvre DIRECTE de production dans un prix pose de gros oeuvre. Sert de controle de coherence entre le prix horaire et les prix unitaires, qui sont deux hypotheses V3 independantes."
+  }
+ },
+ "suivi": {
+  "_role": "Avancement constate a une date d'arret, pour l'exemple de valeur acquise. V3 : donnees fabriquees pour la demonstration.",
+  "niveau_preuve": "V3",
+  "zones_realisees_a_date": 3,
+  "avancement_zone_en_cours_pct": 60,
+  "cout_reel_constate_MAD": 1330000,
+  "note": "Le cout reel vient des attachements. Ici il est pose en V3 pour faire tourner la chaine.",
+  "base_du_choix": "Ce cout reel est FABRIQUE pour la demonstration, et choisi sur une base explicite : un chantier en legere difficulte — quelques pour cent de depassement de cout et un retard de l'ordre d'une zone. La valeur a ete posee AVANT de regarder CPI et SPI, a partir de l'ordre de grandeur du budget de 3,6 zones ; le calcul a ensuite donne CPI 0,94 et un retard de 1,26 zone a la date d'arret. On publie ce que le calcul rend, pas ce que la note esperait : une premiere version de cette note annoncait « une demi-zone » et contredisait la sortie de calc/.",
+  "quantites_relevees": {
+   "_role": "Quantites RELEVEES sur le chantier a la date d'arret (attachements). Elles sont construites sur l'etat PHYSIQUE du chantier — trois zones completes, plus une zone dont le coffrage est pose, le ferraillage presque fini et le beton pas coule — et non sur un prorata uniforme de l'avancement declare. Une version precedente appliquait ce prorata : le recoupement comparait alors deux calculs partageant la meme hypothese, et ne pouvait rien detecter.",
+   "beton_m3": 293.4,
+   "acier_kg": 34007.0,
+   "coffrage_m2": 1683.6,
+   "niveau_preuve": "V3 — releves fabriques pour la demonstration",
+   "base_du_choix": "Poses legerement en retrait de l'etat physique (environ -0,6 % sur le beton, -0,8 % sur le coffrage, -2 % sur l'acier) pour que la demonstration montre ce que le controle sert a detecter : un ecart reel mais sous le seuil sur les postes geometriques, et un ecart plus large sur l'acier, qui vient d'un ratio."
+  },
+  "jours_ouvres_par_semaine": 5,
+  "jour_arret_ouvre": 19,
+  "_jour_arret": "La date d'arret est la DONNEE ; l'avancement prevu a cette date s'en deduit par le planning, en comptant l'avancement fractionnaire de chaque zone. L'ancienne version posait « 4 zones prevues » et en deduisait la date : la courbe en S et le tableau de valeur acquise mesuraient alors deux choses differentes et se contredisaient de 8 points."
+ },
+ "cycle_zone": {
+  "_role": "Parametres du cycle d'une zone qui ne sortent ni d'une quantite ni d'une cadence : durees physiques ou contractuelles, et taux de recouvrement entre equipes. Ils etaient ecrits en dur dans calc/ : ils pesent 32 % du cycle et la totalite du gain de recouvrement, ils doivent donc etre declares, bornes et registres comme le reste.",
+  "niveau_preuve": "V3",
+  "annee_ref": 2026,
+  "cure_avant_decoffrage_j": {
+   "valeur": 2.0,
+   "fourchette": [
+    1.0,
+    4.0
+   ],
+   "note": "attente de resistance avant decoffrage. Le critere reel est une resistance, pas une duree : en § 5.0 aucune valeur normative n'est disponible, la duree est donc une hypothese."
+  },
+  "decoffrage_j": {
+   "valeur": 0.5,
+   "fourchette": [
+    0.25,
+    1.0
+   ],
+   "note": "depose des tables, etais de reprise maintenus"
+  },
+  "point_arret_visa_ferraillage_j": {
+   "valeur": 0.25,
+   "fourchette": [
+    0.125,
+    0.5
+   ],
+   "note": "visa du ferraillage par la maitrise d'oeuvre avant coulage : un point d'arret est une tache du planning"
+  },
+  "recouvrement_coffrage_ferraillage_poutres_pct": {
+   "valeur": 50,
+   "fourchette": [
+    30,
+    70
+   ],
+   "note": "part du coffrage faite avant que le ferraillage des poutres demarre"
+  },
+  "recouvrement_ferraillage_poutres_dalle_pct": {
+   "valeur": 40,
+   "fourchette": [
+    20,
+    60
+   ],
+   "note": "part du ferraillage des poutres faite avant que celui de la dalle demarre"
+  },
+  "effectif_par_tache": {
+   "_role": "Effectif present sur la zone pendant chaque tache du cycle. Les taches a zero sont voulues : la cure n'occupe personne, et le visa est l'affaire du controle, pas d'une equipe.",
+   "COF": "coffreurs",
+   "FEP": "ferrailleurs_poutres",
+   "FED": "ferrailleurs_dalle",
+   "PTA": 0,
+   "BET": "equipe_betonnage",
+   "CUR": 0,
+   "DEC": 2,
+   "_note_DEC": "le decoffrage mobilise deux compagnons, pas l'equipe de coffrage entiere : celle-ci est deja sur la zone suivante, c'est tout l'objet de la rotation."
+  },
+  "marge_de_rotation_pct": {
+   "valeur": 14,
+   "fourchette": [
+    0,
+    30
+   ],
+   "note": "marge ajoutee a la borne theorique de rotation. La borne suppose les equipes saturees a 100 %, ce qu'aucun chantier ne tient : alea, approvisionnement, reprise. A zero, le planning est theoriquement faisable et pratiquement intenable."
+  },
+  "taches_servies_par_la_grue": {
+   "valeur": [
+    "coffrage_j",
+    "decoffrage_j"
+   ],
+   "note": "La grue monte et descend les tables et les cages. Elle ne sert PAS au coulage : le beton arrive par pompe automotrice (materiel.pompe_a_beton). Si le chantier coulait a la benne, il faudrait ajouter betonnage_j ici — et la cadence changerait."
+  }
+ }
 }

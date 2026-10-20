@@ -1,7 +1,7 @@
 """Planification d'un chantier de gare (module D2).
 
 Change d'echelle, pas de methode : le plancher de mezzanine du module TV y est UNE
-tache parmi vingt-cinq. Trois choses que le referentiel generique de gestion de projet
+tache parmi vingt-sept. Trois choses que le referentiel generique de gestion de projet
 ne donne pas, et qui font ce module (§ 1.1 : le lecteur maitrise CPM, on ne le lui
 reapprend pas) :
 
@@ -181,26 +181,73 @@ LOT = {
     "SECH": "7 · Finitions", "SECO": "7 · Finitions", "ESSA": "8 · Réception", "RECE": "8 · Réception",
 }
 
-# (tache, [(predecesseur, decalage)]) — decalage negatif = recouvrement
+# (tache, [(predecesseur, cle_de_recouvrement | None)]).
+#
+# Le recouvrement n'est PLUS un nombre de jours : c'est une cle de
+# `planning.recouvrements_pct`, resolue par `liens_resolus()` en pourcentage de la duree
+# du PREDECESSEUR. Deux raisons, toutes deux trouvees par la passe adversariale :
+#   — un decalage en jours ignore la duree qu'il recouvre, et faisait demarrer deux
+#     successeurs AVANT leur predecesseur (bloquant B7) ;
+#   — la sequence terrassement etait l'inverse de ce que la rubrique securite ecrit :
+#     le soutenement suivait la fouille. Il la precede maintenant (bloquant B6).
 LIENS = {
     "INST": [], "CHET": [],
-    "GRUE": [("INST", -5.0)], "TOPO": [("INST", -8.0)],
-    "TERR": [("TOPO", 0.0)], "FOUI": [("TERR", -2.0)], "SOUT": [("FOUI", -4.0)],
-    "FOND": [("FOUI", 0.0), ("SOUT", 0.0), ("GRUE", 0.0)],
-    "RADT": [("FOND", -3.0)], "VOIL": [("RADT", 0.0)], "PHNT": [("VOIL", 0.0)],
-    "ETAN": [("PHNT", 0.0)],
-    "POTR": [("PHNT", 0.0)], "MEZZ": [("POTR", -4.0)], "NOYX": [("PHNT", 0.0)],
-    "CHFA": [("CHET", 0.0)],
-    "CHAP": [("CHFA", 0.0), ("MEZZ", 0.0)], "CHLV": [("CHAP", 0.0)],
-    "COUV": [("CHLV", 0.0)], "FACA": [("CHLV", -6.0)], "MARQ": [("MEZZ", 0.0), ("CHAP", 0.0)],
-    "PSOU": [("ETAN", 0.0)], "QUAI": [("PSOU", 0.0)],
-    "SECH": [("COUV", 0.0), ("FACA", 0.0)], "SECO": [("SECH", 0.0), ("NOYX", 0.0), ("MARQ", 0.0)],
-    "ESSA": [("SECO", 0.0), ("QUAI", 0.0)], "RECE": [("ESSA", 0.0)],
+    "GRUE": [("INST", "grue_sur_installation")],
+    "TOPO": [("INST", "topographie_sur_installation")],
+    "TERR": [("TOPO", None)],
+    # securite (§ 3.4) : la paroi se realise depuis la plateforme decapee, PUIS on
+    # approfondit a son abri. La fouille ne precede jamais le soutenement.
+    "SOUT": [("TERR", "soutenement_sur_decapage")],
+    "FOUI": [("SOUT", "fouille_sur_soutenement")],
+    "FOND": [("FOUI", None), ("GRUE", None)],
+    "RADT": [("FOND", "radier_sur_fondations")], "VOIL": [("RADT", None)],
+    "PHNT": [("VOIL", None)], "ETAN": [("PHNT", None)],
+    "POTR": [("PHNT", None)], "MEZZ": [("POTR", "mezzanine_sur_poteaux")],
+    "NOYX": [("PHNT", None)],
+    "CHFA": [("CHET", None)],
+    "CHAP": [("CHFA", None), ("MEZZ", None)], "CHLV": [("CHAP", None)],
+    "COUV": [("CHLV", None)], "FACA": [("CHLV", "facade_sur_levage")],
+    "MARQ": [("MEZZ", None), ("CHAP", None)],
+    "PSOU": [("ETAN", None)], "QUAI": [("PSOU", None)],
+    "SECH": [("COUV", None), ("FACA", None)],
+    "SECO": [("SECH", None), ("NOYX", None), ("MARQ", None)],
+    "ESSA": [("SECO", None), ("QUAI", None)], "RECE": [("ESSA", None)],
 }
 
 
-def reseau(durees: dict) -> list:
-    return [Tache(i, NOMS[i], durees[i]["duree_j"], LIENS[i]) for i in NOMS]
+def liens_resolus(d: dict, durees: dict) -> dict:
+    """Transforme les cles de recouvrement en decalages, en jours.
+
+    Et verifie l'invariant que le bloquant B7 violait : un recouvrement ne peut pas
+    depasser la duree du predecesseur, sans quoi le successeur demarre avant lui. Avec
+    des pourcentages borne a 100 %, l'invariant est vrai par construction — le controle
+    reste la pour le cas ou quelqu'un reecrirait un decalage en dur.
+    """
+    pct = d["planning"]["recouvrements_pct"]
+    out = {}
+    for i, liens in LIENS.items():
+        resolus = []
+        for pred, cle in liens:
+            if cle is None:
+                dec = 0.0
+            else:
+                part = pct[cle]["valeur"] / 100.0
+                if not 0.0 <= part <= 1.0:
+                    raise ValueError(f"recouvrement {cle} = {part:.0%} hors de [0 ; 100 %]")
+                dec = -part * durees[pred]["duree_j"]
+            if abs(dec) > durees[pred]["duree_j"] + 1e-9:
+                raise ValueError(
+                    f"lien {pred} -> {i} : recouvrement de {abs(dec):.2f} j pour un "
+                    f"predecesseur de {durees[pred]['duree_j']:.2f} j — le successeur "
+                    "demarrerait avant son predecesseur")
+            resolus.append((pred, round(dec, 4)))
+        out[i] = resolus
+    return out
+
+
+def reseau(d: dict, durees: dict) -> list:
+    lr = liens_resolus(d, durees)
+    return [Tache(i, NOMS[i], durees[i]["duree_j"], lr[i]) for i in NOMS]
 
 
 # ------------------------------------------------- contraintes d'exploitation
@@ -232,37 +279,131 @@ def etalement_sous_fenetres(duree: float, debut_au_plus_tot: float,
             "immobilisation_improductive_j": round((fin - debut) - duree, 2)}
 
 
-def planning_avec_fenetres(durees: dict, ce: dict, iterations: int = 30) -> dict:
+def planning_avec_fenetres(d: dict, durees: dict, iterations: int = 30) -> dict:
     """Point fixe : la fenetre depend de la date, la date depend de la fenetre.
 
-    On recalcule le reseau avec les durees ETALEES jusqu'a ce que les dates ne bougent
-    plus. Sans cette boucle, on appliquerait la fenetre a une date au plus tot qui
-    n'existe deja plus.
+    Une fenetre de consignation agit sur la tache de DEUX facons, et il a fallu une
+    passe adversariale pour voir que la seconde manquait :
+
+    1. elle l'ETALE — le travail se fait par tranches, une par fenetre ;
+    2. elle la DECALE — elle ne peut pas commencer avant la premiere fenetre
+       disponible, meme si le reseau, lui, serait pret plus tot.
+
+    La premiere version n'appliquait que l'etalement : elle calculait la date de la
+    fenetre, la publiait dans `detail_fenetres`, et laissait la tache demarrer a la
+    date du reseau. Le chantier perdait ainsi 17,5 jours ouvres et la date
+    contractuelle 27 jours calendaires (bloquant B1). La contrainte passe maintenant
+    par `Tache.au_plus_tot`, que les deux voies du CPM honorent.
+
+    Le point fixe converge parce que les deux effets ne font que RETARDER : la suite
+    des dates au plus tot est croissante et majoree par la plus tardive des fenetres
+    atteignables.
     """
+    ce = d["planning"]["contraintes_exploitation"]
     fen, per = ce["fenetre_jours"]["valeur"], ce["periode_entre_fenetres_jours"]["valeur"]
-    prem = ce["premiere_fenetre_jour"]
+    prem = ce["premiere_fenetre_jour"]["valeur"]
     soumises = ce["taches_soumises"]
+    lr = liens_resolus(d, durees)
     etale = {i: durees[i]["duree_j"] for i in durees}
+    debut_impose = {i: 0.0 for i in durees}
+    # date a laquelle le reseau NU serait pret : c'est contre elle que se mesure
+    # l'attente. Mesuree contre le reseau deja contraint, elle vaut zero par
+    # construction et l'information se perd.
+    nu = voie_A_parcours([Tache(i, NOMS[i], durees[i]["duree_j"], lr[i]) for i in NOMS])
     detail = {}
-    for _ in range(iterations):
-        r = voie_A_parcours([Tache(i, NOMS[i], etale[i], LIENS[i]) for i in NOMS])
+    for n_iter in range(iterations):
+        r = voie_A_parcours([Tache(i, NOMS[i], etale[i], lr[i], debut_impose[i]) for i in NOMS])
         change = False
         for i in soumises:
             d0 = r["tot"][i][0]
             e = etalement_sous_fenetres(durees[i]["duree_j"], d0, fen, per, prem)
+            e["debut_du_reseau_nu"] = round(nu["tot"][i][0], 2)
+            e["attente_avant_premiere_fenetre_j"] = round(e["debut"] - nu["tot"][i][0], 2)
             if abs(e["etalement_j"] - etale[i]) > 1e-6:
                 etale[i], change = e["etalement_j"], True
+            if abs(e["debut"] - debut_impose[i]) > 1e-6:
+                debut_impose[i], change = e["debut"], True
             detail[i] = e
         if not change:
             break
-    taches = [Tache(i, NOMS[i], etale[i], LIENS[i]) for i in NOMS]
+    else:
+        raise ValueError(f"point fixe des fenetres non converge en {iterations} iterations")
+    taches = [Tache(i, NOMS[i], etale[i], lr[i], debut_impose[i]) for i in NOMS]
     cc = contre_calcul(taches)
+    res = cc["detail"]
+    # Sous contrainte externe, le plus long CHEMIN et l'ensemble des taches a marge
+    # nulle ne coincident plus : en amont d'une tache epinglee par une fenetre, tout
+    # le monde gagne de la marge. Le controle d'inclusion ne vaut donc que sur la
+    # partie du chemin situee APRES la derniere tache contrainte active.
+    chemin = cc["chemin_critique"]
+    actives = [i for i in soumises if abs(res["tot"][i][0] - debut_impose[i]) < 1e-6
+               and debut_impose[i] > 0]
+    idx = max([chemin.index(i) for i in actives if i in chemin], default=-1)
+    aval = chemin[idx:] if idx >= 0 else chemin
+    cc["taches_contraintes_actives"] = actives
+    cc["chemin_en_aval_de_la_contrainte"] = aval
+    cc["aval_entierement_critique"] = set(aval) <= set(cc["taches_critiques_voie_A"])
+    cc["pourquoi_l_inclusion_complete_ne_tient_plus"] = (
+        "Une tache epinglee sur une fenetre de consignation coupe le chemin critique en "
+        "deux : en amont, la duree ne commande plus la date de la tache epinglee, donc "
+        "toutes les taches amont recoivent de la marge ; en aval, la chaine redevient "
+        "critique. Un planning sous fenetres n'a pas un chemin critique continu, et "
+        "c'est exactement ce qui le distingue d'un planning ordinaire.")
+    # Garde-fou du bloquant B1 : la date au plus tot publiee DOIT etre celle de la
+    # fenetre. Le test de recette d'avant comparait la fenetre a elle-meme, ce qui
+    # etait vrai par construction et n'a rien vu.
+    for i in soumises:
+        if abs(res["tot"][i][0] - detail[i]["debut"]) > 1e-6:
+            raise ValueError(
+                f"{i} : le reseau la fait demarrer a {res['tot'][i][0]:.2f} alors que sa "
+                f"fenetre est a {detail[i]['debut']:.2f} — la contrainte n'est pas appliquee")
     return {"durees_etalees": {i: round(etale[i], 2) for i in soumises},
-            "detail_fenetres": detail, "contre_calcul": cc, "taches": taches}
+            "debuts_imposes": {i: round(debut_impose[i], 2) for i in soumises},
+            "detail_fenetres": detail, "contre_calcul": cc, "taches": taches,
+            "iterations": n_iter + 1}
+
+
+def segments_de_travail(durees: dict, res: dict, detail: dict, ce: dict) -> dict:
+    """Quand on travaille VRAIMENT sur chaque tache, et pas seulement quand elle court.
+
+    Une tache ordinaire travaille sur tout son intervalle. Une tache consignee ne
+    travaille que pendant ses fenetres : entre deux consignations, personne n'est la.
+    Cette distinction decide de deux grandeurs que le module publie :
+
+      — l'histogramme d'effectifs, qui dimensionne la base-vie : compter dix
+        compagnons pendant 80 jours d'attente dimensionne une base-vie fantome ;
+      — la courbe en S, qui mesure le travail consomme : la version precedente
+        comptait l'etalement x l'effectif, soit 801 jours-hommes pour 121 de travail,
+        et gonflait le total de 13,8 % (bloquant B5). Elle contredisait la phrase que
+        le module repete : le cout suit la duree de travail, le delai suit l'etalement.
+
+    Elle produit aussi les vrais PALIERS de la courbe en S : entre deux fenetres, elle
+    est plate, et c'est cela que la legende doit decrire (bloquant B4).
+    """
+    fen, per = ce["fenetre_jours"]["valeur"], ce["periode_entre_fenetres_jours"]["valeur"]
+    out = {}
+    for i in NOMS:
+        deb, fin = res["tot"][i]
+        if i in detail:
+            e = detail[i]
+            segs, reste = [], e["duree_de_travail_j"]
+            for k in range(e["nb_fenetres"]):
+                t = min(fen, reste)
+                s0 = e["debut"] + k * per
+                segs.append((round(s0, 4), round(s0 + t, 4)))
+                reste -= t
+            out[i] = segs
+        else:
+            out[i] = [(round(deb, 4), round(fin, 4))]
+        total = sum(b - a for a, b in out[i])
+        if abs(total - durees[i]["duree_j"]) > 1e-6:
+            raise ValueError(f"{i} : {total:.4f} j de travail segmente pour une duree de "
+                             f"{durees[i]['duree_j']:.4f} j")
+    return out
 
 
 # ------------------------------------------------------------- marges
-def marges(res: dict, durees: dict) -> dict:
+def marges(res: dict, durees: dict, liens: dict) -> dict:
     """Marge totale (donnee par le parcours) et marge LIBRE (recalculee ici).
 
     La distinction n'est pas academique : consommer une marge totale decale les
@@ -271,7 +412,7 @@ def marges(res: dict, durees: dict) -> dict:
     """
     tot = res["tot"]
     succ = {i: [] for i in NOMS}
-    for i, preds in LIENS.items():
+    for i, preds in liens.items():
         for p, dec in preds:
             succ[p].append((i, dec))
     out = {}
@@ -321,48 +462,104 @@ def effectifs_par_tache(d: dict, pl: dict, durees: dict) -> dict:
     return out
 
 
-def histogramme_effectifs(res: dict, eff: dict, decalages: dict | None = None) -> list:
-    """Effectif present chaque jour. Les taches se recouvrent : on les somme."""
+def histogramme_effectifs(res: dict, eff: dict, segments: dict,
+                          decalages: dict | None = None) -> list:
+    """Effectif present chaque jour, sur les SEGMENTS DE TRAVAIL.
+
+    Une tache consignee n'occupe personne entre deux fenetres : la compter sur tout son
+    etalement dimensionnerait une base-vie pour des gens qui ne sont pas la.
+    """
     dec = decalages or {}
     fin = int(math.ceil(res["duree"])) + 1
     jours = []
     for k in range(fin):
         n = 0
         for i in NOMS:
-            deb = res["tot"][i][0] + dec.get(i, 0.0)
-            if deb <= k < deb + (res["tot"][i][1] - res["tot"][i][0]):
+            dk = dec.get(i, 0.0)
+            if any(a + dk <= k < b + dk for a, b in segments[i]):
                 n += eff[i]
         jours.append(n)
     return jours
 
 
-def lisser(res: dict, eff: dict, mg: dict, passes: int = 4) -> dict:
+def conflits_de_grue(d: dict, segments: dict, eff: dict,
+                     decalages: dict | None = None) -> dict:
+    """La grue a tour est-elle demandee en deux endroits le meme jour ?
+
+    Une occupation MOYENNE ne repond pas a la question : c'est l'erreur que la tranche
+    verticale avait faite et que la passe adversariale de D2 a retrouvee intacte (la
+    check-list du module exigeait ce controle, et le module ne le faisait pas). On
+    compte donc, jour par jour, combien de taches servies par la grue sont actives, et
+    on compare au parc.
+    """
+    taches = d["planning"]["taches_servies_par_la_grue"]["valeur"]
+    parc = d["materiel"]["nb_grues"]
+    dec = decalages or {}
+    fin = max(int(math.ceil(b + dec.get(i, 0.0))) for i in NOMS for _, b in segments[i]) + 1
+    profil, pire, j_pire = [], 0, 0
+    for k in range(fin):
+        actives = [i for i in taches
+                   if any(a + dec.get(i, 0.0) <= k < b + dec.get(i, 0.0)
+                          for a, b in segments[i])]
+        profil.append({"j": k, "demande": len(actives), "taches": actives})
+        if len(actives) > pire:
+            pire, j_pire = len(actives), k
+    jours_en_conflit = [x["j"] for x in profil if x["demande"] > parc]
+    return {
+        "parc_de_grues": parc, "taches_servies": taches,
+        "demande_maximale": pire, "jour_de_la_demande_maximale": j_pire,
+        "taches_au_pire_jour": profil[j_pire]["taches"],
+        "nb_jours_en_conflit": len(jours_en_conflit),
+        "premier_jour_en_conflit": jours_en_conflit[0] if jours_en_conflit else None,
+        "dernier_jour_en_conflit": jours_en_conflit[-1] if jours_en_conflit else None,
+        "conflit": bool(jours_en_conflit),
+        "profil": [{"j": x["j"], "demande": x["demande"]} for x in profil],
+        "occupation_moyenne_pct": round(
+            sum(x["demande"] for x in profil) / max(1, len(profil)) / max(1, parc) * 100, 1),
+        "pourquoi_la_moyenne_ne_suffit_pas": (
+            "L'occupation moyenne lisse les pointes : une grue demandee trois fois le "
+            "meme jour et nulle part le lendemain affiche une moyenne rassurante. Seul "
+            "le profil journalier dit si le planning est faisable."),
+    }
+
+
+def lisser(res: dict, eff: dict, mg: dict, segments: dict, passes: int = 4) -> dict:
     """Lissage : on DECALE les taches non critiques dans leur marge pour abaisser la
     pointe. Aucune duree ne change, aucune date de fin ne bouge.
+
+    Le decalage est borne par la marge LIBRE, pas par la marge totale. Dans la marge
+    totale, une tache peut se decaler sans repousser la fin du projet, mais en
+    repoussant le DEBUT de son successeur : l'histogramme lisse etait alors
+    irrealisable, et la simplification n'etait pas declaree. Dans la marge libre, aucun
+    successeur ne bouge, donc le planning lisse reste celui qu'on a calcule.
 
     C'est une heuristique gloutonne, pas un optimum : le lissage de ressources est un
     probleme combinatoire. Elle est declaree comme telle (§ R6), et le module dit ce
     qu'elle ne garantit pas.
     """
-    base = histogramme_effectifs(res, eff)
+    base = histogramme_effectifs(res, eff, segments)
     dec = {i: 0.0 for i in NOMS}
     meilleure = max(base)
     for _ in range(passes):
         bouge = False
         for i in sorted(NOMS, key=lambda x: -eff[x]):
-            m = mg[i]["marge_totale_j"]
+            m = mg[i]["marge_libre_j"]
             if m < 1e-9 or eff[i] == 0:
                 continue
             for pas in range(1, int(m) + 1):
                 essai = dict(dec); essai[i] = float(pas)
-                p = max(histogramme_effectifs(res, eff, essai))
+                p = max(histogramme_effectifs(res, eff, segments, essai))
                 if p < meilleure - 1e-9:
                     meilleure, dec, bouge = p, essai, True
         if not bouge:
             break
-    lisse = histogramme_effectifs(res, eff, dec)
+    lisse = histogramme_effectifs(res, eff, segments, dec)
     utiles = [x for x in base if x > 0]
     utiles_l = [x for x in lisse if x > 0]
+    jh_avant, jh_apres = sum(base), sum(lisse)
+    if abs(jh_avant - jh_apres) > 1e-9:
+        raise ValueError(f"le lissage a cree ou detruit du travail : {jh_avant} -> {jh_apres} "
+                         "jours-hommes. Un decalage deplace, il n'ajoute rien.")
     return {
         "pointe_avant": max(base), "pointe_apres": max(lisse),
         "moyenne_avant": round(sum(base) / max(1, len(utiles)), 1),
@@ -371,9 +568,22 @@ def lisser(res: dict, eff: dict, mg: dict, passes: int = 4) -> dict:
         "decalages_utilises_j": {i: v for i, v in dec.items() if v},
         "marge_totale_consommee_j": round(sum(dec.values()), 1),
         "histogramme_brut": base, "histogramme_lisse": lisse,
+        "borne": "marge libre",
+        "jours_hommes_avant": jh_avant, "jours_hommes_apres": jh_apres,
+        "jours_travailles_avant": len(utiles), "jours_travailles_apres": len(utiles_l),
         "limite": ("Heuristique gloutonne : elle abaisse la pointe, elle ne prouve pas "
                    "qu'aucune autre combinaison ne ferait mieux. Et ce qu'elle depense "
-                   "en marge totale n'est plus disponible pour l'alea."),
+                   "en marge libre n'est plus disponible pour l'alea."),
+        "ce_que_le_lissage_conserve": (
+            f"Les jours-hommes sont identiques avant et apres ({jh_avant} de part et "
+            "d'autre, et le calcul leve si ce n'est pas le cas) : lisser DEPLACE du "
+            "travail, il n'en supprime aucun. La MOYENNE, elle, bouge — de "
+            f"{round(sum(base) / max(1, len(utiles)), 1)} a "
+            f"{round(sum(lisse) / max(1, len(utiles_l)), 1)} compagnons — non pas "
+            "parce que le travail a change, mais parce qu'il s'etale desormais sur "
+            f"{len(utiles_l)} jours travailles au lieu de {len(utiles)}. C'est une "
+            "moyenne a denominateur variable : la grandeur conservee est l'aire, pas "
+            "la moyenne."),
     }
 
 
@@ -439,30 +649,72 @@ def calendrier(duree_ouvree: float, cal: dict) -> dict:
 
 
 # ------------------------------------------------------------- courbe en S
-def courbe_en_s(res: dict, eff: dict, pas: int = 1) -> list:
-    """Avancement en % des jours-hommes, date par date.
+def courbe_en_s(res: dict, eff: dict, segments: dict, pas: int = 1) -> list:
+    """Avancement en % des jours-hommes de TRAVAIL, date par date.
 
-    L'assiette n'est pas le nombre de taches finies ni le temps ecoule : c'est le
-    travail consomme. Une courbe batie sur le temps serait une droite, et une droite
-    n'est pas une courbe en S.
+    L'assiette n'est ni le nombre de taches finies, ni le temps ecoule, ni l'etalement :
+    c'est le travail consomme. Une courbe batie sur le temps serait une droite ; une
+    courbe batie sur l'etalement compte des jours-hommes que personne ne fait, et c'est
+    ce qu'elle faisait avant la passe adversariale (bloquant B5). Accumuler sur les
+    segments de travail produit en prime les vrais paliers : entre deux fenetres de
+    consignation, et pendant le sechage, la courbe est PLATE.
     """
     fin = int(math.ceil(res["duree"]))
-    total = sum(eff[i] * (res["tot"][i][1] - res["tot"][i][0]) for i in NOMS)
+    total = sum(eff[i] * sum(b - a for a, b in segments[i]) for i in NOMS)
     pts = []
     for k in range(0, fin + 1, pas):
         acc = 0.0
         for i in NOMS:
-            deb, f = res["tot"][i]
-            if k >= f:
-                acc += eff[i] * (f - deb)
-            elif k > deb:
-                acc += eff[i] * (k - deb)
+            for a, b in segments[i]:
+                if k >= b:
+                    acc += eff[i] * (b - a)
+                elif k > a:
+                    acc += eff[i] * (k - a)
         pts.append({"j": k, "prevu": round(acc / total * 100, 1) if total else 0.0})
     return pts
 
 
+def paliers_de_la_courbe(pts: list, seuil_pts: float = 0.05) -> list:
+    """Les plages ou la courbe en S ne monte pas, et ce qui les explique.
+
+    Publier les paliers evite d'en commenter un qui n'existe pas : la legende de la
+    figure designait l'attente de consignation la ou le plat etait celui du sechage.
+    """
+    out, debut = [], None
+    for k in range(1, len(pts)):
+        plat = pts[k]["prevu"] - pts[k - 1]["prevu"] <= seuil_pts
+        if plat and debut is None:
+            debut = pts[k - 1]["j"]
+        elif not plat and debut is not None:
+            out.append({"de_j": debut, "a_j": pts[k - 1]["j"]})
+            debut = None
+    if debut is not None and debut < pts[-1]["j"]:
+        out.append({"de_j": debut, "a_j": pts[-1]["j"]})
+    return [x for x in out if x["a_j"] - x["de_j"] >= 5]
+
+
+def _cause_du_palier(pal: dict, res: dict, durees: dict, detail: dict) -> str:
+    """Quelle tache explique un palier : on la CHERCHE, on ne la devine pas.
+
+    La legende de la figure designait l'attente de consignation la ou le plat etait
+    celui du sechage (bloquant B4). Un palier dont la cause est calculee ne peut plus
+    etre commente de travers.
+    """
+    milieu = (pal["de_j"] + pal["a_j"]) / 2
+    # une tache imposee a effectif nul qui court pendant le palier l'explique
+    for i in NOMS:
+        deb, fin = res["tot"][i]
+        if deb <= milieu <= fin and durees[i]["famille"] == "imposee":
+            return f"{i} · {NOMS[i]} — durée imposée, aucun effectif sur le chantier"
+    for i, e in detail.items():
+        if e["debut"] <= milieu <= e["fin"]:
+            return f"{i} · {NOMS[i]} — entre deux fenêtres de consignation"
+    return "aucune cause identifiee automatiquement"
+
+
 # ------------------------------------------- contre-calcul n° 2, hors CPM
-def contre_calcul_chemin(res: dict, chemin: list, durees_etalees: dict) -> dict:
+def contre_calcul_chemin(res: dict, chemin: list, durees_etalees: dict,
+                         liens: dict, debuts_imposes: dict | None = None) -> dict:
     """Seconde voie, qui n'est PAS un second algorithme de CPM.
 
     On additionne a la main les durees et les decalages du chemin annonce critique.
@@ -470,20 +722,126 @@ def contre_calcul_chemin(res: dict, chemin: list, durees_etalees: dict) -> dict:
     celui qui porte la duree — une erreur qu'aucune des deux voies de `cpm.py` ne voit,
     puisqu'elles partagent le meme reseau.
     """
+    imp = debuts_imposes or {}
     total, detail = 0.0, []
     for k, i in enumerate(chemin):
-        dec = 0.0
-        if k:
-            dec = dict(LIENS[i]).get(chemin[k - 1], 0.0)
+        dec = dict(liens[i]).get(chemin[k - 1], 0.0) if k else 0.0
         d = durees_etalees.get(i, 0.0)
-        total += d + dec
-        detail.append({"tache": i, "duree_j": round(d, 2), "decalage_j": dec,
-                       "cumul_j": round(total, 2)})
+        # une contrainte externe (fenetre de consignation) peut repousser le debut
+        # au-dela de ce que le chemin accumule : l'addition doit en tenir compte,
+        # sinon la somme du chemin ne retrouve plus la duree du reseau
+        debut = max(total + dec, imp.get(i, 0.0))
+        attente = round(debut - (total + dec), 4)
+        total = debut + d
+        detail.append({"tache": i, "duree_j": round(d, 2), "decalage_j": round(dec, 2),
+                       "attente_de_fenetre_j": attente, "cumul_j": round(total, 2)})
     ecart = abs(total - res["duree"])
     return {"somme_du_chemin_j": round(total, 2), "duree_du_reseau_j": round(res["duree"], 2),
             "ecart_j": round(ecart, 6), "detail": detail,
             "verdict": "OK" if ecart <= 1e-6 else
                        "LE CHEMIN PUBLIE NE PORTE PAS LA DUREE DU PROJET"}
+
+
+def decomposition_du_chemin(cc2: dict, durees: dict, detail: dict) -> dict:
+    """De quoi la duree du projet est-elle FAITE, le long de son chemin critique ?
+
+    Repartir les durees par famille sur « l'ensemble des taches a marge nulle » ne
+    repond plus a la question des qu'une fenetre de consignation epingle une tache :
+    cet ensemble se reduit a l'aval, et sa somme ne fait plus la duree du projet. La
+    passe adversariale avait raison de refuser ce tableau — mais la bonne reponse
+    n'etait pas de le corriger, elle etait de decomposer le CHEMIN, qui lui, par
+    construction, somme exactement a la duree.
+
+    Cinq postes, dont deux que les trois familles de durees ne savaient pas nommer :
+    l'ATTENTE d'une fenetre, et l'IMMOBILISATION entre deux fenetres.
+    """
+    postes = {"calculee": 0.0, "imposee": 0.0, "declaree": 0.0,
+              "attente_de_fenetre": 0.0, "immobilisation_entre_fenetres": 0.0,
+              "recouvrements": 0.0}
+    lignes = []
+    for pas in cc2["detail"]:
+        i = pas["tache"]
+        fam = durees[i]["famille"]
+        travail = durees[i]["duree_j"]
+        immo = detail[i]["immobilisation_improductive_j"] if i in detail else 0.0
+        postes[fam] += travail
+        postes["immobilisation_entre_fenetres"] += immo
+        postes["attente_de_fenetre"] += pas["attente_de_fenetre_j"]
+        postes["recouvrements"] += pas["decalage_j"]
+        lignes.append({"tache": i, "famille": fam, "travail_j": round(travail, 2),
+                       "immobilisation_j": round(immo, 2),
+                       "attente_j": pas["attente_de_fenetre_j"],
+                       "recouvrement_j": pas["decalage_j"]})
+    total = sum(postes.values())
+    ecart = abs(total - cc2["duree_du_reseau_j"])
+    if ecart > 0.02:
+        raise ValueError(f"la decomposition du chemin fait {total:.2f} j pour une duree de "
+                         f"{cc2['duree_du_reseau_j']:.2f} j — ecart {ecart:.2f} j")
+    duree = cc2["duree_du_reseau_j"]
+    return {
+        "lignes": lignes,
+        "postes_j": {k: round(v, 2) for k, v in postes.items()},
+        "postes_pct": {k: round(v / duree * 100, 1) for k, v in postes.items()},
+        "total_j": round(total, 2), "duree_du_reseau_j": duree, "ecart_j": round(ecart, 4),
+        "part_que_les_effectifs_ne_touchent_pas_pct": round(
+            (postes["imposee"] + postes["attente_de_fenetre"]
+             + postes["immobilisation_entre_fenetres"]) / duree * 100, 1),
+        "lecture": (
+            "Seul le poste « calculee » repond aux effectifs. Les durees imposees, "
+            "l'attente de la premiere fenetre et l'immobilisation entre deux fenetres "
+            "sont hors d'atteinte des moyens : doubler les equipes ne les touche pas "
+            "d'un jour. C'est le chiffre a avoir en tete avant de promettre une date."),
+    }
+
+
+def resoudre_le_conflit_de_grue(d: dict, segments: dict, eff: dict, mg: dict,
+                                depart: dict | None = None) -> dict:
+    """Peut-on tenir le planning avec le parc de grues declare ?
+
+    On cherche un decalage des taches servies par la grue, DANS LEUR MARGE LIBRE, qui
+    ramene la demande journaliere au parc. Si aucun n'y suffit, on le dit : le planning
+    publie demande une grue de plus, et c'est une decision de moyens, pas un detail.
+    """
+    taches = d["planning"]["taches_servies_par_la_grue"]["valeur"]
+    parc = d["materiel"]["nb_grues"]
+    dec = dict(depart or {})
+    best = conflits_de_grue(d, segments, eff, dec)
+    essais = 0
+    for _ in range(6):
+        if not best["conflit"]:
+            break
+        bouge = False
+        for i in sorted(taches, key=lambda x: -mg[x]["marge_libre_j"]):
+            m = mg[i]["marge_libre_j"]
+            if m < 1e-9:
+                continue
+            for pas in range(1, int(m) + 1):
+                essai = dict(dec); essai[i] = float(pas)
+                c = conflits_de_grue(d, segments, eff, essai)
+                essais += 1
+                if (c["nb_jours_en_conflit"], c["demande_maximale"]) < \
+                   (best["nb_jours_en_conflit"], best["demande_maximale"]):
+                    best, dec, bouge = c, essai, True
+        if not bouge:
+            break
+    return {
+        "decalages_essayes": essais,
+        "decalages_retenus_j": {i: v for i, v in dec.items() if v},
+        "marge_libre_consommee_j": round(sum(dec.values()), 1),
+        "resultat": {k: v for k, v in best.items() if k != "profil"},
+        "resolu_dans_les_marges": not best["conflit"],
+        "parc_necessaire_si_non_resolu": best["demande_maximale"] if best["conflit"] else parc,
+        "verdict": (
+            "Le conflit se resorbe dans les marges libres : le planning tient avec "
+            f"{parc} grue(s)."
+            if not best["conflit"] else
+            f"Le conflit NE se resorbe pas dans les marges libres : il reste "
+            f"{best['nb_jours_en_conflit']} jour(s) ou {best['demande_maximale']} taches "
+            f"demandent {parc} grue(s). Trois issues, et une seule est honnete : louer "
+            "une seconde grue sur cette periode, completer par une grue mobile, ou "
+            "deplacer une tache HORS de sa marge libre en acceptant de repousser son "
+            "successeur. Publier le planning tel quel sans le dire n'en est pas une."),
+    }
 
 
 # ------------------------------------------------- variantes des exercices
@@ -508,9 +866,12 @@ def variante(d: dict, pl: dict, duree_mezz: float, **modifs) -> dict:
 
     q = quantites_chantier(d, pl2)
     t = durees_chantier(d, pl2, q, duree_mezz)
-    f = planning_avec_fenetres(t, ce)
+    d2 = {**d, "planning": pl2}
+    f = planning_avec_fenetres(d2, t)
     res = voie_A_parcours(f["taches"])
     return {"duree_projet_j": round(res["duree"], 2),
+            "attente_de_fenetre_j": round(
+                f["detail_fenetres"]["CHLV"]["attente_avant_premiere_fenetre_j"], 2),
             "chemin_critique": f["contre_calcul"]["chemin_critique"],
             "etalement_levage_j": round(f["detail_fenetres"]["CHLV"]["etalement_j"], 2),
             "travail_levage_j": round(f["detail_fenetres"]["CHLV"]["duree_de_travail_j"], 2),
@@ -519,21 +880,108 @@ def variante(d: dict, pl: dict, duree_mezz: float, **modifs) -> dict:
             "duree_mezzanine_j": round(t["MEZZ"]["duree_j"], 2)}
 
 
+def variante_aux_bornes(d: dict, pl: dict, duree_mezz: float, sens: str) -> dict:
+    """Rejoue le planning avec TOUTES les hypotheses au meme bout de leur fourchette.
+
+    Un planning publie une date. Celle-ci sort d'une trentaine d'hypotheses V3 qui
+    portent toutes une fourchette declaree, et qu'aucune variante n'exploitait : le
+    module exhibait ses incertitudes puis publiait un nombre unique, ce qu'il reproche
+    lui-meme aux plannings qu'il critique.
+
+    « pessimiste » : cadences au bas de leur fourchette (on va moins vite), forfaits et
+    delais imposes au haut (tout dure plus longtemps), recouvrements au bas (on se
+    superpose moins). « optimiste » : l'inverse. Ces deux bornes ne sont PAS des
+    probabilites : elles ne disent pas qu'une date est plus vraisemblable qu'une autre,
+    elles disent de combien la date bouge quand les hypotheses bougent ensemble — ce qui
+    est deja la seule chose defendable en reunion.
+    """
+    import copy
+    assert sens in ("optimiste", "pessimiste")
+    bas = sens == "pessimiste"
+    d2 = copy.deepcopy(d)
+    pl2 = d2["planning"]
+
+    def borne(o, prendre_le_bas):
+        if isinstance(o, dict) and "valeur" in o and "fourchette" in o:
+            o["valeur"] = o["fourchette"][0 if prendre_le_bas else 1]
+
+    for v in pl2["cadences_chantier_V3"].values():
+        borne(v, bas)                      # cadence basse = chantier lent
+    for bloc in ("forfaits_V3", "delais_imposes_V3"):
+        for v in pl2[bloc].values():
+            borne(v, not bas)              # forfaits hauts = chantier lent
+    for v in pl2["recouvrements_pct"].values():
+        borne(v, bas)                      # peu de recouvrement = chantier lent
+    ce = pl2["contraintes_exploitation"]
+    borne(ce["fenetre_jours"], bas)                    # fenetre courte = chantier lent
+    borne(ce["periode_entre_fenetres_jours"], not bas)
+    borne(ce["premiere_fenetre_jour"], not bas)
+    borne(ce["part_levage_sous_consignation_pct"], not bas)
+    borne(pl2["calendrier"]["jours_non_ouvres_par_mois_intemperies"], not bas)
+
+    q = quantites_chantier(d2, pl2)
+    t = durees_chantier(d2, pl2, q, duree_mezz)
+    f = planning_avec_fenetres(d2, t)
+    res = voie_A_parcours(f["taches"])
+    cal = calendrier(res["duree"], pl2["calendrier"])
+    return {"sens": sens, "duree_j": round(res["duree"], 1),
+            "duree_avec_intemperies_j": cal["duree_ouvree_avec_intemperies_j"],
+            "fin": cal["fin_avec_alea"],
+            "chemin_critique": f["contre_calcul"]["chemin_critique"]}
+
+
+def fourchette_de_date(d: dict, pl: dict, duree_mezz: float, reference: dict,
+                       cal_ref: dict) -> dict:
+    opt = variante_aux_bornes(d, pl, duree_mezz, "optimiste")
+    pes = variante_aux_bornes(d, pl, duree_mezz, "pessimiste")
+    ref = reference["duree"]
+    return {
+        "optimiste": opt, "retenue": {"duree_j": round(ref, 1),
+                                      "duree_avec_intemperies_j": cal_ref["duree_ouvree_avec_intemperies_j"],
+                                      "fin": cal_ref["fin_avec_alea"]},
+        "pessimiste": pes,
+        "facteur_pessimiste": round(pes["duree_j"] / ref, 2),
+        "facteur_optimiste": round(opt["duree_j"] / ref, 2),
+        "etendue_j": round(pes["duree_j"] - opt["duree_j"], 1),
+        "etendue_pct_de_la_retenue": round((pes["duree_j"] - opt["duree_j"]) / ref * 100, 0),
+        "lecture": (
+            "Les deux bornes ne sont pas des probabilites : rien ne dit que toutes les "
+            "hypotheses se trompent dans le meme sens. Elles mesurent la SENSIBILITE de "
+            "la date aux hypotheses, et cette sensibilite est le seul argument qui tienne "
+            "quand on demande de s'engager : une date unique tiree de trente hypotheses "
+            "non bornees n'est pas defendable, meme si son arithmetique est juste."),
+        "lien_avec_la_dette_n10": (
+            "La dette n° 10 du projet soupconne les cadences V3 d'etre optimistes d'un "
+            "facteur 2 a 3, sur la foi d'une part de main d'oeuvre trop faible. La borne "
+            "pessimiste ci-dessus ne va pas jusque-la : elle ne descend les cadences qu'au "
+            "bas de leur fourchette declaree, soit environ un tiers. Si le soupcon se "
+            "confirmait, la date pessimiste serait encore au-dela. Le module D1, qui "
+            "ouvre les prix poste par poste, est l'endroit ou ce soupcon se verifie."),
+    }
+
+
 # ------------------------------------------------------------- sortie
 def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: float,
                   cycle_mezz: float) -> dict:
     q = quantites_chantier(d, pl)
     t = durees_chantier(d, pl, q, duree_mezzanine_j)
 
-    sans = contre_calcul(reseau(t))
-    f = planning_avec_fenetres(t, pl["contraintes_exploitation"])
+    lr = liens_resolus(d, t)
+    sans = contre_calcul(reseau(d, t))
+    f = planning_avec_fenetres(d, t)
     res = voie_A_parcours(f["taches"])
     etalees = {x.id: x.duree for x in f["taches"]}
-    mg = marges(res, t)
+    seg = segments_de_travail(t, res, f["detail_fenetres"], pl["contraintes_exploitation"])
+    mg = marges(res, t, lr)
     eff = effectifs_par_tache(d, pl, t)
-    lis = lisser(res, eff, mg)
+    lis = lisser(res, eff, mg, seg)
+    grue = conflits_de_grue(d, seg, eff)
+    grue_lissee = conflits_de_grue(d, seg, eff, lis["decalages_utilises_j"])
+    grue_res = resoudre_le_conflit_de_grue(d, seg, eff, mg, lis["decalages_utilises_j"])
+    cs = courbe_en_s(res, eff, seg, 5)
     cal = calendrier(res["duree"], pl["calendrier"])
-    cc2 = contre_calcul_chemin(res, f["contre_calcul"]["chemin_critique"], etalees)
+    cc2 = contre_calcul_chemin(res, f["contre_calcul"]["chemin_critique"], etalees, lr,
+                               f["debuts_imposes"])
     leq = ligne_equilibre(d["geometrie"]["mezzanine"]["zones_de_coulage"]["nb_zones"],
                           cadence_mezz, cycle_mezz, res["tot"]["MEZZ"][0])
 
@@ -556,7 +1004,7 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
     noeuds = [{"id": i, "duree": etalees[i], "marge": mg[i]["marge_totale_j"],
                "critique": mg[i]["critique"]} for i in sous_reseau]
     liens = [{"de": p, "vers": i, "critique": mg[i]["critique"] and mg[p]["critique"]}
-             for i in sous_reseau for p, _ in LIENS[i] if p in sous_reseau]
+             for i in sous_reseau for p, _ in lr[i] if p in sous_reseau]
 
     return {
         "quantites": q,
@@ -567,8 +1015,11 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
         "familles": {"nb_taches": {k: len(v) for k, v in par_famille.items()},
                      "somme_des_durees_j": somme,
                      "sur_le_chemin_critique_j": crit_par_famille,
-                     "part_imposee_du_chemin_pct": round(
-                         crit_par_famille.get("imposee", 0) / res["duree"] * 100, 1)},
+                     "_note_chemin": (
+                         "Attention : « sur_le_chemin_critique_j » somme les taches a "
+                         "marge nulle, dont le total ne fait PAS la duree du projet des "
+                         "qu'une fenetre epingle une tache. Pour decomposer la duree, "
+                         "utiliser « decomposition_du_chemin », qui somme exactement.")},
         "reseau": {
             "duree_sans_contrainte_j": sans["voie_A_parcours_avant_arriere_j"],
             "duree_avec_fenetres_j": round(res["duree"], 2),
@@ -581,9 +1032,17 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
             "contre_calcul_cpm": f["contre_calcul"],
             "contre_calcul_chemin": cc2,
         },
-        "consignations": f["detail_fenetres"],
+        "consignations": {**f["detail_fenetres"],
+                          "_debuts_imposes": f["debuts_imposes"],
+                          "_iterations_du_point_fixe": f["iterations"]},
+        "segments_de_travail": {i: seg[i] for i in NOMS},
         "ressources": lis,
+        "grue": grue,
+        "grue_apres_lissage": grue_lissee,
+        "grue_resolution": grue_res,
+        "decomposition_du_chemin": decomposition_du_chemin(cc2, t, f["detail_fenetres"]),
         "calendrier": cal,
+        "fourchette_de_date": fourchette_de_date(d, pl, duree_mezzanine_j, res, cal),
         "ligne_equilibre": leq,
         "variantes": {},
         "exercices": {},
@@ -596,8 +1055,15 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
             "ligne_equilibre": leq,
             "effectifs": [{"j": k, "n": n} for k, n in enumerate(lis["histogramme_brut"])],
             "effectifs_lisses": [{"j": k, "n": n} for k, n in enumerate(lis["histogramme_lisse"])],
-            "courbe_s": courbe_en_s(res, eff, 5),
+            "courbe_s": cs,
+            "grue": [{"j": x["j"], "n": x["demande"]} for x in grue["profil"]],
+            "paliers": [{"de_j": pal["de_j"], "a_j": pal["a_j"],
+                         "etiquette": _cause_du_palier(pal, res, t, f["detail_fenetres"]).split(" · ")[0]}
+                        for pal in paliers_de_la_courbe(cs)],
         },
+        "paliers_de_la_courbe_s": [
+            {**pal, "cause": _cause_du_palier(pal, res, t, f["detail_fenetres"])}
+            for pal in paliers_de_la_courbe(cs)],
     }
 
 

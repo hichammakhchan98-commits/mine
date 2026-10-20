@@ -34,6 +34,23 @@ CAS = [
      [Tache("s", "s", 3), Tache("t", "t", 7, ["s"]), Tache("u", "u", 1, ["s"])], 10.0),
     ("deux departs independants qui convergent",
      [Tache("v", "v", 4), Tache("w", "w", 9), Tache("x2", "x2", 1, ["v", "w"])], 10.0),
+
+    # --- Contrainte de debut au plus tot imposee de l'exterieur (fenetre de
+    #     consignation, ordre de service, livraison). Regime ajoute apres le bloquant
+    #     B1 de la passe adversariale de D2 : le planning calculait la date de la
+    #     fenetre, la publiait, et faisait quand meme demarrer la tache au reseau.
+    ("contrainte externe active : A finit a 2, B ne peut pas demarrer avant 40 — 40 + 3 = 43",
+     [Tache("y1", "y1", 2), Tache("y2", "y2", 3, ["y1"], au_plus_tot=40)], 43.0),
+    ("contrainte externe inactive : le reseau est deja plus tard qu'elle — 20 + 3 = 23",
+     [Tache("z1", "z1", 20), Tache("z2", "z2", 3, ["z1"], au_plus_tot=5)], 23.0),
+    ("contrainte externe sur une tache sans predecesseur : 7 + 4 = 11",
+     [Tache("w1", "w1", 4, [], au_plus_tot=7)], 11.0),
+    ("contrainte externe sur une branche NON critique : la plus longue l'emporte encore",
+     [Tache("v1", "v1", 1), Tache("v2", "v2", 30, ["v1"]),
+      Tache("v3", "v3", 2, ["v1"], au_plus_tot=10), Tache("v4", "v4", 1, ["v2", "v3"])], 32.0),
+    ("contrainte externe qui DEPLACE le chemin critique : 50 + 2 + 1 = 53 contre 31",
+     [Tache("u1", "u1", 1), Tache("u2", "u2", 30, ["u1"]),
+      Tache("u3", "u3", 2, ["u1"], au_plus_tot=50), Tache("u4", "u4", 1, ["u2", "u3"])], 53.0),
 ]
 
 if __name__ == "__main__":

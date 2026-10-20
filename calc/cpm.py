@@ -14,6 +14,12 @@ reseau a fort decalage negatif. C'est l'etalonnage, pas l'intuition, qui tranche
 
 Conventions : taches a duree fixe, liens fin-debut, decalage (`decalage`) possible
 et negatif autorise (recouvrement). Unite : le jour ouvre.
+
+Une tache peut aussi porter une date de debut au plus tot IMPOSEE (`au_plus_tot`),
+independante de ses predecesseurs : une fenetre de consignation accordee par
+l'exploitant, un ordre de service, une date de livraison. Sans elle, un planning
+pouvait calculer la date d'une fenetre, la publier, et faire quand meme demarrer la
+tache a la date du reseau — c'est le bloquant B1 de la passe adversariale de D2.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
@@ -25,6 +31,7 @@ class Tache:
     nom: str
     duree: float
     predecesseurs: list = field(default_factory=list)   # [(id, decalage)] ou [id]
+    au_plus_tot: float = 0.0        # contrainte externe : fenetre, ordre de service, livraison
 
 
 def _norm(preds):
@@ -62,7 +69,8 @@ def voie_A_parcours(taches: list[Tache]) -> dict:
         t = T[i]
         # borne a zero, comme la voie B : un decalage negatif important ne peut pas
         # faire demarrer une tache avant l'origine du planning
-        debut = max(0.0, max([tot[p][1] + dec for p, dec in _norm(t.predecesseurs)], default=0.0))
+        debut = max(0.0, t.au_plus_tot,
+                    max([tot[p][1] + dec for p, dec in _norm(t.predecesseurs)], default=0.0))
         tot[i] = (debut, debut + t.duree)
     duree = max(f for _, f in tot.values())
 
@@ -102,9 +110,15 @@ def voie_B_enumeration(taches: list[Tache]) -> dict:
        successeur. Sur A(10 j) -> B(1 j) avec un decalage de -10, le seul chemin
        complet mesure 1 jour, alors que A finit a 10 : une enumeration qui ne
        regarde que les fins de chemin rendait 1 au lieu de 10.
-    2. Une tache ne peut pas commencer avant l'origine : le debut est borne a zero.
-       Sans cette borne, un decalage negatif plus grand que la duree du predecesseur
-       produisait une duree negative.
+    2. Une tache ne peut pas commencer avant l'origine, ni avant sa contrainte
+       `au_plus_tot` : le debut est borne par les deux. Sans la borne a zero, un
+       decalage negatif plus grand que la duree du predecesseur produisait une duree
+       negative ; sans la contrainte externe, les deux voies ne mesuraient plus le
+       meme reseau des qu'une fenetre de consignation entrait en jeu.
+
+    Une tache sous contrainte externe mais sans predecesseur n'est pas un depart du
+    reseau au sens naif : elle est atteinte comme les autres, et sa contrainte est
+    appliquee a la descente.
     """
     T = {t.id: t for t in taches}
     succ = {t.id: [] for t in taches}
@@ -122,7 +136,8 @@ def voie_B_enumeration(taches: list[Tache]) -> dict:
 
     def descendre(i, debut, chemin):
         nonlocal meilleur, chemin_max
-        debut = max(0.0, debut)                       # (2) pas de demarrage avant l'origine
+        # (2) pas de demarrage avant l'origine, ni avant une contrainte externe
+        debut = max(0.0, T[i].au_plus_tot, debut)
         fin = debut + T[i].duree
         chemin = chemin + [i]
         if fin > meilleur:                            # (1) on lit la fin a chaque noeud

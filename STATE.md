@@ -1,6 +1,6 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **20/10/2026** · Étape en cours : **3 — paliers, programme recentré au 31/10**
+Dernière mise à jour : **20/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
@@ -28,7 +28,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
 **24 livraisons**, dont **3 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
-- **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification).
+- **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 1 passe /devil,
+  32 défauts, 8 bloquants **tous corrigés** — D-035).
 - ▶ **actifs, non écrits** : A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
   D1, D2, D3, D4, D6, D7, M3D, REC, RC1
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
@@ -53,45 +54,39 @@ Détail et justifications : `QA/grilles-72.md`.
 ## Défauts et passe adversariale /devil (§ 12.2)
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
-valeurs clés depuis `data/` seul. E1 : 8 défauts en construisant, **50 sur trois passes**.
-TV : 6 en construisant, **117 sur cinq passes**. Rapports : `QA/`.
+valeurs clés depuis `data/` seul. E1 : **50 sur trois passes**. TV : **117 sur cinq passes**.
+D2 : **32 sur une passe** (D-034). Rapports : `QA/`.
 
-### Socle E1
+### D2 — une passe, 8 bloquants, aucun vu par les 16 contrôles
 
-**Trois passes** : 26 défauts (5 bloquants), puis 14 (1 bloquant, **3 canaris franchissaient les
-11 contrôles**), puis 10 (0 bloquant). **Zéro bloquant à l'arrivée.** Leçon : une correction est un
-changement comme un autre, elle se relit — deux fois elle s'est retournée. **Canaris** : 14 sur le
-socle et la TV, plus 11 inventés par les relecteurs ; **tous rouges aujourd'hui**.
+Six sur huit sont la famille de la TV : **arithmétique juste, modèle faux**. Le plus grave calculait
+la date d'une fenêtre de consignation, la publiait, et faisait démarrer la tâche ailleurs : 17,5 j
+ouvrés et un mois de date contractuelle. Les autres : une figure qui ne traçait pas la série que sa
+légende annonçait ; une moyenne recalculée dans le dessin, contredisant celle du texte ; une légende
+qui commentait un palier qui n'était pas celui-là ; une courbe en S bâtie sur l'étalement et non sur
+le travail (+13,8 %) ; un réseau dont la séquence contredisait la rubrique sécurité du module ; deux
+recouvrements plus grands que la durée qu'ils recouvraient ; la grue vérifiée en moyenne alors que la
+check-list du module exige le contraire. **Tous corrigés** (D-035), avec leur contrôle et leur canari.
 
-### Tranche verticale TV — cinq passes, 117 défauts
+**Ce qui les a trouvés** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie,
+et des captures regardées. **Aucun test.**
 
-| Passe | Défauts | Bloquants |
-|---|---|---|
-| 1 | 19 | **4** |
-| 2 | 25 | **3** — aucun vu par les contrôles |
-| 3 | 26 | **2** |
-| 4 | 24 | **3** |
-| 5 (bornée) | 23 | **3** — sur ce que le module *dit* de son calcul |
+### E1 (3 passes, 50 défauts) et TV (5 passes, 117 défauts)
 
-Rapports et journaux : `QA/TV-*.md`.
+Détail et journaux : `QA/`. **Les quinze bloquants de la TV sont la même chose que les six de D2** :
+des modèles faux sous une arithmétique juste — avancement au prorata au lieu d'être dérivé du
+réseau, taux appliqué à son complément, ressource vérifiée en moyenne, verdict écrit à la main que
+le chiffre d'à côté contredit.
 
-**Les quinze bloquants sont la même chose : des modèles faux sous une arithmétique juste.**
-L'avancement était réparti au **prorata uniforme** (or à 60 % du cycle le béton n'est pas coulé) ; la
-**valeur acquise** appliquait ce prorata à des dirhams ; un **taux de recouvrement** était appliqué à
-son complément, manqué quatre fois parce que l'autre, 50 %, est auto-complémentaire ; la **grue**
-était vérifiée en moyenne, jamais en conflit. Les trois derniers : des **verdicts écrits à la main**
-contredisant le chiffre d'à côté.
+**La règle qui en sort, et elle vaut pour tous les modules à venir** : toute grandeur d'état est
+**dérivée du réseau** et un test refait la dérivation ; tout paramètre déclaré est **relu dans le
+résultat qu'il engendre** ; tout **verdict publié est une sortie de `calc/`** ; toute V3 est
+registrée et vérifiée dans sa fourchette ; un module à risque porte ses dispositions de sécurité
+(§ 3.4) ; chaque contrôle rendant un verdict porte son canari rouge. **Canaris** : 14 sur E1 et TV,
+11 inventés par les relecteurs, 5 ajoutés par D2 ; tous rouges aujourd'hui.
 
-**La leçon vaut pour les cinquante modules à venir** : les contrôles vérifiaient que les nombres se
-suivent, pas que le **modèle** dise ce qu'il prétend. Depuis : toute grandeur d'état est **dérivée du
-réseau** et un test refait la dérivation ; tout paramètre déclaré est **relu dans le résultat qu'il
-engendre** ; tout **verdict publié est une sortie de `calc/`** ; toute V3 est registrée et vérifiée
-dans sa fourchette ; un module à risque porte ses dispositions de sécurité (§ 3.4) ; chaque contrôle
-rendant un verdict porte son canari rouge. Grille § 7.2 : **minimum 2 partout** depuis la passe 5.
-
-**Dette déclarée** (non bloquants des passes 4 et 5) : scalaires V3 sans fourchette hors registre ·
-deux bibliothèques hors vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui
-ne cherche qu'un mot. Part de main-d'œuvre : dette 10.
+**Dette déclarée de la TV** : scalaires V3 sans fourchette hors registre · deux bibliothèques hors
+vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
 
 ## Valeurs V2 en attente de vérification par le lecteur
 
@@ -128,7 +123,8 @@ ne cherche qu'un mot. Part de main-d'œuvre : dette 10.
 | 10 | **Le contrôle de part de main-d'œuvre reste hors fourchette** (5,2 % pour 15 à 30 %) : les cadences V3 sont probablement optimistes d'un facteur 2 à 3, et elles portent **toutes** les durées du cours | premiers attachements réels |
 | 11 | Chevauchements **texte contre trait** non détectés : le test ne compare que texte contre texte | à outiller |
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
-| 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : les 3 bloquants de la passe 2 ont franchi 14 contrôles verts | à outiller, et c'est la dette la plus lourde |
+| 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
+| 14 | **D2, non corrigés** (D-034) : réseau, lots et `21,7` en dur dans `calc/` au lieu de `data/` (M1) · 9 effectifs posés sans forme `{valeur, fourchette}` (M3) · levier « protection de voie » modélisé par un contournement (M5) · nombres encore écrits à la main (M10) · quantités calculées jamais publiées (m1) · axe de la ligne d'équilibre (m2, m3) · deux libellés plus larges que leur métré (m5) · pas de double lecture MOE (m6) · effet de seuil des fenêtres non commenté (m9, m10) | avant la revue de palier |
 
 ## Données modifiées depuis la dernière livraison
 

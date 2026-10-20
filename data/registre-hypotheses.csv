@@ -54,3 +54,11 @@ H052;raccordement du passage souterrain;9 jours;j;6 à 15;2026;D2;la durée est 
 H053;second œuvre et lots techniques;75 jours;j;55 à 110;2026;D2;forfait de synthèse : le détail appartient aux modules C4 et B7b
 H054;réception et levée des réserves;10 jours;j;7 à 15;2026;D2;réception et levée des réserves
 H055;part du tonnage levée sous consignation;35 %;%;25 à 50;2026;D2;tonnage levé au-dessus ou à proximité immédiate de la voie exploitée
+H056;jour de la première consignation accordée;40 jours ouvrés;j;25 à 60;2026;D2;fixe la phase de toutes les fenêtres suivantes , dépend de la date de dépôt de la demande auprès de l'exploitant, six mois à l'avance
+H057;recouvrement du montage de grue sur l'installation;60 %;%;40 à 80;2026;D2;la grue se monte dès que l'aire de levage et son massif sont prêts
+H058;recouvrement de l'implantation sur l'installation;85 %;%;60 à 95;2026;D2;l'implantation suit l'accès et le bornage, sans attendre la base-vie
+H059;recouvrement du soutènement sur le décapage;50 %;%;30 à 70;2026;D2;la paroi se réalise depuis la plateforme décapée
+H060;recouvrement de la fouille sur le soutènement;45 %;%;25 à 65;2026;D2;avance que la paroi garde sur l'approfondissement — jamais l'inverse (§ S4c)
+H061;recouvrement du radier sur les fondations;35 %;%;20 à 50;2026;D2;le radier démarre sur la partie déjà fondée
+H062;recouvrement de la mezzanine sur les poteaux;35 %;%;20 à 50;2026;D2;la première zone de plancher se coffre dès que ses poteaux portent
+H063;recouvrement de la façade sur le levage;10 %;%;5 à 20;2026;D2;la façade démarre quand la première file de charpente est posée et stable

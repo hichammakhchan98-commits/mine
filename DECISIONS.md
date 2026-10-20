@@ -378,3 +378,41 @@ pour que personne ne la découvre plus tard : **des défauts mineurs seront publ
 de cette série ne portent pas la même garantie que la tranche verticale. Ce qui ne change pas : la
 chaîne `data → calc → rendu`, les contre-calculs, le balisage V3, les contrôles automatiques, et le
 refus de publier un chiffre non calculé.
+
+## D-035 — 20/10/2026 — Les huit bloquants de D2 sont corrigés, pas portés en dette
+
+**Décision.** La passe adversariale n° 1 de D2 a trouvé 32 défauts, dont 8 bloquants. Tous les
+bloquants sont corrigés et republiés, ainsi que treize majeurs et mineurs que D-034 autorisait à
+porter en dette — parce que cinq d'entre eux étaient les amorces directes des bloquants suivants.
+
+**Raison.** Six des huit bloquants sont de la famille identifiée par la tranche verticale : une
+arithmétique juste sous un modèle faux. Le plus grave (B1) publiait la date d'une fenêtre de
+consignation puis faisait démarrer la tâche ailleurs, perdant 17,5 jours ouvrés et un mois de date
+contractuelle. Les porter en dette aurait laissé dans le cours un planning dont la thèse centrale
+n'était implémentée qu'à moitié.
+
+**Impact.** Durée du chantier 341,86 → **362,92 jours ouvrés** ; fin 2028-03-30 → **2028-05-01** ;
+chemin critique recomposé (il est désormais **coupé en deux** par la fenêtre de consignation, ce qui
+est le résultat pédagogique le plus fort du module) ; assiette de la courbe en S et de l'histogramme
+ramenée au travail (7 847 → 6 895 jours-hommes) ; séquence terrassement corrigée pour respecter la
+rubrique de sécurité du module lui-même ; conflit de grue publié et **non résolu** — le chantier
+demande une seconde grue, et le module le dit. Deux sections nouvelles (S4f décomposition du chemin,
+S4g ressources en conflit), une figure de plus, et une fourchette de date remplaçant la date unique.
+
+**Ce que cela change pour la suite.** `calc/cpm.py` accepte une contrainte de début au plus tôt
+(étalonnée sur 5 cas fermés) ; le build **échoue** sur toute option de figure inconnue du générateur ;
+les options de figure lisent `data/` par `{"$": "chemin"}`. Ces trois garde-fous servent tous les
+modules suivants.
+
+## D-036 — 20/10/2026 — Une fourchette de date, jamais une date seule
+
+**Décision.** Tout module qui publie une date ou une durée de projet publie aussi les deux bornes
+obtenues en poussant toutes ses hypothèses V3 au même bout de leur fourchette.
+
+**Raison.** D2 publiait une date unique issue d'une trentaine d'hypothèses déclarées avec leur
+fourchette, sans jamais les exploiter — le défaut qu'il reproche aux plannings qu'il critique. Les
+bornes donnent ici ×0,60 et ×2,41, soit 182 % d'étendue : le chiffre est inconfortable et il est la
+mesure honnête de ce que vaut la date.
+
+**Impact.** `variante_aux_bornes` et `fourchette_de_date` dans `calc/planification.py` ; le même
+traitement est attendu de D1 sur les coûts et de D4 sur les prévisions à terminaison.

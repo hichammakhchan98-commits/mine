@@ -2,7 +2,7 @@
 id: D2
 titre: Planification d'un chantier de gare
 fil: Palier 1 · module 1 — direction de projet
-resume: Vingt-sept tâches, trois familles de durées, et un chemin critique qui ne passe pas où l'on croit. Le planning d'un chantier ferroviaire se calcule ; il ne s'estime pas.
+resume: Vingt-sept tâches, trois familles de durées, et une fenêtre de consignation qui coupe le chemin critique en deux. Le planning d'un chantier ferroviaire se calcule ; il ne s'estime pas.
 meta: Mode B · phase § 5.0 (sans calculs normatifs) · cas phare gare · toutes les valeurs numériques sont V3
 pied: Exemple pédagogique — ne remplace ni un planning d'exécution visé ni l'analyse de délai d'un expert.
 donnees: planification, tranche-plancher, gare
@@ -40,14 +40,16 @@ appartiennent à **trois familles**, et une seule obéit aux effectifs.
 | **Imposée** | la physique ou un tiers : séchage, fabrication, visa | **rien** — seulement anticiper le départ | {{planification.familles.nb_taches.imposee}} |
 | **Déclarée** | une hypothèse, faute de quantité à diviser | rien tant qu'elle n'est pas transformée en calculée | {{planification.familles.nb_taches.declaree}} |
 
-La conséquence se lit sur le chemin critique de ce chantier :
-**{{planification.familles.sur_le_chemin_critique_j.imposee::n0}} jours sur
-{{planification.reseau.duree_avec_fenetres_j::n0}}**, soit
-**{{planification.familles.part_imposee_du_chemin_pct::n1}} %**, sont des durées **imposées**. Doubler
-tous les effectifs du chantier ne les touche pas d'un jour. C'est le genre de phrase qu'il faut
-pouvoir dire en réunion avec le calcul derrière.
+Et ces trois familles ne suffisent pas à décomposer une durée de projet : il en manque deux, que
+le § S4a introduira — l'**attente** d'une fenêtre de consignation, et l'**immobilisation** entre deux
+fenêtres. Le compte complet, le long du chemin critique de ce chantier, est le tableau de S4f. Sa
+ligne importante est celle-ci :
+**{{planification.decomposition_du_chemin.part_que_les_effectifs_ne_touchent_pas_pct::n1}} %** de la
+durée du projet — durées imposées, attente et immobilisation réunies — sont **hors d'atteinte des
+moyens**. Doubler tous les effectifs du chantier ne les touche pas d'un jour. C'est le genre de
+phrase qu'il faut pouvoir dire en réunion avec le calcul derrière.
 
-:::figure {"fn":"wbs","args":"planification.figures.wbs","titre":"Organigramme des tâches (WBS), coloré par famille de durée","num":1,"large":true,"racine":"Gare voyageurs — chantier","voir":["La couleur n'est pas décorative : vert = durée calculée, brique = durée imposée, gris = durée déclarée. Un planning dont les barres brique sont sur le chemin critique ne s'accélère pas avec des hommes.","Le lot 4 (charpente) porte deux durées imposées à la suite — études puis fabrication — avant la moindre heure de chantier.","Les durées déclarées sont majoritaires en nombre mais minoritaires en enjeu : elles se transforment en durées calculées au fur et à mesure que les quantités arrivent."],"erreur":"Produire un WBS qui décalque l'organigramme de l'entreprise plutôt que le découpage physique de l'ouvrage. Un WBS sert à accrocher des quantités et des coûts à des tâches, pas à nommer des services."}
+:::figure {"fn":"wbs","args":"planification.figures.wbs","titre":"Organigramme des tâches (WBS), coloré par famille de durée","num":1,"large":true,"options":{"racine":"Gare voyageurs — chantier"},"voir":["La couleur n'est pas décorative : vert = durée calculée, brique = durée imposée, gris = durée déclarée. Un planning dont les barres brique sont sur le chemin critique ne s'accélère pas avec des hommes.","Le lot 4 (charpente) porte deux durées imposées à la suite — études puis fabrication — avant la moindre heure de chantier.","Les durées déclarées et les durées calculées sont à égalité en nombre — {{planification.familles.nb_taches.declaree::n0}} contre {{planification.familles.nb_taches.calculee::n0}} — mais pas en enjeu : une durée déclarée se transforme en durée calculée dès que sa quantité arrive."],"erreur":"Produire un WBS qui décalque l'organigramme de l'entreprise plutôt que le découpage physique de l'ouvrage. Un WBS sert à accrocher des quantités et des coûts à des tâches, pas à nommer des services."}
 :::
 
 ## S3 · Principes : d'où sortent les vingt-sept durées
@@ -91,24 +93,31 @@ Ces trois-là totalisent {{planification.familles.somme_des_durees_j.imposee::n0
 **toutes sur le chemin critique**. Le seul levier qui existe sur elles est le **départ** : lancer les
 études de charpente le premier jour du chantier, et non quand le gros œuvre est fini.
 
-:::encart {"genre":"alerte","titre":"Le résultat le plus contre-intuitif de ce module"}
-Le chemin critique de ce chantier est :
+:::encart {"genre":"alerte","titre":"Le résultat le plus contre-intuitif de ce module : un chemin critique coupé en deux"}
+Le plus long chemin de ce réseau compte
+{{planification.reseau.chemin_critique.length::n0}} tâches, de
+**{{planification.reseau.chemin_critique.0}}** à **{{planification.reseau.chemin_critique.14}}**.
+Mais les tâches à **marge nulle** ne sont que
+{{planification.reseau.nb_taches_critiques::n0}} :
+**{{planification.reseau.contre_calcul_cpm.chemin_en_aval_de_la_contrainte.0}} →
+{{planification.reseau.contre_calcul_cpm.chemin_en_aval_de_la_contrainte.1}} →
+{{planification.reseau.contre_calcul_cpm.chemin_en_aval_de_la_contrainte.2}} →
+{{planification.reseau.contre_calcul_cpm.chemin_en_aval_de_la_contrainte.3}} →
+{{planification.reseau.contre_calcul_cpm.chemin_en_aval_de_la_contrainte.4}} →
+{{planification.reseau.contre_calcul_cpm.chemin_en_aval_de_la_contrainte.5}}**.
 
-**{{planification.reseau.chemin_critique.0}} → {{planification.reseau.chemin_critique.1}} →
-{{planification.reseau.chemin_critique.2}} → {{planification.reseau.chemin_critique.3}} →
-{{planification.reseau.chemin_critique.4}} → {{planification.reseau.chemin_critique.5}} →
-{{planification.reseau.chemin_critique.6}} → {{planification.reseau.chemin_critique.7}} →
-{{planification.reseau.chemin_critique.8}}**
+Les deux ensembles ne coïncident pas, et ce n'est pas une anomalie de calcul : c'est la signature
+d'un planning **sous fenêtres**. La tâche {{planification.reseau.contre_calcul_cpm.taches_contraintes_actives.0}}
+est **épinglée** au jour {{planification.consignations.CHLV.debut::n0}}, celui de sa consignation.
+En amont de cette épingle, la durée des tâches ne commande plus rien : elles finissent toutes avant,
+et reçoivent de la marge. En aval, la chaîne redevient critique au sens ordinaire.
 
-Regardez ce qui n'y est pas : **ni les terrassements, ni les fondations, ni le plancher de
-mezzanine**. Tout le gros œuvre — celui sur lequel se concentrent les réunions de chantier, les
-effectifs et l'attention du conducteur de travaux — dispose de marge. Le chantier est piloté par la
-**charpente**, et plus précisément par les deux durées imposées qui la précèdent.
-
-Ce que cela change dans votre travail : le point de suivi hebdomadaire sur l'avancement du gros
-œuvre est rassurant et **ne dit rien du délai**. Le vrai point de suivi, les six premiers mois, est
-la relance du bureau d'études de charpente et du fournisseur. Un planning qui ne montre pas cela est
-un planning qui vous fera arriver en retard en ayant tenu toutes les cadences.
+Ce que cela change dans votre travail, et c'est vérifiable sur les variantes du § S4e : faire
+travailler **trois ateliers de poteaux au lieu de deux** raccourcit la tâche de
+{{planification.exercices.gain_poteaux_j::n2}} jours et le projet de **zéro**. Le point de suivi
+hebdomadaire sur l'avancement du gros œuvre est rassurant et **ne dit presque rien du délai** ; les
+deux points qui le disent sont la date de consignation obtenue de l'exploitant et l'avancement des
+études et de la fabrication de charpente, qui doivent être prêtes **avant** cette date.
 :::
 
 ### c. Le contre-calcul, et pourquoi il en faut un second
@@ -138,30 +147,55 @@ passage souterrain.
 Les fenêtres déclarées : ⟦V3|durée d'une fenêtre de consignation|3 jours ouvrés consécutifs|j|2 à 5|2026|consignation accordée par l'exploitant⟧,
 tous les ⟦V3|période entre deux consignations|20 jours ouvrés|j|15 à 30|2026|une fenêtre par mois calendaire environ, demandée six mois à l'avance⟧.
 
-| | Travail réel | Étalement | Fenêtres | Immobilisation improductive |
-|---|---:|---:|---:|---:|
-| Levage au-dessus de la voie | {{planification.consignations.CHLV.duree_de_travail_j::n2}} j | **{{planification.consignations.CHLV.etalement_j::n2}} j** | {{planification.consignations.CHLV.nb_fenetres}} | {{planification.consignations.CHLV.immobilisation_improductive_j::n0}} j |
-| Raccordement du passage souterrain | {{planification.consignations.PSOU.duree_de_travail_j::n2}} j | {{planification.consignations.PSOU.etalement_j::n2}} j | {{planification.consignations.PSOU.nb_fenetres}} | {{planification.consignations.PSOU.immobilisation_improductive_j::n0}} j |
+Une fenêtre agit sur une tâche de **deux** façons, et il faut les tenir séparées :
+
+1. elle l'**étale** — le travail se fait par tranches, une par consignation ;
+2. elle la **décale** — la tâche ne peut pas commencer avant la première fenêtre disponible, même
+   si le réseau, lui, serait prêt plus tôt.
+
+| | Travail réel | Prêt au réseau | Fenêtre retenue | Attente | Étalement | Fenêtres | Immobilisation |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Levage au-dessus de la voie | {{planification.consignations.CHLV.duree_de_travail_j::n2}} j | j {{planification.consignations.CHLV.debut_du_reseau_nu::n0}} | **j {{planification.consignations.CHLV.debut::n0}}** | {{planification.consignations.CHLV.attente_avant_premiere_fenetre_j::n2}} j | **{{planification.consignations.CHLV.etalement_j::n2}} j** | {{planification.consignations.CHLV.nb_fenetres}} | {{planification.consignations.CHLV.immobilisation_improductive_j::n0}} j |
+| Raccordement du passage souterrain | {{planification.consignations.PSOU.duree_de_travail_j::n2}} j | j {{planification.consignations.PSOU.debut_du_reseau_nu::n0}} | j {{planification.consignations.PSOU.debut::n0}} | {{planification.consignations.PSOU.attente_avant_premiere_fenetre_j::n2}} j | {{planification.consignations.PSOU.etalement_j::n2}} j | {{planification.consignations.PSOU.nb_fenetres}} | {{planification.consignations.PSOU.immobilisation_improductive_j::n0}} j |
 
 **Le chantier passe de {{planification.reseau.duree_sans_contrainte_j::n0}} à
 {{planification.reseau.duree_avec_fenetres_j::n0}} jours ouvrés** — soit
 **{{planification.reseau.surcout_de_delai_j::n0}} jours, {{planification.reseau.surcout_de_delai_pct::n1}} %** — à cause de
 **{{planification.consignations.CHLV.duree_de_travail_j::n0}} jours de travail**. Il n'y a pas
-d'erreur : le levage ne dure pas plus longtemps, il **s'étale**. La distinction est capitale, parce
-que le **coût** suit la durée de travail tandis que le **délai** suit l'étalement, et parce qu'un
-étalement ne se résorbe pas avec des moyens.
+d'erreur : le levage ne dure pas plus longtemps. Il attend
+{{planification.consignations.CHLV.attente_avant_premiere_fenetre_j::n1}} jours sa première fenêtre,
+puis il **s'étale** sur {{planification.consignations.CHLV.nb_fenetres}} consignations. La
+distinction est capitale, parce que le **coût** suit la durée de travail tandis que le **délai** suit
+l'attente et l'étalement, et parce que ni l'une ni l'autre ne se résorbe avec des moyens.
+
+:::encart {"genre":"note","titre":"Ce que la première version de ce calcul faisait, et ce que cela a coûté"}
+La première version de ce module calculait la date de la fenêtre, la publiait dans ses sorties — et
+laissait quand même la tâche démarrer à la date du réseau. Elle n'appliquait que l'effet n° 1.
+Résultat : {{planification.consignations.CHLV.attente_avant_premiere_fenetre_j::n1}} jours ouvrés
+perdus et une date contractuelle fausse d'environ un mois. La thèse du module — « le chemin critique
+d'un chantier ferroviaire, c'est le réseau **plus** les fenêtres » — n'était implémentée qu'à moitié,
+et aucun des seize contrôles automatiques ne le voyait : les deux voies du CPM, qui partagent le
+réseau, se trompaient ensemble, et le test de recette comparait la fenêtre à elle-même.
+
+Ce qui l'a trouvé est une **contre-expertise à l'aveugle** : un relecteur qui refait le CPM depuis
+`data/` seul, sans lire le code, et qui compare deux nombres du même fichier de sortie — la date de
+début publiée dans `durees` et celle publiée dans `consignations`. Ils différaient de
+{{planification.consignations.CHLV.attente_avant_premiere_fenetre_j::n1}} jours. La contrainte passe
+maintenant par le moteur de CPM lui-même (`Tache.au_plus_tot`), elle est étalonnée sur cinq cas à
+solution connue, et un garde-fou lève si une tâche consignée démarre ailleurs que sur sa fenêtre.
+:::
 
 Trois leviers existent, et un seul est bon marché : négocier une fenêtre plus longue, réduire la part
 levée au-dessus de la voie (pré-assemblage au sol, levage par l'autre côté), ou installer une
 protection de voie qui supprime la consignation pour une partie des opérations. L'exercice 3 les
 chiffre.
 
-:::figure {"fn":"reseau","args":"planification.figures.reseau","titre":"Réseau de la chaîne critique : charpente, couverture et finitions","num":2,"large":true,"voir":["Le réseau publié ici est la partie qui porte le délai, pas les vingt-sept tâches : un PERT illisible n'est pas un PERT.","Les deux premières boîtes sont des durées imposées — études et fabrication — et elles commencent au jour zéro du chantier. Les décaler d'une semaine décale la livraison d'une semaine.","Les tâches hors chemin critique portent leur marge totale : c'est ce que le planificateur peut dépenser, et c'est fini quand c'est dépensé."],"erreur":"Afficher un réseau de cent tâches « pour être complet ». Un réseau sert à montrer une structure de dépendances ; au-delà d'une vingtaine de nœuds, il ne montre plus rien et c'est le Gantt qui prend le relais."}
+:::figure {"fn":"reseau","args":"planification.figures.reseau","titre":"Réseau de la chaîne critique : charpente, couverture et finitions","num":2,"large":true,"voir":["Le réseau publié ici est la partie qui porte le délai — douze tâches sur {{planification.familles.nb_taches.calculee::n0}} + {{planification.familles.nb_taches.declaree::n0}} + {{planification.familles.nb_taches.imposee::n0}} : un PERT illisible n'est pas un PERT.","CHET et CHFA — études et fabrication de la charpente — sont deux durées IMPOSÉES enchaînées, et elles démarrent au jour zéro du chantier. Les décaler d'une semaine décale la livraison d'une semaine, et aucun effectif ne les rattrape.","Les boîtes brique sont à marge nulle, les grises portent leur marge en clair. Remarquez où la couleur bascule : à CHLV, la tâche épinglée par sa fenêtre de consignation. Tout ce qui est à sa gauche a de la marge ; tout ce qui est à sa droite n'en a plus."],"erreur":"Afficher un réseau de cent tâches « pour être complet ». Un réseau sert à montrer une structure de dépendances ; au-delà d'une vingtaine de nœuds, il ne montre plus rien et c'est le Gantt qui prend le relais."}
 :::
 
 ### b. Le Gantt, et la lecture des marges
 
-:::figure {"fn":"gantt","args":"planification.figures.gantt","titre":"Gantt du chantier — les barres brique sont critiques","num":3,"large":true,"voir":["Les barres de la charpente démarrent au jour zéro : ce sont les études, pas des travaux. Un Gantt qui ne les porte pas est un Gantt qui ment sur la date de livraison.","Le plancher de mezzanine — tout le module TV — est une barre parmi vingt-sept, et elle n'est pas critique.","Les deux barres de consignation sont longues et presque vides : leur longueur est de l'attente, pas du travail."],"erreur":"Lire un Gantt comme un calendrier de travaux. Une barre longue n'est pas forcément une tâche lourde : elle peut être une tâche courte qui attend une fenêtre."}
+:::figure {"fn":"gantt","args":"planification.figures.gantt","titre":"Gantt du chantier — les barres brique sont critiques","num":3,"large":true,"voir":["Les barres de la charpente démarrent au jour zéro : ce sont les études, pas des travaux. Un Gantt qui ne les porte pas est un Gantt qui ment sur la date de livraison.","Le plancher de mezzanine — tout le module TV — est une barre parmi vingt-sept, et elle n'est pas critique.","Les deux barres de consignation sont dessinées PLEINES, comme les autres, et c'est une limite de ce Gantt : une barre représente l'étalement, pas le travail. Pour le levage, {{planification.consignations.CHLV.etalement_j::n0}} jours de barre portent {{planification.consignations.CHLV.duree_de_travail_j::n1}} jours de travail. Le tableau du § S4a donne la décomposition que le dessin ne porte pas."],"erreur":"Lire un Gantt comme un calendrier de travaux. Une barre longue n'est pas forcément une tâche lourde : elle peut être une tâche courte qui attend une fenêtre — et le Gantt ne le dit pas, il faut aller chercher le chiffre."}
 :::
 
 Deux marges, et elles ne se dépensent pas de la même façon :
@@ -190,23 +224,47 @@ dont la **pente est la cadence**.
 
 ### d. Les ressources : lisser, et ce que le lissage coûte
 
-L'effectif présent chaque jour est la somme des tâches en cours. Brut, il monte à
-**{{planification.ressources.pointe_avant}} personnes** pour une moyenne de
-{{planification.ressources.moyenne_avant::n1}} : une pointe que la base-vie, les vestiaires et le
-parking doivent encaisser pour quelques jours.
+L'effectif présent chaque jour est la somme des tâches **en cours de travail**. La nuance compte :
+une tâche consignée ne mobilise personne entre deux fenêtres, et la compter sur tout son étalement
+dimensionnerait une base-vie pour des gens qui ne sont pas là. L'histogramme est donc bâti sur les
+**segments de travail**, pas sur les barres du Gantt.
 
-**Lisser** consiste à décaler les tâches non critiques **dans leur marge**, sans changer aucune durée
-ni la date de fin. Résultat ici : pointe ramenée à **{{planification.ressources.pointe_apres}}**, soit
+Brut, il monte à **{{planification.ressources.pointe_avant}} personnes** pour une moyenne de
+{{planification.ressources.moyenne_avant::n1}} sur les
+{{planification.ressources.jours_travailles_avant::n0}} jours travaillés : une pointe que la
+base-vie, les vestiaires et le parking doivent encaisser pour quelques jours.
+
+**Lisser** consiste à décaler les tâches non critiques **dans leur marge libre**, sans changer aucune
+durée, aucune date de fin, et sans repousser le début d'aucun successeur. Le choix de la marge
+**libre** et non de la marge totale n'est pas un détail : dans la marge totale, une tâche se décale
+sans toucher la fin du projet mais en repoussant son successeur, et l'histogramme publié décrit alors
+un planning que le reste du module ne décrit plus.
+
+Résultat ici : pointe ramenée à **{{planification.ressources.pointe_apres}}**, soit
 **{{planification.ressources.gain_de_pointe_pct::n1}} % de moins**, en décalant
-{{planification.durees.NOYX.nom}} et {{planification.durees.MEZZ.nom}}.
+{{planification.durees.MEZZ.nom}} de {{planification.ressources.decalages_utilises_j.MEZZ::n0}} jours.
 
-Le prix : **{{planification.ressources.marge_totale_consommee_j::n0}} jours de marge totale
+Ce que le lissage conserve, et ce qu'il ne conserve pas :
+
+| Grandeur | Avant | Après |
+|---|---:|---:|
+| Pointe | {{planification.ressources.pointe_avant}} | **{{planification.ressources.pointe_apres}}** |
+| Jours-hommes de travail | {{planification.ressources.jours_hommes_avant::n0}} | {{planification.ressources.jours_hommes_apres::n0}} |
+| Jours travaillés | {{planification.ressources.jours_travailles_avant::n0}} | {{planification.ressources.jours_travailles_apres::n0}} |
+| Moyenne sur les jours travaillés | {{planification.ressources.moyenne_avant::n1}} | {{planification.ressources.moyenne_apres::n1}} |
+
+Les **jours-hommes sont identiques** — le calcul lève une erreur s'ils ne le sont pas : lisser
+déplace du travail, il n'en supprime aucun. La **moyenne baisse pourtant**, et ce n'est pas une
+contradiction : le même travail s'étale désormais sur plus de jours travaillés. C'est une moyenne à
+dénominateur variable, et c'est la raison pour laquelle on ne pilote pas un effectif à la moyenne.
+
+Le prix : **{{planification.ressources.marge_totale_consommee_j::n0}} jours de marge libre
 consommés**. C'est le vrai sujet, et il est rarement posé. Une marge dépensée en confort
-d'exploitation n'est plus disponible pour l'aléa. La question à se poser n'est donc pas « peut-on
-lisser ? » mais « **la pointe était-elle infaisable ?** ». Si la base-vie tient 59 personnes, le
-lissage est un luxe payé en marge.
+d'exploitation n'est plus disponible pour l'aléa. La question n'est donc pas « peut-on lisser ? »
+mais « **la pointe était-elle infaisable ?** ». Si la base-vie tient
+{{planification.ressources.pointe_avant}} personnes, le lissage est un luxe payé en marge.
 
-:::figure {"fn":"histogramme","args":"planification.figures.effectifs","serie2":"planification.figures.effectifs_lisses","titre":"Effectif présent, brut et après lissage","num":5,"large":true,"voir":["Le contour foncé est l'effectif après lissage : la pointe tombe, la surface ne change pas — on n'a pas supprimé du travail, on l'a déplacé.","Les creux de début et de fin sont normaux ; seul le plateau central est en régime.","C'est la pointe, et non la moyenne, qui dimensionne la base-vie, le parking et les réfectoires."],"erreur":"Niveler au lieu de lisser sans le dire. Lisser déplace des tâches dans leur marge et ne change pas la fin ; niveler plafonne l'effectif et ALLONGE le projet. Les deux mots désignent deux décisions différentes."}
+:::figure {"fn":"histogramme","args":"planification.figures.effectifs","titre":"Effectif présent, brut et après lissage","num":5,"large":true,"options":{"serie2":{"$":"planification.figures.effectifs_lisses"},"moyenne":{"$":"planification.ressources.moyenne_avant"},"libelle_moyenne":"moyenne sur les jours travaillés","nom1":"avant lissage","nom2":"après lissage"},"voir":["Le contour brique est l'effectif après lissage : la pointe tombe de {{planification.ressources.pointe_avant}} à {{planification.ressources.pointe_apres}}, et l'aire sous la courbe ne change pas — on n'a pas supprimé du travail, on l'a déplacé.","Le trait vert tireté est la moyenne sur les jours travaillés, {{planification.ressources.moyenne_avant::n1}} personnes, calculée par `calc/` et non par le dessin : c'est la même définition que celle du tableau ci-dessus.","C'est la pointe, et non la moyenne, qui dimensionne la base-vie, le parking et les réfectoires."],"erreur":"Niveler au lieu de lisser sans le dire. Lisser déplace des tâches dans leur marge et ne change pas la fin ; niveler plafonne l'effectif et ALLONGE le projet. Les deux mots désignent deux décisions différentes."}
 :::
 
 ### e. Du planning de travail au planning contractuel
@@ -225,7 +283,52 @@ Un marché, lui, s'engage sur des **dates**. Entre les deux, deux conversions, e
 Sans les intempéries, la fin tomberait le {{planification.calendrier.fin_sans_alea}}. **Cinq semaines
 d'écart** sur une seule hypothèse, et c'est celle qu'on oublie le plus souvent de poser.
 
-:::figure {"fn":"courbeS","args":"planification.figures.courbe_s","titre":"Courbe en S du chantier, en jours-hommes","num":6,"large":true,"voir":["L'assiette est le travail consommé (jours-hommes), pas le temps écoulé : une courbe bâtie sur le temps serait une droite, et une droite n'est pas une courbe en S.","Le palier au milieu de la courbe n'est pas une erreur : c'est l'attente des fenêtres de consignation, pendant laquelle le chantier avance peu.","La pente maximale donne le pic de trésorerie et de besoin en main-d'œuvre — c'est là que le préfinancement se joue."],"erreur":"Présenter une courbe en S construite sur l'écoulement du temps. Elle est toujours jolie, toujours en S, et ne mesure rien."}
+:::figure {"fn":"courbeS","args":"planification.figures.courbe_s","titre":"Courbe en S du chantier, en jours-hommes de travail","num":6,"large":true,"options":{"paliers":{"$":"planification.figures.paliers"}},"voir":["L'assiette est le travail consommé (jours-hommes), pas le temps écoulé et pas l'étalement : une courbe bâtie sur le temps serait une droite, et une courbe bâtie sur l'étalement compterait des jours-hommes que personne ne fait.","Les bandes grises sont les paliers, et leur cause est CHERCHÉE par le calcul, pas devinée par cette légende : {{planification.paliers_de_la_courbe_s.0.cause}}, puis quatre paliers entre deux fenêtres de consignation, puis {{planification.paliers_de_la_courbe_s.5.cause}}.","La pente maximale donne le pic de besoin en main-d'œuvre. Le pic de TRÉSORERIE, lui, ne se lit pas ici : il suit les dirhams, pas les heures, et c'est le module D1 qui le trace."],"erreur":"Présenter une courbe en S construite sur l'écoulement du temps. Elle est toujours jolie, toujours en S, et ne mesure rien. La variante plus subtile est de la bâtir sur la durée des barres du Gantt : elle compte alors le travail d'une équipe qui attend une fenêtre, et gonfle le total."}
+:::
+
+#### La date n'est pas un nombre, c'est un intervalle
+
+Les {{planification.calendrier.duree_ouvree_avec_intemperies_j::n0}} jours ci-dessus sortent d'une
+trentaine d'hypothèses V3, toutes déclarées avec leur fourchette au § S4b — et jusqu'ici, aucune
+variante ne les exploitait. Le module exhibait ses incertitudes, puis publiait **un** nombre. C'est
+exactement ce qu'il reproche aux plannings qu'il critique.
+
+Voici donc les trois dates. Chaque borne pousse **toutes** les hypothèses au même bout de leur
+fourchette : cadences basses, forfaits et délais imposés hauts, recouvrements faibles, fenêtres
+courtes et plus espacées, intempéries maximales — et l'inverse pour l'optimiste.
+
+| | Jours ouvrés | Intempéries comprises | Fin |
+|---|---:|---:|---:|
+| Optimiste (×{{planification.fourchette_de_date.facteur_optimiste::n2}}) | {{planification.fourchette_de_date.optimiste.duree_j::n0}} | {{planification.fourchette_de_date.optimiste.duree_avec_intemperies_j::n0}} | {{planification.fourchette_de_date.optimiste.fin}} |
+| **Retenue** | **{{planification.fourchette_de_date.retenue.duree_j::n0}}** | **{{planification.fourchette_de_date.retenue.duree_avec_intemperies_j::n0}}** | **{{planification.fourchette_de_date.retenue.fin}}** |
+| Pessimiste (×{{planification.fourchette_de_date.facteur_pessimiste::n2}}) | {{planification.fourchette_de_date.pessimiste.duree_j::n0}} | {{planification.fourchette_de_date.pessimiste.duree_avec_intemperies_j::n0}} | {{planification.fourchette_de_date.pessimiste.fin}} |
+
+**{{planification.fourchette_de_date.etendue_j::n0}} jours d'étendue, soit
+{{planification.fourchette_de_date.etendue_pct_de_la_retenue::n0}} % de la durée retenue.** Trois ans
+d'écart entre les deux bornes, pour un chantier de dix-huit mois.
+
+Ce chiffre est inconfortable et il est juste. Il ne dit pas que le planning est faux : il dit que
+**la précision d'une date ne peut pas dépasser celle de ses entrées**, et qu'annoncer
+« {{planification.calendrier.fin_avec_alea}} » sans dire d'où vient ce nombre est un engagement pris
+sur des hypothèses que personne n'a vérifiées. Les deux bornes ne sont pas des probabilités — rien
+ne dit que toutes les hypothèses se trompent dans le même sens — mais elles mesurent la
+**sensibilité**, et c'est la seule chose défendable quand on demande de s'engager.
+
+Ce qu'on en fait, concrètement : on ne négocie pas la date, on négocie les **trois ou quatre
+hypothèses** qui portent l'essentiel de l'étendue, et on va chercher pour elles une donnée réelle —
+un attachement, un devis de fournisseur, un engagement écrit de l'exploitant sur les consignations.
+Chaque hypothèse qui passe de V3 à V0 resserre l'intervalle ; aucune réunion ne le resserre.
+
+:::encart {"genre":"alerte","titre":"Et ce n'est probablement pas encore assez pessimiste"}
+La borne haute ci-dessus descend les cadences au bas de leur **fourchette déclarée**, soit environ un
+tiers. Or la dette n° 10 du projet soupçonne ces cadences d'être optimistes d'un **facteur 2 à 3**,
+pour une raison indépendante : la part de main-d'œuvre qu'elles impliquent est très en dessous des
+ordres de grandeur du métier. Si ce soupçon se confirme, la date pessimiste est encore au-delà de
+{{planification.fourchette_de_date.pessimiste.fin}}.
+
+Ce soupçon ne se lève pas ici : il se lève en ouvrant les prix poste par poste, c'est-à-dire au
+module **D1**. C'est le genre de dette qu'on écrit en toutes lettres à côté de la date, et non en
+note de bas de page.
 :::
 
 :::encart {"genre":"voir","titre":"Planning contractuel et planning de travail ne sont pas le même objet"}
@@ -242,6 +345,69 @@ engage, l'autre pilote.
 Règle de conduite, et elle n'a rien de normatif : **ne contractualisez jamais un planning plus
 détaillé que ce que vous acceptez de justifier à chaque réunion.** Chaque tâche contractualisée est
 une tâche sur laquelle on vous demandera des comptes, et une tâche dont la marge vous échappe.
+:::
+
+### f. De quoi la durée du projet est faite
+
+Les trois familles de durées classent les **tâches**. Elles ne décomposent pas une **durée de
+projet**, et il faut dire pourquoi : additionner les durées des tâches à marge nulle ne redonne pas
+la durée du chantier dès qu'une fenêtre en épingle une — l'ensemble à marge nulle se réduit à l'aval
+de l'épingle, et sa somme ne fait plus le compte.
+
+La bonne décomposition suit le **chemin**, qui lui, par construction, somme exactement :
+
+| Poste | Jours | Part | Les effectifs y changent-ils quelque chose ? |
+|---|---:|---:|---|
+| Durées **calculées** | {{planification.decomposition_du_chemin.postes_j.calculee::n1}} | {{planification.decomposition_du_chemin.postes_pct.calculee::n1}} % | oui, proportionnellement |
+| Durées **déclarées** | {{planification.decomposition_du_chemin.postes_j.declaree::n1}} | {{planification.decomposition_du_chemin.postes_pct.declaree::n1}} % | pas tant qu'elles ne sont pas devenues calculées |
+| Durées **imposées** | {{planification.decomposition_du_chemin.postes_j.imposee::n1}} | {{planification.decomposition_du_chemin.postes_pct.imposee::n1}} % | non |
+| **Attente** d'une fenêtre | {{planification.decomposition_du_chemin.postes_j.attente_de_fenetre::n1}} | {{planification.decomposition_du_chemin.postes_pct.attente_de_fenetre::n1}} % | non |
+| **Immobilisation** entre fenêtres | {{planification.decomposition_du_chemin.postes_j.immobilisation_entre_fenetres::n1}} | {{planification.decomposition_du_chemin.postes_pct.immobilisation_entre_fenetres::n1}} % | non |
+| **Recouvrements** (négatifs) | {{planification.decomposition_du_chemin.postes_j.recouvrements::n1}} | {{planification.decomposition_du_chemin.postes_pct.recouvrements::n1}} % | ils gagnent du temps, et ils ont une limite physique |
+| **Total** | **{{planification.decomposition_du_chemin.total_j::n2}}** | 100 % | — |
+
+Le total retrouve la durée du réseau à {{planification.decomposition_du_chemin.ecart_j::n2}} jour
+près, et le calcul **lève une erreur** si l'écart dépasse deux centièmes de jour : une décomposition
+qui ne somme pas à ce qu'elle décompose n'est pas une décomposition, c'est un camembert.
+
+**La ligne à retenir** :
+{{planification.decomposition_du_chemin.part_que_les_effectifs_ne_touchent_pas_pct::n1}} % de la
+durée de ce chantier — imposées, attente et immobilisation — **ne répond à aucun effectif**. C'est le
+chiffre à avoir en tête avant de promettre une date, et c'est aussi celui qui dit où regarder : chez
+le fournisseur de charpente et chez l'exploitant ferroviaire, pas sur le front de taille.
+
+### g. Les ressources en conflit, et non en moyenne
+
+Un histogramme d'effectifs dit si la base-vie suffit. Il ne dit **rien** d'une ressource unique
+demandée en deux endroits le même jour. La grue à tour de ce chantier est dans ce cas : parc de
+{{planification.grue.parc_de_grues::n0}}, et
+{{planification.grue.taches_servies.length::n0}} tâches qui la demandent.
+
+| | Avant lissage | Après lissage | Après recherche de résolution |
+|---|---:|---:|---:|
+| Demande simultanée maximale | **{{planification.grue.demande_maximale::n0}}** | {{planification.grue_apres_lissage.demande_maximale::n0}} | {{planification.grue_resolution.resultat.demande_maximale::n0}} |
+| Jours en conflit | {{planification.grue.nb_jours_en_conflit::n0}} | {{planification.grue_apres_lissage.nb_jours_en_conflit::n0}} | {{planification.grue_resolution.resultat.nb_jours_en_conflit::n0}} |
+| Occupation **moyenne** | {{planification.grue.occupation_moyenne_pct::n1}} % | {{planification.grue.occupation_moyenne_pct::n1}} % | {{planification.grue.occupation_moyenne_pct::n1}} % |
+
+Lisez la dernière ligne : l'occupation moyenne est de
+{{planification.grue.occupation_moyenne_pct::n1}} % et **ne bouge jamais**. Elle est rassurante dans
+les trois colonnes, y compris celle où {{planification.grue.demande_maximale::n0}} tâches —
+{{planification.grue.taches_au_pire_jour.0}}, {{planification.grue.taches_au_pire_jour.1}} et
+{{planification.grue.taches_au_pire_jour.2}} — réclament la même grue le jour
+{{planification.grue.jour_de_la_demande_maximale::n0}}. Une moyenne ne peut pas détecter un conflit :
+elle le dilue.
+
+Le calcul cherche ensuite une résolution **dans les marges libres**, et voici son verdict, publié
+tel quel :
+
+> {{planification.grue_resolution.verdict}}
+
+C'est inconfortable, et c'est le point de ce paragraphe. Un planning se publie avec ses conflits
+ouverts et leurs trois issues chiffrées, pas sans eux. Celui-ci demande une décision de **moyens** —
+une seconde grue sur une période courte, ou une grue mobile en appoint — et cette décision appartient
+au chiffrage, donc au module D1.
+
+:::figure {"fn":"histogramme","args":"planification.figures.grue","titre":"Demande de grue à tour, jour par jour","num":7,"large":true,"options":{"unite":"grues demandées","moyenne":{"$":"planification.grue.parc_de_grues"},"libelle_moyenne":"parc disponible"},"voir":["Le trait vert tireté est le parc : {{planification.grue.parc_de_grues::n0}} grue. Toute barre qui le dépasse est un jour où le planning est infaisable tel qu'il est écrit.","La pointe est à {{planification.grue.demande_maximale::n0}} au jour {{planification.grue.jour_de_la_demande_maximale::n0}} : trois ateliers du gros œuvre se recouvrent et demandent le même appareil.","Le reste du temps la grue est libre, et c'est exactement ce qui rend la moyenne trompeuse : {{planification.grue.occupation_moyenne_pct::n1}} % d'occupation avec {{planification.grue.nb_jours_en_conflit::n0}} jours infaisables."],"erreur":"Conclure d'un taux d'occupation moyen qu'une ressource suffit. La moyenne répond à « la grue travaille-t-elle assez ? », pas à « le planning est-il faisable ? » — deux questions différentes, et seule la seconde intéresse le conducteur de travaux."}
 :::
 
 ## S4b · Les hypothèses du planning, déclarées
@@ -276,7 +442,28 @@ un planning défendable en réunion.
 et la part de charpente levée au-dessus de la voie,
 ⟦V3|part du tonnage levée sous consignation|35 %|%|25 à 50|2026|tonnage levé au-dessus ou à proximité immédiate de la voie exploitée⟧.
 
-**Ce qu'il faut en faire.** Ces trente-six hypothèses sont dans `data/`, pas dans le texte : changez
+**La phase des fenêtres**, qui décale la tâche consignée et, par elle, la date de fin —
+⟦V3|jour de la première consignation accordée|40 jours ouvrés|j|25 à 60|2026|fixe la phase de toutes les fenêtres suivantes ; dépend de la date de dépôt de la demande auprès de l'exploitant, six mois à l'avance⟧.
+Ce paramètre a longtemps traîné dans les données sans fourchette ni déclaration, alors qu'il porte à
+lui seul {{planification.consignations.CHLV.attente_avant_premiere_fenetre_j::n1}} jours de la durée
+du projet.
+
+**Les recouvrements entre tâches**, en pourcentage de la durée du prédécesseur et non en jours —
+⟦V3|recouvrement du montage de grue sur l'installation|60 %|%|40 à 80|2026|la grue se monte dès que l'aire de levage et son massif sont prêts⟧,
+⟦V3|recouvrement de l'implantation sur l'installation|85 %|%|60 à 95|2026|l'implantation suit l'accès et le bornage, sans attendre la base-vie⟧,
+⟦V3|recouvrement du soutènement sur le décapage|50 %|%|30 à 70|2026|la paroi se réalise depuis la plateforme décapée⟧,
+⟦V3|recouvrement de la fouille sur le soutènement|45 %|%|25 à 65|2026|avance que la paroi garde sur l'approfondissement — jamais l'inverse (§ S4c)⟧,
+⟦V3|recouvrement du radier sur les fondations|35 %|%|20 à 50|2026|le radier démarre sur la partie déjà fondée⟧,
+⟦V3|recouvrement de la mezzanine sur les poteaux|35 %|%|20 à 50|2026|la première zone de plancher se coffre dès que ses poteaux portent⟧,
+⟦V3|recouvrement de la façade sur le levage|10 %|%|5 à 20|2026|la façade démarre quand la première file de charpente est posée et stable⟧.
+
+**Pourquoi en pourcentage.** Un recouvrement écrit en jours ignore la durée qu'il recouvre. Celui du
+décapage était posé à −2 jours quand la durée calculée du décapage est tombée à
+{{planification.durees.TERR.duree_j::n2}} jours : le successeur démarrait **avant** son
+prédécesseur, et le Gantt le publiait sans que rien ne sonne. Un pourcentage borné à 100 % ne peut
+pas produire cela, et un contrôle lève désormais si un recouvrement dépasse la durée qu'il recouvre.
+
+**Ce qu'il faut en faire.** Ces hypothèses sont dans `data/`, pas dans le texte : changez
 une cadence et **tous** les nombres de ce module se recalculent, figures comprises. C'est la seule
 façon de répondre « et si ? » en réunion sans refaire un planning à la main.
 
@@ -291,9 +478,23 @@ donnée** — la phase § 5.0 l'interdit.
 | Opération du planning | Ce que le planning décide | Disposition essentielle |
 |---|---|---|
 | **Terrassement et fouille** du niveau technique | la profondeur ouverte et la durée pendant laquelle elle reste ouverte | talutage ou blindage **avant** toute descente ; la fouille n'est pas un passage |
-| **Soutènement** périphérique | s'il est posé avant ou pendant l'excavation | le soutènement précède l'approfondissement, jamais l'inverse |
+| **Soutènement** périphérique | s'il est posé avant ou pendant l'excavation | le soutènement précède l'approfondissement, jamais l'inverse — et le réseau le fait : {{planification.durees.SOUT.nom}} court du jour {{planification.durees.SOUT.debut_j::n1}} au jour {{planification.durees.SOUT.fin_j::n1}}, {{planification.durees.FOUI.nom}} du jour {{planification.durees.FOUI.debut_j::n1}} au jour {{planification.durees.FOUI.fin_j::n1}} |
 | **Levage** de la charpente, dont au-dessus de la voie | les fenêtres, donc la pression horaire sur l'équipe de levage | zone d'exclusion au sol, pas de levage au-dessus d'un poste occupé, abandon par vent fort |
 | **Travaux sous consignation** | le nombre de fenêtres, donc la tentation de déborder | la consignation est une **limite**, pas un objectif : déborder d'une fenêtre, c'est travailler sur une voie remise sous tension |
+
+:::encart {"genre":"alerte","titre":"Ce que ce tableau a corrigé dans le réseau lui-même"}
+La ligne « le soutènement précède l'approfondissement, jamais l'inverse » était écrite dans cette
+rubrique, et le réseau faisait **l'inverse** : la fouille précédait le soutènement, qui finissait
+quatorze jours après la fin de la fouille. Quatorze jours de fouille profonde non soutenue, dans un
+planning dont la rubrique sécurité interdit exactement cela.
+
+Ce n'était pas une faute de frappe mais une faute de **modèle** : le lien était écrit en dur, en
+jours, dans le code, et personne ne l'avait relu contre le texte d'à côté. Les décalages sont
+désormais des **pourcentages de la durée du prédécesseur**, déclarés dans `data/`, et un contrôle
+lève si un recouvrement dépasse la durée qu'il recouvre — ce qui arrivait aussi, deux fois : un
+successeur démarrait avant son prédécesseur. Une rubrique de sécurité qui ne commande pas le calcul
+n'est pas une rubrique de sécurité, c'est une précaution d'écriture.
+:::
 
 **Le lien avec tout ce module, et c'est le plus important.** Un planning trop serré ne produit pas du
 retard : il produit de la **pression sur les opérations à risque**. Les {{planification.consignations.CHLV.nb_fenetres}} fenêtres
@@ -301,6 +502,14 @@ de levage calculées plus haut sont le bon exemple — si l'une est manquée, la
 {{planification.consignations.CHLV.etalement_j::n0}} jours, et c'est là que quelqu'un propose de
 « finir vite » pendant que la voie est encore consignée. **La marge d'un planning est une mesure de
 sécurité avant d'être une mesure de confort.**
+
+:::encart {"genre":"note","titre":"Où est le chiffrage"}
+Ce module ne porte **aucun montant**, et c'est délibéré : il produit des durées, des effectifs et
+des quantités, qui sont les trois entrées du chiffrage. Les dirhams — déboursés, sous-détails de
+prix, courbe de trésorerie, coût d'un mois de retard — sont le sujet du module **D1**, qui lit
+exactement les mêmes cadences et les mêmes quantités. Les deux modules partagent leurs hypothèses :
+c'est la seule façon qu'un planning et un bordereau ne se contredisent pas.
+:::
 
 ## S5 · Erreurs fréquentes, et ce qu'elles coûtent
 
@@ -310,8 +519,11 @@ sécurité avant d'être une mesure de confort.**
 | Cadence d'atelier confondue avec cadence par compagnon | durées divisées par l'effectif deux fois | des durées jusqu'à huit fois trop courtes |
 | Effectifs mis sur une durée imposée | le planning ne bouge pas malgré les moyens | la dépense sans le gain, et la confiance perdue |
 | Fenêtres de consignation oubliées | le planning tient jusqu'au premier levage | {{planification.reseau.surcout_de_delai_j::n0}} jours ici, découverts trop tard |
-| Intempéries non provisionnées | le planning est juste en jours ouvrés et faux en dates | {{planification.calendrier.jours_perdus_intemperies_j::n0}} jours, soit cinq semaines |
+| Intempéries non provisionnées | le planning est juste en jours ouvrés et faux en dates | {{planification.calendrier.jours_perdus_intemperies_j::n0}} jours ouvrés |
 | Lissage présenté comme gratuit | la pointe baisse, personne ne regarde la marge | {{planification.ressources.marge_totale_consommee_j::n0}} jours de marge dépensés avant le premier aléa |
+| Fenêtre calculée puis non appliquée | deux dates de début pour la même tâche dans la même sortie | {{planification.consignations.CHLV.attente_avant_premiere_fenetre_j::n1}} jours ouvrés, et une date contractuelle fausse d'un mois |
+| Ressource vérifiée en moyenne | « {{planification.grue.occupation_moyenne_pct::n0}} % d'occupation, ça passe » | un planning infaisable {{planification.grue.nb_jours_en_conflit::n0}} jours sur sa durée |
+| Recouvrement écrit en jours sur une durée calculée | un successeur démarre avant son prédécesseur | un Gantt que personne ne relit, parce qu'il a l'air normal |
 | Planning contractuel trop détaillé | chaque tâche devient opposable | la marge change de propriétaire |
 
 ## S6 · Exercices
@@ -343,13 +555,17 @@ Que gagne le **projet** ?
 {{planification.exercices.gain_poteaux_j::n2}} j de gagnés sur elle.
 
 Le projet, lui, gagne **{{planification.variantes.poteaux_trois_ateliers.duree_projet_j::n2}} j contre
-{{planification.variantes.reference.duree_projet_j::n2}} j : rien du tout.** Les poteaux ne sont pas
-sur le chemin critique — ils disposent de marge, et le troisième atelier la consomme sans toucher à
-la date de fin. Vous avez dépensé une équipe entière pour un gain nul.
+{{planification.variantes.reference.duree_projet_j::n2}} j : rien du tout.** Et le piège est plus
+retors qu'il n'y paraît, parce que les poteaux **sont** sur le plus long chemin du réseau. Ce qui
+annule le gain n'est pas leur position : c'est la **fenêtre de consignation**, qui épingle le levage
+au jour {{planification.consignations.CHLV.debut::n0}}. Tout ce qui précède cette épingle finit de
+toute façon avant, et gagner du temps en amont ne fait qu'allonger l'attente. Vous avez dépensé une
+équipe entière pour transformer trois jours de travail en trois jours d'attente.
 
 *C'est l'erreur la plus coûteuse du métier, et la plus naturelle : on renforce ce qu'on voit en
-retard sur le terrain, pas ce qui porte le délai. Le chemin critique de ce chantier passe par un
-bureau d'études, pas par une grue.*
+retard sur le terrain, pas ce qui porte le délai. Et le réflexe « est-ce sur le chemin critique ? »
+ne suffit pas quand une contrainte externe coupe ce chemin en deux : la bonne question est « cette
+tâche décale-t-elle la première date contrainte en aval ? »*
 :::
 
 :::exercice {"titre":"3 · Défendre une date face aux consignations","niveau":"probleme"}
@@ -387,9 +603,10 @@ rien en travaux. Je demande ce créneau six mois à l'avance ; sans lui, aucun e
 ces deux mois. » Pas « on va serrer le planning ».
 
 *Le piège : chercher les deux mois dans les durées calculées, qui sont les seules qu'on sache
-raccourcir. Elles ne pèsent que {{planification.familles.sur_le_chemin_critique_j.calculee::n0}} jours
-du chemin critique, contre {{planification.familles.sur_le_chemin_critique_j.imposee::n0}} jours
-d'imposées et l'étalement des consignations.*
+raccourcir. Le tableau de décomposition du § S4f le chiffre : elles ne pèsent que
+{{planification.decomposition_du_chemin.postes_pct.calculee::n1}} % de la durée du projet, contre
+{{planification.decomposition_du_chemin.part_que_les_effectifs_ne_touchent_pas_pct::n1}} % que les
+moyens ne touchent pas — durées imposées, attente de fenêtre et immobilisation entre fenêtres.*
 :::
 
 :::exercice {"titre":"4 · Trouver l'erreur dans ce planning","niveau":"revue critique"}
@@ -407,8 +624,9 @@ Une entreprise présente le planning suivant pour la charpente :
 
 1. **Les études ne démarrent pas après le gros œuvre : elles démarrent au jour zéro.** Études et
    fabrication totalisent **{{planification.exercices.charpente_etudes_plus_fabrication_j::n0}} jours
-   imposés** que rien ne raccourcit. Les lancer après le gros œuvre ajoute ces cent jours **à la fin
-   du chantier** au lieu de les y superposer. C'est l'erreur de planning la plus chère qui existe, et
+   imposés** que rien ne raccourcit. Les lancer après le gros œuvre ajoute ces
+   {{planification.exercices.charpente_etudes_plus_fabrication_j::n0}} jours **à la fin du
+   chantier** au lieu de les y superposer. C'est l'erreur de planning la plus chère qui existe, et
    elle ne se voit pas sur un Gantt où tout paraît s'enchaîner proprement.
 
 2. **« Dès réception en atelier » n'est pas une date.** Le levage au-dessus de la voie ne se fait pas
@@ -425,8 +643,8 @@ Une entreprise présente le planning suivant pour la charpente :
    l'étalement, et une équipe de levage immobilisée se facture.
 
 *Ce qu'on vise : rien, tant que les études ne sont pas repositionnées au jour zéro et que les
-fenêtres ne figurent pas au planning. Et on le dit par écrit, avec les cent jours imposés en toutes
-lettres.*
+fenêtres ne figurent pas au planning. Et on le dit par écrit, avec les
+{{planification.exercices.charpente_etudes_plus_fabrication_j::n0}} jours imposés en chiffres.*
 :::
 
 ## S7 · Check-list, glossaire et quiz
@@ -466,17 +684,17 @@ lettres.*
 **2. Une cadence est donnée en « 450 m³/j ». Quelle question posez-vous avant de l'utiliser ?**
 **Par quoi ?** Par atelier, par équipe ou par compagnon. Confondre une cadence d'atelier et une cadence unitaire produit des durées fausses d'un facteur égal à l'effectif — l'erreur d'unité la plus commune de la planification.
 
-**3. Votre planning montre 67 % d'occupation de la grue. Pouvez-vous conclure qu'elle suffit ?**
-**Non.** Une occupation moyenne ne dit rien des **conflits instantanés** : la grue peut être libre les trois quarts du temps et demandée deux fois le quart restant. Il faut balayer les fronts, pas faire une moyenne.
+**3. Le planning de ce chantier montre {{planification.grue.occupation_moyenne_pct::n0}} % d'occupation moyenne de la grue à tour. Pouvez-vous conclure qu'elle suffit ?**
+**Non — et sur ce chantier précis, elle ne suffit pas.** Le balayage jour par jour du § S4g trouve {{planification.grue.demande_maximale::n0}} tâches qui la demandent en même temps au jour {{planification.grue.jour_de_la_demande_maximale::n0}}, et {{planification.grue.nb_jours_en_conflit::n0}} jours de conflit en tout, pour un parc de {{planification.grue.parc_de_grues::n0}}. Une occupation moyenne ne dit rien des **conflits instantanés** : il faut balayer les fronts, pas faire une moyenne.
 
 **4. Quelle est la différence entre lisser et niveler ?**
 **Lisser** déplace des tâches dans leur marge : la pointe baisse, la **fin ne bouge pas**. **Niveler** plafonne la ressource : le projet **s'allonge**. Les deux mots désignent deux décisions différentes, et l'une se présente en réunion autrement que l'autre.
 
-**5. Le chemin critique de ce chantier passe par les études et la fabrication de charpente. Qu'est-ce que cela change à votre suivi hebdomadaire ?**
-Le point sur l'avancement du gros œuvre est **rassurant et muet sur le délai**. Les six premiers mois, le vrai point de suivi est la **relance du bureau d'études et du fournisseur** de charpente.
+**5. Sur ce chantier, le plus long chemin compte {{planification.reseau.chemin_critique.length::n0}} tâches, mais seulement {{planification.reseau.nb_taches_critiques::n0}} ont une marge nulle. Comment est-ce possible, et qu'est-ce que cela change à votre suivi hebdomadaire ?**
+Parce qu'une **fenêtre de consignation épingle** le levage au jour {{planification.consignations.CHLV.debut::n0}} : tout ce qui est en amont finit de toute façon avant cette date et reçoit de la marge. Pour le suivi : le point sur l'avancement du gros œuvre est **rassurant et presque muet sur le délai** ; les deux points qui le portent sont la date de consignation obtenue et l'avancement des études et de la fabrication de charpente, qui doivent être prêtes avant elle.
 
 **6. Pourquoi convertir un planning en dates civiles **avant** de le contractualiser ?**
-Parce que deux conversions allongent : les week-ends, puis les **intempéries**. Ici {{planification.calendrier.jours_perdus_intemperies_j::n0}} jours, soit cinq semaines. S'engager sur des jours ouvrés convertis à la louche, c'est s'engager sur une date qu'on ne tiendra pas.
+Parce que deux conversions allongent : les week-ends, puis les **intempéries**. Ici {{planification.calendrier.jours_perdus_intemperies_j::n0}} jours ouvrés de plus, et une fin au {{planification.calendrier.fin_avec_alea}} au lieu du {{planification.calendrier.fin_sans_alea}}. S'engager sur des jours ouvrés convertis à la louche, c'est s'engager sur une date qu'on ne tiendra pas.
 
 **7. Une tâche de 12 jours de travail apparaît sur 80 jours au planning. Est-ce une erreur ?**
 **Non**, si c'est un **étalement** sous consignation : la tâche ne dure pas plus longtemps, elle attend ses fenêtres. Le coût suit les 12 jours, le délai suit les 80. Mais si personne ne l'a écrit, c'est une erreur de **lecture** qui coûtera cher en réunion.
@@ -501,10 +719,14 @@ Parce que deux conversions allongent : les week-ends, puis les **intempéries**.
 |---|---:|
 | Durée sans contrainte externe | {{planification.reseau.duree_sans_contrainte_j::n0}} j ouvrés |
 | Avec les fenêtres de consignation | **{{planification.reseau.duree_avec_fenetres_j::n0}} j** (+{{planification.reseau.surcout_de_delai_pct::n0}} %) |
-| Part **imposée** du chemin critique | {{planification.familles.part_imposee_du_chemin_pct::n0}} % |
+| Part de la durée **hors d'atteinte des moyens** | {{planification.decomposition_du_chemin.part_que_les_effectifs_ne_touchent_pas_pct::n1}} % |
+| Attente de la première fenêtre, sur le chemin | {{planification.decomposition_du_chemin.postes_j.attente_de_fenetre::n0}} j |
+| Immobilisation entre fenêtres, sur le chemin | {{planification.decomposition_du_chemin.postes_j.immobilisation_entre_fenetres::n0}} j |
+| Conflit de grue, parc de {{planification.grue.parc_de_grues::n0}} | {{planification.grue.demande_maximale::n0}} demandes simultanées, {{planification.grue.nb_jours_en_conflit::n0}} j |
 | Pointe d'effectif, brute puis lissée | {{planification.ressources.pointe_avant}} → {{planification.ressources.pointe_apres}} |
 | Marge consommée par le lissage | {{planification.ressources.marge_totale_consommee_j::n0}} j |
 | Fin, intempéries comprises | **{{planification.calendrier.fin_avec_alea}}** |
+| Fourchette de fin, hypothèses aux bornes | {{planification.fourchette_de_date.optimiste.fin}} à {{planification.fourchette_de_date.pessimiste.fin}} |
 
 **Les sept réflexes**
 
