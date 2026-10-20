@@ -142,10 +142,9 @@ dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
 ## Effort consommé (§ 13.2)
 
 **7 séances** : Étape 0 = 1 · Étape 1 = 2 (8 défauts, puis 50 sur trois passes) · Étape 2 = 4
-(6 défauts en construisant, puis **117 sur cinq passes**). Hypothèse de budget : 2 séances/semaine,
-~1 à 1,5 séance par livraison ordinaire (V3, à confirmer).
-**Avancement** : 2 livraisons sur 90 au comptage (2 %), mais ce sont les deux plus chères — le socle
-ne se refait pas et le témoin a absorbé les défauts de méthode. En effort sur le **palier 1 actif**
-(30 livraisons, échéance 15/03/2027) : de l'ordre de **15 à 20 %**.
-**Constat** : la relecture adversariale coûte autant que l'écriture ; les 15 bloquants de la TV,
-qu'aucun contrôle ne voyait, montrent qu'il n'y a pas d'économie à y faire.
+(6 défauts en construisant, puis **117 sur cinq passes**). Budget : 2 séances/semaine, ~1 à
+1,5 séance par livraison ordinaire (V3, à confirmer).
+**Avancement** : 2 livraisons sur 90 (2 %) — mais les deux plus chères, le socle ne se refaisant pas
+et le témoin ayant absorbé les défauts de méthode. En effort sur le **palier 1 actif** (30
+livraisons, échéance 15/03/2027) : **15 à 20 %**. La relecture adversariale coûte autant que
+l'écriture, et les 15 bloquants de la TV montrent qu'il n'y a pas d'économie à y faire.
