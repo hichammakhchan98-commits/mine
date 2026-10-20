@@ -1,17 +1,17 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **19/10/2026** · Étape en cours : **2 — tranche verticale, après cinq passes /devil**
+Dernière mise à jour : **20/10/2026** · Étape en cours : **3 — paliers, programme recentré au 31/10**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : Étape 2 — tranche verticale (`TV`). Zip : `cours-genie-civil-P1-TV.zip`
+- **Dernier livrable** : `D2` — Planification. Zip : `cours-genie-civil-P1-D2.zip`
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
-- **EN ATTENTE DE VALIDATION** : la TV doit être validée **avant toute duplication** (forme,
-  profondeur, ergonomie, chaîne de données, utilité de la 3D) — et une **passe 3** reste à lancer.
-- **Prochain module une fois validée** : `D2` — Planification. Son moteur est déjà écrit et testé
-  hors dépôt (quantités, durées par familles, CPM, fenêtres de consignation, lissage, courbe en S).
+- **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
+  ont tous jugé l'absence de 3D justifiée.
+- **Prochain module** : `D1` — Métrés, prix, sous-détails, situations de travaux.
+- **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
 ## Données figées
@@ -25,15 +25,16 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Statut des modules
 
-**Palier 1 — 35 modules, 50 livraisons.** ▶ 23 / 30 actifs · ⏸ 12 / 20 suspendus (§ 5.0.4).
+**Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
+**24 livraisons**, dont **3 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
-- **Livré** : `E1` (socle + page de démonstration), `TV` (tranche verticale de suivi).
+- **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification).
 - ▶ **actifs, non écrits** : A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
   D1, D2, D3, D4, D6, D7, M3D, REC, RC1
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
-**Palier 2** — 12 modules, 26 livraisons · **Palier 3** — 8 modules, 14 livraisons · non ouverts.
-Sommaire, fiches et ordre de livraison : `cadrage/05-sommaire.md`.
+Fiches-module : `cadrage/05-sommaire.md` (périmètre d'origine, conservé pour mémoire).
+Ordre de livraison **en vigueur** : `cadrage/07-programme-31-10.md`.
 
 ## Ce que le socle livre (Étape 1, § 5.2)
 
@@ -46,9 +47,8 @@ captures de toutes les figures · page de démonstration testée.
 
 ## Grilles d'auto-évaluation § 7.2
 
-Socle E1 : **minimum 2 partout tenu**. TV : tenu après la passe 1, **mis en cause par la passe 2**
-(« l'exemple est vérifié » noté 1 par le relecteur), à renoter après la passe 3. Détail et
-justifications : `QA/grilles-72.md`.
+Socle E1, TV, D2 : **minimum 2 partout tenu** (la TV après la passe 5, voir ci-dessous).
+Détail et justifications : `QA/grilles-72.md`.
 
 ## Défauts et passe adversariale /devil (§ 12.2)
 
@@ -141,10 +141,9 @@ dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
 
 ## Effort consommé (§ 13.2)
 
-**7 séances** : Étape 0 = 1 · Étape 1 = 2 (8 défauts, puis 50 sur trois passes) · Étape 2 = 4
-(6 défauts en construisant, puis **117 sur cinq passes**). Budget : 2 séances/semaine, ~1 à
-1,5 séance par livraison ordinaire (V3, à confirmer).
-**Avancement** : 2 livraisons sur 90 (2 %) — mais les deux plus chères, le socle ne se refaisant pas
-et le témoin ayant absorbé les défauts de méthode. En effort sur le **palier 1 actif** (30
-livraisons, échéance 15/03/2027) : **15 à 20 %**. La relecture adversariale coûte autant que
-l'écriture, et les 15 bloquants de la TV montrent qu'il n'y a pas d'économie à y faire.
+**8 séances** : Étape 0 = 1 · Étape 1 = 2 (8 défauts, puis 50 sur trois passes) · Étape 2 = 4
+(117 défauts sur cinq passes) · D2 = 1.
+**Avancement sur le programme du 31/10** (18 livraisons) : **3 faites**, dont les deux plus chères,
+le socle ne se refaisant pas et le témoin ayant absorbé les défauts de méthode. Reste 15 livraisons
+en 11 jours : **1 à 2 par séance**, une passe adversariale par module (D-034), majeurs et mineurs
+portés en dette plutôt que corrigés.

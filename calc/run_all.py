@@ -10,9 +10,11 @@ ETAPES = [
     ("Etalonnage plancher",  [sys.executable, str(RACINE / "etalonnage" / "plancher_cas_ferme.py")]),
     ("Calculs plancher",     [sys.executable, str(RACINE / "cycle_plancher.py")]),
     ("Calculs valeur acquise", [sys.executable, str(RACINE / "valeur_acquise.py")]),
+    ("Calculs planification",  [sys.executable, str(RACINE / "planification.py")]),
     ("Verification dimensionnelle", [sys.executable, str(RACINE / "verif_unites.py")]),
     ("Tests cage",           [sys.executable, str(RACINE / "tests" / "test_cage.py")]),
     ("Tests plancher",       [sys.executable, str(RACINE / "tests" / "test_plancher.py")]),
+    ("Tests planification",  [sys.executable, str(RACINE / "tests" / "test_planification.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:

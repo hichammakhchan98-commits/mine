@@ -357,3 +357,24 @@ comme gratuite. *Décision* : le module publie les deux effets, vérifie que le 
 décalage, et en tire la règle générale. Le texte ne dit plus que le décoffrage « n'est pas sur le
 chemin critique » — il l'est, dans le cycle de sa zone — mais que le décaler **ne retarde pas le
 démarrage de la zone suivante**, ce qui est la propriété réellement utilisée.
+
+**D-033 · 20/10/2026 — Recentrage demandé par le lecteur : gare ferroviaire et bâtiment, rien d'autre.**
+*Décision du lecteur, le 20/10/2026* : abandonner **aéroport, port, barrage/digue, tunnel, hydraulique
+et routes** (tout le palier 3 et les cas exotiques du palier 2), et concentrer le cours sur les
+**gares ferroviaires** : béton armé, gros œuvre, second œuvre, lots techniques, et le pilotage qui va
+avec. *Raison* : ce sont les seuls ouvrages de son poste ; le reste était du périmètre encyclopédique.
+*Impact* : le palier 3 (8 modules, 14 livraisons) est **supprimé**, pas reporté. Du palier 2 ne
+survivent que les sujets qui touchent une gare. Le cours passe de **90 à ~40 livraisons**, et
+l'ordre de livraison est reconstruit autour du quotidien du Chef de Projet Suivi. L'ancien sommaire
+reste dans git pour mémoire.
+
+**D-034 · 20/10/2026 — Échéance au 31/10/2026, et ce qu'elle coûte au § 12.2.**
+*Décision du lecteur* : une version utilisable du cours **fin octobre**, soit onze jours.
+*Conséquence assumée* : le cycle « passe adversariale relancée jusqu'à zéro bloquant » (§ 12.2) est
+remplacé, pour les modules de cette série, par **une passe par module — bloquants corrigés, majeurs
+et mineurs portés en dette déclarée**. *Raison* : la tranche verticale a demandé cinq passes et
+quatre séances ; à ce rythme, huit modules demandent un mois et demi. La contrepartie est écrite ici
+pour que personne ne la découvre plus tard : **des défauts mineurs seront publiés**, et les modules
+de cette série ne portent pas la même garantie que la tranche verticale. Ce qui ne change pas : la
+chaîne `data → calc → rendu`, les contre-calculs, le balisage V3, les contrôles automatiques, et le
+refus de publier un chiffre non calculé.

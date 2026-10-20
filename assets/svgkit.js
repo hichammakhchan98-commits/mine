@@ -238,7 +238,13 @@
     const k = (L - lab - 60) / fin;        // 60 : place pour l'etiquette de duree a droite
     const X = (j) => ech(lab + j * k);
     let g = "";
-    const pasG = fin > 60 ? 10 : fin > 20 ? 5 : 2;
+    // Le pas de graduation se deduit de la PLACE disponible, pas de la seule duree :
+    // un pas de 10 sur un planning de 342 jours alignait trente-cinq etiquettes qui se
+    // chevauchaient toutes.
+    const largeurMin = 34;                       // place d'une etiquette de jour
+    const nMax = Math.max(3, Math.floor((L - lab - 60) / largeurMin));
+    const pasG = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500]
+      .find((x) => fin / x <= nMax) || Math.ceil(fin / nMax);
     for (let j = 0; j <= fin; j += pasG) {
       g += ligne(X(j), 34, X(j), H - 14, { couleur: "#e7e8e3", ep: 1 });
       g += texte(X(j), 28, String(j), { taille: 9.5, mono: 1, ancre: "middle", couleur: "#6b7682" });
@@ -298,7 +304,11 @@
     }
     // graduations en abscisse : sans elles, la courbe ne se lit pas dans le temps
     const jmax = Math.max(...pts.map((p) => p.j));
-    const pasJ = jmax > 60 ? 10 : jmax > 20 ? 5 : 2;
+    // pas deduit de la place, comme au Gantt : un pas fixe de 10 superposait trente
+    // etiquettes sur un planning de chantier
+    const nMaxJ = Math.max(3, Math.floor((r.x(jmax) - r.x(0)) / 34));
+    const pasJ = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500]
+      .find((x) => jmax / x <= nMaxJ) || Math.ceil(jmax / nMaxJ);
     for (let j = 0; j <= jmax + 1e-9; j += pasJ) {
       g += ligne(r.x(j), r.y(0), r.x(j), r.y(0) + 4, { couleur: "#a8aca4", ep: 1 });
       g += texte(r.x(j), r.y(0) + 16, String(Math.round(j)),
@@ -446,7 +456,9 @@
     const PH = { COF: "#7a93ad", FEP: "#c9a227", FED: "#1f5c3a", PTA: "#8c3b2e",
                  BET: "#41607d", CUR: "#e0ded5", DEC: "#a8aca4" };
     let g = "";
-    const pasJ = fin > 30 ? 5 : 2;
+    const nMaxR = Math.max(3, Math.floor(lx / 34));
+    const pasJ = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500]
+      .find((x) => fin / x <= nMaxR) || Math.ceil(fin / nMaxR);
     for (let j = 0; j <= fin; j += pasJ) {
       g += ligne(X(j), 20, X(j), 26 + n * hZ, { couleur: "#eceee9", ep: 1 });
       g += texte(X(j), 15, String(j), { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
@@ -495,6 +507,144 @@
     return { svg: g, largeur: L, hauteur: H };
   }
 
+  /** Organigramme des taches (WBS) : lots en colonnes, taches empilees dessous.
+      La famille de duree donne la teinte : c'est l'information que le lecteur doit
+      voir d'un coup d'oeil, avant meme de lire les noms. */
+  function wbs(arbre, o = {}) {
+    const L = o.largeur || 760;
+    const TEINTE = { calculee: "#cfe0d4", imposee: "#f3d9d4", declaree: "#e8e6df" };
+    const BORD = { calculee: "#1f5c3a", imposee: "#8c3b2e", declaree: "#6b7682" };
+    const nCol = arbre.length;
+    const lCol = (L - 16) / nCol, boite = lCol - 10, lig = 26;
+    const hMax = Math.max(...arbre.map((c) => c.taches.length));
+    const nLigEnt = Math.max(...arbre.map((c) => Math.ceil(String(c.lot).length * 5.3 / (boite - 8))));
+    const hEntMax = Math.max(22, nLigEnt * 12 + 8);
+    const H = 70 + hEntMax + hMax * lig;
+    let g = "";
+    // racine
+    g += rect(L / 2 - 110, 8, 220, 24, { remplissage: "#41607d", couleur: "none", ep: 0, rayon: 3 });
+    g += texte(L / 2, 20, o.racine || "Chantier", { taille: 11.5, gras: 1, ancre: "middle", base: "middle", couleur: "#ffffff" });
+    arbre.forEach((col, i) => {
+      const x = 8 + i * lCol, cx = x + boite / 2;
+      g += ligne(L / 2, 32, cx, 44, { couleur: "#a8aca4", ep: 1 });
+      // L'entete de lot est ECRETEE a la largeur de sa boite : ecrite en taille fixe,
+      // elle debordait sur la colonne voisine et deux titres se superposaient.
+      const motsLot = String(col.lot).split(" ");
+      const lignesLot = [];
+      let courante = "";
+      for (const m of motsLot) {
+        const essai = courante ? `${courante} ${m}` : m;
+        if (essai.length * 5.3 > boite - 8 && courante) { lignesLot.push(courante); courante = m; }
+        else courante = essai;
+      }
+      lignesLot.push(courante);
+      const hEnt = Math.max(22, lignesLot.length * 12 + 8);
+      g += rect(x, 44, boite, hEnt, { remplissage: "#f1f1ed", couleur: "#a8aca4", ep: 1, rayon: 3 });
+      lignesLot.forEach((t, k) => {
+        g += texte(cx, 44 + hEnt / 2 + (k - (lignesLot.length - 1) / 2) * 12, t,
+          { taille: 9, gras: 1, ancre: "middle", base: "middle" });
+      });
+      col.taches.forEach((t, k) => {
+        const y = 52 + hEntMax + k * lig;
+        g += ligne(cx, y - 6, cx, y, { couleur: "#d5d7d1", ep: 1 });
+        g += rect(x, y, boite, lig - 6, { remplissage: TEINTE[t.famille], couleur: BORD[t.famille], ep: 1, rayon: 3 });
+        g += texte(x + 5, y + (lig - 6) / 2, t.id, { taille: 9, mono: 1, base: "middle", couleur: BORD[t.famille] });
+        g += texte(x + boite - 5, y + (lig - 6) / 2, `${Number(t.duree).toFixed(0)} j`,
+          { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: BORD[t.famille] });
+      });
+    });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Reseau de taches (PERT) : rang = plus long chemin depuis l'origine.
+      Le chemin critique est trace en brique et en trait epais ; les autres liens en
+      gris fin. Une fleche qui remonte est impossible : si le trace en montre une,
+      le reseau contient un circuit. */
+  function reseau(z, o = {}) {
+    // la directive :::figure n'appelle un generateur qu'avec (args, options) : le reseau
+    // recoit donc ses noeuds ET ses liens dans un seul objet
+    const noeuds = Array.isArray(z) ? z : z.noeuds;
+    const liens = Array.isArray(z) ? (o.liens || []) : z.liens;
+    const L = o.largeur || 760, lB = 86, hB = 30;
+    const pred = {}; noeuds.forEach((n) => pred[n.id] = []);
+    liens.forEach((l) => { if (pred[l.vers]) pred[l.vers].push(l.de); });
+    const rang = {};
+    const calc = (id, vus) => {
+      if (rang[id] != null) return rang[id];
+      if (vus.includes(id)) return 0;
+      const r = pred[id].length ? Math.max(...pred[id].map((p) => calc(p, vus.concat(id)) + 1)) : 0;
+      rang[id] = r; return r;
+    };
+    noeuds.forEach((n) => calc(n.id, []));
+    const cols = {};
+    noeuds.forEach((n) => (cols[rang[n.id]] = cols[rang[n.id]] || []).push(n));
+    const nCol = Math.max(...Object.keys(cols).map(Number)) + 1;
+    const hMax = Math.max(...Object.values(cols).map((c) => c.length));
+    const pasX = (L - lB - 16) / Math.max(1, nCol - 1), pasY = hB + 16;
+    const H = 24 + hMax * pasY;
+    const pos = {};
+    Object.entries(cols).forEach(([r, ns]) => ns.forEach((n, k) => {
+      pos[n.id] = { x: 8 + Number(r) * pasX, y: 12 + k * pasY + (hMax - ns.length) * pasY / 2 };
+    }));
+    let g = "";
+    liens.forEach((l) => {
+      const a = pos[l.de], b = pos[l.vers];
+      if (!a || !b) return;
+      const crit = l.critique;
+      g += chemin(`M${ech(a.x + lB)} ${ech(a.y + hB / 2)} C${ech(a.x + lB + pasX * .3)} ${ech(a.y + hB / 2)} ${ech(b.x - pasX * .3)} ${ech(b.y + hB / 2)} ${ech(b.x)} ${ech(b.y + hB / 2)}`,
+        { couleur: crit ? "#8c3b2e" : "#c4c7c0", ep: crit ? 1.8 : 1, remplissage: "none" });
+    });
+    noeuds.forEach((n) => {
+      const p = pos[n.id];
+      g += rect(p.x, p.y, lB, hB, {
+        remplissage: n.critique ? "#f3d9d4" : "#f1f1ed",
+        couleur: n.critique ? "#8c3b2e" : "#a8aca4", ep: n.critique ? 1.6 : 1, rayon: 3 });
+      g += texte(p.x + 6, p.y + 11, n.id, { taille: 9.5, mono: 1, gras: 1, base: "middle",
+        couleur: n.critique ? "#8c3b2e" : "#14181d" });
+      g += texte(p.x + lB - 6, p.y + 11, `${Number(n.duree).toFixed(0)} j`,
+        { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+      g += texte(p.x + 6, p.y + 22, n.marge > 0 ? `marge ${Number(n.marge).toFixed(0)} j` : "critique",
+        { taille: 8.5, mono: 1, base: "middle", couleur: n.critique ? "#8c3b2e" : "#6b7682" });
+    });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Ligne d'equilibre : le temps en abscisse, les zones en ordonnee.
+      Une tache repetitive y devient une DROITE dont la pente est la cadence. Deux
+      droites qui se rapprochent annoncent une collision d'equipes ; le Gantt, lui,
+      ne la montre qu'une fois arrivee. */
+  function ligneEquilibre(z, o = {}) {
+    const L = o.largeur || 700, H = o.hauteur || 240;
+    const zones = z.zones, n = zones.length;
+    const tmax = Math.max(...zones.map((x) => x.fin_j));
+    const r = repere({ largeur: L, hauteur: H, marge: 46, margeDroite: 30, libre: true,
+      xmin: 0, xmax: tmax, ymin: 0, ymax: n + 0.5 });
+    let g = "";
+    for (let i = 1; i <= n; i++) {
+      g += ligne(r.x(0), r.y(i), r.x(tmax), r.y(i), { couleur: "#f1f1ed", ep: 1 });
+      g += texte(r.x(0) - 8, r.y(i), `Z${i}`, { taille: 9.5, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    }
+    // barres de presence par zone
+    zones.forEach((x) => {
+      g += ligne(r.x(x.debut_j), r.y(x.zone), r.x(x.fin_j), r.y(x.zone), { couleur: "#cfe0d4", ep: 7 });
+    });
+    const trace = (cle, coul, lib) => chemin(
+      zones.map((x, i) => `${i ? "L" : "M"}${r.x(x[cle])} ${r.y(x.zone)}`).join(" "),
+      { couleur: coul, ep: 2, remplissage: "none" }) +
+      texte(r.x(zones[n - 1][cle]) + 6, r.y(n), lib, { taille: 9.5, ancre: "start", base: "middle", couleur: coul });
+    g += trace("debut_j", "#41607d", "début");
+    g += trace("fin_j", "#8c3b2e", "fin");
+    const nMaxT = Math.max(3, Math.floor((r.x(tmax) - r.x(0)) / 34));
+    const pasJ = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500]
+      .find((x) => tmax / x <= nMaxT) || Math.ceil(tmax / nMaxT);
+    for (let j = 0; j <= tmax + 1e-9; j += pasJ) {
+      g += ligne(r.x(j), r.y(0), r.x(j), r.y(0) + 4, { couleur: "#a8aca4", ep: 1 });
+      g += texte(r.x(j), r.y(0) + 16, String(Math.round(j)), { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    }
+    g += texte(L / 2, H - 6, "jours ouvrés", { taille: 10, ancre: "middle", couleur: "#6b7682" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
   /** Sequence d'execution en etapes numerotees. */
   function sequence(etapes, o = {}) {
     const L = o.largeur || 700, cel = L / etapes.length, H = o.hauteur || 150;
@@ -519,7 +669,7 @@
 
   const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
     coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence,
-    planZones, rotation, MOTIFS, ech };
+    planZones, rotation, wbs, reseau, ligneEquilibre, MOTIFS, ech };
 
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   racine.SVGKit = API;

@@ -26,3 +26,31 @@ H024;recouvrement ferraillage des poutres / de la dalle;40 %;%;20 à 60;2026;TV;
 H025;marge de rotation sur la borne théorique;14 %;%;0 à 30;2026;TV;écart entre la borne de saturation des équipes et la cadence annoncée , à zéro, le planning est théoriquement faisable et pratiquement intenable
 H026;parc de tables coffrantes du chantier;1 300 m²;m²;1 000 à 1 500;2026;TV;parc affecté au plancher de la mezzanine, déduit du planning et non posé a priori
 H027;maintien des étais de reprise après décoffrage;14 jours;j;7 à 28;2026;TV;le critère réel est une résistance et une redistribution de charges, pas une durée , aucune valeur normative n'est disponible en § 5.0
+H028;cadence de semelles isolées;4 unités/jour/atelier;u/j;2,5 à 6;2026;D2;cycle complet : implantation, coffrage bois, cage, coulage
+H029;cadence de dalle pleine;120 m²/jour/atelier;m²/j;80 à 180;2026;D2;cycle complet coffrage-ferraillage-coulage, hors cure
+H030;cadence de poteaux de grande hauteur;3 unités/jour/atelier;u/j;2 à 5;2026;D2;coffrage grimpant, étaiement, travail en hauteur
+H031;délai d'études et de visa d'une charpente;40 jours;j;25 à 60;2026;D2;plans d'exécution, note de calcul, visa de la maîtrise d'œuvre, approbation
+H032;délai de fabrication d'une charpente en atelier;60 jours;j;45 à 90;2026;D2;débit, soudage, contrôles non destructifs, galvanisation, transport
+H033;séchage du gros œuvre avant second œuvre;20 jours;j;14 à 30;2026;D2;avant chapes et cloisons
+H034;durée d'une fenêtre de consignation;3 jours ouvrés consécutifs;j;2 à 5;2026;D2;consignation accordée par l'exploitant
+H035;période entre deux consignations;20 jours ouvrés;j;15 à 30;2026;D2;une fenêtre par mois calendaire environ, demandée six mois à l'avance
+H036;jours non ouvrés pour intempéries;1,5 jour par mois;j/mois;0,5 à 3;2026;D2;région de Marrakech : pluie et vent fort empêchant grue et bétonnage , aucune statistique météo fournie
+H037;épaisseur de décapage;0,3 m;m;0,2 à 0,5;2026;D2;terre végétale et remblais superficiels
+H038;surprofondeur de forme sous dallage;0,4 m;m;0,3 à 0,6;2026;D2;forme et béton de propreté
+H039;foisonnement des déblais;25 %;%;15 à 35;2026;D2;augmentation de volume des déblais transportés
+H040;volume de béton par semelle;2,5 m³;m³;1,5 à 4;2026;D2;semelle isolée et amorce , prédimensionnement, le calcul appartient au module de fondations
+H041;épaisseur de dalle du niveau technique;0,3 m;m;0,25 à 0,4;2026;D2;prédimensionnement
+H042;épaisseur de radier du niveau technique;0,4 m;m;0,3 à 0,6;2026;D2;prédimensionnement
+H043;masse de charpente par m² couvert;65 kg/m²;kg/m²;45 à 90;2026;D2;treillis de 32 m de portée et pannes
+H044;hauteur vitrée moyenne du hall;9 m;m;8 à 12,5;2026;D2;façades du hall voyageurs
+H045;cadence de terrassement par atelier;450 m³/j;m³/j;300 à 700;2026;D2;pelle 30 t et rotation de camions, trajet court
+H046;cadence de charpente par atelier;9 t/j;t/j;5 à 15;2026;D2;pré-assemblage au sol et levage, grue mobile
+H047;cadence de couverture par atelier;250 m²/j;m²/j;150 à 400;2026;D2;pannes, bac et étanchéité
+H048;montage de la grue à tour;5 jours;j;3 à 8;2026;D2;montage et réception de l'appareil
+H049;soutènement périphérique de la fouille;18 jours;j;12 à 30;2026;D2;forfait, le calcul appartient au module de soutènements
+H050;étanchéité et remblais périphériques;12 jours;j;8 à 20;2026;D2;étanchéité et remblais périphériques
+H051;noyaux et escaliers;25 jours;j;18 à 40;2026;D2;forfait de synthèse
+H052;raccordement du passage souterrain;9 jours;j;6 à 15;2026;D2;la durée est courte, l'attente de la fenêtre ne l'est pas
+H053;second œuvre et lots techniques;75 jours;j;55 à 110;2026;D2;forfait de synthèse : le détail appartient aux modules C4 et B7b
+H054;réception et levée des réserves;10 jours;j;7 à 15;2026;D2;réception et levée des réserves
+H055;part du tonnage levée sous consignation;35 %;%;25 à 50;2026;D2;tonnage levé au-dessus ou à proximité immédiate de la voie exploitée

@@ -428,11 +428,358 @@
     }
   },
   "planning": {
-    "taches": [],
-    "dependances": [],
-    "date_fin_P1_demandee_au_lecteur": null,
+    "_role": "Reseau de taches du chantier de la gare. Le plancher de mezzanine (module TV) n'y est qu'une tache parmi vingt-cinq : D2 change d'echelle, pas de methode.",
+    "niveau_preuve": "V3",
+    "calendrier": {
+      "jours_ouvres_par_semaine": 5,
+      "heures_par_jour": 8,
+      "origine": "2026-11-02",
+      "jours_non_ouvres_par_mois_intemperies": {
+        "valeur": 1.5,
+        "fourchette": [
+          0.5,
+          3.0
+        ],
+        "note": "moyenne annuelle region de Marrakech, pluie et vent fort empechant grue et betonnage. V3 : aucune statistique meteo fournie."
+      }
+    },
+    "contraintes_exploitation": {
+      "_role": "Une gare se construit a cote d'une voie exploitee. Les taches qui surplombent ou coupent la voie ne se font PAS quand le planning le voudrait : elles se font quand l'exploitant consigne.",
+      "fenetre_jours": {
+        "valeur": 3,
+        "fourchette": [
+          2,
+          5
+        ],
+        "note": "duree d'une consignation accordee, en jours ouvres consecutifs"
+      },
+      "periode_entre_fenetres_jours": {
+        "valeur": 20,
+        "fourchette": [
+          15,
+          30
+        ],
+        "note": "une fenetre par mois calendaire environ, demandee six mois a l'avance"
+      },
+      "premiere_fenetre_jour": 40,
+      "taches_soumises": [
+        "CHLV",
+        "PSOU"
+      ],
+      "part_levage_sous_consignation_pct": {
+        "valeur": 35,
+        "fourchette": [
+          25,
+          50
+        ],
+        "note": "part du tonnage de charpente levee au-dessus ou a proximite immediate de la voie exploitee, donc soumise a consignation"
+      }
+    },
+    "ratios_quantites_V3": {
+      "_role": "En phase § 5.0, aucune quantite ne sort d'un dimensionnement. Celles du chantier sortent de la geometrie et de ces ratios, declares avec leur fourchette.",
+      "decapage_m": {
+        "valeur": 0.3,
+        "fourchette": [
+          0.2,
+          0.5
+        ],
+        "note": "terre vegetale et remblais superficiels"
+      },
+      "surprofondeur_forme_m": {
+        "valeur": 0.4,
+        "fourchette": [
+          0.3,
+          0.6
+        ],
+        "note": "forme et beton de proprete sous dallage"
+      },
+      "foisonnement_pct": {
+        "valeur": 25,
+        "fourchette": [
+          15,
+          35
+        ],
+        "note": "augmentation de volume des deblais transportes"
+      },
+      "semelle_m3_par_poteau": {
+        "valeur": 2.5,
+        "fourchette": [
+          1.5,
+          4.0
+        ],
+        "note": "semelle isolee + amorce ; PREDIMENSIONNEMENT V3, le calcul appartient a B1 (suspendu)"
+      },
+      "poteau_section_m2": {
+        "valeur": 0.25,
+        "fourchette": [
+          0.16,
+          0.36
+        ],
+        "note": "0,50 x 0,50 m ; PREDIMENSIONNEMENT V3 par elancement, le calcul appartient a B3 (suspendu)"
+      },
+      "dalle_niveau_technique_m": {
+        "valeur": 0.3,
+        "fourchette": [
+          0.25,
+          0.4
+        ]
+      },
+      "radier_niveau_technique_m": {
+        "valeur": 0.4,
+        "fourchette": [
+          0.3,
+          0.6
+        ]
+      },
+      "voile_epaisseur_m": {
+        "valeur": 0.25,
+        "fourchette": [
+          0.2,
+          0.3
+        ]
+      },
+      "charpente_kg_m2": {
+        "valeur": 65,
+        "fourchette": [
+          45,
+          90
+        ],
+        "note": "treillis de 32 m de portee + pannes, masse rapportee a la surface couverte"
+      },
+      "facade_hauteur_m": {
+        "valeur": 9.0,
+        "fourchette": [
+          8.0,
+          12.5
+        ],
+        "note": "hauteur vitree moyenne du hall"
+      }
+    },
+    "cadences_chantier_V3": {
+      "annee_ref": 2026,
+      "charpente_t_j_atelier": {
+        "valeur": 9,
+        "fourchette": [
+          5,
+          15
+        ],
+        "note": "pre-assemblage au sol + levage, grue mobile"
+      },
+      "couverture_m2_j_atelier": {
+        "valeur": 250,
+        "fourchette": [
+          150,
+          400
+        ],
+        "note": "pannes, bac, etancheite"
+      },
+      "dalle_pleine_m2_j_atelier": {
+        "valeur": 120,
+        "fourchette": [
+          80,
+          180
+        ],
+        "note": "radier et plancher plein, cycle complet coffrage-ferraillage-coulage, hors cure"
+      },
+      "facade_m2_j_atelier": {
+        "valeur": 60,
+        "fourchette": [
+          40,
+          90
+        ],
+        "note": "murs-rideaux, pose a la nacelle"
+      },
+      "poteau_unites_j_atelier": {
+        "valeur": 3,
+        "fourchette": [
+          2,
+          5
+        ],
+        "note": "poteau de 9 m : coffrage grimpant, etaiement, securite en hauteur"
+      },
+      "semelle_unites_j_atelier": {
+        "valeur": 4,
+        "fourchette": [
+          2.5,
+          6
+        ],
+        "note": "semelle isolee, cycle complet : implantation, coffrage bois, cage, coulage. Le volume n'est PAS le moteur — le nombre d'unites l'est."
+      },
+      "terrassement_m3_j_atelier": {
+        "valeur": 450,
+        "fourchette": [
+          300,
+          700
+        ],
+        "note": "pelle 30 t + rotation de camions, trajet court"
+      },
+      "voile_m2_j_atelier": {
+        "valeur": 60,
+        "fourchette": [
+          40,
+          90
+        ],
+        "note": "banches, cycle d'un jour"
+      },
+      "_role": "Cadences d'ATELIER (equipe complete), distinctes des cadences unitaires par compagnon du module TV. L'unite le dit : m3/j d'atelier, et non m3/j/compagnon."
+    },
+    "delais_imposes_V3": {
+      "_role": "Durees qu'aucun effectif ne raccourcit. Les confondre avec des durees calculees est l'erreur de planning la plus couteuse : on y met des hommes, et rien ne bouge.",
+      "etudes_et_visa_charpente_j": {
+        "valeur": 40,
+        "fourchette": [
+          25,
+          60
+        ],
+        "note": "plans d'execution, note de calcul, visa de la maitrise d'oeuvre, approbation"
+      },
+      "fabrication_charpente_j": {
+        "valeur": 60,
+        "fourchette": [
+          45,
+          90
+        ],
+        "note": "atelier : debit, soudage, controles non destructifs, galvanisation, transport"
+      },
+      "sechage_avant_second_oeuvre_j": {
+        "valeur": 20,
+        "fourchette": [
+          14,
+          30
+        ],
+        "note": "sechage du gros oeuvre avant chapes et cloisons"
+      }
+    },
+    "forfaits_V3": {
+      "_role": "Durees DECLAREES, faute de quantites a diviser. Chacune porte sa fourchette : c'est la seule honnetete possible.",
+      "installation_chantier_j": {
+        "valeur": 15,
+        "fourchette": [
+          10,
+          25
+        ]
+      },
+      "montage_grue_j": {
+        "valeur": 5,
+        "fourchette": [
+          3,
+          8
+        ]
+      },
+      "implantation_j": {
+        "valeur": 3,
+        "fourchette": [
+          2,
+          5
+        ]
+      },
+      "soutenement_j": {
+        "valeur": 18,
+        "fourchette": [
+          12,
+          30
+        ]
+      },
+      "etancheite_remblais_j": {
+        "valeur": 12,
+        "fourchette": [
+          8,
+          20
+        ]
+      },
+      "noyaux_escaliers_j": {
+        "valeur": 25,
+        "fourchette": [
+          18,
+          40
+        ]
+      },
+      "marquise_j": {
+        "valeur": 14,
+        "fourchette": [
+          10,
+          22
+        ]
+      },
+      "passage_souterrain_j": {
+        "valeur": 9,
+        "fourchette": [
+          6,
+          15
+        ],
+        "note": "raccordement sous consignation : la duree est courte, l'attente de la fenetre ne l'est pas"
+      },
+      "quais_equipements_j": {
+        "valeur": 30,
+        "fourchette": [
+          20,
+          45
+        ]
+      },
+      "second_oeuvre_lots_techniques_j": {
+        "valeur": 75,
+        "fourchette": [
+          55,
+          110
+        ],
+        "note": "forfait de synthese : le detail appartient a C4 et B7b"
+      },
+      "essais_mise_en_service_j": {
+        "valeur": 15,
+        "fourchette": [
+          10,
+          25
+        ]
+      },
+      "reception_j": {
+        "valeur": 10,
+        "fourchette": [
+          7,
+          15
+        ]
+      }
+    },
+    "effectifs_chantier_V3": {
+      "_role": "Nombre d'ATELIERS en parallele, et non nombre de compagnons : c'est ce qui multiplie une cadence d'atelier.",
+      "ateliers_terrassement": 2,
+      "ateliers_fondations": 2,
+      "ateliers_voiles": 1,
+      "ateliers_poteaux": 2,
+      "ateliers_charpente": 1,
+      "ateliers_couverture": 1,
+      "ateliers_facade": 2,
+      "compagnons_par_atelier": {
+        "terrassement": 4,
+        "fondations": 8,
+        "voiles": 8,
+        "poteaux": 6,
+        "charpente": 10,
+        "couverture": 6,
+        "facade": 5
+      },
+      "effectif_par_tache": {
+        "_role": "Effectif present sur le chantier pendant la tache. Pour les taches calculees il se deduit des ateliers ; pour les taches declarees il est pose en V3. L'histogramme n'a de sens que si les deux sont dans la meme unite : des compagnons presents.",
+        "INST": 6,
+        "GRUE": 4,
+        "TOPO": 2,
+        "SOUT": 10,
+        "ETAN": 8,
+        "NOYX": 12,
+        "CHET": 0,
+        "CHFA": 0,
+        "MARQ": 10,
+        "PSOU": 8,
+        "QUAI": 14,
+        "SECH": 0,
+        "SECO": 45,
+        "ESSA": 8,
+        "RECE": 4,
+        "_note_zero": "CHET, CHFA et SECH sont a zero : les etudes, la fabrication en atelier et le sechage n'occupent personne SUR LE CHANTIER. Les compter gonflerait l'histogramme d'un effectif qui n'est pas la."
+      }
+    },
+    "date_fin_P1_demandee_au_lecteur": "2026-10-31",
     "date_fin_P1_actif_hypothese": "2027-03-15",
-    "date_fin_P1_hypothese_niveau_preuve": "V3 — hypothese declaree, faute de reponse chiffree ; a confirmer (§ 5.5)"
+    "date_fin_P1_hypothese_niveau_preuve": "V0 — date fixee par le lecteur le 20/10/2026 (decision D-034)"
   },
   "effectifs": {
     "_role": "Effectifs par poste sur une zone. V3.",
