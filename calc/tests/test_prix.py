@@ -119,6 +119,12 @@ verifie("l'ecart est systematique et de meme signe sur les six postes — c'est 
         all(v["ecart_pct"] < 0 for v in ec["par_poste"].values()),
         f"de {min(v['ecart_pct'] for v in ec['par_poste'].values())} % a "
         f"{max(v['ecart_pct'] for v in ec['par_poste'].values())} %")
+verifie("le verdict du rapprochement est publie, et il dit ce que l'ecart EST",
+        "CALIBRE" in ec["verdict"] or "INACCEPTABLE" in ec["verdict"], ec["verdict"])
+verifie("et il bascule au-dela du seuil declare",
+        (abs(ec["ecart_pct"]) <= ec["seuil_inacceptable_pct"])
+        == ("CALIBRE" in ec["verdict"]),
+        f"{ec['ecart_pct']} % pour un seuil de {ec['seuil_inacceptable_pct']} %")
 _div = (ec["voie_B_prix_poses_MAD"] / ec["voie_A_sous_detail_MAD"] - 1) * 100
 verifie("le « divers » qui recollerait les deux voies est recalcule ici",
         abs(ec["divers_necessaire_pct"] - _div) < 0.05, f"{ec['divers_necessaire_pct']} %")
@@ -130,10 +136,28 @@ for cas in coh["cas"]:
     verifie(f"{cas['poste']} : le facteur de recalage est le rapport des jours-compagnon",
             abs(cas["facteur_de_recalage"] - s_ref / cas["jours_compagnon_par_unite"]) < 0.02,
             f"x{cas['facteur_de_recalage']}")
-verifie("le facteur moyen tombe dans le facteur 2 a 3 soupconne par la dette n 10",
-        2.0 <= coh["facteur_de_recalage_moyen"] <= 3.0,
-        f"x{coh['facteur_de_recalage_moyen']} — obtenu par un chemin independant de celui "
-        "qui a produit le soupcon")
+# Le facteur global est PONDERE par le travail, et non moyenne sur les postes : une
+# moyenne comptait deux fois la cadence partagee par le radier et le plancher haut, et
+# omettait le terrassement. On le recalcule ici depuis les cas publies.
+_jc_plan = sum(x["jours_compagnon_planning_total"] for x in coh["cas"])
+_jc_ref = sum(x["jours_compagnon_reference_total"] for x in coh["cas"])
+verifie("le facteur de recalage est pondere par le travail, et recalcule ici",
+        abs(coh["facteur_de_recalage_pondere"] - _jc_ref / _jc_plan) < 0.01,
+        f"x{coh['facteur_de_recalage_pondere']} contre x{_jc_ref / _jc_plan:.2f}")
+_moyenne_naive = sum(x["facteur_de_recalage"] for x in coh["cas"]) / len(coh["cas"])
+verifie("canari : une moyenne non ponderee donnerait un autre facteur",
+        abs(_moyenne_naive - coh["facteur_de_recalage_pondere"]) > 0.1,
+        f"moyenne naive x{_moyenne_naive:.2f} contre pondere "
+        f"x{coh['facteur_de_recalage_pondere']}")
+verifie("aucune cadence n'est comptee deux fois",
+        sum(len(g["postes"]) for g in coh["par_cadence"].values()) == len(coh["cas"])
+        and len(coh["par_cadence"]) < len(coh["cas"]),
+        f"{len(coh['par_cadence'])} cadences pour {len(coh['cas'])} postes")
+verifie("le terrassement est dans le perimetre du controle",
+        any(x["poste"] == "TERR" for x in coh["cas"]))
+verifie("le facteur confirme le sens du soupcon de la dette n 10, sans en confirmer l'ampleur",
+        1.0 < coh["facteur_de_recalage_pondere"] < 2.0,
+        f"x{coh['facteur_de_recalage_pondere']} — le soupcon annoncait 2 a 3")
 verifie("recaler les cadences rapproche la part de main d'oeuvre de sa fourchette",
         r["variante_recalee"]["part_main_oeuvre_beton_arme_pct"]["recalee"]
         > r["variante_recalee"]["part_main_oeuvre_beton_arme_pct"]["reference"],
@@ -144,6 +168,8 @@ verifie("... et allonge le chantier ET renchérit le debourse — une cadence op
         and r["variante_recalee"]["debourse_MAD"]["ecart_pct"] > 0,
         f"duree +{r['variante_recalee']['duree_j']['ecart_pct']} %, "
         f"debourse +{r['variante_recalee']['debourse_MAD']['ecart_pct']} %")
+
+fd = bord["frais_de_duree"]
 
 # ---------------------------------------------------------------- revision et situation
 sit = r["situation"]
@@ -172,8 +198,9 @@ verifie("le cumul des lignes de situation est recalcule ici",
         abs(_cum - sit["travaux_cumules_MAD"]) < 1, f"{_cum:.0f} MAD")
 _av = r["etats_a_la_date_d_arret"]["declare"]
 verifie("chaque ligne attache la quantite de l'avancement declare, pas celle du marche",
-        all(abs(l["quantite_attachee"] - l["quantite_marche"] * _av[l["poste"]] / 100) < 0.02
-            for l in sit["lignes"] if l["poste"] in _av))
+        all(abs(l["quantite_au_metre"] - l["quantite_marche"] * _av[l["poste"]] / 100) < 0.02
+            for l in sit["lignes"] if l["poste"] in _av),
+        "au metre ; l'ecart d'attachement s'applique ensuite, et sur un seul poste")
 # L'avancement declare n'est plus saisi a la main : il vient de l'etat du chantier,
 # partage avec D4. Une version precedente le posait dans data/ et decrivait un etat
 # correspondant au 2e mois pour une situation annoncee au 7e.
@@ -182,8 +209,9 @@ verifie("l'avancement declare vient de l'etat du chantier, pas d'une table saisi
         "la table saisie a ete retiree de data/")
 _j = d["suivi_chantier"]["date_arret_j"]
 verifie("la situation porte la date d'arret du suivi, et une seule",
-        abs(sit["mois_ecoules"] - _j / P["ressources"]["jours_ouvres_par_mois"]) < 0.01,
-        f"mois {sit['mois_ecoules']} pour j{_j}")
+        abs(sit["mois_ecoules"]
+            - _j / fd["conversion"]["jours_ouvres_par_mois_calendaire"]) < 0.01,
+        f"mois {sit['mois_ecoules']} pour j{_j}, en mois CALENDAIRES")
 
 # ---------------------------------------------------------------- tresorerie
 tr = r["tresorerie"]
@@ -202,7 +230,6 @@ verifie("la depense n'est PAS la courbe de travail de D2 : les deux different",
 
 # ---------------------------------------------------------------- cout du retard
 ret = r["cout_du_retard"]["21"]
-fd = bord["frais_de_duree"]
 verifie("le cout d'un mois de retard est recalcule ici",
         abs(ret["frais_de_duree_MAD"] - fd["cout_MAD_par_jour_ouvre"] * 21) < 1,
         f"{ret['frais_de_duree_MAD']:,.0f} MAD de frais + "
@@ -213,6 +240,71 @@ verifie("les penalites se comptent en jours CALENDAIRES, plus nombreux que les o
 verifie("les penalites restent sous leur plafond",
         all(r["cout_du_retard"][k]["penalites_MAD"]
             <= r["cout_du_retard"][k]["penalites_plafond_MAD"] + 1e-6 for k in r["cout_du_retard"]))
+
+# ---------------------------------------------------------------- les deux calendriers
+conv = fd["conversion"]
+verifie("la conversion entre jours ouvres et calendaires est recalculee ici",
+        abs(conv["ouvres_par_jour_calendaire"] * conv["calendaires_par_jour_ouvre"] - 1) < 1e-3)
+verifie("les frais de duree sont comptes en mois CALENDAIRES",
+        abs(fd["total_MAD"] - fd["cout_MAD_par_mois"] * fd["duree_mois_calendaires"]) < 1,
+        f"{fd['duree_mois_calendaires']} mois calendaires")
+verifie("canari : les compter en mois de 21 jours ouvres donnerait un autre total",
+        abs(fd["duree_mois_calendaires"] - fd["duree_j"] / 21) > 0.3,
+        f"{fd['duree_mois_calendaires']} contre {fd['duree_j'] / 21:.2f}")
+tr2 = r["tresorerie"]
+verifie("le delai de paiement du CPS est converti en jours ouvres avant d'etre compare",
+        abs(tr2["delai_de_paiement_j_ouvres"]
+            - tr2["delai_de_paiement_j_calendaires"] * conv["ouvres_par_jour_calendaire"]) < 0.2,
+        f"{tr2['delai_de_paiement_j_calendaires']} cal = "
+        f"{tr2['delai_de_paiement_j_ouvres']} ouvres")
+verifie("canari : comparer les 60 jours calendaires a des jours ouvres gonflerait le besoin",
+        tr2["delai_de_paiement_j_ouvres"] < tr2["delai_de_paiement_j_calendaires"])
+
+# ---------------------------------------------------------------- l'attachement est PAYE
+ea = sit["ecart_d_attachement"]
+_l = next(l for l in sit["lignes"] if l["poste"] == ea["poste"])
+verifie("la quantite attachee differe de la quantite au metre, et du taux declare",
+        abs(_l["quantite_attachee"] - _l["quantite_au_metre"] * (1 + ea["ecart_pct"] / 100)) < 0.1,
+        f"{_l['quantite_au_metre']} au metre, {_l['quantite_attachee']} attachee")
+verifie("et c'est bien la quantite ATTACHEE qui est payee",
+        abs(_l["montant_cumule_MAD"] - _l["quantite_attachee"] * _l["pu_MAD"]) < 1,
+        f"{ea['effet_sur_la_situation_MAD']:,.0f} MAD d'effet")
+verifie("aucun autre poste ne porte d'ecart d'attachement",
+        sum(1 for l in sit["lignes"] if l["ecart_d_attachement_pct"]) == 1)
+
+# ---------------------------------------------------------------- domaine du ratio au m2
+verifie("le cout au m2 n'est compare a sa fourchette que sur le perimetre du ratio",
+        cr["cout_par_m2_de_plancher_hors_interfaces"]["ratio_defini_sur_cette_base"]
+        and not cr["cout_par_m2_d_emprise_tout_compris"]["ratio_defini_sur_cette_base"])
+_s = cr["_surfaces"]
+verifie("la surface de plancher est recalculee ici",
+        abs(_s["plancher_total_m2"]
+            - (_s["emprise_m2"] + _s["mezzanine_m2"] + _s["niveau_technique_m2"])) < 1,
+        f"{_s['plancher_total_m2']} m2")
+verifie("le prix hors interfaces exclut bien le lot 6",
+        _s["prix_hors_interfaces_MAD"] < bord["prix_de_vente_MAD"],
+        f"{_s['prix_hors_interfaces_MAD']:,.0f} contre {bord['prix_de_vente_MAD']:,.0f} MAD")
+
+# ---------------------------------------------------------------- fourchette de cout (D-036)
+fc = r["fourchette_de_cout"]
+verifie("une fourchette de prix est publiee, comme D-036 l'impose",
+        fc["basse"]["prix_de_vente_MAD"] < fc["retenue"]["prix_de_vente_MAD"]
+        < fc["haute"]["prix_de_vente_MAD"],
+        f"x{fc['facteur_bas']} a x{fc['facteur_haut']}, "
+        f"{fc['etendue_pct_de_la_retenue']:.0f} % d'etendue")
+verifie("l'etendue est recalculee ici",
+        abs(fc["etendue_pct_de_la_retenue"]
+            - (fc["haute"]["prix_de_vente_MAD"] - fc["basse"]["prix_de_vente_MAD"])
+            / fc["retenue"]["prix_de_vente_MAD"] * 100) < 1)
+
+# ---------------------------------------------------------------- la ligne de divers
+bd = r["bordereau_avec_divers"]
+verifie("le bordereau avec divers est le bordereau de reference majore du taux calibre",
+        abs(bd["debourse_sec_MAD"]
+            - bord["debourse_sec_MAD"] * (1 + ec["divers_necessaire_pct"] / 100)) < 1,
+        f"+{bd['divers_pct']} %")
+verifie("et la simplification est declaree : les totaux publies sont sans cette ligne",
+        "declare" in bd["simplification_declaree"].lower())
 
 # ---------------------------------------------------------------- coherence du total
 _somme = sum(p["debourse_sec_total_MAD"] for p in bord["postes"]) + fd["total_MAD"]

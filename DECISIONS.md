@@ -437,11 +437,18 @@ s'applique à D4 (indices de performance) et à D7 (consolidation multi-sites).
 recalage** poste par poste au lieu de les corriger en silence.
 
 **Raison.** Retourner chaque cadence d'atelier en productivité par compagnon — kilos d'acier posés,
-m² de coffrage, m³ de béton par homme et par jour — donne un facteur moyen de **×2,52**, dans le
-facteur 2 à 3 soupçonné par la tranche verticale, obtenu par un chemin entièrement indépendant. Mais
-les postes n'en sortent pas du même côté : le radier est à ×4,25, les semelles à ×0,78. Corriger par
-un facteur global écraserait cette information ; corriger poste par poste reviendrait à inventer des
-cadences que rien n'étaye mieux que les précédentes.
+m² de coffrage, m³ de béton par homme et par jour — donne un facteur **pondéré par le travail** de
+**×1,92**, obtenu par un chemin indépendant de celui qui avait produit le soupçon. Mais les cadences
+n'en sortent pas du même côté : celle des dalles est à ×4,17, celle des semelles à ×0,78. Corriger
+par un facteur global écraserait cette information ; corriger cadence par cadence reviendrait à
+inventer des valeurs que rien n'étaye mieux que les précédentes.
+
+**Correction du 21/10 (passe adversariale de D1).** La première version annonçait ×2,52, obtenu par
+une moyenne **non pondérée** sur les postes : elle comptait deux fois la cadence des dalles, que le
+radier et le plancher haut partagent, et omettait le terrassement, dont la productivité de référence
+était pourtant déclarée. Le facteur pondéré est ×1,92. Le soupçon de la dette n° 10 — « optimistes
+d'un facteur 2 à 3 » — est donc **confirmé dans son sens et revu à la baisse dans son ampleur**, et
+c'est ainsi qu'il faut l'écrire.
 
 **Impact.** `variante_recalee` publie ce que deviendraient durée (+59 %), déboursé (+8 %) et part de
 main-d'œuvre (7,8 → 13,1 %) si l'on recalait. Même recalée, la part reste sous la fourchette : le

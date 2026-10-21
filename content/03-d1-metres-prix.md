@@ -129,7 +129,7 @@ Un bordereau fait l'un **ou** l'autre. Le vérifier prend trente secondes et c'e
 Encadrement, base-vie, location de grue, énergie : ces postes ne se métrent pas, ils **durent**.
 Ici {{prix.bordereau.frais_de_duree.cout_MAD_par_mois::n0}} MAD par mois, soit
 {{prix.bordereau.frais_de_duree.total_MAD::n0}} MAD sur
-{{prix.bordereau.frais_de_duree.duree_mois::n1}} mois — **{{prix.bordereau.par_lot.9 · Frais de duree.part_pct::n1}} %** du déboursé du chantier.
+{{prix.bordereau.frais_de_duree.duree_mois_calendaires::n1}} mois calendaires — **{{prix.bordereau.par_lot.9 · Frais de duree.part_pct::n1}} %** du déboursé du chantier.
 
 C'est par eux que le planning et le coût se touchent vraiment. Un mois de retard ne coûte pas « du
 retard » : il coûte **{{prix.bordereau.frais_de_duree.cout_MAD_par_mois::n0}} MAD** de frais qui
@@ -145,11 +145,10 @@ ratio sait chiffrer :
 |---|---:|---:|
 | Montant | {{prix.ecart_des_deux_voies.voie_A_sous_detail_MAD::n0}} MAD | {{prix.ecart_des_deux_voies.voie_B_prix_poses_MAD::n0}} MAD |
 
-Écart : **{{prix.ecart_des_deux_voies.ecart_pct::n1}} %**, pour une tolérance déclarée de
-{{prix.ecart_des_deux_voies.tolerance_pct::n0}} %. La tolérance de 5 % du § 3.3 ne s'applique pas
-ici, et il faut dire pourquoi : les deux voies **ne chiffrent pas le même objet**. L'une construit un
-prix à partir de ressources nommées, l'autre lit un prix de marché qui porte des sujétions que
-personne ne détaille. Le § S4d en tire la conséquence utile.
+Écart : **{{prix.ecart_des_deux_voies.ecart_pct::n1}} %**. Verdict publié :
+*{{prix.ecart_des_deux_voies.verdict}}*.
+
+{{prix.ecart_des_deux_voies.pourquoi_ce_n_est_pas_un_controle_de_tolerance}}
 
 ## S4 · Étude de cas : le bordereau de la gare
 
@@ -216,6 +215,17 @@ déboursé sec pour recoller au prix de marché.
 poste, et non en recopiant un pourcentage d'usage. Et c'est une information qu'on ne peut obtenir
 qu'en ayant fait les deux calculs — raison pour laquelle on les fait tous les deux.
 
+| | Déboursé sec | Prix de vente | Au m² d'emprise |
+|---|---:|---:|---:|
+| Bordereau de référence, sans divers | {{prix.bordereau.debourse_sec_MAD::n0}} | {{prix.bordereau.prix_de_vente_MAD::n0}} | {{prix.bordereau.cout_MAD_par_m2_emprise::n0}} |
+| **Avec la ligne de divers calibrée ({{prix.bordereau_avec_divers.divers_pct::n1}} %)** | {{prix.bordereau_avec_divers.debourse_sec_MAD::n0}} | **{{prix.bordereau_avec_divers.prix_de_vente_MAD::n0}}** | {{prix.bordereau_avec_divers.cout_MAD_par_m2_emprise::n0}} |
+
+**Lequel signeriez-vous ?** {{prix.bordereau_avec_divers.lequel_on_signe}}
+
+:::encart {"genre":"alerte","titre":"Simplification déclarée (§ R6)"}
+{{prix.bordereau_avec_divers.simplification_declaree}}
+:::
+
 ### e. Les productivités, ou comment on localise une erreur qu'un ratio signale
 
 Le module TV avait trouvé une part de main-d'œuvre de 5,2 % là où le métier en attend 15 à 30 %, et
@@ -235,17 +245,38 @@ Le calcul **refuse** de rendre un verdict sur les deux dernières lignes, et il 
 Un ratio a un domaine de définition ; l'écrire est la moitié du travail. Le module TV comparait la
 dernière ligne à la fourchette de la première.
 
+:::encart {"genre":"note","titre":"Ce que les productivités par métier démontrent, et ce qu'elles ne démontrent pas"}
+{{prix.coherence_cadences.circularite_des_productivites_par_metier}}
+
+Autrement dit : les « {{prix.coherence_cadences.cas.3.metiers.ferraillage_kg.productivite_implicite::n0}} kg
+par homme et par jour » de la figure 3 ne sont pas une mesure indépendante du facteur — ils en sont
+la traduction dans une unité qui parle. C'est utile et ce n'est pas une preuve, et la différence
+mérite d'être dite : une figure qui donne trois nombres là où le calcul n'en produit qu'un laisse
+croire à trois confirmations.
+
+Le périmètre aussi se déclare : {{prix.coherence_cadences.perimetre}}
+:::
+
 **Second temps : et pourtant le soupçon tenait.** Sur la bonne base, la part reste de
 {{prix.controle_ratios.part_main_oeuvre_beton_arme_decompose.constate::n2}} %, sous la fourchette.
 Pour savoir **où**, on retourne chaque cadence d'atelier en **productivité par compagnon** — ce qu'un
 homme pose en une journée — et on la compare à ce que le métier constate.
 
-:::figure {"fn":"barres","args":"prix.figures.recalage","titre":"Facteur de recalage par poste : de combien la cadence du planning est optimiste","num":3,"large":true,"options":{"bande":[0.8,1.2],"libelle_bande":"cadence crédible","unite":"facteur (jours-compagnon de référence ÷ jours-compagnon du planning)"},"voir":["Un facteur de 1 veut dire que la cadence du planning demande exactement le travail qu'un compagnon fournit. Au-delà de 1, elle en demande plus : elle est optimiste.","Les {{prix.coherence_cadences.postes_hors_bande.length}} postes sont hors de la bande {{prix.coherence_cadences.bande_de_credibilite.0}}–{{prix.coherence_cadences.bande_de_credibilite.1}}, et c'est pour cela qu'ils sont tous en brique. Le pire est {{prix.coherence_cadences.poste_le_plus_optimiste}}, à ×{{prix.coherence_cadences.facteur_de_recalage_max::n2}} : sa cadence implique de poser {{prix.coherence_cadences.cas.1.metiers.ferraillage_kg.productivite_implicite::n0}} kg d'acier par compagnon et par jour, pour une référence de {{prix.coherence_cadences.cas.1.metiers.ferraillage_kg.fourchette_de_reference.0}} à {{prix.coherence_cadences.cas.1.metiers.ferraillage_kg.fourchette_de_reference.1}}.","Mais ils n'en sortent pas du même côté : {{prix.coherence_cadences.poste_le_plus_prudent}} est à ×{{prix.coherence_cadences.facteur_de_recalage_min::n2}}, c'est-à-dire que sa cadence est au contraire PRUDENTE. Un facteur global unique aurait écrasé cette nuance, et c'est tout l'intérêt de faire le calcul poste par poste : on ne recale pas un chantier, on recale des cadences."],"erreur":"Conclure d'une part de main-d'œuvre globale que « les cadences sont fausses ». C'est une alerte, pas un diagnostic : elle ne dit ni quel poste, ni dans quel sens, ni de combien. Seule une productivité individuelle le dit, parce qu'elle se compare à quelque chose qu'on a vu sur un chantier."}
+:::figure {"fn":"barres","args":"prix.figures.recalage","titre":"Facteur de recalage par poste : de combien la cadence du planning est optimiste","num":3,"large":true,"options":{"bande":[0.8,1.2],"libelle_bande":"cadence crédible","unite":"facteur (jours-compagnon de référence ÷ jours-compagnon du planning)"},"voir":["Un facteur de 1 veut dire que la cadence du planning demande exactement le travail qu'un compagnon fournit. Au-delà de 1, elle en demande plus : elle est optimiste.","Les {{prix.coherence_cadences.cadences_hors_bande.length}} cadences sur {{prix.coherence_cadences.nb_cadences::n0}} sont hors de la bande {{prix.coherence_cadences.bande_de_credibilite.0}}–{{prix.coherence_cadences.bande_de_credibilite.1}}, et c'est pour cela qu'ils sont tous en brique. La pire est {{prix.coherence_cadences.cadence_la_plus_optimiste}}, à ×{{prix.coherence_cadences.facteur_de_recalage_max::n2}} : sa cadence implique de poser {{prix.coherence_cadences.cas.3.metiers.ferraillage_kg.productivite_implicite::n0}} kg d'acier par compagnon et par jour, pour une référence de {{prix.coherence_cadences.cas.3.metiers.ferraillage_kg.fourchette_de_reference.0}} à {{prix.coherence_cadences.cas.3.metiers.ferraillage_kg.fourchette_de_reference.1}}.","Mais ils n'en sortent pas du même côté : {{prix.coherence_cadences.cadence_la_plus_prudente}} est à ×{{prix.coherence_cadences.facteur_de_recalage_min::n2}}, c'est-à-dire que sa cadence est au contraire PRUDENTE. Un facteur global unique aurait écrasé cette nuance, et c'est tout l'intérêt de faire le calcul poste par poste : on ne recale pas un chantier, on recale des cadences."],"erreur":"Conclure d'une part de main-d'œuvre globale que « les cadences sont fausses ». C'est une alerte, pas un diagnostic : elle ne dit ni quel poste, ni dans quel sens, ni de combien. Seule une productivité individuelle le dit, parce qu'elle se compare à quelque chose qu'on a vu sur un chantier."}
 :::
 
-Facteur moyen : **×{{prix.coherence_cadences.facteur_de_recalage_moyen::n2}}**, obtenu par un chemin
-entièrement indépendant de celui qui avait produit le soupçon. Il tombe dans le facteur 2 à 3
-annoncé. Ce que cela donne si l'on recale :
+Facteur **pondéré par le travail** : **×{{prix.coherence_cadences.facteur_de_recalage_pondere::n2}}**
+— {{prix.coherence_cadences.jours_compagnon_de_reference::n0}} jours-compagnon de référence contre
+{{prix.coherence_cadences.jours_compagnon_du_planning::n0}} qu'implique le planning. La pondération
+n'est pas un détail : une moyenne sur les postes compterait deux fois la cadence des dalles, que le
+radier et le plancher haut partagent, et oublierait le terrassement. Elle donnait ×2,52 ; le facteur
+pondéré en donne {{prix.coherence_cadences.facteur_de_recalage_pondere::n2}}.
+
+Ce facteur est **en dessous** du facteur 2 à 3 que la tranche verticale soupçonnait, et il l'est par
+un chemin indépendant : le soupçon venait d'une part de main-d'œuvre, celui-ci de productivités
+individuelles. Le soupçon est donc confirmé dans son sens et **revu à la baisse** dans son ampleur.
+
+Ce que cela donne si l'on recale :
 
 | | Référence | Cadences ÷ {{prix.variante_recalee.facteur::n2}} |
 |---|---:|---:|
@@ -295,7 +326,7 @@ Les décaissements suivent l'avancement ; les encaissements le suivent **avec un
 délai de paiement, et moins la retenue de garantie**. L'écart entre les deux courbes est ce que
 l'entreprise finance.
 
-:::figure {"fn":"tresorerie","args":"prix.figures.tresorerie","titre":"Décaissements et encaissements cumulés, et le besoin de trésorerie","num":5,"large":true,"options":{"besoin_max":{"$":"prix.tresorerie.besoin_maximal_MAD"},"j_max":{"$":"prix.tresorerie.besoin_maximal_au_jour"}},"voir":["L'aire rosée est l'écart entre les deux courbes. Quand la rouge est au-dessus, l'entreprise avance de l'argent au maître d'ouvrage ; quand la bleue repasse devant — ici entre les jours 180 et 230 — c'est l'inverse, et l'avance non encore remboursée y est pour beaucoup. Le besoin de financement est le MAXIMUM de cet écart : {{prix.tresorerie.besoin_maximal_MAD::n0}} MAD au jour {{prix.tresorerie.besoin_maximal_au_jour::n0}}, soit {{prix.tresorerie.besoin_maximal_pct_du_marche::n1}} % du marché. Une moyenne ne dirait rien : c'est la pointe qu'il faut financer.","Le décrochement initial de la courbe bleue est l'avance de {{gare.prix_unitaires_MAD.contrat.avance_pct.valeur}} % : c'est le seul moment où l'entreprise est devant. Elle la rembourse ensuite progressivement, ce qui aplatit la courbe au moment où le chantier dépense le plus.","La courbe bleue est en escalier et la rouge est continue : on dépense tous les jours, on encaisse une fois par mois. C'est cette asymétrie, et non la marge, qui met des entreprises en défaut."],"erreur":"Confondre le besoin de trésorerie et la perte. Un chantier parfaitement rentable peut demander {{prix.tresorerie.besoin_maximal_pct_du_marche::n0}} % de son montant en financement : la marge est au bilan, la trésorerie est à la banque, et ce sont deux questions différentes."}
+:::figure {"fn":"tresorerie","args":"prix.figures.tresorerie","titre":"Décaissements et encaissements cumulés, et le besoin de trésorerie","num":5,"large":true,"options":{"besoin_max":{"$":"prix.tresorerie.besoin_maximal_MAD"},"j_max":{"$":"prix.tresorerie.besoin_maximal_au_jour"}},"voir":["L'aire rosée est l'écart entre les deux courbes. Quand la rouge est au-dessus, l'entreprise avance de l'argent au maître d'ouvrage. Le besoin de financement est le MAXIMUM de cet écart : {{prix.tresorerie.besoin_maximal_MAD::n0}} MAD au jour {{prix.tresorerie.besoin_maximal_au_jour::n0}}, soit {{prix.tresorerie.besoin_maximal_pct_du_marche::n1}} % du marché. Une moyenne ne dirait rien : c'est la pointe qu'il faut financer.","L'entreprise n'est devant qu'à deux moments, et le calcul les donne : du jour {{prix.tresorerie.periodes_ou_l_entreprise_est_devant.0.de_j::n0}} au jour {{prix.tresorerie.periodes_ou_l_entreprise_est_devant.0.a_j::n0}} — grâce à l'avance de {{gare.prix_unitaires_MAD.contrat.avance_pct.valeur}} %, encaissée avant la première dépense — puis du jour {{prix.tresorerie.periodes_ou_l_entreprise_est_devant.1.de_j::n0}} au jour {{prix.tresorerie.periodes_ou_l_entreprise_est_devant.1.a_j::n0}}, pendant le plateau d'attente des consignations où le chantier encaisse ce qu'il a construit avant sans dépenser beaucoup.","La courbe bleue est en escalier et la rouge est continue : on dépense tous les jours, on encaisse une fois par mois, et avec {{prix.tresorerie.delai_de_paiement_j_calendaires::n0}} jours calendaires de délai — soit {{prix.tresorerie.delai_de_paiement_j_ouvres::n0}} jours ouvrés sur cet axe. C'est cette asymétrie, et non la marge, qui met des entreprises en défaut."],"erreur":"Confondre le besoin de trésorerie et la perte. Un chantier parfaitement rentable peut demander {{prix.tresorerie.besoin_maximal_pct_du_marche::n0}} % de son montant en financement : la marge est au bilan, la trésorerie est à la banque, et ce sont deux questions différentes."}
 :::
 
 :::encart {"genre":"note","titre":"Pourquoi la courbe de dépense n'est pas la courbe en S du planning"}
@@ -328,6 +359,27 @@ Deux choses à retenir, et la seconde est un piège de calcul :
    ouvré de retard, c'est {{prix.cout_du_retard.21.retard_j_ouvres::n0}} jours de frais mais
    {{prix.cout_du_retard.21.retard_j_calendaires::n1}} jours de pénalité. Confondre les deux
    calendriers sous-estime la pénalité d'un tiers.
+
+### i. Le prix n'est pas un nombre, c'est un intervalle
+
+Le module D2 publie une fourchette de date ; la décision D-036 impose le même traitement aux coûts.
+Voici donc le bordereau, toutes ses hypothèses poussées au même bout de leur fourchette — prix de
+ressource, consommations, forfaits, coefficient d'entreprise :
+
+| | Prix de vente | Au m² d'emprise |
+|---|---:|---:|
+| Basse (×{{prix.fourchette_de_cout.facteur_bas::n2}}) | {{prix.fourchette_de_cout.basse.prix_de_vente_MAD::n0}} MAD | {{prix.fourchette_de_cout.basse.cout_MAD_par_m2_emprise::n0}} |
+| **Retenue** | **{{prix.fourchette_de_cout.retenue.prix_de_vente_MAD::n0}} MAD** | **{{prix.fourchette_de_cout.retenue.cout_MAD_par_m2_emprise::n0}}** |
+| Haute (×{{prix.fourchette_de_cout.facteur_haut::n2}}) | {{prix.fourchette_de_cout.haute.prix_de_vente_MAD::n0}} MAD | {{prix.fourchette_de_cout.haute.cout_MAD_par_m2_emprise::n0}} |
+
+**{{prix.fourchette_de_cout.etendue_pct_de_la_retenue::n0}} % d'étendue.**
+{{prix.fourchette_de_cout.lecture}}
+
+Ce qu'on en fait, exactement comme pour la date : on ne négocie pas le prix, on va chercher une
+donnée réelle pour les **trois ou quatre hypothèses** qui portent l'essentiel de l'étendue. Ici ce
+sont la fourniture de façade (de 1 600 à 3 600 MAD/m², plus du double), le forfait de second œuvre
+(de 9 à 22 MMAD) et les cadences, qui portent à la fois la main-d'œuvre et les frais de durée.
+Chaque devis signé resserre l'intervalle ; aucune réunion ne le resserre.
 
 ## S4b · Les hypothèses de ce chiffrage, déclarées
 
@@ -520,10 +572,11 @@ une fourchette attendue de {{prix.controle_ratios.part_main_oeuvre_beton_arme_de
 2. **Toujours hors fourchette ?** Oui. L'alerte était donc réelle, même si la base était fausse.
 3. **Où, et de combien ?** Un ratio global ne le dit pas. En retournant les cadences en
    productivités par compagnon, on trouve
-   {{prix.coherence_cadences.postes_hors_bande.length}} postes sur
-   {{prix.coherence_cadences.nb_postes::n0}} hors de la bande de crédibilité, un facteur moyen de
-   ×{{prix.coherence_cadences.facteur_de_recalage_moyen::n2}} — et un poste, les semelles,
-   dont la cadence est au contraire **prudente** (×{{prix.coherence_cadences.cas.0.facteur_de_recalage::n2}}).
+   {{prix.coherence_cadences.cadences_hors_bande.length}} cadences sur
+   {{prix.coherence_cadences.nb_cadences::n0}} hors de la bande de crédibilité, un facteur pondéré
+   de ×{{prix.coherence_cadences.facteur_de_recalage_pondere::n2}} — et une cadence, celle des
+   semelles, qui est au contraire **prudente**
+   (×{{prix.coherence_cadences.par_cadence.semelle_unites_j_atelier.facteur::n2}}).
 
 *La leçon : un ratio hors fourchette est une **question**, jamais une conclusion. Il ne dit ni quel
 poste, ni dans quel sens. Le diagnostic demande de descendre à une grandeur qu'on a déjà vue sur un
@@ -544,7 +597,8 @@ Une entreprise vous soumet au visa le sous-détail suivant, pour un m³ de béto
 | Frais de chantier 12 % + frais généraux 7 % + marge 6 % | + 631 MAD |
 | **Prix de vente** | **3 158 MAD/m³** |
 
-**Quatre choses ne vont pas. Lesquelles ?**
+**Quatre choses ne vont pas, et une ligne est correcte alors qu'elle paraît suspecte.
+Lesquelles ?**
 
 **Corrigé.**
 
@@ -556,17 +610,23 @@ Une entreprise vous soumet au visa le sous-détail suivant, pour un m³ de béto
    pour un m³, il faut la diviser par l'épaisseur, soit environ
    {{prix.bordereau.par_poste.VOIL.main_oeuvre.h_par_unite::n3}} / {{gare.planning.ratios_quantites_V3.voile_epaisseur_m.valeur}} ≈ 4,3 h/m³.
    L'erreur d'unité la plus commune du sous-détail, et elle fait un facteur 4.
-3. **Le coffrage de 8 m²/m³ ne correspond à rien de déclaré.** Pour un voile de
-   {{gare.planning.ratios_quantites_V3.voile_epaisseur_m.valeur}} m avec deux faces, c'est 2 /
-   {{gare.planning.ratios_quantites_V3.voile_epaisseur_m.valeur}} = 8 m²/m³ — celle-ci est juste, et
-   c'est le piège : dans une liste d'erreurs, il y a toujours une ligne correcte, et la refuser coûte
-   autant que d'en laisser passer une fausse.
+3. **Les pertes de béton ne sont pas comptées.** 900 MAD/m³ est le prix du béton livré ; le
+   sous-détail doit porter
+   {{gare.prix_unitaires_MAD.coefficients_sous_detail.pertes_beton_pct.valeur::n0}} % de plus —
+   fonds de benne, tolérances de coffrage, reprises. Un oubli discret, qui ne se voit pas parce que
+   le prix affiché est exactement celui du bordereau du fournisseur.
 4. **Frais de chantier 12 % *et* une ligne d'installation ailleurs au bordereau** : le double compte
    du § S3b. Il faut demander lequel des deux est en trop — et la réponse n'est pas toujours le
    pourcentage.
 
-*Ce qu'on vise : rien, tant que l'acier n'est pas repris en fourniture seule et que les heures ne
-sont pas ramenées au m³. Et on le dit par écrit, avec le calcul, pas « le prix paraît élevé ».*
+**La ligne correcte, et c'est le piège.** Le coffrage de 8 m²/m³ paraît énorme — il l'est — mais il
+est juste : pour un voile de {{gare.planning.ratios_quantites_V3.voile_epaisseur_m.valeur}} m avec
+deux faces de banche, c'est 2 / {{gare.planning.ratios_quantites_V3.voile_epaisseur_m.valeur}} =
+8 m² de coffrage par m³ de béton. Dans une liste d'erreurs il y a toujours une ligne correcte, et la
+refuser coûte autant que d'en laisser passer une fausse.
+
+*Ce qu'on vise : rien, tant que l'acier n'est pas repris en fourniture seule, que les heures ne sont
+pas ramenées au m³ et que les pertes de béton ne sont pas portées. Et on le dit par écrit, avec le calcul, pas « le prix paraît élevé ».*
 :::
 
 ## S7 · Check-list, glossaire et quiz
@@ -652,7 +712,7 @@ Le nombre d'**ateliers** n'y est pas : il achète du délai, pas du prix.
 | Frais indexés sur la durée | {{prix.bordereau.frais_de_duree.cout_MAD_par_mois::n0}} MAD/mois |
 | Besoin de trésorerie maximal | {{prix.tresorerie.besoin_maximal_MAD::n0}} MAD ({{prix.tresorerie.besoin_maximal_pct_du_marche::n1}} %) |
 | Un mois de retard | {{prix.cout_du_retard.21.total_MAD::n0}} MAD |
-| Facteur de recalage des cadences | ×{{prix.coherence_cadences.facteur_de_recalage_moyen::n2}} |
+| Facteur de recalage des cadences | ×{{prix.coherence_cadences.facteur_de_recalage_pondere::n2}} |
 
 **Les huit réflexes**
 

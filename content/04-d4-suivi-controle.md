@@ -136,7 +136,7 @@ projeté sur le reste du chantier, cela fait trois façons de prévoir la fin.
 {{suivi.valeur_acquise.quelle_EAC}}
 
 Et le diagnostic, ici, penche : le module D1 a montré que les cadences du projet sont optimistes d'un
-facteur ×{{prix.coherence_cadences.facteur_de_recalage_moyen::n2}}. Une dérive qui vient d'une
+facteur ×{{prix.coherence_cadences.facteur_de_recalage_pondere::n2}}. Une dérive qui vient d'une
 hypothèse d'entrée fausse est **systématique** par construction. La deuxième ligne est donc la plus
 défendable des trois, et c'est elle qu'on annonce — en disant pourquoi.
 
@@ -361,7 +361,7 @@ l'argument n'est pas dans la formule, il est dans le **diagnostic de la cause**.
 
 Si la dérive venait d'un aléa ponctuel — une reprise, une intempérie — la première serait la bonne :
 ce qui est passé est passé, le reste se fera au budget. Mais le module D1 a montré que les cadences
-du projet sont optimistes d'un facteur ×{{prix.coherence_cadences.facteur_de_recalage_moyen::n2}}, et
+du projet sont optimistes d'un facteur ×{{prix.coherence_cadences.facteur_de_recalage_pondere::n2}}, et
 qu'elles portent **toutes** les durées et tous les prix. Une dérive qui vient d'une hypothèse
 d'entrée fausse est systématique par construction : elle ne cessera pas.
 

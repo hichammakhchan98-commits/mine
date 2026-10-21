@@ -346,7 +346,8 @@ def tout_calculer(d: dict, duree_mezz: float) -> dict:
     duree = res["duree"]
     durees = {i: {**t[i], "debut_j": res["tot"][i][0], "fin_j": res["tot"][i][1]} for i in pln.NOMS}
 
-    bord = px.bordereau(d, q, t, duree)
+    cal = pln.calendrier(duree, pl["calendrier"])
+    bord = px.bordereau(d, q, t, duree, cal)
     dep = px.courbe_de_depense(bord, res, t)
     j = float(d["suivi_chantier"]["date_arret_j"])
 
@@ -359,7 +360,6 @@ def tout_calculer(d: dict, duree_mezz: float) -> dict:
     spi = spi_du_chemin_critique(etats, planifie, chemin, t)
     fia = fiabilite_du_cpi(bord, dep, duree)
     visa = visa_de_situation(d, bord, etats, sit)
-    cal = pln.calendrier(duree, pl["calendrier"])
     mod = impact_modification(d, bord, ve, duree, cal)
     return {
         "date_arret": {"jour_ouvre": j, "mois": round(j / 21, 2),

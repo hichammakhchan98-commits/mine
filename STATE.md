@@ -40,51 +40,53 @@ Ordre de livraison **en vigueur** : `cadrage/07-programme-31-10.md`.
 
 ## Ce que le socle livre (Étape 1, § 5.2)
 
-Charte et impression (contrastes AA) · SVG paramétrique (`assets/svgkit.js`, 9 générateurs de
-figures) · 3D (`src/civil3d/`, bundle IIFE 765 ko : scène, orbite, matériaux, étiquettes, coupe,
-éclaté, phasage 4D) · build qui **échoue** sur variable absente, légende incomplète, nombre normatif
-non balisé ou accident de gabarit · `calc/` : contre-calcul à deux voies, 3 étalonnages sur solution
-fermée, `pint` sur les 5 bibliothèques · **16 contrôles** `npm run check`, 14 tests de rendu,
-captures de toutes les figures · page de démonstration testée.
+Charte et impression (contrastes AA) · SVG paramétrique (`assets/svgkit.js`, 12 générateurs, chacun
+déclarant ses options — le build **échoue** sur une option inconnue) · 3D (`src/civil3d/`, bundle
+IIFE 765 ko) · build qui échoue sur variable absente, légende incomplète, nombre normatif non balisé
+ou accident de gabarit · `calc/` : contre-calcul à deux voies, étalonnages sur solution fermée,
+`pint` · **16 contrôles** `npm run check`, captures de toutes les figures.
 
 ## Grilles d'auto-évaluation § 7.2
 
-Socle E1, TV, D2 : **minimum 2 partout tenu** (la TV après la passe 5, voir ci-dessous).
-Détail et justifications : `QA/grilles-72.md`.
+E1, TV, D2, D1 : **minimum 2 partout** après correction des bloquants. Détail : `QA/grilles-72.md`.
 
 ## Défauts et passe adversariale /devil (§ 12.2)
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
 valeurs clés depuis `data/` seul. E1 : **50 sur trois passes**. TV : **117 sur cinq passes**.
-D2 : **32 sur une passe** (D-034). Rapports : `QA/`.
+D2 : **32 sur une passe**, D1 : **28 sur une passe** (D-034). Rapports : `QA/`.
 
-### D2 — une passe, 8 bloquants, aucun vu par les 16 contrôles
+**D1**, dont **deux récidives dans le module qui enseigne à ne pas les commettre** : un ratio au m²
+comparé hors de son domaine, un facteur de recalage moyenné au lieu d'être pondéré (×2,52 annoncé
+pour ×1,92 réel). Les autres : un délai de paiement calendaire comparé à des jours ouvrés (besoin de
+trésorerie 15,4 → 10,4 MMAD), des frais de chantier en mois de 21 jours, un écart d'attachement
+déclaré et registré que **rien ne lisait**, un verdict jamais publié, une légende contradictoire.
+**Tous corrigés.** Les 34 tests de D1 étaient verts et n'en avaient vu aucun.
 
-Six sur huit sont la famille de la TV : **arithmétique juste, modèle faux**. Le plus grave calculait
-la date d'une fenêtre de consignation, la publiait, et faisait démarrer la tâche ailleurs : 17,5 j
-ouvrés et un mois de date contractuelle. Les autres : une figure qui ne traçait pas la série que sa
-légende annonçait ; une moyenne recalculée dans le dessin, contredisant celle du texte ; une légende
-qui commentait un palier qui n'était pas celui-là ; une courbe en S bâtie sur l'étalement et non sur
-le travail (+13,8 %) ; un réseau dont la séquence contredisait la rubrique sécurité du module ; deux
-recouvrements plus grands que la durée qu'ils recouvraient ; la grue vérifiée en moyenne alors que la
-check-list du module exige le contraire. **Tous corrigés** (D-035), avec leur contrôle et leur canari.
+**Ce qui les trouve** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie, et
+des captures regardées. **Jamais un test.**
 
-**Ce qui les a trouvés** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie,
-et des captures regardées. **Aucun test.**
+**Faute de séquencement à ne pas reproduire** : D4 a modifié les fichiers de D1 pendant sa passe
+adversariale, et a corrigé un de ses bloquants par effet de bord. Un livrable en relecture est figé.
+
+### D2 — 8 bloquants · D1 — 7 bloquants · aucun vu par les contrôles
+
+**D2** : une fenêtre de consignation calculée, publiée, puis jetée (17,5 j ouvrés, un mois de date
+contractuelle) ; une figure qui ne traçait pas la série annoncée ; une moyenne recalculée dans le
+dessin ; une légende commentant un palier qui n'était pas celui-là ; une courbe en S bâtie sur
+l'étalement (+13,8 %) ; une séquence contredisant la rubrique sécurité du module ; deux
+recouvrements plus grands que la durée recouverte ; la grue vérifiée en moyenne. **Tous corrigés**
+(D-035), avec leur contrôle et leur canari.
 
 ### E1 (3 passes, 50 défauts) et TV (5 passes, 117 défauts)
 
-Détail et journaux : `QA/`. **Les quinze bloquants de la TV sont la même chose que les six de D2** :
-des modèles faux sous une arithmétique juste — avancement au prorata au lieu d'être dérivé du
-réseau, taux appliqué à son complément, ressource vérifiée en moyenne, verdict écrit à la main que
-le chiffre d'à côté contredit.
+Détail : `QA/`. Les quinze bloquants de la TV sont la même famille que ceux de D2 et D1.
 
-**La règle qui en sort, et elle vaut pour tous les modules à venir** : toute grandeur d'état est
-**dérivée du réseau** et un test refait la dérivation ; tout paramètre déclaré est **relu dans le
-résultat qu'il engendre** ; tout **verdict publié est une sortie de `calc/`** ; toute V3 est
-registrée et vérifiée dans sa fourchette ; un module à risque porte ses dispositions de sécurité
-(§ 3.4) ; chaque contrôle rendant un verdict porte son canari rouge. **Canaris** : 14 sur E1 et TV,
-11 inventés par les relecteurs, 5 ajoutés par D2 ; tous rouges aujourd'hui.
+**La règle qui en sort** : toute grandeur d'état est **dérivée** et un test refait la dérivation ;
+tout paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verdict publié est une
+sortie de `calc/`** ; toute V3 est registrée et vérifiée dans sa fourchette ; un module à risque
+porte ses dispositions de sécurité (§ 3.4) ; chaque contrôle rendant un verdict porte son canari.
+**Canaris** : 14 sur E1 et TV, 11 inventés par les relecteurs, 5 par D2, 7 par D1 ; tous rouges.
 
 **Dette déclarée de la TV** : scalaires V3 sans fourchette hors registre · deux bibliothèques hors
 vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
@@ -121,10 +123,11 @@ vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité q
 | 7 | Bundle 3D de 765 ko, hors budget par module | à surveiller |
 | 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivent dans le zip, pas sur GitHub | limite de l'environnement |
 | 9 | `TV` sans modèle 3D (le phasage appartient à C3) — à réviser si vous jugez qu'il en manque un | après validation |
-| 10 | **Part de main-d'œuvre hors fourchette.** D1 l'a instruite : la base du ratio était fausse (bordereau entier au lieu du béton armé décomposé), **et** les cadences sont bien optimistes — facteur ×2,52 obtenu par les productivités individuelles, chemin indépendant. Recalées, la part passe de 7,8 à 13,1 %, toujours sous 15 %. **Chiffrée, non soldée** | attachements réels |
+| 10 | **Part de main-d'œuvre hors fourchette.** D1 l'a instruite : la base du ratio était fausse (bordereau entier au lieu du béton armé décomposé), **et** les cadences sont optimistes — facteur **×1,92** pondéré par le travail, chemin indépendant. Le soupçon « 2 à 3 » est confirmé dans son sens, **revu à la baisse dans son ampleur**. **Chiffrée, non soldée** | attachements réels |
 | 11 | Chevauchements **texte contre trait** non détectés : le test ne compare que texte contre texte | à outiller |
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
 | 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
+| 16 | **D1, non corrigés** (D-034) : figure 4 écrite en dur dans `figures()` au lieu d'être générée depuis `data/` (M6) · un seul canari pour cinq verdicts (M9) · nombres encore écrits à la main (M10) · dix mineurs. Et une **simplification déclarée** : tous les totaux de D1 sont calculés **sans** la ligne de divers calibrée (28,7 %), donc ce sont des bornes basses | avant la revue de palier |
 | 15 | **D1, corrigé en écrivant D4** : l'avancement déclaré de la situation était saisi à la main dans `data/` et décrivait un état de chantier du 2ᵉ mois pour une situation annoncée au 7ᵉ. Il est désormais dérivé du réseau (`calc/etat.py`), partagé par D1 et D4 | fait, D-039 |
 | 14 | **D2, non corrigés** (D-034) : réseau, lots et `21,7` en dur dans `calc/` au lieu de `data/` (M1) · 9 effectifs posés sans forme `{valeur, fourchette}` (M3) · levier « protection de voie » modélisé par un contournement (M5) · nombres encore écrits à la main (M10) · quantités calculées jamais publiées (m1) · axe de la ligne d'équilibre (m2, m3) · deux libellés plus larges que leur métré (m5) · pas de double lecture MOE (m6) · effet de seuil des fenêtres non commenté (m9, m10) | avant la revue de palier |
 

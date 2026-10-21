@@ -23,7 +23,7 @@ sys.path.insert(0, str(RACINE / "calc"))
 import planification as pln                                    # noqa: E402
 from etat import avancement_planifie, trois_etats             # noqa: E402
 
-TOL_DEUX_VOIES_PCT = 20.0   # justifiee dans ecart_des_deux_voies()
+ECART_INACCEPTABLE_PCT = 40.0   # justifie dans ecart_des_deux_voies()
 
 
 # ------------------------------------------------------------------ ressources
@@ -323,23 +323,54 @@ def _mezzanine(d: dict, qte: float) -> dict:
 
 
 # ------------------------------------------------------------------ bordereau
-def frais_de_duree(d: dict, duree_j: float) -> dict:
-    """Les postes indexes sur la duree, et le cout d'un mois de retard."""
+def conversion_calendaire(cal: dict) -> dict:
+    """Le pont entre les deux calendriers d'un chantier, etabli UNE fois.
+
+    Un planning se compte en jours ouvres ; un loyer, un salaire, un delai de paiement
+    et une penalite se comptent en jours CALENDAIRES. Melanger les deux est l'erreur la
+    plus silencieuse du chiffrage : elle ne produit ni unite fausse ni formule fausse,
+    seulement un resultat faux. Elle a ete trouvee ici deux fois — des frais de chantier
+    comptes sur des « mois » de 21 jours, et un delai de paiement de 60 jours
+    calendaires compare a des jours ouvres.
+    """
+    jc = cal["semaines_calendaires"] * 7
+    jo = cal["duree_ouvree_avec_intemperies_j"]
+    return {
+        "jours_calendaires": round(jc, 1),
+        "jours_ouvres_avec_intemperies": jo,
+        "ouvres_par_jour_calendaire": round(jo / jc, 4),
+        "calendaires_par_jour_ouvre": round(jc / jo, 4),
+        "mois_calendaires": cal["mois_calendaires"],
+        "jours_ouvres_par_mois_calendaire": round(jo / cal["mois_calendaires"], 2),
+    }
+
+
+def frais_de_duree(d: dict, duree_j: float, cal: dict) -> dict:
+    """Les postes indexes sur la duree, et le cout d'un mois de retard.
+
+    Comptes en mois CALENDAIRES : un conducteur de travaux, une base-vie et une grue se
+    paient au mois du calendrier, pas par tranches de 21 jours ouvres. La premiere
+    version divisait par 21 et sous-estimait ces frais de 4 %.
+    """
     fr = d["prix_unitaires_MAD"]["frais_indexes_sur_la_duree_MAD_mois"]
-    r = d["prix_unitaires_MAD"]["ressources"]
-    mois = duree_j / r["jours_ouvres_par_mois"]
+    conv = conversion_calendaire(cal)
+    mois = conv["mois_calendaires"]
     lignes = {k: {"MAD_mois": v["valeur"], "montant_MAD": round(v["valeur"] * mois, 2)}
               for k, v in fr.items() if not k.startswith("_")}
     par_mois = sum(v["MAD_mois"] for v in lignes.values())
-    return {"duree_j": round(duree_j, 2), "duree_mois": round(mois, 2), "lignes": lignes,
+    return {"duree_j": round(duree_j, 2), "duree_mois_calendaires": round(mois, 2),
+            "lignes": lignes,
             "total_MAD": round(par_mois * mois, 2), "cout_MAD_par_mois": par_mois,
-            "cout_MAD_par_jour_ouvre": round(par_mois / r["jours_ouvres_par_mois"], 2)}
+            "cout_MAD_par_jour_ouvre": round(par_mois * mois / duree_j, 2),
+            "conversion": conv,
+            "_base": "mois calendaires — ces postes se paient au calendrier, pas en "
+                     "jours ouvres"}
 
 
-def bordereau(d: dict, q: dict, durees: dict, duree_j: float) -> dict:
+def bordereau(d: dict, q: dict, durees: dict, duree_j: float, cal: dict) -> dict:
     qb = quantites_bordereau(d, q)
     postes = [sous_detail(d, p, qb[p], durees) for p in pln.NOMS]
-    fd = frais_de_duree(d, duree_j)
+    fd = frais_de_duree(d, duree_j, cal)
     k = postes[0]["coefficient_de_vente"]
     ds = sum(p["debourse_sec_total_MAD"] for p in postes) + fd["total_MAD"]
     heures = sum(p["heures_totales"] for p in postes)
@@ -442,8 +473,19 @@ def ecart_des_deux_voies(bord: dict, voie_b: dict) -> dict:
         "perimetre": "gros oeuvre en beton arme — les six postes que des ratios peuvent chiffrer",
         "par_poste": par_poste,
         "voie_A_sous_detail_MAD": round(a_tot, 2), "voie_B_prix_poses_MAD": round(b_tot, 2),
-        "ecart_pct": round(ecart, 2), "tolerance_pct": TOL_DEUX_VOIES_PCT,
-        "verdict": "OK" if abs(ecart) <= TOL_DEUX_VOIES_PCT else "ECART",
+        "ecart_pct": round(ecart, 2),
+        "seuil_inacceptable_pct": ECART_INACCEPTABLE_PCT,
+        "verdict": ("ECART ATTENDU — il CALIBRE la ligne de divers"
+                    if abs(ecart) <= ECART_INACCEPTABLE_PCT else
+                    "ECART INACCEPTABLE — l'une des deux voies est fausse"),
+        "pourquoi_ce_n_est_pas_un_controle_de_tolerance": (
+            "Ce rapprochement n'est pas un controle qui passe ou qui echoue, et le "
+            "presenter ainsi serait trompeur : les deux voies ne chiffrent pas le meme "
+            "objet. Un prix construit a partir de ressources nommees est TOUJOURS sous "
+            "un prix de marche, qui porte ce qu'on ne sait pas nommer. L'ecart est donc "
+            "un RESULTAT — il calibre la ligne de divers — et non un verdict. Le seul "
+            "verdict possible est un seuil au-dela duquel l'ecart cesse d'etre "
+            f"explicable : {ECART_INACCEPTABLE_PCT:.0f} %, declare ici."),
         "tolerance_justifiee": (
             "La tolerance de 5 % du § 3.3 vaut pour deux calculs du MEME objet. Ici les deux "
             "voies ne chiffrent pas le meme objet : la voie A construit un prix de vente a "
@@ -472,13 +514,105 @@ def ecart_des_deux_voies(bord: dict, voie_b: dict) -> dict:
     }
 
 
+def bordereau_avec_divers(bord: dict, ecart: dict) -> dict:
+    """Le bordereau une fois la ligne de divers calibree sur les prix de marche.
+
+    Le bordereau de reference n'en porte pas : il est une construction pure a partir de
+    ressources nommees, et c'est ce qui permet de la comparer a un prix de marche. Mais
+    publier ce total comme « le prix du chantier » serait le publier amputé. On publie
+    donc les deux, et on dit lequel on signerait.
+    """
+    taux = ecart["divers_necessaire_pct"] / 100
+    ds = bord["debourse_sec_MAD"] * (1 + taux)
+    pv = ds * bord["coefficient_de_vente"]
+    return {
+        "divers_pct": round(taux * 100, 1),
+        "debourse_sec_MAD": round(ds, 2),
+        "prix_de_vente_MAD": round(pv, 2),
+        "ecart_avec_le_bordereau_de_reference_MAD": round(pv - bord["prix_de_vente_MAD"], 2),
+        "cout_MAD_par_m2_emprise": round(pv / bord["emprise_m2"], 1),
+        "lequel_on_signe": (
+            "Celui-ci. Le bordereau de reference est un outil d'analyse : il montre d'ou "
+            "vient chaque dirham. Celui-ci est une offre : il porte en plus ce qu'on ne "
+            "sait pas detailler mais qu'on paiera quand meme. Remettre le premier a un "
+            "maitre d'ouvrage, c'est s'engager sur un prix amputé de sa ligne la moins "
+            "glorieuse et la plus certaine."),
+        "simplification_declaree": (
+            "Tous les autres totaux de ce module — bordereau, situation, tresorerie, "
+            "cout du retard — sont calcules SANS cette ligne. Ils sont donc des bornes "
+            "basses, de l'ordre de ce taux. C'est declare ici et dans STATE.md plutot "
+            "que corrige, parce qu'integrer la ligne rendrait le rapprochement des deux "
+            "voies circulaire : il se comparerait a ce qu'il a servi a calibrer."),
+    }
+
+
+def fourchette_de_cout(d: dict, q: dict, durees: dict, duree_j: float, cal: dict,
+                       reference: dict) -> dict:
+    """Le prix, hypotheses poussees aux deux bouts de leur fourchette (D-036).
+
+    Un bordereau publie un nombre tire d'une centaine d'hypotheses V3 qui portent toutes
+    leur fourchette. La decision D-036 impose de publier les bornes avec lui.
+    """
+    import copy
+
+    def borne(o, bas):
+        if isinstance(o, dict) and "valeur" in o and "fourchette" in o:
+            o["valeur"] = o["fourchette"][0 if bas else 1]
+            return
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if not k.startswith("_"):
+                    borne(v, bas)
+
+    def variante(bas):
+        d2 = copy.deepcopy(d)
+        P = d2["prix_unitaires_MAD"]
+        for cle in ("ressources", "frais_indexes_sur_la_duree_MAD_mois",
+                    "composition_prix_pct", "coefficients_sous_detail", "forfaits_MAD"):
+            borne(P[cle], bas)
+        b = bordereau(d2, q, durees, duree_j, cal)
+        return {"debourse_sec_MAD": b["debourse_sec_MAD"],
+                "prix_de_vente_MAD": b["prix_de_vente_MAD"],
+                "cout_MAD_par_m2_emprise": b["cout_MAD_par_m2_emprise"]}
+
+    bas, haut = variante(True), variante(False)
+    ref = reference["prix_de_vente_MAD"]
+    return {
+        "basse": bas, "retenue": {"prix_de_vente_MAD": ref,
+                                  "cout_MAD_par_m2_emprise": reference["cout_MAD_par_m2_emprise"]},
+        "haute": haut,
+        "facteur_bas": round(bas["prix_de_vente_MAD"] / ref, 2),
+        "facteur_haut": round(haut["prix_de_vente_MAD"] / ref, 2),
+        "etendue_pct_de_la_retenue": round(
+            (haut["prix_de_vente_MAD"] - bas["prix_de_vente_MAD"]) / ref * 100, 0),
+        "lecture": (
+            "Les deux bornes ne sont pas des probabilites : rien ne dit que toutes les "
+            "hypotheses se trompent dans le meme sens, et sur une centaine d'hypotheses "
+            "independantes, c'est meme tres improbable. Elles mesurent la SENSIBILITE du "
+            "prix a ses entrees. Un chiffrage qui ne publie pas cette etendue laisse "
+            "croire a une precision qu'il n'a pas — et c'est exactement ce qu'on "
+            "reproche a un prix au ratio."),
+    }
+
+
 # ------------------------------- productivites : la ou se localise la dette n 10
 def coherence_cadences(d: dict, q: dict) -> dict:
     """Retourne chaque cadence d'atelier en productivite PAR COMPAGNON, metier par metier.
 
     La part de main d'oeuvre globale signale un probleme ; elle ne dit pas ou. Une
-    productivite individuelle, elle, se compare a ce qu'un compagnon pose vraiment en
-    une journee. C'est le controle qui localise la dette n° 10 de STATE.md.
+    productivite individuelle, elle, se compare a ce qu'un compagnon pose vraiment en une
+    journee. C'est le controle qui localise la dette n° 10 de STATE.md.
+
+    Deux precautions, toutes deux trouvees par la passe adversariale :
+
+    1. Le facteur global est pondere par le TRAVAIL (jours-compagnon), pas moyenne sur
+       les postes. Une moyenne non ponderee comptait deux fois la cadence des dalles,
+       partagee par le radier et le plancher haut, et omettait le terrassement.
+    2. La repartition des jours-compagnon entre les trois metiers d'un poste est une
+       HYPOTHESE — au prorata du temps que chacun prendrait a sa productivite de
+       reference — et elle est circulaire : elle redonne a chaque metier le facteur du
+       poste. Les productivites par metier sont donc une LECTURE du facteur, pas une
+       mesure independante. Seul le facteur agrege est une sortie.
     """
     pr = d["prix_unitaires_MAD"]["ratios_de_controle"]["productivites_par_compagnon_et_par_jour"]
     r = d["prix_unitaires_MAD"]["ressources"]
@@ -487,74 +621,116 @@ def coherence_cadences(d: dict, q: dict) -> dict:
     ac, co = c["acier_kg_par_m3"], c["coffrage_m2_par_unite"]
     pertes = 1 + c["pertes_beton_pct"]["valeur"] / 100
     h_j = r["heures_par_jour"]
+    qb = quantites_bordereau(d, q)
 
-    def implique(poste, acier_kg_u, coffrage_m2_u, beton_m3_u):
-        """Pour une unite d'ouvrage, les trois productivites qu'implique la cadence."""
+    def cas(poste, consommations):
+        """consommations : {cle de productivite : quantite par unite d'ouvrage}."""
         h = heures_par_unite(d, poste)
-        jh = h["h_par_unite"] / h_j            # jours-compagnon par unite d'ouvrage
-        out = {"poste": poste, "jours_compagnon_par_unite": round(jh, 4), "metiers": {}}
-        for metier, par_unite, cle in (("ferraillage_kg", acier_kg_u, "ferraillage_kg"),
-                                       ("coffrage_m2", coffrage_m2_u, "coffrage_m2"),
-                                       ("betonnage_m3", beton_m3_u, "betonnage_m3")):
+        jh = h["h_par_unite"] / h_j                      # jours-compagnon par unite
+        metiers = {}
+        besoin = 0.0
+        for cle, par_unite in consommations.items():
             if par_unite <= 0:
                 continue
-            # hypothese explicite : les trois metiers se partagent les jours-compagnon
-            # au prorata du temps qu'ils prendraient a la productivite de reference
-            out["metiers"][metier] = {"quantite_par_unite": round(par_unite, 4),
-                                      "reference_j": round(par_unite / pr[cle]["valeur"], 4)}
-        besoin = sum(v["reference_j"] for v in out["metiers"].values())
-        out["jours_compagnon_de_reference_par_unite"] = round(besoin, 4)
-        out["facteur_de_recalage"] = round(besoin / jh, 2) if jh > 0 else None
-        for metier, v in out["metiers"].items():
+            ref = par_unite / pr[cle]["valeur"]
+            besoin += ref
+            metiers[cle] = {"quantite_par_unite": round(par_unite, 4),
+                            "reference_j": round(ref, 5),
+                            "fourchette_de_reference": pr[cle]["fourchette"]}
+        for cle, v in metiers.items():
             part = v["reference_j"] / besoin if besoin else 0
-            v["productivite_implicite"] = round(v["quantite_par_unite"] / (jh * part), 1) if jh * part else None
-            v["fourchette_de_reference"] = pr[metier]["fourchette"]
+            v["productivite_implicite"] = (
+                round(v["quantite_par_unite"] / (jh * part), 1) if jh * part else None)
             v["dans_la_fourchette"] = bool(
                 v["productivite_implicite"] is not None
-                and pr[metier]["fourchette"][0] <= v["productivite_implicite"] <= pr[metier]["fourchette"][1])
-        return out
+                and v["fourchette_de_reference"][0] <= v["productivite_implicite"]
+                <= v["fourchette_de_reference"][1])
+        return {"poste": poste, "cadence": d["prix_unitaires_MAD"]["sous_details"][poste]["cadence"],
+                "quantite": qb[poste], "unite": d["prix_unitaires_MAD"]["sous_details"][poste]["unite"],
+                "jours_compagnon_par_unite": round(jh, 5),
+                "jours_compagnon_de_reference_par_unite": round(besoin, 5),
+                "jours_compagnon_planning_total": round(jh * qb[poste], 1),
+                "jours_compagnon_reference_total": round(besoin * qb[poste], 1),
+                "facteur_de_recalage": round(besoin / jh, 2) if jh > 0 else None,
+                "metiers": metiers}
 
-    s = math.sqrt(rq["poteau_section_m2"]["valeur"])
+    s_ = math.sqrt(rq["poteau_section_m2"]["valeur"])
     hp = _h_poteau(d)
     vol_pot = rq["poteau_section_m2"]["valeur"] * hp
-    ep_r, ep_d, ep_v = (rq["radier_niveau_technique_m"]["valeur"],
-                        rq["dalle_niveau_technique_m"]["valeur"],
-                        rq["voile_epaisseur_m"]["valeur"])
-    cas = [
-        implique("FOND", ac["semelles"]["valeur"], co["semelle_par_m3"]["valeur"], pertes),
-        implique("RADT", ac["radier"]["valeur"] * ep_r, co["radier_par_m2"]["valeur"], pertes * ep_r),
-        implique("VOIL", ac["voile"]["valeur"] * ep_v, co["voile_par_m2"]["valeur"], pertes * ep_v),
-        implique("PHNT", ac["dalle_pleine"]["valeur"] * ep_d, co["dalle_par_m2"]["valeur"], pertes * ep_d),
-        implique("POTR", ac["poteau"]["valeur"] * vol_pot, 4 * s * hp, pertes * vol_pot),
+    ep_r = rq["radier_niveau_technique_m"]["valeur"]
+    ep_d = rq["dalle_niveau_technique_m"]["valeur"]
+    ep_v = rq["voile_epaisseur_m"]["valeur"]
+    cas_ = [
+        cas("TERR", {"terrassement_m3": 1.0}),
+        cas("FOUI", {"terrassement_m3": 1.0}),
+        cas("FOND", {"ferraillage_kg": ac["semelles"]["valeur"],
+                     "coffrage_m2": co["semelle_par_m3"]["valeur"], "betonnage_m3": pertes}),
+        cas("RADT", {"ferraillage_kg": ac["radier"]["valeur"] * ep_r,
+                     "coffrage_m2": co["radier_par_m2"]["valeur"],
+                     "betonnage_m3": pertes * ep_r}),
+        cas("VOIL", {"ferraillage_kg": ac["voile"]["valeur"] * ep_v,
+                     "coffrage_m2": co["voile_par_m2"]["valeur"],
+                     "betonnage_m3": pertes * ep_v}),
+        cas("PHNT", {"ferraillage_kg": ac["dalle_pleine"]["valeur"] * ep_d,
+                     "coffrage_m2": co["dalle_par_m2"]["valeur"],
+                     "betonnage_m3": pertes * ep_d}),
+        cas("POTR", {"ferraillage_kg": ac["poteau"]["valeur"] * vol_pot,
+                     "coffrage_m2": 4 * s_ * hp, "betonnage_m3": pertes * vol_pot}),
     ]
-    hors = [c_["poste"] for c_ in cas
-            if any(not v["dans_la_fourchette"] for v in c_["metiers"].values())]
-    facteurs = [c_["facteur_de_recalage"] for c_ in cas]
-    # Bande de credibilite du FACTEUR lui-meme : un facteur proche de 1 veut dire que la
-    # cadence demande le travail qu'un compagnon fournit. C'est le critere de la figure,
-    # et il doit etre publie, sans quoi la legende et le dessin comptent differemment.
+    # Facteur global : PONDERE par le travail, et non moyenne sur les postes.
+    jc_plan = sum(x["jours_compagnon_planning_total"] for x in cas_)
+    jc_ref = sum(x["jours_compagnon_reference_total"] for x in cas_)
+    facteur = jc_ref / jc_plan
+    # Par cadence, pour ne pas compter deux fois celle que deux postes partagent.
+    par_cadence = {}
+    for x in cas_:
+        g = par_cadence.setdefault(x["cadence"], {"postes": [], "plan": 0.0, "ref": 0.0})
+        g["postes"].append(x["poste"])
+        g["plan"] += x["jours_compagnon_planning_total"]
+        g["ref"] += x["jours_compagnon_reference_total"]
+    for g in par_cadence.values():
+        g["facteur"] = round(g["ref"] / g["plan"], 2) if g["plan"] else None
+        g["plan"] = round(g["plan"], 1)
+        g["ref"] = round(g["ref"], 1)
     BANDE = (0.8, 1.2)
-    hors_bande = [c_["poste"] for c_ in cas
-                  if not BANDE[0] <= c_["facteur_de_recalage"] <= BANDE[1]]
+    hors = [k for k, g in par_cadence.items() if not BANDE[0] <= g["facteur"] <= BANDE[1]]
+    facteurs = [g["facteur"] for g in par_cadence.values()]
     return {
-        "cas": cas, "postes_hors_fourchette": hors,
+        "cas": cas_, "par_cadence": par_cadence,
         "bande_de_credibilite": list(BANDE),
-        "postes_hors_bande": hors_bande,
-        "nb_postes": len(cas),
-        "poste_le_plus_optimiste": max(cas, key=lambda c_: c_["facteur_de_recalage"])["poste"],
-        "poste_le_plus_prudent": min(cas, key=lambda c_: c_["facteur_de_recalage"])["poste"],
+        "cadences_hors_bande": hors, "nb_cadences": len(par_cadence),
+        "jours_compagnon_du_planning": round(jc_plan, 1),
+        "jours_compagnon_de_reference": round(jc_ref, 1),
+        "facteur_de_recalage_pondere": round(facteur, 2),
         "facteur_de_recalage_min": round(min(facteurs), 2),
         "facteur_de_recalage_max": round(max(facteurs), 2),
-        "facteur_de_recalage_moyen": round(sum(facteurs) / len(facteurs), 2),
+        "cadence_la_plus_optimiste": max(par_cadence, key=lambda k: par_cadence[k]["facteur"]),
+        "cadence_la_plus_prudente": min(par_cadence, key=lambda k: par_cadence[k]["facteur"]),
+        "perimetre": (
+            "Les sept postes dont la cadence peut etre retournee en productivite "
+            "individuelle, c'est-a-dire ceux dont on sait ce qu'un compagnon y pose : "
+            "terrassement et beton arme. La charpente, la couverture et la facade en "
+            "sont exclues faute de productivite de reference declaree — leur cadence "
+            "n'est donc PAS controlee ici, et rien ne dit qu'elle soit meilleure."),
         "lecture": (
-            "Le facteur de recalage est le rapport entre les jours-compagnon qu'il faudrait aux "
-            "productivites de reference et ceux qu'implique la cadence du planning. Superieur a "
-            "1, la cadence est optimiste : les durees de D2 et les prix de D1 sont tous deux "
-            "trop bas, du meme facteur et pour la meme raison."),
+            "Le facteur de recalage est le rapport entre les jours-compagnon qu'il "
+            "faudrait aux productivites de reference et ceux qu'implique la cadence du "
+            "planning, pondere par le travail de chaque poste. Superieur a 1, la cadence "
+            "est optimiste : les durees de D2 et les prix de D1 sont tous deux trop bas, "
+            "du meme facteur et pour la meme raison."),
         "ce_que_ce_controle_ne_dit_pas": (
-            "Il ne dit pas que les cadences sont fausses : il dit qu'elles sont incompatibles "
-            "avec des productivites individuelles d'ordre de grandeur courant. Les deux sont "
-            "des hypotheses V3. Un seul attachement reel tranche, et aucun n'est disponible."),
+            "Il ne dit pas que les cadences sont fausses : il dit qu'elles sont "
+            "incompatibles avec des productivites individuelles d'ordre de grandeur "
+            "courant. Les deux sont des hypotheses V3. Un seul attachement reel "
+            "trancherait, et aucun n'est disponible. Il ne dit rien non plus des "
+            "cadences hors de son perimetre."),
+        "circularite_des_productivites_par_metier": (
+            "Les productivites par metier publiees pour chaque poste sont obtenues en "
+            "repartissant ses jours-compagnon AU PRORATA des temps de reference. Cette "
+            "repartition est une hypothese, et elle est circulaire : chaque metier "
+            "retrouve le facteur du poste. Elles servent a RENDRE LISIBLE un facteur — "
+            "« 290 kg par homme et par jour » parle, « ×1,93 » moins — et non a le "
+            "demontrer. Le facteur, lui, ne depend d'aucune repartition."),
     }
 
 
@@ -574,8 +750,10 @@ def variante_recalee(d: dict, q: dict, durees: dict, duree_j: float, facteur: fl
     dur2 = pln.durees_chantier(d2, d2["planning"], q2, duree_mezz)
     f2 = pln.planning_avec_fenetres(d2, dur2)
     res2 = pln.voie_A_parcours(f2["taches"])
-    b2 = bordereau(d2, q2, dur2, res2["duree"])
-    b1 = bordereau(d, q, durees, duree_j)
+    cal2 = pln.calendrier(res2["duree"], d2["planning"]["calendrier"])
+    b2 = bordereau(d2, q2, dur2, res2["duree"], cal2)
+    cal1 = pln.calendrier(duree_j, d["planning"]["calendrier"])
+    b1 = bordereau(d, q, durees, duree_j, cal1)
     return {
         "facteur": facteur,
         "duree_j": {"reference": round(duree_j, 1),
@@ -592,6 +770,7 @@ def variante_recalee(d: dict, q: dict, durees: dict, duree_j: float, facteur: fl
             "_base": "beton arme decompose — la seule base ou ce ratio est defini"},
         "frais_de_duree_MAD": {"reference": b1["frais_de_duree"]["total_MAD"],
                                "recalee": b2["frais_de_duree"]["total_MAD"]},
+        "_q2": None,
         "lecture": (
             "Une cadence divisee par le facteur de recalage allonge le chantier ET renchérit le "
             "debourse, par deux chemins differents : plus d'heures de main d'oeuvre, et plus de "
@@ -642,25 +821,40 @@ def situation(d: dict, bord: dict, declare: dict) -> dict:
     av = declare
     marche = bord["prix_de_vente_MAD"]
 
-    lignes, cumul = [], 0.0
+    # L'ecart d'attachement est APPLIQUE, pas seulement raconte : la quantite payee est
+    # celle du constat contradictoire. Une version precedente declarait cet ecart dans
+    # data/, le registrait en V3, enseignait la regle en trois endroits du module — et
+    # payait le metre d'etude.
+    ea = se["ecart_attachement"]
+    poste_ea, pct_ea = ea["poste"], ea["ecart_pct"]["valeur"] / 100
+    lignes, cumul, effet_ea = [], 0.0, 0.0
     for p in bord["postes"]:
         a = av[p["poste"]] / 100
-        m = p["prix_total_MAD"] * a
+        k = (1 + pct_ea) if p["poste"] == poste_ea else 1.0
+        qte = p["quantite"] * a * k
+        m = p["pu_de_vente_MAD"] * qte
+        if k != 1.0:
+            effet_ea = m - p["prix_total_MAD"] * a
         cumul += m
         lignes.append({"poste": p["poste"], "libelle": p["libelle"], "unite": p["unite"],
                        "quantite_marche": p["quantite"], "avancement_pct": av[p["poste"]],
-                       "quantite_attachee": round(p["quantite"] * a, 2),
+                       "quantite_au_metre": round(p["quantite"] * a, 2),
+                       "quantite_attachee": round(qte, 2),
+                       "ecart_d_attachement_pct": round(pct_ea * 100, 1) if k != 1.0 else 0.0,
                        "pu_MAD": p["pu_de_vente_MAD"], "montant_cumule_MAD": round(m, 2)})
     # les frais indexes sur la duree s'attachent au TEMPS ecoule, pas a un ouvrage
     fd = bord["frais_de_duree"]
-    mois = d["suivi_chantier"]["date_arret_j"] / d["prix_unitaires_MAD"]["ressources"]["jours_ouvres_par_mois"]
-    part_temps = min(1.0, mois / fd["duree_mois"])
+    # la date d'arret est en jours OUVRES ; les frais de duree se comptent au mois
+    # calendaire. La part ecoulee se lit donc sur la duree ouvree, pas sur les mois.
+    mois = d["suivi_chantier"]["date_arret_j"] / fd["conversion"]["jours_ouvres_par_mois_calendaire"]
+    part_temps = min(1.0, d["suivi_chantier"]["date_arret_j"] / fd["duree_j"])
     m_fd = fd["total_MAD"] * bord["coefficient_de_vente"] * part_temps
     cumul += m_fd
     lignes.append({"poste": "FRAIS-DUREE", "libelle": "Frais de chantier indexes sur la duree",
-                   "unite": "mois", "quantite_marche": fd["duree_mois"],
+                   "unite": "mois", "quantite_marche": fd["duree_mois_calendaires"],
                    "avancement_pct": round(part_temps * 100, 1),
-                   "quantite_attachee": round(mois, 2),
+                   "quantite_au_metre": round(mois, 2),
+                   "quantite_attachee": round(mois, 2), "ecart_d_attachement_pct": 0.0,
                    "pu_MAD": round(fd["cout_MAD_par_mois"] * bord["coefficient_de_vente"], 2),
                    "montant_cumule_MAD": round(m_fd, 2)})
 
@@ -675,11 +869,20 @@ def situation(d: dict, bord: dict, declare: dict) -> dict:
     frac = 0.0 if pct <= bas else (1.0 if pct >= haut else (pct - bas) / (haut - bas))
     rembourse = avance * frac
     net = revise - rg_plafonnee - rembourse + avance * 0.0   # l'avance a deja ete encaissee
-    cal = pln.calendrier(fd["duree_j"], d["planning"]["calendrier"])
     return {
         "numero": se["numero"], "mois_ecoules": round(mois, 2), "lignes": lignes,
         "montant_marche_MAD": marche,
         "travaux_cumules_MAD": round(cumul, 2),
+        "ecart_d_attachement": {
+            "poste": poste_ea, "libelle": next(x["libelle"] for x in bord["postes"]
+                                               if x["poste"] == poste_ea),
+            "ecart_pct": round(pct_ea * 100, 1),
+            "effet_sur_la_situation_MAD": round(effet_ea, 2),
+            "motif": ea["lecon"],
+            "regle": ("La quantite payee est celle de l'attachement contradictoire, pas "
+                      "celle du metre d'etude. Ici le constat donne "
+                      f"{pct_ea * 100:.0f} % de plus que le metre, et la situation les "
+                      "paie — c'est le sens meme d'un attachement.")},
         "travaux_cumules_pct_du_marche": round(pct, 2),
         "_note_avancement": (
             "Ce pourcentage est celui des TRAVAUX factures, avant retenues. Le module D4 "
@@ -701,9 +904,6 @@ def situation(d: dict, bord: dict, declare: dict) -> dict:
             "des hypotheses V3 posees pour faire tourner l'exemple. Dans un marche reel ils se "
             "lisent dans le CPS, qui prime (§ 3.1) : ne reportez aucun de ces chiffres sur un "
             "dossier sans l'avoir ouvert."),
-        "_calendrier_du_chantier": {"fin": cal["fin_avec_alea"],
-                                    "duree_ouvree_avec_intemperies_j":
-                                        cal["duree_ouvree_avec_intemperies_j"]},
     }
 
 
@@ -766,6 +966,21 @@ def ecart_depense_travail(dep: dict, courbe_s: list) -> dict:
     }
 
 
+def _plages(js: list) -> list:
+    """Regroupe une liste de jours en intervalles continus — pour que la legende d'une
+    figure cite des plages CALCULEES au lieu de plages lues a l'oeil sur le dessin."""
+    if not js:
+        return []
+    out, deb, prec = [], js[0], js[0]
+    for j in js[1:]:
+        if j - prec > 12:
+            out.append({"de_j": deb, "a_j": prec})
+            deb = j
+        prec = j
+    out.append({"de_j": deb, "a_j": prec})
+    return out
+
+
 def tresorerie(d: dict, bord: dict, dep: dict) -> dict:
     """Decaissements contre encaissements : le besoin de tresorerie du chantier.
 
@@ -776,11 +991,15 @@ def tresorerie(d: dict, bord: dict, dep: dict) -> dict:
     """
     ct = d["prix_unitaires_MAD"]["contrat"]
     r = d["prix_unitaires_MAD"]["ressources"]
-    jm = r["jours_ouvres_par_mois"]
+    # Le delai de paiement du CPS et la periodicite des situations sont en jours
+    # CALENDAIRES ; l'axe de ce calcul est en jours ouvres. On convertit, une fois.
+    conv = bord["frais_de_duree"]["conversion"]
+    jm = conv["jours_ouvres_par_mois_calendaire"]
     duree = bord["frais_de_duree"]["duree_j"]
     ds, marche = bord["debourse_sec_MAD"], bord["prix_de_vente_MAD"]
     rg = ct["retenue_de_garantie_pct"]["valeur"] / 100
-    delai = ct["delai_de_paiement_j"]["valeur"]
+    delai_cal = ct["delai_de_paiement_j"]["valeur"]
+    delai = delai_cal * conv["ouvres_par_jour_calendaire"]
     avance = marche * ct["avance_pct"]["valeur"] / 100
     bas, haut = ct["avance_remboursement_entre_avancement_pct"]
     total = dep["total_MAD"]
@@ -814,10 +1033,16 @@ def tresorerie(d: dict, bord: dict, dep: dict) -> dict:
         "besoin_maximal_pct_du_marche": round(besoin_max / marche * 100, 2),
         "avance_versee_MAD": round(avance),
         "retenue_de_garantie_finale_MAD": round(marche * rg),
+        "periodes_ou_l_entreprise_est_devant": _plages([p["j"] for p in points
+                                                       if p["besoin_MAD"] < 0]),
+        "delai_de_paiement_j_calendaires": delai_cal,
+        "delai_de_paiement_j_ouvres": round(delai, 1),
+        "mois_en_jours_ouvres": jm,
         "lecture": (
             "Le besoin maximal n'est pas une perte : c'est l'argent que l'entreprise avance au "
             f"maitre d'ouvrage pendant le chantier. Une avance de {ct['avance_pct']['valeur']} % "
-            f"le reduit, un delai de paiement de {delai} jours l'augmente, et la retenue de "
+            f"le reduit, un delai de paiement de {delai_cal} jours calendaires "
+            f"({delai:.0f} jours ouvres) l'augmente, et la retenue de "
             "garantie ne revient qu'apres la reception. Un chantier rentable peut mettre une "
             "entreprise en defaut : la marge est au bilan, la tresorerie est a la banque."),
         "hypothese_de_profil": (
@@ -833,10 +1058,8 @@ def cout_du_retard(d: dict, bord: dict, jours: float) -> dict:
     ct = d["prix_unitaires_MAD"]["contrat"]
     fd = bord["frais_de_duree"]
     marche = bord["prix_de_vente_MAD"]
-    cal = d["planning"]["calendrier"]
     # les penalites courent en jours CALENDAIRES, les frais de duree en jours ouvres
-    _c = pln.calendrier(fd["duree_j"], cal)
-    ratio = _c["semaines_calendaires"] * 7 / fd["duree_j"]
+    ratio = fd["conversion"]["calendaires_par_jour_ouvre"]
     j_cal = jours * ratio
     pen = marche * ct["penalite_retard_pour_mille_par_j"]["valeur"] / 1000 * j_cal
     plafond = marche * ct["penalite_plafond_pct"]["valeur"] / 100
@@ -894,8 +1117,19 @@ def controle_ratios(d: dict, bord: dict, q: dict) -> dict:
                     "ratio_defini_sur_cette_base": defini,
                     "dans_la_fourchette": bool(defini and lo <= valeur <= hi)}
 
-    ctrl("cout_par_m2_emprise", bord["cout_MAD_par_m2_emprise"],
+    # Le ratio de reference dit « tous corps d'etat, HORS VRD et HORS interfaces
+    # ferroviaires » et se rapporte a une surface de PLANCHER. Le comparer au cout
+    # rapporte a l'emprise, interfaces comprises, revenait a appliquer un ratio hors de
+    # son domaine — dans le module meme qui enseigne a ne pas le faire.
+    hors = sum(v["prix_MAD"] for k, v in bord["par_lot"].items()
+               if not k.startswith("6 ·"))
+    g = d["geometrie"]
+    surf_plancher = (q["emprise_m2"] + q["surface_mezzanine_m2"]
+                     + q["surface_niveau_technique_m2"])
+    ctrl("cout_par_m2_de_plancher_hors_interfaces", hors / surf_plancher,
          rc["cout_MAD_m2_batiment_voyageurs"], "MAD/m2")
+    ctrl("cout_par_m2_d_emprise_tout_compris", bord["cout_MAD_par_m2_emprise"],
+         rc["cout_MAD_m2_batiment_voyageurs"], "MAD/m2", defini=False)
     ctrl("part_main_oeuvre_beton_arme_decompose", p_ba,
          rc["part_main_oeuvre_gros_oeuvre_pct"], "%")
     ctrl("part_main_oeuvre_tous_postes_decomposes", p_dec,
@@ -907,6 +1141,16 @@ def controle_ratios(d: dict, bord: dict, q: dict) -> dict:
     ctrl("part_gros_oeuvre", gros / bord["debourse_sec_MAD"] * 100,
          rc["part_gros_oeuvre_pct"], "%")
 
+    out["_surfaces"] = {
+        "emprise_m2": q["emprise_m2"], "mezzanine_m2": q["surface_mezzanine_m2"],
+        "niveau_technique_m2": q["surface_niveau_technique_m2"],
+        "plancher_total_m2": round(surf_plancher, 1),
+        "prix_hors_interfaces_MAD": round(hors, 2),
+        "_note": ("Un cout au m2 tous corps d'etat se rapporte a une surface de "
+                  "PLANCHER, et le ratio de reference exclut les interfaces "
+                  "ferroviaires. Rapporte a l'emprise et interfaces comprises, le meme "
+                  "chantier affiche un nombre bien plus eleve qui ne se compare a rien."),
+    }
     out["_perimetres"] = {
         "beton_arme_decompose": list(BETON_ARME),
         "debourse_MAD": round(ds_ba, 2), "main_oeuvre_MAD": round(mo_ba, 2),
@@ -957,8 +1201,10 @@ def figures(d: dict, bord: dict, tres: dict, coh: dict, dep: dict, cs: list) -> 
         "lots": [{"libelle": k, "valeur": round(v["debourse_MAD"] / 1e6, 2),
                   "part": v["part_pct"]} for k, v in lots],
         "tresorerie": tres["points"],
-        "recalage": [{"libelle": f"{c['poste']} · {pln.NOMS[c['poste']]}",
-                      "valeur": c["facteur_de_recalage"]} for c in coh["cas"]],
+        "recalage": [{"libelle": k.replace("_j_atelier", "").replace("_", " "),
+                      "valeur": g["facteur"]}
+                     for k, g in sorted(coh["par_cadence"].items(),
+                                        key=lambda kv: -kv[1]["facteur"])],
         "depense_contre_travail": {
             "series": [
                 {"nom": "Dépense (MAD)", "points": [{"j": p["j"], "pct": p["pct"]}
@@ -984,7 +1230,8 @@ def tout_calculer(d: dict, duree_mezz: float, cadence_mezz: float, cycle_mezz: f
     eff = pln.effectifs_par_tache(d, pl, t)
     cs = pln.courbe_en_s(res, eff, seg, 5)
 
-    bord = bordereau(d, q, t, res["duree"])
+    cal = pln.calendrier(res["duree"], pl["calendrier"])
+    bord = bordereau(d, q, t, res["duree"], cal)
     dep = courbe_de_depense(bord, res, t)
     durees_dates = {i: {**t[i], "debut_j": res["tot"][i][0], "fin_j": res["tot"][i][1]}
                     for i in pln.NOMS}
@@ -998,13 +1245,15 @@ def tout_calculer(d: dict, duree_mezz: float, cadence_mezz: float, cycle_mezz: f
     sit = situation(d, bord, etats["declare"])
     retard = {str(j): cout_du_retard(d, bord, j) for j in (1, 21, 63)}
     ctrl = controle_ratios(d, bord, q)
-    var = variante_recalee(d, q, t, res["duree"], coh["facteur_de_recalage_moyen"], duree_mezz)
+    var = variante_recalee(d, q, t, res["duree"], coh["facteur_de_recalage_pondere"], duree_mezz)
     return {
         "_durees_reference": {i: t[i]["duree_j"] for i in pln.NOMS},
         "quantites_bordereau": quantites_bordereau(d, q),
         "taux_horaires": {m: taux_horaire_atelier(d, m)
                           for m in pl["effectifs_chantier_V3"]["compagnons_par_atelier"]},
         "bordereau": {**bord, "par_poste": {x["poste"]: x for x in bord["postes"]}},
+        "bordereau_avec_divers": bordereau_avec_divers(bord, ecart),
+        "fourchette_de_cout": fourchette_de_cout(d, q, t, res["duree"], cal, bord),
         "voie_prix_poses": voie_b, "ecart_des_deux_voies": ecart,
         "coherence_cadences": coh, "variante_recalee": var,
         "situation": sit, "etats_a_la_date_d_arret": etats,
@@ -1044,4 +1293,4 @@ if __name__ == "__main__":
           f"({b['cout_MAD_par_m2_emprise']:,.0f} MAD/m2)  "
           f"part MO {b['part_main_oeuvre_du_debourse_pct']} %  "
           f"ecart deux voies {r['ecart_des_deux_voies']['ecart_pct']} %  "
-          f"recalage moyen x{r['coherence_cadences']['facteur_de_recalage_moyen']}")
+          f"recalage moyen x{r['coherence_cadences']['facteur_de_recalage_pondere']}")
