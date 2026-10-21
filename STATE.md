@@ -1,16 +1,16 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **20/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
+Dernière mise à jour : **21/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `D2` — Planification. Zip : `cours-genie-civil-P1-D2.zip`
+- **Dernier livrable** : `D1` — Métrés et prix. Zip : `cours-genie-civil-P1-D1.zip`
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `D1` — Métrés, prix, sous-détails, situations de travaux.
+- **Prochain module** : `D4` — Suivi et contrôle (avancement, attachements, valeur acquise, visas).
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -26,10 +26,10 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Statut des modules
 
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
-**24 livraisons**, dont **3 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
+**24 livraisons**, dont **4 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
-- **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 1 passe /devil,
-  32 défauts, 8 bloquants **tous corrigés** — D-035).
+- **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 32 défauts, 8 bloquants
+  **tous corrigés** — D-035), `D1` (métrés et prix, passe /devil **à lancer**).
 - ▶ **actifs, non écrits** : A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
   D1, D2, D3, D4, D6, D7, M3D, REC, RC1
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
@@ -120,7 +120,7 @@ vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité q
 | 7 | Bundle 3D de 765 ko, hors budget par module | à surveiller |
 | 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivent dans le zip, pas sur GitHub | limite de l'environnement |
 | 9 | `TV` sans modèle 3D (le phasage appartient à C3) — à réviser si vous jugez qu'il en manque un | après validation |
-| 10 | **Le contrôle de part de main-d'œuvre reste hors fourchette** (5,2 % pour 15 à 30 %) : les cadences V3 sont probablement optimistes d'un facteur 2 à 3, et elles portent **toutes** les durées du cours | premiers attachements réels |
+| 10 | **Part de main-d'œuvre hors fourchette.** D1 l'a instruite : la base du ratio était fausse (bordereau entier au lieu du béton armé décomposé), **et** les cadences sont bien optimistes — facteur ×2,52 obtenu par les productivités individuelles, chemin indépendant. Recalées, la part passe de 7,8 à 13,1 %, toujours sous 15 %. **Chiffrée, non soldée** | attachements réels |
 | 11 | Chevauchements **texte contre trait** non détectés : le test ne compare que texte contre texte | à outiller |
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
 | 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
@@ -137,9 +137,9 @@ dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
 
 ## Effort consommé (§ 13.2)
 
-**8 séances** : Étape 0 = 1 · Étape 1 = 2 (8 défauts, puis 50 sur trois passes) · Étape 2 = 4
-(117 défauts sur cinq passes) · D2 = 1.
-**Avancement sur le programme du 31/10** (18 livraisons) : **3 faites**, dont les deux plus chères,
-le socle ne se refaisant pas et le témoin ayant absorbé les défauts de méthode. Reste 15 livraisons
-en 11 jours : **1 à 2 par séance**, une passe adversariale par module (D-034), majeurs et mineurs
+**9 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2 = 1 (dont la passe et ses corrections)
+· D1 = 1.
+**Avancement sur le programme du 31/10** (18 livraisons) : **4 faites**, dont les deux plus chères,
+le socle ne se refaisant pas et le témoin ayant absorbé les défauts de méthode. Reste 14 livraisons
+en 10 jours : **1 à 2 par séance**, une passe adversariale par module (D-034), majeurs et mineurs
 portés en dette plutôt que corrigés.

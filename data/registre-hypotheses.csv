@@ -62,3 +62,75 @@ H060;recouvrement de la fouille sur le soutènement;45 %;%;25 à 65;2026;D2;avan
 H061;recouvrement du radier sur les fondations;35 %;%;20 à 50;2026;D2;le radier démarre sur la partie déjà fondée
 H062;recouvrement de la mezzanine sur les poteaux;35 %;%;20 à 50;2026;D2;la première zone de plancher se coffre dès que ses poteaux portent
 H063;recouvrement de la façade sur le levage;10 %;%;5 à 20;2026;D2;la façade démarre quand la première file de charpente est posée et stable
+H064;coût horaire d'un manœuvre;32 MAD/h;MAD/h;25 à 40;2026;D1;charges patronales comprises
+H065;coût horaire d'un compagnon;45 MAD/h;MAD/h;35 à 60;2026;D1;même valeur que le prix horaire du module TV, pour que les deux voies de chiffrage soient comparables
+H066;coût horaire d'un compagnon qualifié;58 MAD/h;MAD/h;45 à 75;2026;D1;ferrailleur, coffreur-banche, monteur de charpente, vitrier
+H067;coût horaire d'un chef d'équipe;70 MAD/h;MAD/h;55 à 95;2026;D1;coût horaire d'un chef d'équipe
+H068;coût horaire d'un grutier;62 MAD/h;MAD/h;48 à 80;2026;D1;compté dans l'encadrement de chantier, pas dans les ateliers
+H069;béton prêt à l'emploi livré;900 MAD/m³;MAD/m³;800 à 1050;2026;D1;hors pompage et hors mise en œuvre
+H070;acier HA livré façonné;11,5 MAD/kg;MAD/kg;9,5 à 14;2026;D1;hors pose
+H071;amortissement d'une rotation de coffrage;38 MAD/m²;MAD/m²;28 à 55;2026;D1;banche ou table, huile et consommables compris
+H072;amortissement d'une rotation d'étaiement;14 MAD/m²;MAD/m²;9 à 22;2026;D1;amortissement d'une rotation d'étaiement
+H073;charpente métallique fournie en atelier;28 MAD/kg;MAD/kg;22 à 38;2026;D1;profilés, assemblages, galvanisation et peinture, hors pose
+H074;couverture fournie;520 MAD/m²;MAD/m²;380 à 700;2026;D1;pannes, bac acier, isolant, étanchéité
+H075;mur-rideau vitré fourni;2400 MAD/m²;MAD/m²;1600 à 3600;2026;D1;poste le plus sensible du bordereau : l'étendue dépasse le double
+H076;transport et mise en décharge des déblais;55 MAD/m³;MAD/m³;40 à 80;2026;D1;au m³ foisonné
+H077;location d'une grue à tour;95000 MAD/mois;MAD/mois;70000 à 130000;2026;D1;location nue, montage et grutier comptés à part
+H078;location d'une grue mobile de 200 t;18000 MAD/j;MAD/j;12000 à 28000;2026;D1;location d'une grue mobile de 200 t
+H079;pompe à béton;4200 MAD/j;MAD/j;3000 à 6000;2026;D1;pompe à béton
+H080;pelle de 30 t avec conducteur;520 MAD/h;MAD/h;400 à 700;2026;D1;pelle de 30 t avec conducteur
+H081;nacelle;1100 MAD/j;MAD/j;800 à 1600;2026;D1;nacelle
+H082;vibreur;120 MAD/j;MAD/j;80 à 200;2026;D1;vibreur
+H083;part de compagnons qualifiés dans un atelier;50 %;%;30 à 70;2026;D1;le reste est compté en manœuvres , un chef d'équipe par atelier
+H084;frais généraux de siège;7 %;%;4 à 10;2026;D1;politique d'entreprise, pas une règle
+H085;provision pour aléas;4 %;%;2 à 8;2026;D1;provision pour aléas
+H086;marge;6 %;%;2 à 12;2026;D1;marge
+H087;pertes de béton;5 %;%;3 à 8;2026;D1;fonds de benne, tolérances de coffrage, reprises
+H088;ratio d'acier des semelles;60 kg/m³;kg/m³;45 à 80;2026;D1;ratio d'acier des semelles
+H089;ratio d'acier d'un radier;90 kg/m³;kg/m³;70 à 120;2026;D1;ratio d'acier d'un radier
+H090;ratio d'acier d'une dalle pleine;90 kg/m³;kg/m³;70 à 120;2026;D1;ratio d'acier d'une dalle pleine
+H091;ratio d'acier d'un voile;75 kg/m³;kg/m³;55 à 100;2026;D1;ratio d'acier d'un voile
+H092;ratio d'acier d'un poteau;130 kg/m³;kg/m³;100 à 180;2026;D1;un poteau de 9 m est l'élément le plus ferraillé du gros œuvre au m³
+H093;coffrage d'une semelle par m³;2,5 m²/m³;m²/m³;1,8 à 3,4;2026;D1;coffrage bois perdu ou à faible rotation
+H094;coffrage de rive d'un radier;0,15 m²/m²;m²/m²;0,08 à 0,25;2026;D1;un radier est coulé sur béton de propreté : pas de sous-face à coffrer
+H095;coffrage d'un plancher par m² coulé;1,179 m²/m²;m²/m²;1,10 à 1,30;2026;D1;sous-face + joues + fonds de poutres + rives — MESURÉ sur la géométrie du plancher au module TV, pas posé ici , la fourchette couvre d'autres géométries de plancher
+H096;étaiement par m² de dalle;1,0 m²/m²;m²/m²;1,0 à 1,0;2026;D1;une surface étayée par surface coulée : ce n'est pas une hypothèse, c'est une géométrie
+H097;journées de pompe par m³;0,004 j/m³;j/m³;0,002 à 0,008;2026;D1;une journée de pompe pour environ 250 m³
+H098;journées de vibreur par m³;0,004 j/m³;j/m³;0,002 à 0,008;2026;D1;journées de vibreur par m³
+H099;ferraillage posé par compagnon et par jour;150 kg/j;kg/j;100 à 250;2026;D1;façonnage exclu, pose et ligature comprises
+H100;coffrage posé par compagnon et par jour;18 m²/j;m²/j;12 à 28;2026;D1;banches ou tables, pose et dépose
+H101;béton mis en œuvre par compagnon et par jour;12 m³/j;m³/j;8 à 20;2026;D1;mise en œuvre, vibration, surfaçage
+H102;terrassement par compagnon et par jour;110 m³/j;m³/j;70 à 180;2026;D1;conduite d'engin et aide au sol
+H103;encadrement de chantier;180000 MAD/mois;MAD/mois;120000 à 260000;2026;D1;conducteur de travaux, chef de chantier, topographe, qualité, HSE, secrétariat
+H104;base-vie et fonctionnement;35000 MAD/mois;MAD/mois;22000 à 55000;2026;D1;base-vie et fonctionnement
+H105;énergie et divers;18000 MAD/mois;MAD/mois;10000 à 30000;2026;D1;énergie et divers
+H106;part de main-d'œuvre d'un lot de gros œuvre;20 %;%;15 à 30;2026;D1;du déboursé sec, et sur CE périmètre seulement
+H107;coût tous corps d'état d'un bâtiment voyageurs;11000 MAD/m²;MAD/m²;7000 à 16000;2026;D1;hors VRD et hors interfaces ferroviaires
+H108;part du gros œuvre dans le coût total;30 %;%;22 à 40;2026;D1;part du gros œuvre dans le coût total
+H109;ratio d'acier moyen du gros œuvre;95 kg/m³;kg/m³;70 à 130;2026;D1;ratio d'acier moyen du gros œuvre
+H110;forfait d'implantation topographique;85000 MAD;MAD;55000 à 130000;2026;D1;forfait d'implantation topographique
+H111;forfait de second œuvre et lots techniques;14500000 MAD;MAD;9000000 à 22000000;2026;D1;cloisons, plafonds, sols, CVC, électricité, courants faibles, plomberie, ascenseurs, escalators — sous-traité, tout compris
+H112;forfait d'installation de chantier;620000 MAD;MAD;420000 à 900000;2026;D1;forfait d'installation de chantier
+H113;forfait de montage et démontage de la grue;240000 MAD;MAD;160000 à 350000;2026;D1;forfait de montage et démontage de la grue
+H114;forfait de soutènement périphérique;3800000 MAD;MAD;2500000 à 5500000;2026;D1;berlinoise et tirants, sous-traité
+H115;forfait d'étanchéité et remblais;1450000 MAD;MAD;950000 à 2100000;2026;D1;forfait d'étanchéité et remblais
+H116;forfait de noyaux et escaliers;2900000 MAD;MAD;2000000 à 4200000;2026;D1;forfait de noyaux et escaliers
+H117;forfait de marquise en porte-à-faux;1900000 MAD;MAD;1200000 à 2900000;2026;D1;forfait de marquise en porte-à-faux
+H118;forfait de raccordement du passage souterrain;2600000 MAD;MAD;1700000 à 3900000;2026;D1;travaux sous consignation : le forfait porte la sujétion de travail en fenêtre
+H119;forfait de quais et équipements;4200000 MAD;MAD;2800000 à 6200000;2026;D1;forfait de quais et équipements
+H120;forfait d'études et de visa de la charpente;1350000 MAD;MAD;900000 à 2000000;2026;D1;ne consomme aucune heure de chantier et occupe pourtant le chemin critique
+H121;forfait d'essais et de mise en service;680000 MAD;MAD;420000 à 1100000;2026;D1;forfait d'essais et de mise en service
+H122;forfait de réception et de DOE;190000 MAD;MAD;110000 à 300000;2026;D1;forfait de réception et de DOE
+H123;forfait de séchage avant second œuvre;0 MAD;MAD;0 à 0;2026;D1;zéro dirham et vingt jours de chemin critique : un séchage ne se paie pas, il se subit
+H124;avance forfaitaire;10 %;%;0 à 20;2026;D1;remboursée par prélèvement progressif sur les situations
+H125;retenue de garantie;7 %;%;5 à 10;2026;D1;sur chaque situation, plafonnée
+H126;plafond de la retenue de garantie;7 %;%;5 à 10;2026;D1;du montant du marché
+H127;cautionnement définitif;3 %;%;2 à 5;2026;D1;cautionnement définitif
+H128;délai de paiement;60 jours;j;30 à 90;2026;D1;du dépôt de la situation à l'encaissement
+H129;pénalité de retard journalière;1 pour mille;‰;0,5 à 2;2026;D1;du montant du marché, par jour calendaire
+H130;plafond des pénalités;10 %;%;5 à 10;2026;D1;plafond des pénalités
+H131;part fixe de la formule de révision;0,15;—;0,10 à 0,20;2026;D1;part non révisable
+H132;part de l'index bâtiment dans la révision;0,60;—;0,50 à 0,70;2026;D1;part de l'index bâtiment dans la révision
+H133;part de l'index acier dans la révision;0,25;—;0,15 à 0,35;2026;D1;part de l'index acier dans la révision
+H134;rapport de l'index bâtiment au mois de base;1,062;—;1,00 à 1,15;2026;D1;rapport de l'index bâtiment au mois de base
+H135;rapport de l'index acier au mois de base;1,118;—;1,00 à 1,30;2026;D1;plus volatil que l'index bâtiment

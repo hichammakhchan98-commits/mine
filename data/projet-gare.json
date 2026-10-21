@@ -425,6 +425,836 @@
     ],
     "note": "compagnon, charges comprises"
    }
+  },
+  "_role": "Prix de RESSOURCE et coefficients de consommation. Aucun prix d'ouvrage n'est saisi ici : le bordereau du module D1 les deduit par sous-detail. « postes » (prix poses, main d'oeuvre comprise) est la seconde voie de chiffrage, conservee pour comparaison — jamais additionnee a la premiere.",
+  "ressources": {
+   "_role": "Le seul endroit du jeu de donnees ou un prix est saisi.",
+   "heures_par_jour": 8,
+   "jours_ouvres_par_mois": 21,
+   "main_oeuvre_MAD_h": {
+    "manoeuvre": {
+     "valeur": 32,
+     "fourchette": [
+      25,
+      40
+     ],
+     "note": "charges patronales comprises"
+    },
+    "compagnon": {
+     "valeur": 45,
+     "fourchette": [
+      35,
+      60
+     ],
+     "note": "meme valeur que postes.main_oeuvre_h : les deux voies de chiffrage partent du meme cout horaire, sinon leur comparaison ne voudrait rien dire"
+    },
+    "compagnon_qualifie": {
+     "valeur": 58,
+     "fourchette": [
+      45,
+      75
+     ],
+     "note": "ferrailleur, coffreur-banche, monteur de charpente, vitrier : les metiers qui portent la cadence"
+    },
+    "chef_equipe": {
+     "valeur": 70,
+     "fourchette": [
+      55,
+      95
+     ]
+    },
+    "grutier": {
+     "valeur": 62,
+     "fourchette": [
+      48,
+      80
+     ]
+    }
+   },
+   "composition_atelier": {
+    "_role": "De quoi est fait un atelier, pour en deduire son TAUX HORAIRE MOYEN. Sans cette ligne, un sous-detail paie des ferrailleurs au prix du manoeuvre.",
+    "chefs_equipe": 1,
+    "part_compagnons_qualifies_pct": {
+     "valeur": 50,
+     "fourchette": [
+      30,
+      70
+     ],
+     "note": "le reste de l'atelier est compte en manoeuvres"
+    }
+   },
+   "materiaux_MAD": {
+    "beton_bpe_m3": {
+     "valeur": 900,
+     "fourchette": [
+      800,
+      1050
+     ],
+     "note": "beton pret a l'emploi livre sur chantier — HORS pompage et HORS mise en oeuvre"
+    },
+    "acier_ha_kg": {
+     "valeur": 11.5,
+     "fourchette": [
+      9.5,
+      14.0
+     ],
+     "note": "acier HA livre faconne et etiquete — HORS pose"
+    },
+    "coffrage_rotation_m2": {
+     "valeur": 38,
+     "fourchette": [
+      28,
+      55
+     ],
+     "note": "amortissement d'UNE rotation de banche ou de table, huile et consommables compris"
+    },
+    "etaiement_rotation_m2": {
+     "valeur": 14,
+     "fourchette": [
+      9,
+      22
+     ],
+     "note": "amortissement d'une rotation d'etaiement"
+    },
+    "charpente_acier_kg": {
+     "valeur": 28,
+     "fourchette": [
+      22,
+      38
+     ],
+     "note": "profiles fournis en atelier, assemblages, galvanisation et peinture — HORS pose"
+    },
+    "couverture_m2": {
+     "valeur": 520,
+     "fourchette": [
+      380,
+      700
+     ],
+     "note": "pannes, bac acier, isolant, etancheite — fourniture"
+    },
+    "facade_m2": {
+     "valeur": 2400,
+     "fourchette": [
+      1600,
+      3600
+     ],
+     "note": "mur-rideau vitre — fourniture"
+    },
+    "evacuation_deblais_m3": {
+     "valeur": 55,
+     "fourchette": [
+      40,
+      80
+     ],
+     "note": "transport et mise en decharge autorisee, au m3 FOISONNE"
+    }
+   },
+   "materiel_MAD": {
+    "grue_tour_mois": {
+     "valeur": 95000,
+     "fourchette": [
+      70000,
+      130000
+     ],
+     "note": "location nue — montage, demontage et grutier comptes a part"
+    },
+    "grue_mobile_200t_j": {
+     "valeur": 18000,
+     "fourchette": [
+      12000,
+      28000
+     ]
+    },
+    "pompe_a_beton_j": {
+     "valeur": 4200,
+     "fourchette": [
+      3000,
+      6000
+     ]
+    },
+    "pelle_30t_h": {
+     "valeur": 520,
+     "fourchette": [
+      400,
+      700
+     ],
+     "note": "avec conducteur"
+    },
+    "nacelle_j": {
+     "valeur": 1100,
+     "fourchette": [
+      800,
+      1600
+     ]
+    },
+    "vibreur_j": {
+     "valeur": 120,
+     "fourchette": [
+      80,
+      200
+     ]
+    }
+   }
+  },
+  "frais_indexes_sur_la_duree_MAD_mois": {
+   "_role": "Postes qui ne dependent d'AUCUNE quantite : ils durent ce que le chantier dure. C'est par eux qu'un mois de retard coute de l'argent sans qu'un m3 de plus soit coule — le lien direct entre le planning (D2) et le cout (D1).",
+   "encadrement": {
+    "valeur": 180000,
+    "fourchette": [
+     120000,
+     260000
+    ],
+    "note": "conducteur de travaux, chef de chantier, topographe, qualite, HSE, secretariat"
+   },
+   "base_vie_et_fonctionnement": {
+    "valeur": 35000,
+    "fourchette": [
+     22000,
+     55000
+    ]
+   },
+   "grue_tour_location": {
+    "valeur": 95000,
+    "fourchette": [
+     70000,
+     130000
+    ],
+    "note": "reprend ressources.materiel_MAD.grue_tour_mois : la location est indexee sur la duree, le montage non"
+   },
+   "energie_et_divers": {
+    "valeur": 18000,
+    "fourchette": [
+     10000,
+     30000
+    ]
+   }
+  },
+  "composition_prix_pct": {
+   "_role": "Du debourse sec au prix de vente. Hypotheses de politique d'entreprise, pas des regles.",
+   "frais_generaux_siege": {
+    "valeur": 7,
+    "fourchette": [
+     4,
+     10
+    ]
+   },
+   "aleas": {
+    "valeur": 4,
+    "fourchette": [
+     2,
+     8
+    ]
+   },
+   "marge": {
+    "valeur": 6,
+    "fourchette": [
+     2,
+     12
+    ]
+   },
+   "_frais_de_chantier": "PAS de taux ici, et c'est voulu : les frais de chantier sont des POSTES du bordereau (installation, montage de grue, encadrement indexe sur la duree). Les compter EN PLUS par un pourcentage de 10 a 15 % les compterait deux fois. Un bordereau fait l'un ou l'autre, jamais les deux."
+  },
+  "coefficients_sous_detail": {
+   "_role": "Consommations de matiere et de materiel par unite d'ouvrage. La consommation de MAIN D'OEUVRE n'est pas ici : elle est DEDUITE de la cadence et de l'effectif d'atelier du planning (h/unite = 8 x compagnons / cadence). La saisir en plus laisserait le metre et le planning se contredire sans que rien ne le signale.",
+   "pertes_beton_pct": {
+    "valeur": 5,
+    "fourchette": [
+     3,
+     8
+    ],
+    "note": "surconsommation de beton : fonds de benne, tolerances de coffrage, reprises"
+   },
+   "acier_kg_par_m3": {
+    "semelles": {
+     "valeur": 60,
+     "fourchette": [
+      45,
+      80
+     ]
+    },
+    "radier": {
+     "valeur": 90,
+     "fourchette": [
+      70,
+      120
+     ]
+    },
+    "dalle_pleine": {
+     "valeur": 90,
+     "fourchette": [
+      70,
+      120
+     ]
+    },
+    "voile": {
+     "valeur": 75,
+     "fourchette": [
+      55,
+      100
+     ]
+    },
+    "poteau": {
+     "valeur": 130,
+     "fourchette": [
+      100,
+      180
+     ],
+     "note": "un poteau de 9 m est l'element le plus ferraille du gros oeuvre au m3"
+    }
+   },
+   "coffrage_m2_par_unite": {
+    "semelle_par_m3": {
+     "valeur": 2.5,
+     "fourchette": [
+      1.8,
+      3.4
+     ],
+     "note": "coffrage bois perdu ou faible rotation"
+    },
+    "radier_par_m2": {
+     "valeur": 0.15,
+     "fourchette": [
+      0.08,
+      0.25
+     ],
+     "note": "rives seules : un radier est coule sur beton de proprete, sans sous-face a coffrer"
+    },
+    "voile_par_m2": {
+     "valeur": 2.0,
+     "fourchette": [
+      2.0,
+      2.0
+     ],
+     "note": "deux faces de banche par m2 de voile — ce n'est pas une hypothese, c'est une geometrie"
+    },
+    "dalle_par_m2": {
+     "valeur": 1.179,
+     "fourchette": [
+      1.1,
+      1.3
+     ],
+     "note": "MESURE sur la geometrie du plancher au module TV (sous-face + joues + fonds de poutres + rives), pas pose ici"
+    }
+   },
+   "etaiement_m2_par_m2_dalle": {
+    "valeur": 1.0,
+    "fourchette": [
+     1.0,
+     1.0
+    ],
+    "note": "une surface etayee par surface coulee"
+   },
+   "vibreur_j_par_m3": {
+    "valeur": 0.004,
+    "fourchette": [
+     0.002,
+     0.008
+    ]
+   },
+   "pompe_j_par_m3": {
+    "valeur": 0.004,
+    "fourchette": [
+     0.002,
+     0.008
+    ],
+    "note": "une journee de pompe pour environ 250 m3"
+   }
+  },
+  "sous_details": {
+   "_role": "Un poste de bordereau par tache du module D2 : le bordereau est le planning vu du cote de l'argent. « conversion » est le nombre d'unites de CADENCE par unite de BORDEREAU — 1 quand les deux coincident.",
+   "_familles": "Le type d'un poste suit la FAMILLE de sa duree au module D2 : une tache calculee donne un prix unitaire, une tache declaree un forfait, une tache imposee une fourniture sans main d'oeuvre de chantier.",
+   "TERR": {
+    "type": "unitaire",
+    "unite": "m3",
+    "metier": "terrassement",
+    "cadence": "terrassement_m3_j_atelier",
+    "conversion": 1.0,
+    "note": "Le m3 du bordereau est un m3 EN PLACE ; l'evacuation se paie au m3 FOISONNE. Le facteur de foisonnement est le pont entre les deux unites, et l'oublier fait perdre 25 % du poste transport."
+   },
+   "FOUI": {
+    "type": "unitaire",
+    "unite": "m3",
+    "metier": "terrassement",
+    "cadence": "terrassement_m3_j_atelier",
+    "conversion": 1.0
+   },
+   "FOND": {
+    "type": "unitaire",
+    "unite": "m3",
+    "metier": "fondations",
+    "cadence": "semelle_unites_j_atelier",
+    "conversion": 0.4,
+    "note": "La cadence est en UNITES par jour, le poste en m3 : la conversion est le nombre de semelles par m3, soit 1 / semelle_m3_par_poteau = 0,4. C'est la que les sous-details se trompent le plus souvent — diviser par la mauvaise unite donne un prix faux d'un facteur egal au volume unitaire."
+   },
+   "RADT": {
+    "type": "unitaire",
+    "unite": "m2",
+    "metier": "fondations",
+    "cadence": "dalle_pleine_m2_j_atelier",
+    "conversion": 1.0
+   },
+   "VOIL": {
+    "type": "unitaire",
+    "unite": "m2",
+    "metier": "voiles",
+    "cadence": "voile_m2_j_atelier",
+    "conversion": 1.0,
+    "note": "Deux faces de banche par m2 de voile : le coffrage, et non le beton, est le poste dominant."
+   },
+   "PHNT": {
+    "type": "unitaire",
+    "unite": "m2",
+    "metier": "fondations",
+    "cadence": "dalle_pleine_m2_j_atelier",
+    "conversion": 1.0
+   },
+   "POTR": {
+    "type": "unitaire",
+    "unite": "u",
+    "metier": "poteaux",
+    "cadence": "poteau_unites_j_atelier",
+    "conversion": 1.0
+   },
+   "MEZZ": {
+    "type": "unitaire_herite_TV",
+    "unite": "m2",
+    "note": "Pas de sous-detail propre : les consommations VIENNENT du metre de la zone au module TV (beton, acier et coffrage mesures sur la geometrie) et les heures de sa chaine de cadences. D1 ne refait pas le metre du TV : il le re-PRIX."
+   },
+   "CHAP": {
+    "type": "unitaire",
+    "unite": "kg",
+    "metier": "charpente",
+    "cadence": "charpente_t_j_atelier",
+    "conversion": 0.001,
+    "note": "Fourniture nulle : l'acier est paye au poste CHFA. Ici on ne paie que le pre-assemblage et le levage — et la grue mobile en est le poste dominant."
+   },
+   "CHLV": {
+    "type": "unitaire",
+    "unite": "kg",
+    "metier": "charpente",
+    "cadence": "charpente_t_j_atelier",
+    "conversion": 0.001,
+    "note": "Meme prix unitaire que CHAP : c'est la meme operation. Ce qui differe est la contrainte de consignation, donc le cout d'un RETARD, pas le cout du kg."
+   },
+   "COUV": {
+    "type": "unitaire",
+    "unite": "m2",
+    "metier": "couverture",
+    "cadence": "couverture_m2_j_atelier",
+    "conversion": 1.0
+   },
+   "FACA": {
+    "type": "unitaire",
+    "unite": "m2",
+    "metier": "facade",
+    "cadence": "facade_m2_j_atelier",
+    "conversion": 1.0,
+    "note": "Poste le plus cher du bordereau au m2 et le plus sensible a sa fourchette de fourniture : de 1 600 a 3 600 MAD/m2, soit plus du double."
+   },
+   "CHET": {
+    "type": "fourniture_forfait",
+    "unite": "ens"
+   },
+   "CHFA": {
+    "type": "fourniture_unitaire",
+    "unite": "kg",
+    "note": "Fabrication en atelier : la main d'oeuvre existe, mais elle est DANS le prix du fournisseur, pas dans l'effectif du chantier. La compter aux deux endroits est l'erreur classique du sous-detail d'un lot sous-traite."
+   },
+   "SECH": {
+    "type": "fourniture_forfait",
+    "unite": "ens",
+    "note": "Zero dirham, et pourtant une duree imposee sur le chemin critique. Le poste qui prouve qu'un planning et un bordereau ne mesurent pas la meme chose."
+   },
+   "INST": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "GRUE": {
+    "type": "forfait",
+    "unite": "ens",
+    "note": "Transport, montage, lestage, essais et demontage. La LOCATION n'est pas ici : elle est indexee sur la duree du chantier, pas sur cette tache."
+   },
+   "TOPO": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "SOUT": {
+    "type": "forfait",
+    "unite": "ens",
+    "note": "Sous-traite : le forfait porte la fourniture ET la main d'oeuvre du sous-traitant. Aucune heure n'en est deduite pour le chantier."
+   },
+   "ETAN": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "NOYX": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "MARQ": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "PSOU": {
+    "type": "forfait",
+    "unite": "ens",
+    "note": "Travaux sous consignation : le forfait porte la sujetion de travail en fenetre, qui n'est pas un supplement de quantite mais un supplement de prix."
+   },
+   "QUAI": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "SECO": {
+    "type": "forfait",
+    "unite": "ens",
+    "note": "Second oeuvre et lots techniques : le poste le plus lourd du bordereau, et le plus mal connu a ce stade. Plafonne a 10 % du cours (§ 2.2), pas du budget."
+   },
+   "ESSA": {
+    "type": "forfait",
+    "unite": "ens"
+   },
+   "RECE": {
+    "type": "forfait",
+    "unite": "ens"
+   }
+  },
+  "forfaits_MAD": {
+   "_role": "Montants forfaitaires des postes a duree declaree ou imposee. Hors main d'oeuvre de chantier pour les postes forfaitaires de l'entreprise : elle est deduite de la duree et de l'effectif du planning. Pour les postes sous-traites, le forfait est tout compris et aucune heure n'en est deduite.",
+   "INST": {
+    "valeur": 620000,
+    "fourchette": [
+     420000,
+     900000
+    ],
+    "note": "clotures, acces, reseaux provisoires, base-vie installee, aires de stockage"
+   },
+   "GRUE": {
+    "valeur": 240000,
+    "fourchette": [
+     160000,
+     350000
+    ],
+    "note": "transport, montage, lestage, essais, demontage"
+   },
+   "TOPO": {
+    "valeur": 85000,
+    "fourchette": [
+     55000,
+     130000
+    ],
+    "note": "materiel de releve, bornage, plan d'implantation"
+   },
+   "SOUT": {
+    "valeur": 3800000,
+    "fourchette": [
+     2500000,
+     5500000
+    ],
+    "note": "berlinoise et tirants — SOUS-TRAITE, tout compris"
+   },
+   "ETAN": {
+    "valeur": 1450000,
+    "fourchette": [
+     950000,
+     2100000
+    ],
+    "note": "etancheite du niveau technique, drainage, remblais"
+   },
+   "NOYX": {
+    "valeur": 2900000,
+    "fourchette": [
+     2000000,
+     4200000
+    ],
+    "note": "noyaux beton, escaliers, reservations d'escalators"
+   },
+   "MARQ": {
+    "valeur": 1900000,
+    "fourchette": [
+     1200000,
+     2900000
+    ],
+    "note": "charpente, couverture et sous-face de la marquise"
+   },
+   "PSOU": {
+    "valeur": 2600000,
+    "fourchette": [
+     1700000,
+     3900000
+    ],
+    "note": "raccordement du passage souterrain sous consignation"
+   },
+   "QUAI": {
+    "valeur": 4200000,
+    "fourchette": [
+     2800000,
+     6200000
+    ],
+    "note": "bordures, revetements, mobilier, signaletique, abris"
+   },
+   "SECO": {
+    "valeur": 14500000,
+    "fourchette": [
+     9000000,
+     22000000
+    ],
+    "note": "cloisons, plafonds, sols, CVC, electricite, courants faibles, plomberie, ascenseurs, escalators — SOUS-TRAITE, tout compris"
+   },
+   "ESSA": {
+    "valeur": 680000,
+    "fourchette": [
+     420000,
+     1100000
+    ],
+    "note": "essais, reglages, mise en service, formation"
+   },
+   "RECE": {
+    "valeur": 190000,
+    "fourchette": [
+     110000,
+     300000
+    ],
+    "note": "levee de reserves, DOE, dossier de recolement"
+   },
+   "CHET": {
+    "valeur": 1350000,
+    "fourchette": [
+     900000,
+     2000000
+    ],
+    "note": "etudes d'execution de la charpente, plans d'atelier, notes, visa. Ne consomme aucune heure de chantier et occupe pourtant le chemin critique."
+   },
+   "SECH": {
+    "valeur": 0,
+    "fourchette": [
+     0,
+     0
+    ],
+    "note": "zero : un sechage ne se paie pas, il se subit"
+   },
+   "_sous_traites": [
+    "SOUT",
+    "SECO"
+   ]
+  },
+  "ratios_de_controle": {
+   "_role": "Ratios V3 de verification d'ordre de grandeur (§ 3.3). Un ratio ne valide jamais un chiffrage : il signale un chiffrage a reprendre.",
+   "part_main_oeuvre_gros_oeuvre_pct": {
+    "valeur": 20,
+    "fourchette": [
+     15,
+     30
+    ],
+    "note": "part du debourse sec d'un lot de GROS OEUVRE. Appliquer cette fourchette a un bordereau qui porte aussi de la fourniture (charpente, facade, couverture, lots techniques) produit une fausse alerte : c'est exactement ce qui est arrive au module TV, et la dette n° 10 de STATE.md vient de la."
+   },
+   "cout_MAD_m2_batiment_voyageurs": {
+    "valeur": 11000,
+    "fourchette": [
+     7000,
+     16000
+    ],
+    "note": "tous corps d'etat, hors VRD et hors interfaces ferroviaires"
+   },
+   "part_gros_oeuvre_pct": {
+    "valeur": 30,
+    "fourchette": [
+     22,
+     40
+    ],
+    "note": "du cout tous corps d'etat"
+   },
+   "acier_kg_par_m3_gros_oeuvre": {
+    "valeur": 95,
+    "fourchette": [
+     70,
+     130
+    ]
+   },
+   "productivites_par_compagnon_et_par_jour": {
+    "_role": "Ce qu'un compagnon pose en une journee de 8 h, metier par metier. Ces fourchettes ne servent pas a calculer : elles servent a CONTROLER les cadences d'atelier du planning, en les retournant en productivites individuelles. C'est l'outil qui localise la dette n° 10 de STATE.md, la ou la part de main d'oeuvre globale ne faisait que la signaler.",
+    "ferraillage_kg": {
+     "valeur": 150,
+     "fourchette": [
+      100,
+      250
+     ],
+     "note": "faconnage exclu, pose et ligature comprises"
+    },
+    "coffrage_m2": {
+     "valeur": 18,
+     "fourchette": [
+      12,
+      28
+     ],
+     "note": "banches ou tables, pose et depose"
+    },
+    "betonnage_m3": {
+     "valeur": 12,
+     "fourchette": [
+      8,
+      20
+     ],
+     "note": "mise en oeuvre, vibration, surfacage"
+    },
+    "terrassement_m3": {
+     "valeur": 110,
+     "fourchette": [
+      70,
+      180
+     ],
+     "note": "conduite d'engin et aide au sol"
+    }
+   }
+  },
+  "contrat": {
+   "_role": "Mecanismes de paiement. AUCUNE de ces valeurs n'est une regle : toutes se lisent dans le CPS du marche, qui prime (§ 3.1). Elles sont posees en V3 pour faire tourner l'exemple, et le module le redit a chaque usage.",
+   "avance_pct": {
+    "valeur": 10,
+    "fourchette": [
+     0,
+     20
+    ],
+    "note": "avance forfaitaire, remboursee par retenue sur les situations"
+   },
+   "avance_remboursement_entre_avancement_pct": [
+    20,
+    80
+   ],
+   "_avance_note": "l'avance se rembourse par prelevement progressif entre ces deux taux d'avancement des travaux",
+   "retenue_de_garantie_pct": {
+    "valeur": 7,
+    "fourchette": [
+     5,
+     10
+    ],
+    "note": "retenue sur chaque situation, plafonnee"
+   },
+   "retenue_plafond_pct_du_marche": {
+    "valeur": 7,
+    "fourchette": [
+     5,
+     10
+    ]
+   },
+   "cautionnement_definitif_pct": {
+    "valeur": 3,
+    "fourchette": [
+     2,
+     5
+    ]
+   },
+   "delai_de_paiement_j": {
+    "valeur": 60,
+    "fourchette": [
+     30,
+     90
+    ],
+    "note": "du depot de la situation a l'encaissement"
+   },
+   "periodicite_situations": "mensuelle",
+   "penalite_retard_pour_mille_par_j": {
+    "valeur": 1.0,
+    "fourchette": [
+     0.5,
+     2.0
+    ],
+    "note": "pour mille du montant du marche, par jour de retard"
+   },
+   "penalite_plafond_pct": {
+    "valeur": 10,
+    "fourchette": [
+     5,
+     10
+    ]
+   },
+   "revision_des_prix": {
+    "formule": "P = P0 x (a + b x I/I0 + c x J/J0)",
+    "part_fixe_a": {
+     "valeur": 0.15,
+     "fourchette": [
+      0.1,
+      0.2
+     ],
+     "note": "part non revisable"
+    },
+    "part_b_index_batiment": {
+     "valeur": 0.6,
+     "fourchette": [
+      0.5,
+      0.7
+     ]
+    },
+    "part_c_index_acier": {
+     "valeur": 0.25,
+     "fourchette": [
+      0.15,
+      0.35
+     ]
+    },
+    "I_sur_I0": {
+     "valeur": 1.062,
+     "fourchette": [
+      1.0,
+      1.15
+     ],
+     "note": "index batiment du mois de la situation, rapporte au mois de base du marche"
+    },
+    "J_sur_J0": {
+     "valeur": 1.118,
+     "fourchette": [
+      1.0,
+      1.3
+     ],
+     "note": "index acier — plus volatil que l'index batiment"
+    },
+    "_controle": "a + b + c = 1. C'est la premiere chose a verifier dans un CPS : une somme differente de 1 fausse toutes les revisions du marche."
+   }
+  },
+  "situation_exemple": {
+   "_role": "Situation mensuelle n° 7, au meme instant d'arret que le suivi du module TV.",
+   "numero": 7,
+   "mois_ecoules": 7,
+   "avancement_declare_pct": {
+    "INST": 100,
+    "GRUE": 100,
+    "TOPO": 100,
+    "TERR": 100,
+    "FOUI": 100,
+    "SOUT": 100,
+    "FOND": 100,
+    "RADT": 100,
+    "VOIL": 100,
+    "PHNT": 85,
+    "ETAN": 40,
+    "POTR": 60,
+    "MEZZ": 25,
+    "NOYX": 15,
+    "CHET": 100,
+    "CHFA": 70,
+    "CHAP": 0,
+    "CHLV": 0,
+    "COUV": 0,
+    "FACA": 0,
+    "MARQ": 0,
+    "PSOU": 0,
+    "QUAI": 0,
+    "SECH": 0,
+    "SECO": 0,
+    "ESSA": 0,
+    "RECE": 0
+   },
+   "ecart_attachement": {
+    "poste": "FOUI",
+    "ecart_pct": {
+     "valeur": 9,
+     "fourchette": [
+      0,
+      20
+     ],
+     "note": "constat contradictoire : sur-profondeur de forme imposee par le fond de fouille rencontre"
+    },
+    "lecon": "La quantite payee est celle de l'attachement contradictoire, pas celle du metre d'etude. Un metre juste qui n'est pas attache ne se paie pas."
+   }
   }
  },
  "planning": {

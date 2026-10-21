@@ -416,3 +416,34 @@ mesure honnête de ce que vaut la date.
 
 **Impact.** `variante_aux_bornes` et `fourchette_de_date` dans `calc/planification.py` ; le même
 traitement est attendu de D1 sur les coûts et de D4 sur les prévisions à terminaison.
+
+## D-037 — 21/10/2026 — Un ratio de contrôle ne vaut que sur son domaine de définition
+
+**Décision.** Tout ratio de vérification publié par le cours nomme la **base** sur laquelle il est
+calculé, et le calcul **refuse de rendre un verdict** sur une base où le ratio n'est pas défini.
+
+**Raison.** La dette n° 10 vient d'une part de main-d'œuvre comparée à une fourchette de gros œuvre
+alors qu'elle était calculée sur un bordereau entier — qui porte des fournitures sans heures et des
+forfaits dont les heures existent sans être visibles. Le module D1 le montre : sur la bonne base, la
+part vaut 7,8 % au lieu de 1,0 %. L'alerte était réelle, la base ne l'était pas.
+
+**Impact.** `controle_ratios` dans `calc/prix.py` porte un champ `ratio_defini_sur_cette_base`, et un
+test vérifie qu'une base non définie ne peut jamais être déclarée « dans la fourchette ». La règle
+s'applique à D4 (indices de performance) et à D7 (consolidation multi-sites).
+
+## D-038 — 21/10/2026 — La dette n° 10 est chiffrée, et elle n'est pas soldée
+
+**Décision.** Les cadences V3 du cours restent en l'état pour la v1, et D1 publie leur **facteur de
+recalage** poste par poste au lieu de les corriger en silence.
+
+**Raison.** Retourner chaque cadence d'atelier en productivité par compagnon — kilos d'acier posés,
+m² de coffrage, m³ de béton par homme et par jour — donne un facteur moyen de **×2,52**, dans le
+facteur 2 à 3 soupçonné par la tranche verticale, obtenu par un chemin entièrement indépendant. Mais
+les postes n'en sortent pas du même côté : le radier est à ×4,25, les semelles à ×0,78. Corriger par
+un facteur global écraserait cette information ; corriger poste par poste reviendrait à inventer des
+cadences que rien n'étaye mieux que les précédentes.
+
+**Impact.** `variante_recalee` publie ce que deviendraient durée (+59 %), déboursé (+8 %) et part de
+main-d'œuvre (7,8 → 13,1 %) si l'on recalait. Même recalée, la part reste sous la fourchette : le
+recalage explique l'essentiel de l'écart, pas tout. Seuls des attachements réels trancheraient, et
+le cours n'en a aucun. C'est écrit dans le module, pas en note de bas de page.

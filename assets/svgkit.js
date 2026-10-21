@@ -754,6 +754,137 @@
       legendeImplicite: etapes.map((e, i) => ({ n: i + 1, t: String(e) })) };
   }
 
+  /** Cascade : comment un prix unitaire se construit, poste par poste.
+      Les barres « ajout » s'empilent depuis le cumul precedent ; les barres « total »
+      repartent du sol. Le dessin ne calcule rien : les montants viennent de calc/. */
+  function cascade(etapes, o = {}) {
+    const L = o.largeur || 700, H = o.hauteur || 300;
+    const cumuls = [];
+    let c = 0;
+    for (const e of etapes) {
+      if (e.type === "total") { cumuls.push({ bas: 0, haut: e.montant }); c = e.montant; }
+      else { cumuls.push({ bas: c, haut: c + e.montant }); c += e.montant; }
+    }
+    const ymax = Math.max(...cumuls.map((x) => x.haut)) * 1.12;
+    const r = repere({ largeur: L, hauteur: H, marge: 52, margeBas: 58, libre: true,
+      xmin: 0, xmax: etapes.length, ymin: 0, ymax });
+    let g = "";
+    const pasY = Math.pow(10, Math.floor(Math.log10(ymax))) / 2;
+    for (let v = 0; v <= ymax; v += pasY) {
+      g += ligne(r.x(0), r.y(v), r.x(etapes.length), r.y(v), { couleur: v ? "#eceee9" : "#14181d", ep: 1 });
+      g += texte(r.x(0) - 8, r.y(v), String(Math.round(v)),
+        { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    }
+    const l = (r.x(1) - r.x(0)) * .68;
+    etapes.forEach((e, i) => {
+      const { bas, haut } = cumuls[i];
+      const total = e.type === "total";
+      const x = r.x(i) + (r.x(1) - r.x(0) - l) / 2;
+      g += rect(x, r.y(haut), l, Math.max(1, r.y(bas) - r.y(haut)),
+        { remplissage: total ? "#41607d" : "#9fb3c4", couleur: total ? "#2b4256" : "none",
+          ep: total ? 1.2 : 0, rayon: 2 });
+      g += texte(x + l / 2, r.y(haut) - 6, String(e.montant).replace(".", ","),
+        { taille: 9.5, mono: 1, ancre: "middle", couleur: total ? "#2b4256" : "#3f4852" });
+      // libelle sous l'axe, replie sur deux lignes si besoin
+      const mots = String(e.libelle).split(" ");
+      let ligneTxt = "", lignes = [];
+      for (const m of mots) {
+        if ((ligneTxt + " " + m).trim().length > 14) { lignes.push(ligneTxt.trim()); ligneTxt = m; }
+        else ligneTxt += " " + m;
+      }
+      lignes.push(ligneTxt.trim());
+      lignes.slice(0, 2).forEach((t, k) => {
+        g += texte(x + l / 2, r.y(0) + 14 + k * 11, t,
+          { taille: 9, ancre: "middle", couleur: total ? "#2b4256" : "#6b7682", gras: total ? 1 : 0 });
+      });
+      if (i < etapes.length - 1 && !total)
+        g += ligne(x + l, r.y(haut), r.x(i + 1) + (r.x(1) - r.x(0) - l) / 2, r.y(haut),
+          { couleur: "#c4c7c0", ep: 1, tirets: "3 3" });
+    });
+    g += texte(r.x(0) + 2, r.y(ymax) + 10, o.unite || "MAD", { taille: 9, couleur: "#6b7682" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Barres horizontales triees, avec une bande de reference optionnelle.
+      Sert aux decompositions par lot et aux ratios compares a une fourchette. */
+  function barres(items, o = {}) {
+    const L = o.largeur || 700, lig = 26;
+    const lab = Math.min(300, Math.max(120,
+      Math.round(Math.max(...items.map((x) => String(x.libelle).length)) * 6.1) + 14));
+    const H = 40 + items.length * lig;
+    const vmax = Math.max(...items.map((x) => x.valeur), ...(o.bande || [0]));
+    const x0 = lab, x1 = L - 70;
+    const X = (v) => ech(x0 + (v / (vmax * 1.08)) * (x1 - x0));
+    let g = "";
+    if (o.bande) {
+      g += rect(X(o.bande[0]), 24, X(o.bande[1]) - X(o.bande[0]), H - 42,
+        { remplissage: "#e7ecdf", couleur: "none", ep: 0 });
+      g += texte((X(o.bande[0]) + X(o.bande[1])) / 2, 18,
+        o.libelle_bande || `${o.bande[0]} à ${o.bande[1]}`,
+        { taille: 9, mono: 1, ancre: "middle", couleur: "#5d6b3a" });
+    }
+    items.forEach((it, i) => {
+      const y = 28 + i * lig;
+      const hors = o.bande && (it.valeur < o.bande[0] || it.valeur > o.bande[1]);
+      g += texte(lab - 10, y + 9, String(it.libelle), { taille: 10.5, ancre: "end" });
+      g += rect(x0, y, Math.max(2, X(it.valeur) - x0), 14,
+        { remplissage: hors ? "#8c3b2e" : "#41607d", couleur: "none", ep: 0, rayon: 2 });
+      const txt = it.part != null
+        ? `${String(it.valeur).replace(".", ",")} · ${String(it.part).replace(".", ",")} %`
+        : String(it.valeur).replace(".", ",");
+      g += texte(X(it.valeur) + 6, y + 9, txt,
+        { taille: 9.5, mono: 1, base: "middle", couleur: "#6b7682" });
+    });
+    g += ligne(x0, 24, x0, H - 18, { couleur: "#14181d", ep: 1 });
+    g += texte(L - 6, H - 6, o.unite || "", { taille: 9, ancre: "end", couleur: "#6b7682" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
+  /** Decaissements contre encaissements, et l'ecart maximal cote : le besoin de
+      tresorerie. Les deux courbes sont des cumuls en MAD, jamais des pourcentages. */
+  function tresorerie(z, o = {}) {
+    const pts = Array.isArray(z) ? z : z.points;
+    const L = o.largeur || 700, H = o.hauteur || 300;
+    const jmax = Math.max(...pts.map((p) => p.j));
+    const vmax = Math.max(...pts.map((p) => Math.max(p.decaisse_MAD, p.encaisse_MAD))) * 1.1;
+    const r = repere({ largeur: L, hauteur: H, marge: 60, margeDroite: 20, libre: true,
+      xmin: 0, xmax: jmax, ymin: 0, ymax: vmax });
+    let g = "";
+    const pasY = Math.pow(10, Math.floor(Math.log10(vmax)));
+    for (let v = 0; v <= vmax; v += pasY) {
+      g += ligne(r.x(0), r.y(v), r.x(jmax), r.y(v), { couleur: v ? "#eceee9" : "#14181d", ep: 1 });
+      g += texte(r.x(0) - 8, r.y(v), `${Math.round(v / 1e6)} M`,
+        { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    }
+    // l'aire entre les deux courbes : c'est elle, le besoin
+    const haut = pts.map((p) => `${ech(r.x(p.j))} ${ech(r.y(p.decaisse_MAD))}`).join(" L");
+    const bas = pts.slice().reverse().map((p) => `${ech(r.x(p.j))} ${ech(r.y(p.encaisse_MAD))}`).join(" L");
+    g += chemin(`M${haut} L${bas} Z`, { remplissage: "#f3e4e0", couleur: "none", ep: 0 });
+    const trace = (cle, coul, tirets) => chemin(
+      pts.map((p, i) => `${i ? "L" : "M"}${ech(r.x(p.j))} ${ech(r.y(p[cle]))}`).join(" "),
+      { couleur: coul, ep: 2, tirets, remplissage: "none", jointure: "round" });
+    g += trace("decaisse_MAD", "#8c3b2e", null);
+    g += trace("encaisse_MAD", "#41607d", "6 4");
+    if (o.besoin_max != null && o.j_max != null) {
+      const p = pts.reduce((a, b) => (Math.abs(b.j - o.j_max) < Math.abs(a.j - o.j_max) ? b : a));
+      g += ligne(r.x(p.j), r.y(p.decaisse_MAD), r.x(p.j), r.y(p.encaisse_MAD),
+        { couleur: "#8c3b2e", ep: 1.6 });
+      g += texte(r.x(p.j) + 8, (r.y(p.decaisse_MAD) + r.y(p.encaisse_MAD)) / 2,
+        `besoin ${(o.besoin_max / 1e6).toFixed(1).replace(".", ",")} M`,
+        { taille: 10, mono: 1, base: "middle", couleur: "#8c3b2e" });
+    }
+    const pasJ = [10, 20, 25, 50, 100].find((x) => jmax / x <= 14) || 100;
+    for (let j = 0; j <= jmax; j += pasJ)
+      g += texte(r.x(j), r.y(0) + 16, String(j),
+        { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    g += texte(L / 2, H - 22, "jours ouvrés", { taille: 10, ancre: "middle", couleur: "#6b7682" });
+    g += rect(r.x(0) + 4, 10, 16, 3, { remplissage: "#8c3b2e", couleur: "none", ep: 0 });
+    g += texte(r.x(0) + 26, 15, "décaissé (déboursé)", { taille: 10, couleur: "#3f4852" });
+    g += ligne(r.x(0) + 170, 11.5, r.x(0) + 186, 11.5, { couleur: "#41607d", ep: 2, tirets: "6 4" });
+    g += texte(r.x(0) + 192, 15, "encaissé (situations payées)", { taille: 10, couleur: "#3f4852" });
+    return { svg: g, largeur: L, hauteur: H };
+  }
+
   /* Options acceptees par chaque generateur. Le build ECHOUE sur une option inconnue :
      la legende d'une figure de D2 annoncait une serie que le generateur ne connaissait
      pas, l'option etait ignoree en silence, et la figure ne montrait pas ce que la
@@ -772,11 +903,15 @@
     wbs: ["racine", "couleurs"],
     reseau: ["rangs"],
     ligneEquilibre: ["zones"],
+    cascade: [],
+    barres: ["bande", "libelle_bande"],
+    tresorerie: ["besoin_max", "j_max"],
   };
 
   const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
     coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence,
-    planZones, rotation, wbs, reseau, ligneEquilibre, MOTIFS, ech,
+    planZones, rotation, wbs, reseau, ligneEquilibre, cascade, barres, tresorerie,
+    MOTIFS, ech,
     OPTIONS, OPTIONS_COMMUNES };
 
   if (typeof module !== "undefined" && module.exports) module.exports = API;
