@@ -805,38 +805,58 @@
     return { svg: g, largeur: L, hauteur: H };
   }
 
-  /** Barres horizontales triees, avec une bande de reference optionnelle.
-      Sert aux decompositions par lot et aux ratios compares a une fourchette. */
+  /** Barres horizontales, avec une bande de reference optionnelle.
+      Gere les valeurs NEGATIVES : l'axe porte alors un zero place a sa vraie abscisse
+      et les barres partent de lui, a gauche ou a droite. Une version precedente
+      ramenait tout a un axe commencant a zero, et dessinait cinq ecarts negatifs comme
+      cinq traits de deux pixels — une figure qui ne montrait pas ce qu'elle mesurait. */
   function barres(items, o = {}) {
     const L = o.largeur || 700, lig = 26;
     const lab = Math.min(300, Math.max(120,
       Math.round(Math.max(...items.map((x) => String(x.libelle).length)) * 6.1) + 14));
-    const H = 40 + items.length * lig;
-    const vmax = Math.max(...items.map((x) => x.valeur), ...(o.bande || [0]));
-    const x0 = lab, x1 = L - 70;
-    const X = (v) => ech(x0 + (v / (vmax * 1.08)) * (x1 - x0));
+    const H = 44 + items.length * lig;
+    const vals = items.map((x) => x.valeur).concat(o.bande || []);
+    // `origine` permet de comparer des valeurs voisines (des indices autour de 1) :
+    // un axe qui part de zero les dessine toutes de la meme longueur, et la figure ne
+    // montre plus ce qu'elle compare. L'axe porte alors sa valeur d'origine en clair,
+    // sans quoi le lecteur croit lire des proportions.
+    const base = o.origine != null ? o.origine : 0;
+    const vmin = Math.min(base, ...vals), vmax = Math.max(base, ...vals);
+    const etendue = (vmax - vmin) || 1;
+    const x0 = lab, x1 = L - 74;
+    // marge de 8 % de chaque cote pour que l'etiquette de valeur tienne
+    const X = (v) => ech(x0 + ((v - vmin) / etendue * .92 + .04) * (x1 - x0));
+    const xZero = X(base);
     let g = "";
     if (o.bande) {
-      g += rect(X(o.bande[0]), 24, X(o.bande[1]) - X(o.bande[0]), H - 42,
+      const a = X(Math.max(vmin, o.bande[0])), b = X(Math.min(vmax, o.bande[1]));
+      g += rect(a, 26, Math.max(1, b - a), H - 46,
         { remplissage: "#e7ecdf", couleur: "none", ep: 0 });
-      g += texte((X(o.bande[0]) + X(o.bande[1])) / 2, 18,
-        o.libelle_bande || `${o.bande[0]} à ${o.bande[1]}`,
+      g += texte((a + b) / 2, 19, o.libelle_bande || `${o.bande[0]} à ${o.bande[1]}`,
         { taille: 9, mono: 1, ancre: "middle", couleur: "#5d6b3a" });
     }
     items.forEach((it, i) => {
-      const y = 28 + i * lig;
-      const hors = o.bande && (it.valeur < o.bande[0] || it.valeur > o.bande[1]);
+      const y = 30 + i * lig;
+      const v = Number(it.valeur);
+      const hors = o.bande && (v < o.bande[0] || v > o.bande[1]);
+      const xv = X(v);
+      const gauche = xv < xZero;
       g += texte(lab - 10, y + 9, String(it.libelle), { taille: 10.5, ancre: "end" });
-      g += rect(x0, y, Math.max(2, X(it.valeur) - x0), 14,
+      g += rect(Math.min(xZero, xv), y, Math.max(2, Math.abs(xv - xZero)), 14,
         { remplissage: hors ? "#8c3b2e" : "#41607d", couleur: "none", ep: 0, rayon: 2 });
       const txt = it.part != null
         ? `${String(it.valeur).replace(".", ",")} · ${String(it.part).replace(".", ",")} %`
         : String(it.valeur).replace(".", ",");
-      g += texte(X(it.valeur) + 6, y + 9, txt,
-        { taille: 9.5, mono: 1, base: "middle", couleur: "#6b7682" });
+      g += texte(gauche ? Math.min(xZero, xv) - 6 : xv + 6, y + 9, txt,
+        { taille: 9.5, mono: 1, base: "middle", ancre: gauche ? "end" : "start",
+          couleur: "#6b7682" });
     });
-    g += ligne(x0, 24, x0, H - 18, { couleur: "#14181d", ep: 1 });
-    g += texte(L - 6, H - 6, o.unite || "", { taille: 9, ancre: "end", couleur: "#6b7682" });
+    // l'axe est trace au ZERO, qui n'est pas toujours a gauche
+    g += ligne(xZero, 26, xZero, H - 20, { couleur: "#14181d", ep: 1 });
+    if (vmin < 0 || base !== 0)
+      g += texte(xZero, H - 8, String(base).replace(".", ","),
+        { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    g += texte(L - 6, H - 8, o.unite || "", { taille: 9, ancre: "end", couleur: "#6b7682" });
     return { svg: g, largeur: L, hauteur: H };
   }
 
@@ -904,7 +924,7 @@
     reseau: ["rangs"],
     ligneEquilibre: ["zones"],
     cascade: [],
-    barres: ["bande", "libelle_bande"],
+    barres: ["bande", "libelle_bande", "origine"],
     tresorerie: ["besoin_max", "j_max"],
   };
 

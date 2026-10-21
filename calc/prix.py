@@ -21,6 +21,7 @@ import json, math, pathlib, sys
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "calc"))
 import planification as pln                                    # noqa: E402
+from etat import avancement_planifie, trois_etats             # noqa: E402
 
 TOL_DEUX_VOIES_PCT = 20.0   # justifiee dans ecart_des_deux_voies()
 
@@ -625,7 +626,7 @@ def revision(d: dict, montant: float) -> dict:
             "part_de_la_revision_pct": round((k - 1) * 100, 2)}
 
 
-def situation(d: dict, bord: dict) -> dict:
+def situation(d: dict, bord: dict, declare: dict) -> dict:
     """Situation mensuelle : de l'avancement declare au net a payer.
 
     L'ordre des operations n'est pas decoratif : la revision porte sur les travaux, la
@@ -634,7 +635,11 @@ def situation(d: dict, bord: dict) -> dict:
     """
     ct = d["prix_unitaires_MAD"]["contrat"]
     se = d["prix_unitaires_MAD"]["situation_exemple"]
-    av = se["avancement_declare_pct"]
+    # L'avancement declare n'est PAS saisi ici : il vient de l'etat du chantier
+    # (calc/etat.py), partage avec le module de suivi. Saisi a part, il pouvait — et il
+    # l'a fait — decrire une date qui n'etait pas celle du planning : la situation
+    # annoncait sept mois ecoules pour un etat de chantier correspondant au deuxieme.
+    av = declare
     marche = bord["prix_de_vente_MAD"]
 
     lignes, cumul = [], 0.0
@@ -648,13 +653,14 @@ def situation(d: dict, bord: dict) -> dict:
                        "pu_MAD": p["pu_de_vente_MAD"], "montant_cumule_MAD": round(m, 2)})
     # les frais indexes sur la duree s'attachent au TEMPS ecoule, pas a un ouvrage
     fd = bord["frais_de_duree"]
-    part_temps = min(1.0, se["mois_ecoules"] / fd["duree_mois"])
+    mois = d["suivi_chantier"]["date_arret_j"] / d["prix_unitaires_MAD"]["ressources"]["jours_ouvres_par_mois"]
+    part_temps = min(1.0, mois / fd["duree_mois"])
     m_fd = fd["total_MAD"] * bord["coefficient_de_vente"] * part_temps
     cumul += m_fd
     lignes.append({"poste": "FRAIS-DUREE", "libelle": "Frais de chantier indexes sur la duree",
                    "unite": "mois", "quantite_marche": fd["duree_mois"],
                    "avancement_pct": round(part_temps * 100, 1),
-                   "quantite_attachee": se["mois_ecoules"],
+                   "quantite_attachee": round(mois, 2),
                    "pu_MAD": round(fd["cout_MAD_par_mois"] * bord["coefficient_de_vente"], 2),
                    "montant_cumule_MAD": round(m_fd, 2)})
 
@@ -671,10 +677,15 @@ def situation(d: dict, bord: dict) -> dict:
     net = revise - rg_plafonnee - rembourse + avance * 0.0   # l'avance a deja ete encaissee
     cal = pln.calendrier(fd["duree_j"], d["planning"]["calendrier"])
     return {
-        "numero": se["numero"], "mois_ecoules": se["mois_ecoules"], "lignes": lignes,
+        "numero": se["numero"], "mois_ecoules": round(mois, 2), "lignes": lignes,
         "montant_marche_MAD": marche,
         "travaux_cumules_MAD": round(cumul, 2),
-        "avancement_financier_pct": round(pct, 2),
+        "travaux_cumules_pct_du_marche": round(pct, 2),
+        "_note_avancement": (
+            "Ce pourcentage est celui des TRAVAUX factures, avant retenues. Le module D4 "
+            "publie un « avancement financier » different, qui est le NET encaissable : "
+            "les deux ne se confondent pas, et c'est la retenue de garantie plus le "
+            "remboursement d'avance qui les separent."),
         "revision": rev,
         "montant_revise_MAD": round(revise, 2),
         "retenue_de_garantie_MAD": round(rg, 2),
@@ -975,12 +986,16 @@ def tout_calculer(d: dict, duree_mezz: float, cadence_mezz: float, cycle_mezz: f
 
     bord = bordereau(d, q, t, res["duree"])
     dep = courbe_de_depense(bord, res, t)
+    durees_dates = {i: {**t[i], "debut_j": res["tot"][i][0], "fin_j": res["tot"][i][1]}
+                    for i in pln.NOMS}
+    etats = trois_etats(d, avancement_planifie(
+        seg, durees_dates, float(d["suivi_chantier"]["date_arret_j"])))
     ecart_ct = ecart_depense_travail(dep, cs)
     voie_b = voie_prix_poses(d, q)
     ecart = ecart_des_deux_voies(bord, voie_b)
     coh = coherence_cadences(d, q)
     tres = tresorerie(d, bord, dep)
-    sit = situation(d, bord)
+    sit = situation(d, bord, etats["declare"])
     retard = {str(j): cout_du_retard(d, bord, j) for j in (1, 21, 63)}
     ctrl = controle_ratios(d, bord, q)
     var = variante_recalee(d, q, t, res["duree"], coh["facteur_de_recalage_moyen"], duree_mezz)
@@ -992,7 +1007,8 @@ def tout_calculer(d: dict, duree_mezz: float, cadence_mezz: float, cycle_mezz: f
         "bordereau": {**bord, "par_poste": {x["poste"]: x for x in bord["postes"]}},
         "voie_prix_poses": voie_b, "ecart_des_deux_voies": ecart,
         "coherence_cadences": coh, "variante_recalee": var,
-        "situation": sit, "tresorerie": tres, "cout_du_retard": retard,
+        "situation": sit, "etats_a_la_date_d_arret": etats,
+        "tresorerie": tres, "cout_du_retard": retard,
         "courbe_de_depense": {k: v for k, v in dep.items() if k != "cumul"},
         "ecart_depense_travail": ecart_ct,
         "controle_ratios": ctrl,

@@ -447,3 +447,23 @@ cadences que rien n'étaye mieux que les précédentes.
 main-d'œuvre (7,8 → 13,1 %) si l'on recalait. Même recalée, la part reste sous la fourchette : le
 recalage explique l'essentiel de l'écart, pas tout. Seuls des attachements réels trancheraient, et
 le cours n'en a aucun. C'est écrit dans le module, pas en note de bas de page.
+
+## D-039 — 21/10/2026 — L'état d'avancement est partagé entre les modules, pas recalculé par chacun
+
+**Décision.** L'avancement d'un chantier à une date — planifié, constaté, déclaré — vit dans
+`calc/etat.py`, et les modules qui en ont besoin le lisent. Aucun ne le saisit.
+
+**Raison.** En écrivant D4, l'avancement déclaré de la situation de D1 s'est révélé incohérent avec
+le planning : il était saisi à la main dans `data/`, décrivait un état de chantier correspondant au
+2ᵉ mois, et la situation s'annonçait au 7ᵉ. Aucun contrôle ne pouvait le voir — les deux nombres
+étaient justes séparément. Pire, D4 allait viser une situation calculée sur un tableau d'avancement
+différent du sien : le montant retiré au visa n'aurait eu aucun rapport avec le montant déposé.
+
+**Impact.** `avancement_planifie` est dérivé des segments de travail de D2 ; `trois_etats` en déduit
+le constaté et le déclaré à partir des écarts déclarés dans `data/suivi_chantier`. La situation de
+D1 et le visa de D4 portent désormais sur le même tableau, et un test le vérifie. La date d'arrêt
+est unique et vit dans `suivi_chantier.date_arret_j`.
+
+**La leçon, pour les modules suivants** : quand deux modules ont besoin de la même grandeur d'état,
+la question n'est pas « comment la recalculer pareil ? » mais « où la mettre pour qu'elle n'existe
+qu'une fois ? ».

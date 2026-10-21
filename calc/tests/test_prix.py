@@ -170,10 +170,20 @@ verifie("la retenue reste sous son plafond",
 _cum = sum(l["montant_cumule_MAD"] for l in sit["lignes"])
 verifie("le cumul des lignes de situation est recalcule ici",
         abs(_cum - sit["travaux_cumules_MAD"]) < 1, f"{_cum:.0f} MAD")
-_av = P["situation_exemple"]["avancement_declare_pct"]
+_av = r["etats_a_la_date_d_arret"]["declare"]
 verifie("chaque ligne attache la quantite de l'avancement declare, pas celle du marche",
         all(abs(l["quantite_attachee"] - l["quantite_marche"] * _av[l["poste"]] / 100) < 0.02
             for l in sit["lignes"] if l["poste"] in _av))
+# L'avancement declare n'est plus saisi a la main : il vient de l'etat du chantier,
+# partage avec D4. Une version precedente le posait dans data/ et decrivait un etat
+# correspondant au 2e mois pour une situation annoncee au 7e.
+verifie("l'avancement declare vient de l'etat du chantier, pas d'une table saisie",
+        "avancement_declare_pct" not in P["situation_exemple"],
+        "la table saisie a ete retiree de data/")
+_j = d["suivi_chantier"]["date_arret_j"]
+verifie("la situation porte la date d'arret du suivi, et une seule",
+        abs(sit["mois_ecoules"] - _j / P["ressources"]["jours_ouvres_par_mois"]) < 0.01,
+        f"mois {sit['mois_ecoules']} pour j{_j}")
 
 # ---------------------------------------------------------------- tresorerie
 tr = r["tresorerie"]

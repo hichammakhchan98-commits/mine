@@ -1211,38 +1211,8 @@
    }
   },
   "situation_exemple": {
-   "_role": "Situation mensuelle n° 7, au meme instant d'arret que le suivi du module TV.",
-   "numero": 7,
-   "mois_ecoules": 7,
-   "avancement_declare_pct": {
-    "INST": 100,
-    "GRUE": 100,
-    "TOPO": 100,
-    "TERR": 100,
-    "FOUI": 100,
-    "SOUT": 100,
-    "FOND": 100,
-    "RADT": 100,
-    "VOIL": 100,
-    "PHNT": 85,
-    "ETAN": 40,
-    "POTR": 60,
-    "MEZZ": 25,
-    "NOYX": 15,
-    "CHET": 100,
-    "CHFA": 70,
-    "CHAP": 0,
-    "CHLV": 0,
-    "COUV": 0,
-    "FACA": 0,
-    "MARQ": 0,
-    "PSOU": 0,
-    "QUAI": 0,
-    "SECH": 0,
-    "SECO": 0,
-    "ESSA": 0,
-    "RECE": 0
-   },
+   "_role": "Situation mensuelle, a la date d'arret du bloc suivi_chantier. L'avancement declare n'est PAS ici : il est derive de l'etat du chantier (calc/etat.py), partage avec le module de suivi, pour que la situation deposee et le visa qui la controle portent sur le meme tableau.",
+   "numero": 4,
    "ecart_attachement": {
     "poste": "FOUI",
     "ecart_pct": {
@@ -1871,6 +1841,61 @@
     "decoffrage_j"
    ],
    "note": "La grue monte et descend les tables et les cages. Elle ne sert PAS au coulage : le beton arrive par pompe automotrice (materiel.pompe_a_beton). Si le chantier coulait a la benne, il faudrait ajouter betonnage_j ici — et la cadence changerait."
+  }
+ },
+ "suivi_chantier": {
+  "_role": "Ce que le chantier fait VRAIMENT a la date d'arret, et ce que l'entreprise en declare. Trois tableaux et deux ecarts : planifie -> constate est une derive de chantier, constate -> declare est un objet de visa. Le planifie n'est pas ici : il est DERIVE du reseau de D2, sans quoi le suivi et le planning pourraient se contredire.",
+  "niveau_preuve": "V3",
+  "date_arret_j": 84,
+  "_date_note": "84 jours ouvres, soit le 4e mois. Date choisie pour que plusieurs taches soient en cours, dont une sur le chemin critique : un instantane ou tout est fini ou rien commence n'apprend rien.",
+  "ecarts_constates_pts": {
+   "_role": "Derive REELLE du chantier, en points d'avancement, constatee contradictoirement. Negatif = en retard.",
+   "CHFA": -18,
+   "MEZZ": -6,
+   "ETAN": -12,
+   "NOYX": -8,
+   "PSOU": 4
+  },
+  "optimisme_declare_pts": {
+   "_role": "Ce que l'entreprise declare EN PLUS du constat dans sa situation. Ce n'est pas une derive : c'est ce que le visa de la maitrise d'oeuvre retire. Fabrique pour la demonstration.",
+   "MEZZ": 6,
+   "CHFA": 10,
+   "ETAN": 7
+  },
+  "cout_reel_MAD": {
+   "valeur": 23500000,
+   "fourchette": [
+    20000000,
+    27000000
+   ],
+   "note": "Cout reel impute a la date d'arret, issu des attachements et de la comptabilite analytique. FABRIQUE pour la demonstration, et sur une base explicite : l'ordre de grandeur de la valeur acquise a cette date, majore de quelques pour cent pour representer un chantier en legere difficulte. La valeur a ete posee AVANT de regarder le CPI ; une premiere version, posee au juge, rendait un CPI de 1,34 — un chantier 34 % sous budget, ce qui n'etait pas ce que la note annoncait. On publie ce que le calcul rend, et on corrige l'hypothese, pas la sortie."
+  },
+  "incertitude_sur_le_cout_reel": {
+   "valeur": 1,
+   "fourchette": [
+    1,
+    1
+   ],
+   "note": "un mois de frais de chantier mal impute — c'est l'ordre de grandeur du bruit d'une comptabilite analytique en cours de chantier, et il sert a dire a partir de quel avancement un CPI veut dire quelque chose"
+  },
+  "modification": {
+   "objet": "Renforcement des massifs de grue mobile pour le levage au-dessus de la voie, exige par l'exploitant apres examen de la note de levage",
+   "montant_travaux_MAD": {
+    "valeur": 1200000,
+    "fourchette": [
+     700000,
+     1900000
+    ]
+   },
+   "delai_supplementaire_j": {
+    "valeur": 15,
+    "fourchette": [
+     8,
+     25
+    ],
+    "note": "la tache touchee est sur le chemin critique : le delai se repercute entier"
+   },
+   "_nature": "ordre de service de la maitrise d'ouvrage — travaux supplementaires"
   }
  }
 }

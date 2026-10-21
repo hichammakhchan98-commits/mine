@@ -273,7 +273,7 @@ L'ordre des opérations n'est pas décoratif — inverser deux lignes change le 
 
 | Ligne | Montant |
 |---|---:|
-| Travaux cumulés ({{prix.situation.avancement_financier_pct::n1}} % du marché) | {{prix.situation.travaux_cumules_MAD::n0}} MAD |
+| Travaux cumulés ({{prix.situation.travaux_cumules_pct_du_marche::n1}} % du marché) | {{prix.situation.travaux_cumules_MAD::n0}} MAD |
 | Révision des prix (coefficient {{prix.situation.revision.coefficient::n4}}) | + {{prix.situation.revision.revision_MAD::n0}} MAD |
 | **Montant révisé** | **{{prix.situation.montant_revise_MAD::n0}} MAD** |
 | Retenue de garantie ({{gare.prix_unitaires_MAD.contrat.retenue_de_garantie_pct.valeur}} %) | − {{prix.situation.retenue_retenue_MAD::n0}} MAD |

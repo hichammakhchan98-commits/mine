@@ -134,3 +134,16 @@ H132;part de l'index bâtiment dans la révision;0,60;—;0,50 à 0,70;2026;D1;p
 H133;part de l'index acier dans la révision;0,25;—;0,15 à 0,35;2026;D1;part de l'index acier dans la révision
 H134;rapport de l'index bâtiment au mois de base;1,062;—;1,00 à 1,15;2026;D1;rapport de l'index bâtiment au mois de base
 H135;rapport de l'index acier au mois de base;1,118;—;1,00 à 1,30;2026;D1;plus volatil que l'index bâtiment
+H136;date d'arrêt du suivi;84 jours ouvrés;j;0 à 363;2026;D4;le 4e mois , date choisie pour que plusieurs tâches soient en cours, dont une sur le chemin critique
+H137;dérive constatée de la fabrication de charpente;−18 points;points;−30 à 0;2026;D4;retard du fournisseur, constaté contradictoirement
+H138;dérive constatée du plancher de mezzanine;−6 points;points;−15 à 0;2026;D4;une zone en retard de cycle
+H139;dérive constatée de l'étanchéité et des remblais;−12 points;points;−20 à 0;2026;D4;dérive constatée de l'étanchéité et des remblais
+H140;dérive constatée des noyaux et escaliers;−8 points;points;−15 à 0;2026;D4;dérive constatée des noyaux et escaliers
+H141;dérive constatée du passage souterrain;+4 points;points;0 à 10;2026;D4;en avance, et hors chemin critique : un gain de délai nul
+H142;optimisme déclaré sur le plancher de mezzanine;+6 points;points;0 à 10;2026;D4;ce que l'entreprise déclare au-delà du constat
+H143;optimisme déclaré sur la fabrication de charpente;+10 points;points;0 à 15;2026;D4;optimisme déclaré sur la fabrication de charpente
+H144;optimisme déclaré sur l'étanchéité;+7 points;points;0 à 12;2026;D4;optimisme déclaré sur l'étanchéité
+H145;coût réel imputé à la date d'arrêt;23500000 MAD;MAD;20000000 à 27000000;2026;D4;issu des attachements et de la comptabilité analytique , posé à partir de l'ordre de grandeur de la valeur acquise, majoré de quelques pour cent, AVANT de regarder le CPI
+H146;bruit sur le coût réel;1 mois de frais de chantier;mois;1 à 1;2026;D4;ordre de grandeur de l'imprécision d'une comptabilité analytique en cours de chantier , sert à dater la lisibilité du CPI
+H147;montant des travaux supplémentaires;1200000 MAD;MAD;700000 à 1900000;2026;D4;renforcement des massifs de grue mobile
+H148;délai supplémentaire de la modification;15 jours;j;8 à 25;2026;D4;la tâche touchée est sur le chemin critique : le délai se répercute entier
