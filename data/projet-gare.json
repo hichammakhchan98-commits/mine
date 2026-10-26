@@ -419,17 +419,17 @@
             "repere": "B2",
             "role": "chapeaux sur appuis intermediaires",
             "lit": "sup",
-            "dia_mm": 20,
+            "dia_mm": 25,
             "positions": [
               {
                 "de_m": 5.6,
                 "a_m": 10.4,
-                "n": 3
+                "n": 5
               },
               {
                 "de_m": 13.6,
                 "a_m": 18.4,
-                "n": 3
+                "n": 5
               }
             ],
             "retours_m": [],
@@ -440,7 +440,7 @@
             "repere": "B3",
             "role": "chapeaux sur appuis de rive",
             "lit": "sup",
-            "dia_mm": 16,
+            "dia_mm": 20,
             "positions": [
               {
                 "de_m": 0.0,
@@ -465,18 +465,30 @@
           "zones": [
             {
               "nom": "about et appuis (resserres)",
-              "longueur_cumulee_m": 9.0,
-              "espacement_cm": 10
+              "espacement_cm": 10,
+              "segments_m": [
+                1.5,
+                2.5,
+                2.5,
+                2.5
+              ],
+              "_lecture_segments": "about de rive, deux appuis intermediaires, about opposé"
             },
             {
               "nom": "travee courante",
-              "longueur_cumulee_m": 15.0,
-              "espacement_cm": 20
+              "espacement_cm": 20,
+              "segments_m": [
+                5.5,
+                5.0,
+                4.5
+              ]
             }
           ],
-          "_lecture": "Le resserrement pres des appuis est une disposition constructive : sa REGLE est reglementaire (⏸). Ce que le suivi controle, c'est que le pose est conforme au plan vise — pas que le plan est conforme a la norme, ce qui est le role du BET et du controle technique."
+          "_lecture": "Le resserrement pres des appuis est une disposition constructive : sa REGLE est reglementaire (⏸). Ce que le suivi controle, c'est que le pose est conforme au plan vise — pas que le plan est conforme a la norme, ce qui est le role du BET et du controle technique.",
+          "_comptage": "Un cadre se compte par SEGMENT continu : floor(l/s) + 1 sur chaque segment, parce que chaque segment a ses deux extremites. Totaliser les longueurs d'une zone puis ajouter un seul cadre sous-compte d'un cadre par segment — et les cadres manquants sont ceux des extremites, la ou ils servent le plus."
         },
-        "_elevation_note": "Chaque repere porte ses POSITIONS sur l'elevation : ou la barre commence, ou elle s'arrete, combien il y en a a cet endroit. Le nombre de la nomenclature et le dessin de l'elevation en sortent tous les deux (R1) : le controle n° 5 de la lecture — le plan dessine et la nomenclature chiffre la meme chose — est ainsi vrai par construction dans ce cours. Il ne l'est PAS sur un plan reel, et c'est pourquoi le module en fait un controle a la main."
+        "_elevation_note": "Chaque repere porte ses POSITIONS sur l'elevation : ou la barre commence, ou elle s'arrete, combien il y en a a cet endroit. Le nombre de la nomenclature et le dessin de l'elevation en sortent tous les deux (R1) : le controle n° 5 de la lecture — le plan dessine et la nomenclature chiffre la meme chose — est ainsi vrai par construction dans ce cours. Il ne l'est PAS sur un plan reel, et c'est pourquoi le module en fait un controle a la main.",
+        "_equilibre_des_lits": "Sur trois travees egales sous charge uniforme, le moment sur appui intermediaire est d'environ 1,25 fois celui de travee (0,100 qL2 contre 0,080) : l'acier SUPERIEUR sur appui doit donc depasser l'acier INFERIEUR de travee. C'est de la RDM pure, V1, et aucune norme n'est necessaire pour le dire. Une premiere version de ce plan fictif faisait l'inverse (13,4 cm2 sur appui contre 24,2 en travee) pendant que le module ecrivait « la logique se voit sans calcul, c'est la forme du moment ». Un plan fictif n'a pas a etre dimensionne ; il n'a pas le droit de contredire ce que le module en dit."
       },
       "dalle_DM1": {
         "ouvrage": "dalle de plancher de mezzanine, zone de 360 m2, portee 7,50 m entre poutres",
@@ -492,7 +504,8 @@
             "sens": "porteur",
             "longueur_barre_m": 7.9,
             "nb_lits": 1,
-            "developpe_sur_m2": 360.0
+            "developpe_sur_m2": 360.0,
+            "portee_armee_m": 7.5
           },
           {
             "repere": "D2",
@@ -502,7 +515,8 @@
             "sens": "repartition",
             "longueur_barre_m": 12.0,
             "nb_lits": 1,
-            "developpe_sur_m2": 360.0
+            "developpe_sur_m2": 360.0,
+            "portee_armee_m": 7.5
           },
           {
             "repere": "D3",
@@ -512,10 +526,13 @@
             "sens": "porteur",
             "longueur_barre_m": 3.2,
             "nb_lits": 1,
-            "developpe_sur_m2": 144.0
+            "developpe_sur_m2": 144.0,
+            "portee_armee_m": 3.0,
+            "_portee": "un chapeau sur poutre franchit la BANDE qu'il arme (3,00 m, soit 1,50 m de part et d'autre de l'appui), pas la portee de la dalle : sa surface developpee de 144 m2 est celle de cette bande le long des 2 x 24 m de poutre"
           }
         ],
-        "_lecture": "Une nappe ne se metre pas barre par barre : on compte les barres par metre (100 / espacement) et on multiplie par la longueur developpee. C'est la difference de methode entre une poutre, qui a une nomenclature, et une dalle, qui a des nappes."
+        "_lecture": "Une nappe ne se metre pas barre par barre : on compte les barres par metre (100 / espacement) et on multiplie par la longueur developpee. C'est la difference de methode entre une poutre, qui a une nomenclature, et une dalle, qui a des nappes.",
+        "_portee_note": "La largeur a armer est la surface developpee divisee par la PORTEE que la barre franchit, pas par la longueur de la barre : la barre deborde de part et d'autre pour son ancrage, et compter sur sa longueur totale laisse une bande de dalle sans armature. Ici l'erreur valait 2,4 m de largeur, soit 18 m2 de dalle nue."
       }
     },
     "du_plan_a_la_commande": {
@@ -1950,14 +1967,16 @@
       "fourchette": [
         65,
         100
-      ]
+      ],
+      "note": "RAPPORTE AU VOLUME DE DALLE SEUL, retombees de poutres exclues."
     },
     "acier_poutre_kg_m3": {
       "valeur": 180,
       "fourchette": [
         140,
         220
-      ]
+      ],
+      "note": "RAPPORTE A LA RETOMBEE SOUS DALLE (0,35 x 0,50 m ici), le volume de la table etant compte avec la dalle. Un meme plan rapporte a la section pleine donnerait un ratio bien plus bas : un ratio d'acier sans sa base ne rend aucun verdict (D-037)."
     },
     "coffrage_rives_pct": {
       "valeur": 4,

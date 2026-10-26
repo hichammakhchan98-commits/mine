@@ -221,8 +221,8 @@ bpm = (1 / esp).to(1 / u.m)
 dit(str(bpm.units) == "1 / meter", "barres par metre = 1 / espacement est en m^-1",
     f"{bpm.magnitude:.2f} /m")
 # ratio kg/m3 : masse d'acier sur volume de beton
-beton = _fe["deux_voies"]["elements"][0]["beton_m3"] * u.m**3
-ratio = (_fe["deux_voies"]["elements"][0]["voie_A_kg"] * u.kg / beton).to(u.kg / u.m**3)
+beton = _fe["ordre_de_grandeur"]["elements"][0]["beton_m3"] * u.m**3
+ratio = (_fe["ordre_de_grandeur"]["elements"][0]["masse_du_plan_kg"] * u.kg / beton).to(u.kg / u.m**3)
 dit(str(ratio.units) == "kilogram / meter ** 3", "ratio d'acier = masse / volume de beton",
     f"{ratio.magnitude:.0f} kg/m3")
 # perimetre du cadre : 2 (b + h), en m

@@ -90,7 +90,7 @@ plan lu en commençant par les diamètres se lit deux fois.
 
 {{ferraillage.lire_un_plan.la_regle}}
 
-:::figure {"fn":"coupeSection","args":"ferraillage.figures.coupe","titre":"Coupe transversale de la poutre PM1 en travée","num":1,"motifs":["beton"],"legende":[{"n":1,"t":"béton — b × h de la section"},{"n":2,"t":"barres longitudinales, lit inférieur"},{"n":3,"t":"cadre, tracé sur son axe"}],"options":{"cotes":true,"aciers":true,"enrobage":true},"voir":["La coupe est la seule vue où l'enrobage se lit. Il vaut {{gare.armatures.plan.poutre_PM1.section_cm.enrobage}} cm ici, mesuré à la peau du CADRE et non à celle des barres longitudinales : c'est le cadre qui est le plus à l'extérieur.","Les lits se comptent ici et nulle part ailleurs : {{ferraillage.figures.coupe.section.inf.n}} HA{{ferraillage.figures.coupe.section.inf.dia_mm}} en bas (repère {{ferraillage.figures.coupe.section.inf.repere}}), {{ferraillage.figures.coupe.section.sup.n}} HA{{ferraillage.figures.coupe.section.sup.dia_mm}} en haut ({{ferraillage.figures.coupe.section.sup.repere}}) — les seules barres FILANTES, celles qui courent sur toute la poutre. L'élévation, elle, dira où chacune commence et s'arrête — jamais combien il y en a dans l'épaisseur.","Un cadre se dessine sur son AXE. Son périmètre vaut {{ferraillage.cadres.perimetre_m::n3}} m, soit la section d'axe {{ferraillage.cadres.section_axe_cadre_m.b::n3}} × {{ferraillage.cadres.section_axe_cadre_m.h::n3}} m — et non le périmètre de la section de béton, qui le surestimerait de 14 %."],"erreur":"Mesurer l'enrobage à la barre longitudinale. On gagne un demi-diamètre de cadre sur le papier et on le perd sur l'ouvrage : la peau du cadre se retrouve plus près du coffrage que l'enrobage annoncé, et c'est elle qui rouille en premier."}
+:::figure {"fn":"coupeSection","args":"ferraillage.figures.coupe","titre":"Coupe de la poutre PM1 — les barres filantes","num":1,"motifs":["beton"],"legende":[{"n":1,"t":"béton — b × h de la section"},{"n":2,"t":"barres longitudinales filantes, lits inférieur et supérieur"},{"n":3,"t":"cadre, tracé sur son axe"}],"options":{"cotes":true,"aciers":true,"enrobage":true},"voir":["La coupe est la seule vue où l'enrobage se lit. Il vaut {{gare.armatures.plan.poutre_PM1.section_cm.enrobage}} cm ici, mesuré à la peau du CADRE et non à celle des barres longitudinales : c'est le cadre qui est le plus à l'extérieur.","Cette coupe ne montre QUE les filantes : {{ferraillage.figures.coupe.section.inf.n}} HA{{ferraillage.figures.coupe.section.inf.dia_mm}} en bas ({{ferraillage.figures.coupe.section.inf.repere}}), {{ferraillage.figures.coupe.section.sup.n}} HA{{ferraillage.figures.coupe.section.sup.dia_mm}} en haut ({{ferraillage.figures.coupe.section.sup.repere}}). À mi-travée le lit inférieur en porte trois de plus (A2), sur appui le lit supérieur cinq de plus (B2) : un plan réel dessine PLUSIEURS coupes, précisément parce que les lits changent le long de la poutre. L'élévation, elle, dira où chacune commence et s'arrête — jamais combien il y en a dans l'épaisseur.","Un cadre se dessine sur son AXE. Son périmètre vaut {{ferraillage.cadres.perimetre_m::n3}} m, soit la section d'axe {{ferraillage.cadres.section_axe_cadre_m.b::n3}} × {{ferraillage.cadres.section_axe_cadre_m.h::n3}} m — et non le périmètre de la section de béton, qui le surestimerait de 14 %."],"erreur":"Mesurer l'enrobage à la barre longitudinale. On gagne un demi-diamètre de cadre sur le papier et on le perd sur l'ouvrage : la peau du cadre se retrouve plus près du coffrage que l'enrobage annoncé, et c'est elle qui rouille en premier."}
 :::
 
 ### b. L'élévation : là où se lisent les arrêts de barres
@@ -124,12 +124,31 @@ La longueur à façonner n'est **pas** la cote du dessin : c'est la **longueur d
 droite plus retours d'équerre. Et pour une filante plus longue qu'une barre du commerce, il faut
 ajouter les recouvrements :
 
-$$ L_{\text{façonnée}} = L_{\text{droite}} + \sum L_{\text{retours}} + n_{\text{rec}} \cdot L_{\text{rec}} \qquad n_{\text{rec}} = \left\lceil \frac{L}{L_{\text{commerciale}}} \right\rceil - 1 $$
+$$ L_{\text{façonnée}} = L_{\text{droite}} + \sum L_{\text{retours}} + n_{\text{rec}} \cdot L_{\text{rec}} $$
 
-Le **nombre** de recouvrements est géométrique : une filante de
-{{ferraillage.nomenclature.longueur_de_poutre_m::n0}} m faite de barres de
-{{gare.armatures.conventions.longueur_commerciale_m::n0}} m en demande un, et aucun règlement n'y
-peut rien. Leur **longueur**, en revanche, est réglementaire : elle reste **⏸**. Celle du plan
+Le **nombre** de recouvrements est géométrique, et il se compte en raisonnant sur la **couverture**,
+pas sur une simple division. $k$ barres de $L_c$ recouvertes de $L_r$ ne couvrent que
+$k L_c - (k-1) L_r$ : chaque recouvrement consomme de la barre sans couvrir d'ouvrage. D'où
+
+$$ k = \left\lceil \frac{L - L_r}{L_c - L_r} \right\rceil \qquad n_{\text{rec}} = k - 1 $$
+
+Une filante de {{ferraillage.nomenclature.longueur_de_poutre_m::n0}} m faite de barres de
+{{gare.armatures.conventions.longueur_commerciale_m::n0}} m en demande
+**{{ferraillage.nomenclature.lignes.0.recouvrements_par_barre}}**, et aucun règlement n'y peut rien.
+
+:::encart {"genre":"piege","titre":"Le réflexe qui manque une barre sur deux"}
+On écrit volontiers $\lceil L/L_c \rceil - 1$ : pour 24,00 m en barres de 12,00 m, cela donne
+**1 recouvrement, donc 2 barres**. Or deux barres de 12 m recouvertes de 1 m ne couvrent que
+**23,00 m**. Il en faut trois, et la filante pèse
+{{ferraillage.nomenclature.lignes.0.longueur_faconnee_m::n2}} m d'acier pour
+{{ferraillage.nomenclature.longueur_de_poutre_m::n2}} m d'ouvrage.
+
+L'erreur n'est pas de 4 % sur le métré : elle est **physique**. On ne coupe pas 25 m de barre dans
+du stock de 12 m. Un métré faux de ce côté-là se solde par une livraison qui ne permet pas de poser
+le ferraillage, le jour où l'on pose.
+:::
+
+Leur **longueur**, en revanche, est réglementaire : elle reste **⏸**. Celle du plan
 fictif vaut ⟦V3|longueur de recouvrement portée par le plan fictif|1,00|m|0,60 à 1,60|2026|hypothèse de métré, non une disposition : une longueur de recouvrement réelle se lit dans le BAEL et dépend du diamètre, de l'adhérence et de la position de la barre⟧ m, déclarée comme hypothèse de métré.
 
 ### d. Deux ouvrages, deux méthodes de métré
@@ -166,42 +185,68 @@ Les quantités sont celles des **deux** poutres de la zone, comme sur une nomenc
 
 {{ferraillage.cadres._piege_du_comptage}}
 
-| Zone | Longueur | Espacement | Cadres |
-|---|---:|---:|---:|
-| {{ferraillage.cadres.zones.0.nom}} | {{ferraillage.cadres.zones.0.longueur_m::n2}} m | {{ferraillage.cadres.zones.0.espacement_cm}} cm | {{ferraillage.cadres.zones.0.nombre}} |
-| {{ferraillage.cadres.zones.1.nom}} | {{ferraillage.cadres.zones.1.longueur_m::n2}} m | {{ferraillage.cadres.zones.1.espacement_cm}} cm | {{ferraillage.cadres.zones.1.nombre}} |
-| | | **par poutre** | **{{ferraillage.cadres.nombre_par_poutre}}** |
+| Zone | Segments | Longueur | Espacement | Cadres par segment | Total |
+|---|---|---:|---:|---|---:|
+| {{ferraillage.cadres.zones.0.nom}} | {{ferraillage.cadres.zones.0.segments_m.length}} | {{ferraillage.cadres.zones.0.longueur_m::n2}} m | {{ferraillage.cadres.zones.0.espacement_cm}} cm | {{ferraillage.cadres.zones.0.cadres_par_segment}} | {{ferraillage.cadres.zones.0.nombre}} |
+| {{ferraillage.cadres.zones.1.nom}} | {{ferraillage.cadres.zones.1.segments_m.length}} | {{ferraillage.cadres.zones.1.longueur_m::n2}} m | {{ferraillage.cadres.zones.1.espacement_cm}} cm | {{ferraillage.cadres.zones.1.cadres_par_segment}} | {{ferraillage.cadres.zones.1.nombre}} |
+| | **{{ferraillage.cadres.nb_de_segments}} segments** | {{ferraillage.nomenclature.longueur_de_poutre_m::n2}} m | | **par poutre** | **{{ferraillage.cadres.nombre_par_poutre}}** |
 
-$$ n = \left\lfloor \frac{L}{s} \right\rfloor + 1 \qquad\text{par zone d'espacement} $$
+$$ n = \sum_{\text{segments}} \left( \left\lfloor \frac{\ell_i}{s} \right\rfloor + 1 \right) $$
+
+Le « + 1 » se compte **par segment continu**, pas par zone d'espacement : chaque segment a ses deux
+extrémités. Les zones de ce plan ne sont pas des tronçons uniques — la zone resserrée couvre
+{{ferraillage.cadres.zones.0.segments_m.length}} segments disjoints (l'about de rive, les deux
+appuis intermédiaires, l'about opposé) et la zone courante
+{{ferraillage.cadres.zones.1.segments_m.length}}. Totaliser les longueurs d'une zone avant
+d'ajouter un seul cadre fait la même erreur que compter $\ell/s$, en plus discret.
 
 {{ferraillage.cadres.lecture}}
 
 :::encart {"genre":"attente","titre":"Le métré des cadres est MINORANT, et voici de combien"}
 {{ferraillage.cadres._crochets}}
 
-Sur la cage de démonstration du socle, l'écart mesuré entre un cadre fermé sans crochets et un cadre
-réel était d'environ **3 %** de la masse des cadres. Appliqué ici, cela représente une trentaine de
-kilogrammes sur la zone. Ce n'est pas corrigé, et c'est volontaire : **on ne corrige pas un métré
-d'une valeur qu'on ne peut pas citer.** On publie le minorant et on nomme ce qui manque. Le jour où
-le BAEL est fourni, la longueur d'un crochet entre dans la formule et le métré monte.
+Les cadres de cette zone pèsent {{ferraillage.commande.crochets_non_metres.masse_des_cadres_kg::n1}} kg.
+Si l'on retient **{{ferraillage.commande.crochets_non_metres.part_estimee_pct::n0}} %** pour les
+crochets — un **ordre de grandeur déclaré, et non une mesure** —, cela fait
+{{ferraillage.commande.crochets_non_metres.masse_non_metree_kg::n1}} kg, soit
+{{ferraillage.commande.crochets_non_metres.part_du_metre_total_pct::n2}} % du métré total.
+
+Ce n'est pas corrigé, et c'est volontaire : **on ne corrige pas un métré d'une valeur qu'on ne peut
+pas citer.** On publie le minorant et on nomme ce qui manque. Et on ne dit pas « mesuré » : le cours
+n'a pas mesuré cet écart et ne le peut pas, puisque la longueur d'un crochet est précisément ce qui
+est ⏸. Le jour où le BAEL est fourni, elle entre dans la formule et le métré monte.
 :::
 
-### c. Les deux voies, et ce qu'elles ne prouvent pas
+### c. Le contrôle d'ordre de grandeur — et pourquoi ce n'est PAS une seconde voie
 
-Le § 3.3 impose deux voies indépendantes. La première est le métré du plan, ci-dessus. La seconde
-est le **ratio kg/m³**, appliqué au volume de béton de la zone.
+Le § 3.3 impose deux voies indépendantes. **Ce module ne les a pas pour sa masse totale, et il le
+dit.** Le plan fictif de ce cours a été *calibré* sur les ratios kg/m³ du projet ; comparer ensuite
+son métré à ces mêmes ratios vérifie le **calibrage**, pas le métré. Un résultat « dans la
+fourchette » serait ici une tautologie, et la présenter comme une vérification serait exactement le
+défaut que le module C3 a dû corriger : un test qui épingle une conclusion au lieu de contrôler une
+règle.
 
-| Ouvrage | Voie A — métré | Béton | Ratio du plan | Référence | Fourchette | Verdict |
-|---|---:|---:|---:|---:|---:|---|
-| {{ferraillage.deux_voies.elements.0.element}} | {{ferraillage.deux_voies.elements.0.voie_A_kg::n0}} kg | {{ferraillage.deux_voies.elements.0.beton_m3::n1}} m³ | **{{ferraillage.deux_voies.elements.0.ratio_du_plan_kg_m3::n0}}** kg/m³ | ⟦V3|ratio d'acier d'une poutre de plancher|180|kg/m³|140 à 220|2026|ordre de grandeur de prédimensionnement, aucun document normatif fourni⟧ | {{ferraillage.deux_voies.elements.0.fourchette_kg_m3.0}} à {{ferraillage.deux_voies.elements.0.fourchette_kg_m3.1}} | dans ({{ferraillage.deux_voies.elements.0.ecart_pct::n1}} %) |
-| {{ferraillage.deux_voies.elements.1.element}} | {{ferraillage.deux_voies.elements.1.voie_A_kg::n0}} kg | {{ferraillage.deux_voies.elements.1.beton_m3::n1}} m³ | **{{ferraillage.deux_voies.elements.1.ratio_du_plan_kg_m3::n0}}** kg/m³ | ⟦V3|ratio d'acier d'une dalle de plancher|80|kg/m³|65 à 100|2026|ordre de grandeur de prédimensionnement, aucun document normatif fourni⟧ | {{ferraillage.deux_voies.elements.1.fourchette_kg_m3.0}} à {{ferraillage.deux_voies.elements.1.fourchette_kg_m3.1}} | dans ({{ferraillage.deux_voies.elements.1.ecart_pct::n1}} %) |
+| Ouvrage | Métré du plan | Béton | Base du ratio | Ratio du plan | Référence | Fourchette | Écart |
+|---|---:|---:|---|---:|---:|---:|---:|
+| {{ferraillage.ordre_de_grandeur.elements.0.element}} | {{ferraillage.ordre_de_grandeur.elements.0.masse_du_plan_kg::n0}} kg | {{ferraillage.ordre_de_grandeur.elements.0.beton_m3::n1}} m³ | retombée sous dalle | **{{ferraillage.ordre_de_grandeur.elements.0.ratio_du_plan_kg_m3::n0}}** | ⟦V3|ratio d'acier d'une poutre de plancher, rapporté à la retombée sous dalle|180|kg/m³|140 à 220|2026|ordre de grandeur de prédimensionnement, aucun document normatif fourni ; la base — retombée et non section pleine — change entièrement le verdict⟧ | {{ferraillage.ordre_de_grandeur.elements.0.fourchette_kg_m3.0}} à {{ferraillage.ordre_de_grandeur.elements.0.fourchette_kg_m3.1}} | {{ferraillage.ordre_de_grandeur.elements.0.ecart_pct::n1}} % |
+| {{ferraillage.ordre_de_grandeur.elements.1.element}} | {{ferraillage.ordre_de_grandeur.elements.1.masse_du_plan_kg::n0}} kg | {{ferraillage.ordre_de_grandeur.elements.1.beton_m3::n1}} m³ | dalle seule | **{{ferraillage.ordre_de_grandeur.elements.1.ratio_du_plan_kg_m3::n0}}** | ⟦V3|ratio d'acier d'une dalle de plancher, rapporté au volume de dalle seul|80|kg/m³|65 à 100|2026|ordre de grandeur de prédimensionnement, aucun document normatif fourni⟧ | {{ferraillage.ordre_de_grandeur.elements.1.fourchette_kg_m3.0}} à {{ferraillage.ordre_de_grandeur.elements.1.fourchette_kg_m3.1}} | {{ferraillage.ordre_de_grandeur.elements.1.ecart_pct::n1}} % |
 
-{{ferraillage.deux_voies.ce_que_l_ecart_veut_dire}}
+**La colonne « base du ratio » n'est pas un détail de présentation.** 180 kg/m³ s'applique ici à la
+**retombée sous dalle** ({{ferraillage.ordre_de_grandeur.elements.0.beton_m3::n1}} m³), la table
+étant comptée avec la dalle. Rapporté à la section pleine de la poutre, le même plan donnerait un
+ratio bien plus bas et le verdict basculerait. Un ratio d'acier sans sa base ne rend aucun verdict.
 
-:::figure {"fn":"barres","args":"ferraillage.figures.deux_voies","titre":"Les deux voies du métré, et la fourchette de la seconde","num":4,"options":{"unite":"kg d'acier sur la zone","bande":{"$":"ferraillage.figures.deux_voies_bande"},"libelle_bande":"fourchette du ratio"},"voir":["La bande grise est la fourchette du ratio. Elle est LARGE — c'est la marque d'une hypothèse V3, pas d'une mesure — et c'est elle qui dit ce que la voie B peut prouver : pas grand-chose, et c'est normal.","La voie A tombe dans la bande. C'est tout ce que la comparaison établit : l'ordre de grandeur tient. Elle n'établit pas que le métré est juste — il l'est pour une autre raison, parce qu'il ne repose que sur des longueurs et une masse volumique.","Les deux barres ne mesurent pas le même objet : la première mesure CE plan, la seconde mesure à quoi ressemble un plancher de ce type."],"erreur":"Corriger le métré pour le faire rentrer dans le ratio. C'est l'inversion complète : on remplace une mesure sûre par une hypothèse V3. Si un écart gêne, c'est le PLAN qu'on interroge, auprès du BET."}
+{{ferraillage.ordre_de_grandeur._pourquoi_element_par_element}}
+
+:::figure {"fn":"barres","args":"ferraillage.figures.ordre_de_grandeur","titre":"Métré du plan et masse au ratio — un contrôle de cohérence, pas une vérification","num":4,"options":{"unite":"kg d'acier sur la zone","bande":{"$":"ferraillage.figures.ordre_de_grandeur_bande"},"libelle_bande":"fourchette du ratio"},"voir":["La bande grise est LARGE : c'est la marque d'une hypothèse V3. Elle dit ce que la comparaison peut prouver — peu de choses, et c'est normal.","Les deux barres ne sont pas indépendantes : le plan de ce cours a été calibré sur ce ratio. La comparaison vérifie le calibrage, pas le métré, et le module préfère le dire plutôt que de se décerner une vérification qu'il n'a pas faite.","Ce qui garantit le métré est ailleurs : l'étalonnage externe de la masse linéique (dix diamètres contre le tableau du commerce, écart maximal 0,5 g/m) et la seconde traversée depuis le dessin, ci-dessous."],"erreur":"Appeler « seconde voie » une comparaison dont les deux termes viennent de la même source. Sur un chantier réel — plan du BET, ratio d'ailleurs — la comparaison redevient un vrai contrôle ; dans un cours qui a calibré son propre plan, non."}
 :::
 
-{{ferraillage.deux_voies._pourquoi_element_par_element}}
+**La seconde traversée, elle, est réelle.** La masse de la poutre se recalcule depuis le **dessin** —
+positions de l'élévation, section, segments de cadres — sans passer par la nomenclature :
+{{ferraillage.metre_depuis_le_dessin.masse_depuis_le_dessin_kg::n1}} kg contre
+{{ferraillage.metre_depuis_le_dessin.masse_depuis_la_nomenclature_kg::n1}} kg, soit
+{{ferraillage.metre_depuis_le_dessin.ecart_pct::n3}} % d'écart. Ce qu'elle vérifie :
+{{ferraillage.metre_depuis_le_dessin.ce_que_cette_voie_verifie}}
 
 ### d. Ce que le métré change pour le budget, et quand
 
@@ -289,7 +334,9 @@ du coffrage.
 | Compter $L/s$ cadres au lieu de $L/s + 1$ | rien au métré | le cadre manquant est celui de l'about, là où il sert le plus |
 | Commander le poids du plan | il manque de l'acier à J-1 | {{ferraillage.commande.ecart_commande_plan_pct::n1}} % de l'acier de la zone |
 | Attacher sur un bon de livraison | la quantité est supérieure à celle du plan | une réclamation perdue au décompte : le CPS paie le poids théorique |
-| Comparer les deux ouvrages à un ratio **global** | le verdict est rassurant | {{ferraillage.deux_voies.ecart_pct::n1}} % globalement, contre {{ferraillage.deux_voies.elements.1.ecart_pct::n1}} % sur la dalle : une poutre lourde compense une dalle légère |
+| Comparer les deux ouvrages à un ratio **global** | le verdict est rassurant | ici {{ferraillage.ordre_de_grandeur.ecart_pct::n1}} % globalement, qui masquent {{ferraillage.ordre_de_grandeur.elements.0.ecart_pct::n1}} % sur la poutre et {{ferraillage.ordre_de_grandeur.elements.1.ecart_pct::n1}} % sur la dalle |
+| Publier un ratio d'acier **sans sa base** | le nombre a l'air d'un fait | 180 kg/m³ sur la retombée ou sur la section pleine, ce n'est pas le même ouvrage et le verdict bascule |
+| Appeler « seconde voie » une comparaison **circulaire** | on se décerne une vérification | le plan de ce cours est calibré sur le ratio : la comparaison vérifie le calibrage, pas le métré |
 | Corriger le métré pour entrer dans le ratio | plus aucun écart nulle part | on a remplacé une mesure sûre par une hypothèse V3 |
 | Garder le ratio au bordereau après le visa des plans | les indices de D4 dérivent sans raison | un avancement mesuré sur des plans comparé à un budget bâti sur une hypothèse |
 | Viser un ferraillage sur photo | le visa est tracé, le constat ne l'est pas | une non-conformité invisible, et un visa qu'on ne pourra pas défendre |
@@ -321,16 +368,20 @@ d'acier ?
    {{ferraillage.nomenclature.lignes.0.masse_lineique_kg_m::n3}} = **{{ferraillage.nomenclature.lignes.0.masse_kg::n1}} kg**
    pour les deux poutres.
 
-*Le piège est l'étape 2. Sans elle on obtient {{ferraillage.nomenclature.lignes.0.nombre}} × {{ferraillage.nomenclature.longueur_de_poutre_m::n2}} ×
-{{ferraillage.nomenclature.lignes.0.masse_lineique_kg_m::n3}} kg, soit 4,2 % de moins — et une barre
-trop courte sur le chantier, ce qui ne se rattrape pas en poussant les autres.*
+*Le piège est l'étape 2, et il a deux étages. Oublier complètement les recouvrements donne
+{{ferraillage.nomenclature.lignes.0.nombre}} × {{ferraillage.nomenclature.longueur_de_poutre_m::n2}} ×
+{{ferraillage.nomenclature.lignes.0.masse_lineique_kg_m::n3}}, soit
+{{ferraillage.nomenclature.lignes.0.ecart_sans_recouvrement_pct::n1}} % de moins. Les compter par
+$\lceil L/L_c \rceil - 1$ — le réflexe — en trouve un au lieu de deux, et commande des barres qui
+ne couvrent pas la poutre. Dans les deux cas, le chantier s'en aperçoit le jour de la pose, et une
+barre trop courte ne se rattrape pas en poussant les autres.*
 :::
 
 :::exercice {"titre":"2 · Un plan arrive à 95 kg/m³ sur la dalle","niveau":"probleme"}
 Le BET envoie l'indice B du plan de la dalle. Votre métré donne cette fois **95 kg/m³** au lieu des
-{{ferraillage.deux_voies.elements.1.ratio_du_plan_kg_m3::n0}} de l'indice A. La fourchette de
-référence est {{ferraillage.deux_voies.elements.1.fourchette_kg_m3.0}} à
-{{ferraillage.deux_voies.elements.1.fourchette_kg_m3.1}} kg/m³. Que faites-vous ?
+{{ferraillage.ordre_de_grandeur.elements.1.ratio_du_plan_kg_m3::n0}} de l'indice A. La fourchette de
+référence est {{ferraillage.ordre_de_grandeur.elements.1.fourchette_kg_m3.0}} à
+{{ferraillage.ordre_de_grandeur.elements.1.fourchette_kg_m3.1}} kg/m³. Que faites-vous ?
 
 **Corrigé. Rien qui ressemble à une alerte, et deux choses précises.**
 
@@ -342,8 +393,8 @@ général. Un plan hors fourchette est une **question**, jamais un verdict.
 Les deux choses à faire sont ailleurs :
 
 1. **Chiffrer l'écart sur la commande**, parce qu'il est réel, lui. De
-   {{ferraillage.deux_voies.elements.1.ratio_du_plan_kg_m3::n0}} à 95 kg/m³ sur
-   {{ferraillage.deux_voies.elements.1.beton_m3::n0}} m³ de dalle, la zone prend environ
+   {{ferraillage.ordre_de_grandeur.elements.1.ratio_du_plan_kg_m3::n0}} à 95 kg/m³ sur
+   {{ferraillage.ordre_de_grandeur.elements.1.beton_m3::n0}} m³ de dalle, la zone prend environ
    **2 000 kg** de plus, soit +{{ferraillage.commande.chutes_pct::n0}} % de chutes par-dessus, et
    huit zones derrière. Si la commande est déjà passée sur l'indice A, elle est fausse — et c'est
    cela l'urgence, pas le ratio.
@@ -428,21 +479,26 @@ précisément parce qu'on ne peut pas trancher qu'on signale. Et surtout, on ne 
 le seul contrôle que personne d'autre ne fera — compter ce qui est posé.
 
 **2. La nomenclature dit 24,00 m pour une filante. Que commande-t-on ?**
-**{{ferraillage.nomenclature.lignes.0.longueur_faconnee_m::n2}} m par barre**, parce qu'une barre du
-commerce fait {{gare.armatures.conventions.longueur_commerciale_m::n0}} m et qu'il faut
-{{ferraillage.nomenclature.lignes.0.recouvrements_par_barre}} recouvrement. Le nombre de
-recouvrements est géométrique ; leur longueur, elle, est réglementaire et reste ⏸.
+**{{ferraillage.nomenclature.lignes.0.longueur_faconnee_m::n2}} m par barre** :
+{{ferraillage.nomenclature.lignes.0.nb_de_barres_par_filante}} barres du commerce de
+{{gare.armatures.conventions.longueur_commerciale_m::n0}} m et donc
+{{ferraillage.nomenclature.lignes.0.recouvrements_par_barre}} recouvrements. Deux barres ne
+suffiraient pas : elles ne couvriraient que 23,00 m. Le nombre de recouvrements est géométrique ;
+leur longueur, elle, est réglementaire et reste ⏸.
 
-**3. Combien de cadres sur 15,00 m à 20 cm ?**
+**3. Combien de cadres sur un tronçon continu de 15,00 m à 20 cm ?**
 **76**, soit $\lfloor 15{,}00/0{,}20 \rfloor + 1$. Compter 75 oublie le cadre d'extrémité, celui qui
-tient la cage contre l'about.
+tient la cage contre l'about. Et si ces 15,00 m ne sont pas continus mais répartis sur trois
+tronçons, la réponse n'est plus 76 mais **78** : le « + 1 » est par **segment**, pas par total.
 
-**4. Votre métré donne {{ferraillage.deux_voies.elements.1.ratio_du_plan_kg_m3::n0}} kg/m³ sur la dalle, le ratio de référence est 80. Le plan est-il faux ?**
-**La question n'a pas de sens sous cette forme.** Le métré est sûr — il ne repose que sur des
-longueurs et une masse volumique. Le ratio est une hypothèse V3 de fourchette
-{{ferraillage.deux_voies.elements.1.fourchette_kg_m3.0}} à
-{{ferraillage.deux_voies.elements.1.fourchette_kg_m3.1}}. L'écart interroge le plan ; il ne condamne
-jamais le métré, et il ne prouve rien sur la justesse du calcul.
+**4. Votre métré donne {{ferraillage.ordre_de_grandeur.elements.1.ratio_du_plan_kg_m3::n0}} kg/m³ sur la dalle, le ratio de référence est 80. Le plan est-il faux ?**
+**La question n'a pas de sens sous cette forme**, et trois choses manquent avant d'y répondre. La
+**base** du ratio — 80 kg/m³ de quoi : la dalle seule, ou dalle et retombées ? Le **métré**, lui, est
+sûr : il ne repose que sur des longueurs et une masse volumique. Et le ratio est une hypothèse V3 de
+fourchette {{ferraillage.ordre_de_grandeur.elements.1.fourchette_kg_m3.0}} à
+{{ferraillage.ordre_de_grandeur.elements.1.fourchette_kg_m3.1}}. L'écart interroge le plan ; il ne
+condamne jamais le métré. *Et dans ce cours en particulier, il ne prouve rien du tout : le plan a été
+calibré sur ce ratio.*
 
 **5. Le bon de livraison porte {{ferraillage.commande.acier_commande_kg::n0}} kg. Qu'attache-t-on ?**
 **{{ferraillage.commande.acier_du_plan_kg::n0}} kg**, le poids de la nomenclature — sauf mention
@@ -471,7 +527,10 @@ plans à un budget bâti sur une hypothèse.
 
 **Les trois formules du métré**
 
-$$ m_\ell = \frac{\pi}{4} d^2 \rho \qquad L_{\text{façonnée}} = L_{\text{droite}} + \sum L_{\text{retours}} + n_{\text{rec}} L_{\text{rec}} \qquad n_{\text{cadres}} = \left\lfloor \frac{L}{s} \right\rfloor + 1 $$
+$$ m_\ell = \frac{\pi}{4} d^2 \rho \qquad n_{\text{rec}} = \left\lceil \frac{L - L_r}{L_c - L_r} \right\rceil - 1 \qquad n_{\text{cadres}} = \sum_i \left( \left\lfloor \frac{\ell_i}{s} \right\rfloor + 1 \right) $$
+
+Le premier « + 1 » est **par segment**. Le nombre de recouvrements se compte sur la **couverture**
+($k L_c - (k-1) L_r \geq L$), jamais par une simple division.
 
 **Masses linéiques à retenir** (recalculables, non réglementaires)
 
@@ -483,12 +542,12 @@ $$ m_\ell = \frac{\pi}{4} d^2 \rho \qquad L_{\text{façonnée}} = L_{\text{droit
 
 | | |
 |---|---:|
-| Acier des 2 poutres PM1 | {{ferraillage.nomenclature.masse_kg::n0}} kg · {{ferraillage.deux_voies.elements.0.ratio_du_plan_kg_m3::n0}} kg/m³ |
+| Acier des 2 poutres PM1 | {{ferraillage.nomenclature.masse_kg::n0}} kg · {{ferraillage.ordre_de_grandeur.elements.0.ratio_du_plan_kg_m3::n0}} kg/m³ |
 | Acier de la dalle DM1 | {{ferraillage.nappes.masse_kg::n0}} kg · {{ferraillage.nappes.masse_par_m2_kg::n1}} kg/m² |
-| **Acier du plan** | **{{ferraillage.deux_voies.voie_A_metre_du_plan_kg::n0}} kg** |
-| Acier à commander | {{ferraillage.commande.acier_commande_kg::n0}} kg (+{{ferraillage.commande.ecart_commande_plan_pct::n1}} %) |
+| **Acier du plan** | **{{ferraillage.ordre_de_grandeur.masse_du_plan_kg::n0}} kg** |
+| Acier à commander | {{ferraillage.commande.acier_commande_kg::n0}} kg (+{{ferraillage.commande.ecart_commande_plan_pct::n1}} %) · fourchette {{ferraillage.commande.fourchette.acier_commande_kg.0::n0}} à {{ferraillage.commande.fourchette.acier_commande_kg.1::n0}} |
 | Cadres | {{ferraillage.cadres.nombre_total}} · périmètre {{ferraillage.cadres.perimetre_m::n3}} m |
-| Cales d'enrobage | {{ferraillage.commande.cales_d_enrobage_u}} |
+| Cales d'enrobage | {{ferraillage.commande.cales_d_enrobage_u}} · fourchette {{ferraillage.commande.fourchette.cales_u.0}} à {{ferraillage.commande.fourchette.cales_u.1}} |
 
 **Les sept points d'un visa de ferraillage** — à viser côté maîtrise d'œuvre
 

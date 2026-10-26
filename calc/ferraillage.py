@@ -68,6 +68,24 @@ def longueur_developpee_m(barre: dict) -> float:
     return droit + sum(barre.get("retours_m", []) or [])
 
 
+def nb_recouvrements(L: float, Lc: float, Lr: float) -> int:
+    """Combien de recouvrements pour couvrir L avec des barres de Lc recouvertes de Lr.
+
+    k barres couvrent k.Lc - (k-1).Lr. Le plus petit k tel que cette couverture atteigne
+    L vaut ceil((L - Lr) / (Lc - Lr)), et il y a k-1 recouvrements. La longueur d'acier a
+    commander est alors L + (k-1).Lr : chaque recouvrement est de l'acier paye qui ne
+    couvre aucun ouvrage.
+    """
+    if L <= Lc:
+        return 0
+    if Lr >= Lc:
+        raise ValueError(
+            f"Recouvrement de {Lr} m sur des barres de {Lc} m : chaque barre ajoutee "
+            "couvrirait une longueur nulle ou negative. Une filante ne peut pas se "
+            "reconstituer dans ces conditions.")
+    return math.ceil((L - Lr) / (Lc - Lr)) - 1
+
+
 def nombre_par_poutre(barre: dict) -> int:
     """Le nombre d'un repere est la somme de ses positions sur l'elevation."""
     if "positions" in barre:
@@ -97,7 +115,12 @@ def nomenclature_poutre(d: dict) -> dict:
         # Une FILANTE plus longue que la barre commerciale se reconstitue par
         # recouvrement : ce n'est pas une disposition, c'est une contrainte de livraison.
         # Le nombre de recouvrements est geometrique ; seule leur LONGUEUR est ⏸.
-        n_rec = math.ceil(Lu / Lc) - 1 if b.get("filante") else 0
+        #
+        # k barres de Lc recouvertes de Lr couvrent k.Lc - (k-1).Lr : chaque
+        # recouvrement CONSOMME une longueur de barre sans couvrir d'ouvrage. Ecrire
+        # ceil(Lu/Lc) - 1 l'oublie et sous-compte : pour 24 m avec des barres de 12 m et
+        # 1 m de recouvrement, cette formule donne 2 barres, qui ne couvrent que 23 m.
+        n_rec = nb_recouvrements(Lu, Lc, Lr) if b.get("filante") else 0
         Lu_avec_rec = Lu + n_rec * Lr
         ml = masse_lineique_kg_m(b["dia_mm"], rho)
         n_tot = nombre_par_poutre(b) * n_poutres
@@ -106,6 +129,9 @@ def nomenclature_poutre(d: dict) -> dict:
             "nombre": n_tot, "dia_mm": b["dia_mm"],
             "longueur_unitaire_m": round(Lu, 3),
             "recouvrements_par_barre": n_rec,
+            "nb_de_barres_par_filante": n_rec + 1 if n_rec else 1,
+            "ecart_sans_recouvrement_pct": round(
+                -n_rec * Lr / Lu_avec_rec * 100, 1) if n_rec else 0.0,
             "longueur_faconnee_m": round(Lu_avec_rec, 3),
             "longueur_totale_m": round(Lu_avec_rec * n_tot, 2),
             "masse_lineique_kg_m": round(ml, 4),
@@ -177,8 +203,14 @@ def cadres_poutre(d: dict) -> dict:
     zones = []
     total = 0
     for z in cad["zones"]:
-        n = math.floor(z["longueur_cumulee_m"] / (z["espacement_cm"] / 100.0)) + 1
-        zones.append({"nom": z["nom"], "longueur_m": z["longueur_cumulee_m"],
+        # Un cadre se compte par SEGMENT continu : chaque segment a ses deux extremites,
+        # donc son propre « + 1 ». Totaliser les longueurs d'une zone puis ajouter un
+        # seul cadre sous-compte d'un cadre par segment.
+        s_cm = z["espacement_cm"] / 100.0
+        par_seg = [math.floor(l / s_cm) + 1 for l in z["segments_m"]]
+        n = sum(par_seg)
+        zones.append({"nom": z["nom"], "longueur_m": round(sum(z["segments_m"]), 2),
+                      "segments_m": z["segments_m"], "cadres_par_segment": par_seg,
                       "espacement_cm": z["espacement_cm"], "nombre": n})
         total += n
     n_poutres = p["nb_dans_la_zone"]
@@ -193,16 +225,16 @@ def cadres_poutre(d: dict) -> dict:
         "nombre_total": n_tot,
         "masse_kg": round(perim * n_tot * ml, 1),
         "lecture": cad["_lecture"],
-        "espacement_moyen_cm": round(
-            sum(z["longueur_cumulee_m"] for z in cad["zones"]) / (total - len(cad["zones"]))
-            * 100, 1),
+        "nb_de_segments": sum(len(z["segments_m"]) for z in cad["zones"]),
         "_piege_du_comptage": (
-            f"{total} cadres par poutre pour "
-            f"{sum(z['longueur_cumulee_m'] for z in cad['zones']):.0f} m. Compter L/s au "
-            f"lieu de L/s + 1 en donnerait {total - len(cad['zones'])}, soit "
-            f"{len(cad['zones'])} de moins : un par zone d'espacement. L'ecart de masse "
-            "est negligeable ; l'ecart a la pose ne l'est pas, parce que le cadre qui "
-            "manque est celui de l'extremite."),
+            f"{total} cadres par poutre, comptes sur "
+            f"{sum(len(z['segments_m']) for z in cad['zones'])} segments continus. "
+            "Compter l/s au lieu de l/s + 1 en donnerait "
+            f"{total - sum(len(z['segments_m']) for z in cad['zones'])}, soit un de "
+            "moins PAR SEGMENT. Et totaliser les longueurs d'une zone avant d'ajouter un "
+            "seul cadre fait la meme erreur en plus discret. L'ecart de masse est "
+            "negligeable ; l'ecart a la pose ne l'est pas, parce que les cadres qui "
+            "manquent sont ceux des extremites."),
         "_crochets": (
             "Ce perimetre est celui d'un cadre FERME SANS crochets d'extremite. Un cadre "
             "reel en porte deux, et leur longueur est reglementaire (⏸). Le metre des "
@@ -225,8 +257,11 @@ def nappes_dalle(d: dict) -> dict:
     lignes = []
     for n in dal["nappes"]:
         bpm = 100.0 / n["espacement_cm"]
-        # largeur couverte = surface developpee / longueur d'une barre
-        largeur = n["developpe_sur_m2"] / n["longueur_barre_m"]
+        # La largeur a armer se divise par la PORTEE que la barre franchit, pas par la
+        # longueur de la barre : celle-ci deborde de part et d'autre pour son ancrage.
+        # Diviser par la longueur totale laisse une bande de dalle sans armature — ici
+        # 2,4 m de largeur, soit 18 m2 de dalle nue.
+        largeur = n["developpe_sur_m2"] / n["portee_armee_m"]
         nb = math.ceil(largeur * bpm) * n["nb_lits"]
         ml = masse_lineique_kg_m(n["dia_mm"], rho)
         lignes.append({
@@ -235,6 +270,9 @@ def nappes_dalle(d: dict) -> dict:
             "barres_par_metre": round(bpm, 2),
             "surface_developpee_m2": n["developpe_sur_m2"],
             "longueur_barre_m": n["longueur_barre_m"],
+            "portee_armee_m": n["portee_armee_m"],
+            "largeur_a_armer_m": round(largeur, 2),
+            "debord_d_ancrage_m": round(n["longueur_barre_m"] - n["portee_armee_m"], 2),
             "nombre": nb,
             "longueur_totale_m": round(nb * n["longueur_barre_m"], 1),
             "masse_lineique_kg_m": round(ml, 4),
@@ -257,26 +295,28 @@ def nappes_dalle(d: dict) -> dict:
 
 
 # --------------------------------------------------------------- les deux voies (§ 3.3)
-def deux_voies(d: dict, q: dict, nom: dict, nap: dict) -> dict:
-    """Voie A : le metre du plan. Voie B : le ratio kg/m3. Et ce que l'ecart veut dire.
+def controle_d_ordre_de_grandeur(d: dict, q: dict, nom: dict, nap: dict) -> dict:
+    """Le ratio kg/m3, element par element — et ce que cette comparaison NE prouve PAS.
 
-    ATTENTION a ce que cette comparaison est, et surtout a ce qu'elle n'est pas. Les deux
-    voies ne verifient pas la meme chose :
+    Ceci n'est PAS la seconde voie du § 3.3, et l'appeler ainsi serait une tautologie :
+    le plan fictif de ce cours a ete CALIBRE sur ces memes ratios (data :
+    armatures._calibrage). La comparaison verifie donc le calibrage, pas le metre. Sur un
+    chantier reel, ou le plan vient du BET et le ratio d'ailleurs, elle redevient un vrai
+    controle — mais ici le cours doit le dire.
 
-      - la voie A mesure CE PLAN. Elle est sure a la geometrie pres, parce qu'elle ne
-        repose que sur des longueurs et une masse volumique.
-      - la voie B mesure A QUOI RESSEMBLE un plancher de ce type. Elle repose sur un
-        ratio V3 dont la fourchette est large.
+    Ce qui garantit le metre est ailleurs, et c'est plus solide :
+      - la masse lineique est ETALONNEE sur une source externe (le tableau du commerce,
+        dix diametres, ecart max 0,5 g/m) ;
+      - chaque formule passe une verification dimensionnelle ;
+      - la masse se recalcule par une seconde traversee des donnees, depuis le DESSIN
+        (positions de l'elevation, section, segments de cadres) et non depuis la
+        nomenclature : voir `metre_depuis_le_dessin`.
 
-    Un ecart ne dit donc pas « le metre est faux ». Il dit « ce plan est plus leger (ou
-    plus lourd) que l'habitude », ce qui est une question a poser au BET, pas une erreur
-    a corriger. Le confondre avec un controle de justesse est l'erreur classique, et elle
-    conduit a corriger un metre JUSTE pour le faire rentrer dans un ratio APPROXIMATIF.
+    La comparaison garde une vertu, et une seule : si un jour le plan change sans que le
+    ratio change, elle le signale. C'est un garde-fou de coherence, pas une preuve.
 
-    La comparaison se fait ELEMENT PAR ELEMENT. Un ratio global sur l'ensemble du
-    plancher laisse une poutre trop lourde compenser une dalle trop legere : les deux
-    ouvrages n'ont ni la meme densite d'acier, ni la meme fourchette, et leurs ratios ne
-    s'additionnent pas plus que deux pourcentages de bases differentes (D-037).
+    Elle se fait ELEMENT PAR ELEMENT. Un ratio global n'a pas de fourchette de reference,
+    parce que la part relative de poutre et de dalle change tout (D-037).
     """
     r = d["ratios_V3"]
     elements = []
@@ -288,51 +328,140 @@ def deux_voies(d: dict, q: dict, nom: dict, nap: dict) -> dict:
         ref, (bas, haut) = r[cle]["valeur"], r[cle]["fourchette"]
         ratio = masse / beton
         elements.append({
-            "element": nom_el,
-            "voie_A_kg": round(masse, 1),
-            "beton_m3": beton,
+            "element": nom_el, "masse_du_plan_kg": round(masse, 1), "beton_m3": beton,
+            "base_du_ratio": r[cle]["note"],
             "ratio_du_plan_kg_m3": round(ratio, 1),
-            "ratio_de_reference_kg_m3": ref,
-            "fourchette_kg_m3": [bas, haut],
-            "voie_B_kg": round(ref * beton, 1),
-            "voie_B_fourchette_kg": [round(bas * beton, 1), round(haut * beton, 1)],
+            "ratio_de_reference_kg_m3": ref, "fourchette_kg_m3": [bas, haut],
+            "masse_au_ratio_kg": round(ref * beton, 1),
+            "fourchette_en_masse_kg": [round(bas * beton, 1), round(haut * beton, 1)],
             "ecart_pct": round((masse - ref * beton) / (ref * beton) * 100, 1),
             "dans_la_fourchette": bool(bas <= ratio <= haut),
         })
-    masse_plan = round(sum(e["voie_A_kg"] for e in elements), 1)
-    voie_b = round(sum(e["voie_B_kg"] for e in elements), 1)
-    beton = q["beton_m3"]
+    masse_plan = round(sum(e["masse_du_plan_kg"] for e in elements), 1)
+    au_ratio = round(sum(e["masse_au_ratio_kg"] for e in elements), 1)
     hors = [e for e in elements if not e["dans_la_fourchette"]]
     return {
         "elements": elements,
-        "voie_A_metre_du_plan_kg": masse_plan,
-        "voie_A_detail": {"poutres_kg": nom["masse_kg"], "dalle_kg": nap["masse_kg"]},
-        "voie_B_ratio_kg": voie_b,
-        "voie_B_fourchette_kg": [round(sum(e["voie_B_fourchette_kg"][0] for e in elements), 1),
-                                 round(sum(e["voie_B_fourchette_kg"][1] for e in elements), 1)],
-        "beton_de_la_zone_m3": beton,
-        "ratio_global_du_plan_kg_m3": round(masse_plan / beton, 1),
-        "ecart_pct": round((masse_plan - voie_b) / voie_b * 100, 1),
+        "masse_du_plan_kg": masse_plan,
+        "masse_au_ratio_kg": au_ratio,
+        "fourchette_en_masse_kg": [
+            round(sum(e["fourchette_en_masse_kg"][0] for e in elements), 1),
+            round(sum(e["fourchette_en_masse_kg"][1] for e in elements), 1)],
+        "beton_de_la_zone_m3": q["beton_m3"],
+        "ecart_pct": round((masse_plan - au_ratio) / au_ratio * 100, 1),
         "elements_hors_fourchette": [e["element"] for e in hors],
         "tous_dans_la_fourchette": not hors,
-        "ce_que_l_ecart_veut_dire": (
-            "Les deux voies ne mesurent pas la meme chose. La voie A mesure CE plan, "
-            "exactement : elle ne repose que sur des longueurs et une masse volumique. "
-            "La voie B mesure a quoi ressemble un plancher de ce type, approximativement, "
-            "sur un ratio V3 a large fourchette. Un ecart interroge le PLAN ; il ne "
-            "condamne jamais le metre."
-            + ("" if not hors else
-               " Ici " + ", ".join(e["element"] for e in hors) + " sort de sa fourchette : "
-               "c'est une question a poser au BET, pas une erreur etablie.")),
+        "_ce_n_est_pas_une_seconde_voie": (
+            "Le plan de ce cours a ete calibre sur ces ratios : la comparaison verifie "
+            "le CALIBRAGE, pas le metre, et un resultat « dans la fourchette » est ici "
+            "une tautologie. Sur un chantier reel — plan du BET, ratio d'ailleurs — elle "
+            "redevient un controle utile. Le cours le dit plutot que de se decerner une "
+            "verification qu'il n'a pas faite."),
+        "ce_que_l_ecart_voudrait_dire_ailleurs": (
+            "Sur un vrai plan : un ecart interroge le PLAN, il ne condamne jamais le "
+            "metre. Le metre ne repose que sur des longueurs et une masse volumique ; le "
+            "ratio est une hypothese V3 a large fourchette. Corriger le metre pour le "
+            "faire rentrer dans le ratio remplace une mesure sure par une hypothese."),
         "_pourquoi_element_par_element": (
-            f"Globalement le plan pese {masse_plan / beton:.0f} kg/m3, ce qui ne se "
-            "compare a rien : il n'existe pas de fourchette pour « un plancher » en "
-            "general, parce que la part relative de poutre et de dalle change tout. "
-            "Comparer element par element evite qu'une poutre lourde compense une dalle "
-            "legere — la meme faute de domaine que D-037 denonce ailleurs."),
-        "_erreur_a_ne_pas_commettre": (
-            "Corriger le metre pour le faire rentrer dans le ratio. C'est l'inversion "
-            "complete : on remplace une mesure sure par une hypothese V3."),
+            f"Globalement le plan pese {masse_plan / q['beton_m3']:.0f} kg/m3, ce qui ne "
+            "se compare a rien : il n'existe pas de fourchette pour « un plancher » en "
+            "general, la part relative de poutre et de dalle changeant tout. Et chaque "
+            "ratio porte sa BASE — celui de la poutre est rapporte a la retombee sous "
+            "dalle, pas a la section pleine : la meme masse rapportee a la section "
+            "entiere donnerait un ratio tout autre et un verdict different (D-037)."),
+    }
+
+
+def metre_depuis_le_dessin(d: dict, nom: dict) -> dict:
+    """Seconde traversee : la masse de la poutre recalculee depuis le DESSIN.
+
+    On repart des positions de l'elevation (une par trait dessine), de la section et des
+    segments de cadres, sans passer par la nomenclature. Ce que cela attrape : une erreur
+    de CODE dans la chaine de nomenclature, ou un dessin et un chiffrage qui divergent.
+    Ce que cela n'attrape PAS : une erreur dans le plan lui-meme, puisque les deux
+    traversees lisent le meme plan. C'est une verification de chaine, pas de contenu, et
+    le dire est la difference entre un controle et une auto-congratulation.
+    """
+    A = d["armatures"]
+    p = A["plan"]["poutre_PM1"]
+    rho = A["conventions"]["masse_volumique_acier_kg_m3"]
+    Lc = A["conventions"]["longueur_commerciale_m"]
+    Lr = A["du_plan_a_la_commande"]["longueur_de_recouvrement_du_plan_m"]["valeur"]
+    n_poutres = p["nb_dans_la_zone"]
+    masse = 0.0
+    for b in p["barres"]:
+        ml = masse_lineique_kg_m(b["dia_mm"], rho)
+        retours = sum(b.get("retours_m", []) or [])
+        for q in b["positions"]:
+            L = q["a_m"] - q["de_m"] + retours
+            L += nb_recouvrements(L, Lc, Lr) * Lr
+            masse += L * q["n"] * n_poutres * ml
+    c = cadres_poutre(d)
+    masse += c["masse_kg"]
+    ecart = masse - nom["masse_kg"]
+    return {
+        "masse_depuis_le_dessin_kg": round(masse, 1),
+        "masse_depuis_la_nomenclature_kg": nom["masse_kg"],
+        "ecart_kg": round(ecart, 2),
+        "ecart_pct": round(ecart / nom["masse_kg"] * 100, 3),
+        "ce_que_cette_voie_verifie": (
+            "la chaine de calcul, pas le plan : les deux traversees lisent les memes "
+            "donnees. Un ecart signale une erreur de code ou un dessin qui a diverge de "
+            "son chiffrage ; un accord ne prouve rien sur la justesse du ferraillage."),
+    }
+
+
+def le_metre_contre_l_estimation(d: dict, q: dict, dv: dict, tv: dict) -> dict:
+    """Ce que le metre d'un plan vise change pour le budget qui a ete bati AVANT lui.
+
+    Toute la chaine economique du cours — bordereau de D1, situation, valeur acquise de
+    D4 — repose sur une quantite d'acier ESTIMEE par ratio, avant que le moindre plan
+    n'existe. C'est la facon normale de proceder, et ce n'est pas un defaut : on ne
+    chiffre pas un marche en attendant les plans d'execution.
+
+    Ce qui serait un defaut, c'est de ne jamais remplacer l'estimation par le metre une
+    fois le plan vise. Le metre d'un plan vise est une MESURE ; le ratio est une
+    hypothese. Le jour du visa, le second cede la place au premier, et la difference se
+    propage : quantite au bordereau, montant des situations, BAC de la valeur acquise.
+
+    Le controle qui compte ici n'est pas « les deux nombres sont-ils egaux ? » — ils ne
+    le seront jamais — mais « le metre tombe-t-il dans la FOURCHETTE que l'estimation
+    avait declaree ? ». S'il y tombe, l'estimation a fait son travail. S'il en sort,
+    c'est le budget qu'il faut rouvrir, pas le plan qu'il faut discuter.
+    """
+    est = tv["quantites"]["acier_kg"]
+    f = tv["quantites"]["fourchette_acier"]
+    metre = dv["masse_du_plan_kg"]
+    dans = f["min_kg"] <= metre <= f["max_kg"]
+    return {
+        "estimation_par_ratio_kg": est,
+        "fourchette_de_l_estimation_kg": [f["min_kg"], f["max_kg"]],
+        "metre_du_plan_kg": metre,
+        "ecart_kg": round(metre - est, 1),
+        "ecart_pct": round((metre - est) / est * 100, 1),
+        "le_metre_est_dans_la_fourchette_de_l_estimation": bool(dans),
+        "lecture": (
+            f"L'estimation par ratio annoncait {est:.0f} kg, fourchette {f['min_kg']:.0f} "
+            f"a {f['max_kg']:.0f}. Le metre du plan en donne {metre:.0f}, soit "
+            f"{(metre - est) / est * 100:+.1f} %. "
+            + ("Il tombe DANS la fourchette : l'estimation a fait son travail, et c'est "
+               "desormais le metre qui vaut."
+               if dans else
+               "Il en SORT : ce n'est plus le plan qu'on discute, c'est le budget qu'on "
+               "rouvre.")),
+        "ce_qui_change_en_aval": (
+            "Des le visa, la ligne « aciers » du bordereau, les quantites des "
+            "attachements et le BAC de la valeur acquise se prennent sur la NOMENCLATURE "
+            "et non sur le ratio. Tant que ce basculement n'est pas fait, le suivi "
+            "compare un avancement mesure sur des plans a un budget bati sur une "
+            "hypothese : les indices de performance ne mesurent alors plus rien de "
+            "precis — c'est la meme faute d'assiette que D4 corrige sur sa valeur "
+            "acquise."),
+        "_pourquoi_ce_module_ne_le_fait_pas": (
+            "Le cours ne rebascule PAS le bordereau sur ce metre, et c'est deliberé : le "
+            "plan de B3e ne couvre qu'UNE zone sur huit, et il est fictif. Rebasculer "
+            "donnerait l'illusion d'un metre d'execution complet. Ce qui est enseigne "
+            "est la regle et le moment ou elle s'applique, pas un nouveau nombre."),
     }
 
 
@@ -384,6 +513,27 @@ def du_plan_a_la_commande(d: dict, masse_plan: float, nap: dict) -> dict:
             "prend sur la NOMENCLATURE VISEE, jamais sur un bon de livraison. Les deux "
             f"different ici de {(commande - masse_plan) / masse_plan * 100:.1f} %."),
         "_renvoi_CPS": "⚠ a verifier dans le CPS du marche : mode de metre des aciers.",
+        # D-036 : tout cout ou toute quantite publiee porte sa fourchette. Les chutes,
+        # les ligatures et les cales sont des V3 a large fourchette : la commande n'est
+        # pas un nombre, c'est un intervalle, et c'est lui qu'on negocie.
+        "fourchette": {
+            "acier_commande_kg": [
+                round(masse_plan * (1 + k["chutes_pct"]["fourchette"][0] / 100)
+                      * (1 + k["ligatures_pct"]["fourchette"][0] / 100), 1),
+                round(masse_plan * (1 + k["chutes_pct"]["fourchette"][1] / 100)
+                      * (1 + k["ligatures_pct"]["fourchette"][1] / 100), 1)],
+            "cales_u": [round(nap["surface_m2"] * k["cales_par_m2"]["fourchette"][0]),
+                        round(nap["surface_m2"] * k["cales_par_m2"]["fourchette"][1])],
+            "lecture": (
+                "L'ecart entre les bornes de la commande vient entierement du taux de "
+                "chutes, qui depend du calepinage du ferrailleur — un atelier qui "
+                "optimise contre un chantier qui coupe au fur et a mesure. C'est donc "
+                "une quantite qui se NEGOCIE a la commande, pas une donnee du plan."),
+        },
+        "crochets_non_metres": {
+            "masse_des_cadres_kg": None,
+            "note": "complete apres le calcul des cadres",
+        },
     }
 
 
@@ -407,7 +557,7 @@ def le_metre_contre_l_estimation(d: dict, q: dict, dv: dict, tv: dict) -> dict:
     """
     est = tv["quantites"]["acier_kg"]
     f = tv["quantites"]["fourchette_acier"]
-    metre = dv["voie_A_metre_du_plan_kg"]
+    metre = dv["masse_du_plan_kg"]
     dans = f["min_kg"] <= metre <= f["max_kg"]
     return {
         "estimation_par_ratio_kg": est,
@@ -598,13 +748,13 @@ def figures(d: dict, nom: dict, nap: dict, dv: dict, cmd: dict) -> dict:
         "par_diametre": [{"libelle": f"HA{x['dia_mm']} · {'+'.join(x['reperes'])}",
                           "valeur": x["masse_kg"]}
                          for x in nom["recapitulatif_par_diametre"]],
-        "deux_voies": [
-            {"libelle": "Voie A — métré du plan (nomenclature + nappes)",
-             "valeur": dv["voie_A_metre_du_plan_kg"]},
-            {"libelle": "Voie B — ratio kg/m³ × béton de la zone",
-             "valeur": dv["voie_B_ratio_kg"]},
+        "ordre_de_grandeur": [
+            {"libelle": "Métré du plan (nomenclature + nappes)",
+             "valeur": dv["masse_du_plan_kg"]},
+            {"libelle": "Masse au ratio kg/m³ (sur lequel le plan a été calibré)",
+             "valeur": dv["masse_au_ratio_kg"]},
         ],
-        "deux_voies_bande": dv["voie_B_fourchette_kg"],
+        "ordre_de_grandeur_bande": dv["fourchette_en_masse_kg"],
         "cascade": cmd["cascade"],
     }
 
@@ -615,8 +765,29 @@ def tout_calculer(d: dict) -> dict:
     q = plc.quantites_zone(d)
     nom = nomenclature_poutre(d)
     nap = nappes_dalle(d)
-    dv = deux_voies(d, q, nom, nap)
-    cmd = du_plan_a_la_commande(d, dv["voie_A_metre_du_plan_kg"], nap)
+    dv = controle_d_ordre_de_grandeur(d, q, nom, nap)
+    dessin = metre_depuis_le_dessin(d, nom)
+    cmd = du_plan_a_la_commande(d, dv["masse_du_plan_kg"], nap)
+    # B-9 : le metre des cadres est minorant des crochets. « Une trentaine de kilos »
+    # etait faux ET presente comme mesure : la longueur d'un crochet est ⏸, donc la
+    # part se declare comme un ordre de grandeur, et elle se chiffre sur la masse des
+    # CADRES, pas sur la masse totale.
+    cad = cadres_poutre(d)
+    part = 0.03
+    cmd["crochets_non_metres"] = {
+        "masse_des_cadres_kg": cad["masse_kg"],
+        "part_estimee_pct": round(part * 100, 1),
+        "masse_non_metree_kg": round(cad["masse_kg"] * part, 1),
+        "part_du_metre_total_pct": round(
+            cad["masse_kg"] * part / dv["masse_du_plan_kg"] * 100, 2),
+        "statut": "ORDRE DE GRANDEUR V3, non mesure",
+        "note": (
+            "La longueur d'un crochet d'extremite est une disposition constructive "
+            "reglementaire : elle est ⏸, donc elle n'est pas metree et le metre des "
+            "cadres est minorant. La part de 3 % est un ordre de grandeur declare, pas "
+            "une mesure — le cours ne peut pas mesurer ce qu'il n'a pas le droit de "
+            "citer. Rapportee au metre total, elle pese moins d'un demi-pour-cent."),
+    }
     tv = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json")
                     .read_text(encoding="utf-8"))
     return {
@@ -625,7 +796,8 @@ def tout_calculer(d: dict) -> dict:
         "nomenclature": nom,
         "cadres": cadres_poutre(d),
         "nappes": nap,
-        "deux_voies": dv,
+        "ordre_de_grandeur": dv,
+        "metre_depuis_le_dessin": dessin,
         "commande": cmd,
         "controles": controles_du_ferraillage(d, nap),
         "figures": figures(d, nom, nap, dv, cmd),
@@ -639,9 +811,11 @@ if __name__ == "__main__":
     sortie.mkdir(parents=True, exist_ok=True)
     (sortie / "ferraillage.json").write_text(
         json.dumps(r, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    dv, n = r["deux_voies"], r["nomenclature"]
+    dv, n = r["ordre_de_grandeur"], r["nomenclature"]
     print(f"poutres {n['masse_kg']} kg ({len(n['lignes'])} reperes) + dalle "
-          f"{r['nappes']['masse_kg']} kg = {dv['voie_A_metre_du_plan_kg']} kg")
+          f"{r['nappes']['masse_kg']} kg = {dv['masse_du_plan_kg']} kg "
+          f"(dessin : {r['metre_depuis_le_dessin']['masse_depuis_le_dessin_kg']} kg, "
+          f"ecart {r['metre_depuis_le_dessin']['ecart_pct']} %)")
     for e in dv["elements"]:
         print(f"  {e['element']} : {e['ratio_du_plan_kg_m3']} kg/m3 "
               f"(reference {e['ratio_de_reference_kg_m3']}, fourchette "
