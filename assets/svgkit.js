@@ -173,10 +173,17 @@
 
   /** Elevation d'une poutre continue : travees issues des donnees + console eventuelle. */
   function elevationPoutre(p, o = {}) {
-    const L = o.largeur || 640, H = o.hauteur || 180;
+    const ferraille = !!(o.aciers && p.aciers && p.aciers.length);
+    const L = o.largeur || 640, H = o.hauteur || (ferraille ? 260 : 180);
     const total = p.travees_m.reduce((a, b) => a + b, 0) + (p.console_m || 0);
-    const r = repere({ largeur: L, hauteur: H, marge: 42, xmin: 0, xmax: total, ymin: 0, ymax: Math.max(2, total / 6) });
-    const yh = r.y(1.1), hp = r.l(p.h_m || 0.75);
+    const r = repere({ largeur: L, hauteur: H, marge: 42, margeDroite: ferraille ? 60 : undefined,
+      xmin: 0, xmax: total, ymin: 0, ymax: Math.max(2, total / 6) });
+    // Une elevation ferraillee se dessine avec EXAGERATION VERTICALE : a l'echelle, une
+    // poutre de 0,75 m sur 24 m ne fait que quelques pixels de haut et aucun lit n'y est
+    // lisible. La distorsion est assumee et dite en legende ; les cotes, elles, restent
+    // celles des donnees.
+    const yh = ferraille ? H / 2 + 6 : r.y(1.1);
+    const hp = ferraille ? 104 : r.l(p.h_m || 0.75);
     let g = "", x = 0;
     g += rect(r.x(0), yh - hp / 2, r.l(total), hp, { remplissage: "url(#m-beton)", ep: 1.3 });
     const appuis = [0];
@@ -186,7 +193,10 @@
       g += chemin(`M${ax - 9} ${ay + 15} L${ax} ${ay} L${ax + 9} ${ay + 15} z`,
         { remplissage: "#41607d", couleur: "#41607d", ep: 1 });
       g += ligne(ax - 13, ay + 15, ax + 13, ay + 15, { couleur: "#41607d", ep: 1.6 });
-      g += texte(ax, ay + 29, `A${i + 1}`, { taille: 10, ancre: "middle", couleur: "#3f4852" });
+      // « App. n » et non « An » : sur une elevation ferraillee, « A1 » est deja le
+      // repere d'une barre. Deux sens pour un meme symbole sur la meme figure, c'est
+      // une erreur de lecture programmee.
+      g += texte(ax, ay + 29, `App. ${i + 1}`, { taille: 10, ancre: "middle", couleur: "#3f4852" });
     });
     let xc = 0;
     p.travees_m.forEach((t) => {
@@ -197,6 +207,35 @@
       g += cote(r.x(xc), yh - hp / 2, r.x(total), yh - hp / 2, `${p.console_m.toFixed(2)} m`,
         { decalage: -24, couleur: "#8c3b2e" });
       g += texte(r.x(xc + p.console_m / 2), yh + hp / 2 + 40, "console", { taille: 10.5, ancre: "middle", couleur: "#8c3b2e" });
+    }
+    // Aciers : un trait par POSITION de barre, place dans son lit. Les positions
+    // viennent des donnees du plan, jamais d'un trait pose a l'oeil : c'est ce qui
+    // garantit que l'elevation et la nomenclature disent la meme chose.
+    if (o.aciers && p.aciers && p.aciers.length) {
+      const lits = { inf: [], sup: [] };
+      for (const a of p.aciers) lits[a.lit === "sup" ? "sup" : "inf"].push(a);
+      // Un lit par repere, empile vers l'interieur de la section pour que deux reperes
+      // du meme lit ne se superposent pas.
+      for (const [lit, liste] of Object.entries(lits)) {
+        const reperes = [...new Set(liste.map((a) => a.repere))];
+        for (const a of liste) {
+          const rang = reperes.indexOf(a.repere);
+          const dy = (hp / 2 - 12) - rang * 13;
+          const y = lit === "sup" ? yh - dy : yh + dy;
+          const x1 = r.x(a.de_m), x2 = r.x(a.a_m);
+          g += ligne(x1, y, x2, y, { couleur: "#8c3b2e", ep: Math.max(1.6, a.dia_mm / 7) });
+          // extremites marquees : c'est l'ARRET de barre qui s'enseigne, pas le trait
+          for (const x of [x1, x2])
+            g += ligne(x, y - 4, x, y + 4, { couleur: "#8c3b2e", ep: 1.4 });
+        }
+        reperes.forEach((rep, i) => {
+          const prem = liste.find((a) => a.repere === rep);
+          const dy = (hp / 2 - 12) - i * 13;
+          const y = lit === "sup" ? yh - dy : yh + dy;
+          g += texte(L - 56, y + 3.5, `${rep}·${prem.n}HA${prem.dia_mm}`,
+            { taille: 9, ancre: "start", couleur: "#8c3b2e" });
+        });
+      }
     }
     return { svg: g, largeur: L, hauteur: H };
   }

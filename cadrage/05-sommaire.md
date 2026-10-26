@@ -764,3 +764,35 @@ Puis, dans cet ordre — **le métier du lecteur d'abord**, ce qui inverse l'ord
 **tu valides** comme la TV) → `A2b`, `A3`, `A5b` → `B1`, `B2` → `B3` (suite) → `B5a-calc` → `B6`, `B6b` →
 `B7a` → `R5`. Puis relecture des modules déjà livrés qui portaient un renvoi « ⏸ » ou une valeur V3
 qu'un document V0 peut remplacer (§ 5.0.7d), corrections listées dans `STATE.md`.
+
+### B3e — Béton armé en exécution (module créé par D-033, écrit le 26/10/2026)
+```text
+ID : B3e              Titre : Beton arme EN EXECUTION — lire un plan, le metrer, le controler
+Palier : P1           Type : calcul non normatif + execution     Niveau : [C]     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Options : O1 ✓ (coupe et elevation ferraillees, nomenclature) · O2 ✓ (n = 5) · O3 — sans objet
+          (la cage 3D parametrique existe deja a la page de demonstration du socle ; la dupliquer
+          ici ne ferait que cocher une case, § 6.2) · O4 ✓ (double lecture) · O5 ○ partiel (metre
+          et commande ; le prix reste chez D1) · O6 ○ non retenu · O7 ✓ (deux voies + etalonnage)
+Sans objet : O3, justifie ci-dessus. O6 — les 3 exercices couvrent le cas ouvert.
+Partie ⏸ : TOUT le dimensionnement — sections, longueurs d'ancrage et de recouvrement, arrets de
+          barres, enrobages minimaux, espacements maximaux, longueurs de crochets. Module B3c a la
+          levee du § 5.0.
+Contenu propre : les 7 etapes de lecture d'un plan ; metre par nomenclature (poutre) et par nappes
+          (dalle) ; masse lineique comme grandeur PHYSIQUE ; longueur developpee contre cote du
+          dessin ; recouvrements de livraison (nombre geometrique, longueur ⏸) ; comptage des
+          cadres ; les deux voies element par element ; le metre contre l'estimation par ratio, et
+          quand l'un remplace l'autre ; du plan a la commande a ce qui se paie ; 7 controles avec
+          leur REFERENCE et le statut de leur regle
+Donnees lues : data/projet-gare.json -> armatures.plan (PLAN FICTIF, calibre sur ratios_V3, non
+          dimensionne), armatures.conventions, armatures.du_plan_a_la_commande, ratios_V3.acier
+Donnees ecrites : calc/sorties/ferraillage.json
+Contre-calcul : voie A nomenclature x masse lineique contre voie B ratio kg/m3, element par element
+Etalonnage : calc/etalonnage/ferraillage_cas_ferme.py (10 diametres contre le tableau du commerce,
+          perimetre de cadre analytique, comptage, analyse dimensionnelle)
+Double lecture entreprise / MOE : ✓     Fiche memo S8 : ✓ (7 points du visa de ferraillage)
+Schemas : coupe ferraillee · elevation ferraillee (nouveau generateur) · masse par diametre ·
+          les deux voies avec fourchette · cascade plan -> commande
+Exercices : 1 application + 1 probleme + 1 cas ouvert   Quiz : 7 questions
+Tests : calc/tests/test_ferraillage.py (60 controles, 6 canaris) + verif_unites + rendu
+```

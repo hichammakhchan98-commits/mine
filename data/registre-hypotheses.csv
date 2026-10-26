@@ -160,3 +160,7 @@ H158;débit pratique d'une pompe automotrice;45 m³/h;m³/h;25 à 70;2026;C3;dé
 H159;durée cible d'un coulage;4 h;h;3 à 6;2026;C3;pour qu'un coulage démarré à l'aube finisse avant la montée en température , décision de conduite, pas contrainte physique
 H160;heure de fin voulue d'un coulage d'été;10 h;h;9 à 12;2026;C3;heure à laquelle le surfaçage doit être terminé , c'est d'elle qu'on recule pour trouver l'heure de démarrage
 H161;lever du soleil à la mi-juillet, région de Marrakech;6,3 h;h;6,0 à 6,7;2026;C3;sert à dire si le coulage démarre de nuit, et donc s'il faut éclairer
+H162;longueur de recouvrement portée par le plan fictif;1,00;m;0,60 à 1,60;2026;B3e;hypothèse de métré, non une disposition : une longueur de recouvrement réelle se lit dans le BAEL et dépend du diamètre, de l'adhérence et de la position de la barre
+H163;ratio d'acier d'une poutre de plancher;180;kg/m³;140 à 220;2026;B3e;ordre de grandeur de prédimensionnement, aucun document normatif fourni
+H164;ratio d'acier d'une dalle de plancher;80;kg/m³;65 à 100;2026;B3e;ordre de grandeur de prédimensionnement, aucun document normatif fourni
+H165;cales d'enrobage en partie courante de dalle;4;cales/m²;2 à 6;2026;B3e;hypothèse de commande, dépend du type de cale et du diamètre de la nappe

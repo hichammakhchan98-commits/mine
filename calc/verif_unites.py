@@ -195,5 +195,47 @@ leve("CPI calcule avec un cout realise en jours", lambda: (VA / (30 * u.day)).to
 leve("SV additionne a une duree", lambda: (SV + 1 * u.day).to(u.MAD))
 leve("recoupement entre un m3 et un m2", lambda: ((releve - 1 * u.m**2) / theorique).to(u.dimensionless))
 
+# ---------------------------------------------------------------- ferraillage.py (B3e)
+print("\nferraillage.py — metre d'un plan de ferraillage")
+_fe = json.loads((SORTIES / "ferraillage.json").read_text(encoding="utf-8"))
+import math
+rho = d["armatures"]["conventions"]["masse_volumique_acier_kg_m3"] * u.kg / u.m**3
+dia = _fe["nomenclature"]["lignes"][0]["dia_mm"] * u.mm
+# l. 38 de ferraillage.py : m = pi/4 x d^2 x rho
+ml = (math.pi / 4 * dia**2 * rho).to(u.kg / u.m)
+dit(str(ml.units) == "kilogram / meter", "masse lineique = pi/4 d^2 rho est en kg/m",
+    f"HA{dia.magnitude:.0f} = {ml.magnitude:.3f} kg/m")
+# l. 60 : longueur developpee = droite + somme des retours
+Ld = (_fe["nomenclature"]["lignes"][0]["longueur_unitaire_m"] * u.m)
+Lrec = (_fe["nomenclature"]["longueur_de_recouvrement_utilisee_m"] * u.m)
+Lf = (Ld + _fe["nomenclature"]["lignes"][0]["recouvrements_par_barre"] * Lrec).to(u.m)
+dit(str(Lf.units) == "meter", "longueur faconnee = droite + n x recouvrement est en m",
+    f"{Lf.magnitude:.2f} m")
+# masse d'un repere = longueur totale x masse lineique
+masse = (Lf * _fe["nomenclature"]["lignes"][0]["nombre"] * ml).to(u.kg)
+dit(str(masse.units) == "kilogram", "masse d'un repere = longueur totale x masse lineique",
+    f"{masse.magnitude:.1f} kg")
+# l. 180 : barres par metre = 100 / espacement -> en 1/m
+esp = _fe["nappes"]["lignes"][0]["espacement_cm"] * u.cm
+bpm = (1 / esp).to(1 / u.m)
+dit(str(bpm.units) == "1 / meter", "barres par metre = 1 / espacement est en m^-1",
+    f"{bpm.magnitude:.2f} /m")
+# ratio kg/m3 : masse d'acier sur volume de beton
+beton = _fe["deux_voies"]["elements"][0]["beton_m3"] * u.m**3
+ratio = (_fe["deux_voies"]["elements"][0]["voie_A_kg"] * u.kg / beton).to(u.kg / u.m**3)
+dit(str(ratio.units) == "kilogram / meter ** 3", "ratio d'acier = masse / volume de beton",
+    f"{ratio.magnitude:.0f} kg/m3")
+# perimetre du cadre : 2 (b + h), en m
+c = _fe["cadres"]["section_axe_cadre_m"]
+per = (2 * (c["b"] * u.m + c["h"] * u.m)).to(u.m)
+dit(str(per.units) == "meter", "perimetre du cadre = 2 (b + h) est en m",
+    f"{per.magnitude:.3f} m")
+
+leve("masse lineique calculee avec un diametre au carre oublie",
+     lambda: (math.pi / 4 * dia * rho).to(u.kg / u.m))
+leve("ratio d'acier rapporte a une surface",
+     lambda: (masse / (360 * u.m**2)).to(u.kg / u.m**3))
+leve("longueur faconnee additionnee a une masse", lambda: (Lf + masse).to(u.m))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)
