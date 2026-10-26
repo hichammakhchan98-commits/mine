@@ -147,3 +147,14 @@ H145;coût réel imputé à la date d'arrêt;23500000 MAD;MAD;20000000 à 270000
 H146;bruit sur le coût réel;1 mois de frais de chantier;mois;1 à 1;2026;D4;ordre de grandeur de l'imprécision d'une comptabilité analytique en cours de chantier , sert à dater la lisibilité du CPI
 H147;montant des travaux supplémentaires;1200000 MAD;MAD;700000 à 1900000;2026;D4;renforcement des massifs de grue mobile
 H148;délai supplémentaire de la modification;15 jours;j;8 à 25;2026;D4;la tâche touchée est sur le chemin critique : le délai se répercute entier
+H149;location d'un parc de coffrage;48 MAD/m²/mois;MAD/m²/mois;32 à 70;2026;C3;tables coffrantes et étaiement associé, location nue, transport amorti
+H150;montage et repli d'un parc de coffrage;55 MAD/m²;MAD/m²;35 à 85;2026;C3;première mise en place et repli, indépendants de la durée
+H151;temps de maniabilité à 20 °C;3,0 h;h;2,0 à 4,5;2026;C3;délai utile entre deux bandes successives
+H152;temps de maniabilité à 30 °C;1,8 h;h;1,2 à 2,5;2026;C3;temps de maniabilité à 30 °C
+H153;temps de maniabilité à 35 °C;1,3 h;h;0,8 à 2,0;2026;C3;régime d'été de la région de Marrakech : c'est le cas dimensionnant
+H154;température du béton frais retenue;35 °C;°C;25 à 42;2026;C3;température du BÉTON, non de l'air : la différence se joue sur le transport et la cure des granulats
+H155;largeur d'une bande de coulage;4,0 m;m;3,0 à 6,0;2026;C3;fixée par la portée de flèche de pompe et la largeur de règle vibrante
+H156;volume d'une toupie;8 m³;m³;6 à 10;2026;C3;volume d'une toupie
+H157;durée de rotation d'une toupie;75 min;min;45 à 120;2026;C3;aller, attente, vidange, retour, lavage — centrale à une vingtaine de minutes
+H158;débit pratique d'une pompe automotrice;45 m³/h;m³/h;25 à 70;2026;C3;débit de chantier, déplacements de flèche et attentes de toupie compris — et non le débit catalogue
+H159;durée cible d'un coulage;4 h;h;3 à 6;2026;C3;pour qu'un coulage démarré à l'aube finisse avant la montée en température , décision de conduite, pas contrainte physique

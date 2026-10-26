@@ -19,6 +19,8 @@ ETAPES = [
     ("Tests prix",           [sys.executable, str(RACINE / "tests" / "test_prix.py")]),
     ("Suivi (D4)",           [sys.executable, str(RACINE / "suivi.py")]),
     ("Tests suivi",          [sys.executable, str(RACINE / "tests" / "test_suivi.py")]),
+    ("Gros oeuvre (C3)",     [sys.executable, str(RACINE / "gros_oeuvre.py")]),
+    ("Tests gros oeuvre",    [sys.executable, str(RACINE / "tests" / "test_gros_oeuvre.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:

@@ -1,16 +1,16 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **21/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
+Dernière mise à jour : **26/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `D4` — Suivi et contrôle. Zip : `cours-genie-civil-P1-D4.zip`
+- **Dernier livrable** : `C3` — Gros œuvre. Zip : `cours-genie-civil-P1-C3.zip`
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `C3` — Gros œuvre (coffrage, ferraillage, bétonnage, cycle par niveau).
+- **Prochain module** : `B3e` — Béton armé en exécution (lire un plan, métrer, contrôler).
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -26,11 +26,11 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Statut des modules
 
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
-**24 livraisons**, dont **5 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
+**24 livraisons**, dont **6 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
 - **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 32 défauts, 8 bloquants
-  **tous corrigés** — D-035), `D1` (métrés et prix), `D4` (suivi et contrôle).
-  Passes /devil **à lancer** sur D1 et D4.
+  — D-035), `D1` (métrés et prix, 28 défauts, 7 bloquants corrigés), `D4` (suivi),
+  `C3` (gros œuvre). Passes /devil **à lancer** sur D4 et C3.
 - ▶ **actifs, non écrits** : A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
   D1, D2, D3, D4, D6, D7, M3D, REC, RC1
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
@@ -119,7 +119,6 @@ vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité q
 | 3 | Dates du palier 1 : **hypothèse V3** (fin du P1 actif au 15/03/2027), non confirmée | § 5.5 |
 | 4 | Logiciel aux éléments finis du lecteur inconnu — nécessaire avant B6b (⏸) | avant B6b |
 | 5 | Référentiel ferroviaire non identifié (quais, gabarits, caténaire) | CPS du marché |
-| 6 | Contrôle d'impression visuel, non automatisé | à outiller |
 | 7 | Bundle 3D de 765 ko, hors budget par module | à surveiller |
 | 8 | **Les tags git ne sont pas poussables** dans ce bac à sable (le proxy n'expose que `refs/heads/*`) : les tags de palier vivent dans le zip, pas sur GitHub | limite de l'environnement |
 | 9 | `TV` sans modèle 3D (le phasage appartient à C3) — à réviser si vous jugez qu'il en manque un | après validation |
@@ -127,6 +126,7 @@ vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité q
 | 11 | Chevauchements **texte contre trait** non détectés : le test ne compare que texte contre texte | à outiller |
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
 | 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
+| 17 | **C3** : le parc de coffrage divisait le stock de tables par la surface de PLANCHER au lieu de la surface de COFFRAGE (18 % d'écart), et le bétonnage raisonnait en couches sur toute la surface au lieu de bandes qui avancent (138 m³/h demandés pour une dalle de 25 cm). Corrigés en écrivant, avant la passe | fait |
 | 16 | **D1, non corrigés** (D-034) : figure 4 écrite en dur dans `figures()` au lieu d'être générée depuis `data/` (M6) · un seul canari pour cinq verdicts (M9) · nombres encore écrits à la main (M10) · dix mineurs. Et une **simplification déclarée** : tous les totaux de D1 sont calculés **sans** la ligne de divers calibrée (28,7 %), donc ce sont des bornes basses | avant la revue de palier |
 | 15 | **D1, corrigé en écrivant D4** : l'avancement déclaré de la situation était saisi à la main dans `data/` et décrivait un état de chantier du 2ᵉ mois pour une situation annoncée au 7ᵉ. Il est désormais dérivé du réseau (`calc/etat.py`), partagé par D1 et D4 | fait, D-039 |
 | 14 | **D2, non corrigés** (D-034) : réseau, lots et `21,7` en dur dans `calc/` au lieu de `data/` (M1) · 9 effectifs posés sans forme `{valeur, fourchette}` (M3) · levier « protection de voie » modélisé par un contournement (M5) · nombres encore écrits à la main (M10) · quantités calculées jamais publiées (m1) · axe de la ligne d'équilibre (m2, m3) · deux libellés plus larges que leur métré (m5) · pas de double lecture MOE (m6) · effet de seuil des fenêtres non commenté (m9, m10) | avant la revue de palier |
@@ -142,9 +142,9 @@ dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
 
 ## Effort consommé (§ 13.2)
 
-**10 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2 = 1 (dont la passe et ses
-corrections) · D1 = 1 · D4 = 1.
-**Avancement sur le programme du 31/10** (18 livraisons) : **5 faites**, dont les deux plus chères,
-le socle ne se refaisant pas et le témoin ayant absorbé les défauts de méthode. Reste 13 livraisons
-en 10 jours : **1 à 2 par séance**, une passe adversariale par module (D-034), majeurs et mineurs
-portés en dette plutôt que corrigés.
+**11 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3 = 1 chacun (passes et
+corrections comprises).
+**Avancement sur le programme du 31/10** : **6 livraisons sur 18**. À la cadence constatée — un
+module plus sa passe et ses corrections par séance — il en reste 5 à 7 atteignables sur les 12
+annoncées, et non 12. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les
+premiers coupés. C'est dit au lecteur, pas découvert le 31.

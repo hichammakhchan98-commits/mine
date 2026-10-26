@@ -1897,5 +1897,150 @@
    },
    "_nature": "ordre de service de la maitrise d'ouvrage — travaux supplementaires"
   }
+ },
+ "gros_oeuvre": {
+  "_role": "Parametres du gros oeuvre qui ne sont ni une cadence, ni une quantite, ni un prix d'ouvrage : le loyer du parc de coffrage, le regime thermique du betonnage, et les points d'arret. Le cycle lui-meme n'est PAS ici : il est calcule par le module TV et repris tel quel.",
+  "niveau_preuve": "V3",
+  "annee_ref": 2026,
+  "coffrage": {
+   "_role": "Le parc se LOUE au mois tant qu'on decide de sa taille. Le prix au m2 de rotation du bordereau (D1) est autre chose : un prix d'entreprise qui suppose le parc deja la. Les deux ne s'additionnent pas.",
+   "location_MAD_m2_mois": {
+    "valeur": 48,
+    "fourchette": [
+     32,
+     70
+    ],
+    "note": "tables coffrantes et etaiement associe, location nue, transport amorti"
+   },
+   "montage_demontage_MAD_m2": {
+    "valeur": 55,
+    "fourchette": [
+     35,
+     85
+    ],
+    "note": "premiere mise en place et repli du parc, independants de la duree"
+   },
+   "parcs_a_comparer_m2": [
+    430,
+    850,
+    1300,
+    1700,
+    2150,
+    2550
+   ],
+   "_parcs_note": "de une a six zones de coffrage simultanees. Une zone demande 424,3 m2 de TABLES — sa surface de coffrage, et non sa surface de plancher de 360 m2 : le ratio est de 1,179 m2 de coffrage par m2 coule, mesure sur la geometrie au module TV."
+  },
+  "betonnage_temps_chaud": {
+   "_role": "Ce qui decide d'une reprise froide : le temps pendant lequel une couche de beton accepte encore d'etre vibree avec la suivante. Aucune valeur normative ici (§ 5.0) : ce sont des ordres de grandeur declares.",
+   "temps_de_maniabilite_h": {
+    "_role": "Delai utile entre deux couches successives, selon la temperature du beton frais a la mise en oeuvre.",
+    "a_20_degres": {
+     "valeur": 3.0,
+     "fourchette": [
+      2.0,
+      4.5
+     ]
+    },
+    "a_30_degres": {
+     "valeur": 1.8,
+     "fourchette": [
+      1.2,
+      2.5
+     ]
+    },
+    "a_35_degres": {
+     "valeur": 1.3,
+     "fourchette": [
+      0.8,
+      2.0
+     ],
+     "note": "regime d'ete de la region de Marrakech : c'est le cas dimensionnant"
+    }
+   },
+   "temperature_de_calcul_C": {
+    "valeur": 35,
+    "fourchette": [
+     25,
+     42
+    ],
+    "note": "temperature du beton frais retenue pour le calcul du debit, et non temperature de l'air : la difference se joue sur le transport et la cure des granulats"
+   },
+   "volume_toupie_m3": {
+    "valeur": 8,
+    "fourchette": [
+     6,
+     10
+    ]
+   },
+   "rotation_toupie_min": {
+    "valeur": 75,
+    "fourchette": [
+     45,
+     120
+    ],
+    "note": "aller, attente, vidange, retour, lavage — centrale a une vingtaine de minutes du chantier"
+   },
+   "debit_pompe_m3_h": {
+    "valeur": 45,
+    "fourchette": [
+     25,
+     70
+    ],
+    "note": "debit PRATIQUE d'une pompe automotrice sur chantier, deplacements de fleche et attentes de toupie compris — et non son debit catalogue"
+   },
+   "largeur_de_bande_m": {
+    "valeur": 4.0,
+    "fourchette": [
+     3.0,
+     6.0
+    ],
+    "note": "largeur de la bande coulee en une passe. Elle est fixee par la portee de la fleche de pompe et par la largeur que la regle vibrante couvre, pas par un choix libre : on ne coule pas une dalle en nappe, on la coule par bandes qui se rattrapent."
+   },
+   "_modele": "Une dalle ne se coule pas en couches horizontales superposees : elle se coule par BANDES qui avancent. La contrainte de reprise froide porte donc sur le temps que met la bande n+1 a rejoindre la bande n, et le volume en jeu est celui d'une bande — pas celui de toute la zone. Une premiere version de ce calcul raisonnait en couches de 0,5 m sur toute la surface et demandait 138 m3/h et vingt-deux toupies pour une dalle de 25 cm : un debit absurde, ne de la mauvaise image de l'ouvrage.",
+   "duree_cible_du_coulage_h": {
+    "valeur": 4.0,
+    "fourchette": [
+     3.0,
+     6.0
+    ],
+    "note": "duree visee pour qu'un coulage demarre a l'aube se termine avant la montee en temperature. Ce n'est pas une contrainte physique mais une decision de conduite : elle fixe le nombre de toupies a commander."
+   }
+  },
+  "points_d_arret": {
+   "_role": "Les etapes que l'execution ne franchit pas sans accord ecrit. Ce sont des TACHES du planning, avec une duree, et non des formalites.",
+   "_nature": "decision",
+   "valeur": [
+    {
+     "etape": "Implantation et altimétrie du coffrage",
+     "vise_par": "maîtrise d'œuvre",
+     "duree_j": 0.125,
+     "critere": "tolérances de niveau et d'axe relevées contradictoirement"
+    },
+    {
+     "etape": "Ferraillage avant coulage",
+     "vise_par": "maîtrise d'œuvre",
+     "duree_j": 0.25,
+     "critere": "sections, recouvrements, enrobages, cales, propreté du fond"
+    },
+    {
+     "etape": "Fermeture du coffrage de voile",
+     "vise_par": "chef de chantier puis maîtrise d'œuvre",
+     "duree_j": 0.125,
+     "critere": "étanchéité des joints, serrage, étaiement et contreventement"
+    },
+    {
+     "etape": "Autorisation de bétonnage",
+     "vise_par": "maîtrise d'œuvre",
+     "duree_j": 0.0,
+     "critere": "bon de livraison conforme, température du béton, essais prévus"
+    },
+    {
+     "etape": "Décoffrage",
+     "vise_par": "chef de chantier",
+     "duree_j": 0.0,
+     "critere": "résistance atteinte — un critère de résistance, jamais un délai"
+    }
+   ]
+  }
  }
 }
