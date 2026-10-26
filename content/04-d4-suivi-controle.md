@@ -22,7 +22,8 @@ reporting de chantier :
 2. il distingue **trois états** — planifié, constaté, déclaré — et donc **deux écarts** : le premier
    est une dérive qui se pilote, le second un objet de **visa**. Les confondre fait viser une
    situation sur une déclaration ;
-3. il montre qu'un **SPI global ne voit pas le chemin critique**, et calcule les deux ;
+3. il montre qu'à une date donnée, **aucun indice ne répond à « la date tient-elle ? »** — ce qui y
+   répond est la **marge restante** des tâches qui ont dérivé, tâche par tâche ;
 4. il **calcule** à partir de quel avancement un CPI veut dire quelque chose, au lieu de citer une
    règle d'usage.
 
@@ -45,7 +46,7 @@ ceci :
 
 {{suivi.avancements.lecture}}
 
-:::figure {"fn":"barres","args":"suivi.figures.avancements","titre":"Trois avancements au même instant","num":1,"large":true,"options":{"unite":"% du budget, du marché ou du délai selon la ligne","bande":[0,100],"libelle_bande":"0 à 100 %"},"voir":["Les trois barres ne mesurent pas la même chose, et l'unité de l'axe le dit : un pourcentage n'a de sens qu'avec son dénominateur. C'est pour cela qu'on ne les additionne ni ne les moyenne.","Le physique dépasse le temporel de {{suivi.avancements.ecart_physique_temporel_pts::n1}} points : le chantier a produit plus que le calendrier n'a consommé. C'est normal en début de chantier, où les tâches les plus denses en budget se bousculent.","Le financier est {{suivi.avancements.ecart_physique_financier_pts::n1}} points sous le physique. L'entreprise a construit plus qu'elle n'a encaissé, et l'écart finance le maître d'ouvrage — c'est le besoin de trésorerie du module D1, vu d'un autre angle."],"erreur":"Citer « le chantier est à 25 % » sans dire de quoi. Dans une réunion où trois personnes ont trois chiffres différents, aucune n'a tort : elles ne répondent pas à la même question. Le seul qui mesure l'ouvrage est le physique."}
+:::figure {"fn":"barres","args":"suivi.figures.avancements","titre":"Trois avancements au même instant","num":1,"large":true,"options":{"unite":"% du budget, du marché ou du délai selon la ligne","bande":[0,100],"libelle_bande":"0 à 100 %"},"voir":["Les trois barres ne mesurent pas la même chose, et l'unité de l'axe le dit : un pourcentage n'a de sens qu'avec son dénominateur. C'est pour cela qu'on ne les additionne ni ne les moyenne.","Le physique dépasse le temporel de {{suivi.avancements.ecart_physique_temporel_pts::n1}} points, et cela ne veut PAS dire que le chantier est en avance : les tâches denses en budget sont en tête de planning, et une courbe en S n'est pas linéaire dans le temps. L'avance ou le retard se lit ailleurs — {{suivi.avancements.avance_ou_retard_pts::n1}} points, au constaté contre le planifié de la même date.","Le financier est {{suivi.avancements.ecart_physique_financier_pts::n1}} points sous le physique. L'entreprise a construit plus qu'elle n'a encaissé, et l'écart finance le maître d'ouvrage — c'est le besoin de trésorerie du module D1, vu d'un autre angle."],"erreur":"Citer « le chantier est à 25 % » sans dire de quoi. Dans une réunion où trois personnes ont trois chiffres différents, aucune n'a tort : elles ne répondent pas à la même question. Le seul qui mesure l'ouvrage est le physique."}
 :::
 
 ## S3 · Principes
@@ -94,11 +95,19 @@ Deux précautions, et chacune a déjà coûté un bloquant à ce cours :
    plus de vingt points en milieu de chantier, et c'est la seconde qui sert de référence à un indice
    exprimé en dirhams.
 
-### c. Un indice global ne voit pas le chemin critique
+### c. Aucun indice ne dit si la date tient
 
-Un SPI pondère les écarts par les budgets. Une dérive sur un gros poste non critique l'écrase ; une
-dérive sur une petite tâche critique y disparaît. On recalcule donc la même comparaison **en durée**,
-restreinte aux tâches qui portent la date.
+Un SPI pondère les écarts par les budgets : une dérive sur un gros poste non critique l'écrase, une
+dérive sur une petite tâche critique y disparaît. Le réflexe est alors de recalculer le même indice
+sur les tâches qui portent la date. Sur ce chantier, à cette date, **ce calcul n'existe pas** :
+aucune des {{suivi.ce_qui_porte_la_date.taches_a_marge_nulle.length}} tâches à marge nulle n'a
+commencé. Un indice sur elles vaut 0/0.
+
+Ce qui répond vraiment à la question n'est pas un indice mais une **marge**. Une dérive ne menace la
+date que lorsqu'elle dépasse la **marge totale** de la tâche qui la subit — et cela se vérifie tâche
+par tâche, en jours, pas en moyenne.
+
+$$ \text{retard}_i = \frac{\text{planifié}_i - \text{constaté}_i}{100} \times d_i \qquad\text{menace la date si } \text{retard}_i > MT_i $$
 
 ## S4 · Étude de cas : le point mensuel
 
@@ -143,37 +152,46 @@ défendable des trois, et c'est elle qu'on annonce — en disant pourquoi.
 :::figure {"fn":"courbeS","args":"suivi.figures.courbe","titre":"Courbe de dépense et point de valeur acquise","num":3,"large":true,"voir":["La courbe tiretée est la dépense PRÉVUE, en dirhams — celle de D1, pas la courbe en jours-hommes de D2. Les deux diffèrent de plus de vingt points en milieu de chantier, et un indice en dirhams se compare à la première.","Le point brique est la valeur acquise constatée, et l'écart coté à côté — en points de pourcentage — est l'écart de délai. C'est la même grandeur que le SV du tableau ci-dessus, dans une autre unité : {{suivi.valeur_acquise.ecart_de_delai_SV_MAD::n0}} MAD rapportés au budget de {{suivi.valeur_acquise.budget_a_l_achevement_BAC_MAD::n0}} MAD. Un écart de quelques points sur une courbe est vite jugé négligeable ; en dirhams il l'est moins.","Un seul point de constat est tracé, et c'est volontaire : relier deux relevés par une courbe donnerait l'illusion d'une tendance là où il n'y a qu'une paire de mesures."],"erreur":"Lire l'écart vertical comme un retard en jours. Il est en dirhams. Pour le convertir en temps, il faut le reporter sur la courbe prévue et lire la date correspondante — et cette conversion suppose que le reste du chantier suivra le rythme prévu, ce que rien ne garantit."}
 :::
 
-### c. Le SPI ne dit pas ce qu'on croit
+### c. Ce qui porte la date, et qu'aucun indice ne mesure
 
-| | Avancement constaté | Avancement planifié | Indice |
-|---|---:|---:|---:|
-| **Global**, en durée | {{suivi.spi_du_chemin.avancement_global_constate_pct::n1}} % | {{suivi.spi_du_chemin.avancement_global_planifie_pct::n1}} % | **{{suivi.spi_du_chemin.SPI_en_duree_global::n3}}** |
-| **Chemin critique**, en durée | {{suivi.spi_du_chemin.avancement_du_chemin_constate_pct::n1}} % | {{suivi.spi_du_chemin.avancement_du_chemin_planifie_pct::n1}} % | **{{suivi.spi_du_chemin.SPI_en_duree_du_chemin::n3}}** |
+À la date d'arrêt, **aucune** des {{suivi.ce_qui_porte_la_date.taches_a_marge_nulle.length}} tâches
+à marge nulle n'a commencé — le levage sous consignation est épinglé au jour
+{{planification.consignations.CHLV.debut::n0}}, et tout ce qui le suit attend avec lui. Publier un
+« SPI du chemin critique » à cette date reviendrait à diviser zéro par zéro, ou à le calculer sur la
+plus longue chaîne du réseau, dont la plupart des tâches ont quarante jours de marge. Le module ne
+le publie donc pas, et c'est un résultat : **un indice de performance ne dit rien de la date tant
+que ce qui porte la date n'a pas commencé.**
 
-**{{suivi.spi_du_chemin.ecart_pts::n1}} points d'écart entre les deux indices**, et ils ne pointent
-pas dans le même sens. L'indice global est le plus pessimiste : il porte toute la dérive de la
-fabrication de charpente, {{suivi.etats.planifie.CHFA::n0}} % prévus contre
-{{suivi.etats.constate.CHFA::n0}} % constatés. Or **cette tâche n'est pas sur le chemin critique** de
-ce chantier — elle dispose de {{planification.durees.CHFA.marge_totale_j::n0}} jours de marge, et son
-retard y est absorbé.
+Ce qui le dit, c'est la marge restante, dérive par dérive :
 
-:::encart {"genre":"voir","titre":"Pourquoi c'est contre-intuitif, et pourquoi il faut le calculer"}
-Le réflexe est de penser l'inverse : un indice global **rassurant** qui masquerait une dérive
-critique. Cela arrive, et c'est le danger qu'on enseigne. Mais sur ce chantier précis, c'est la
-situation symétrique qui se produit : l'indice global **sur-alarme**, parce que la dérive la plus
-visible est absorbée par une marge.
+| Tâche | Retard | Marge totale | Reste | Décale un successeur ? | Menace la date ? |
+|---|---:|---:|---:|---|---|
+| {{suivi.ce_qui_porte_la_date.derives.0.tache}} · {{suivi.ce_qui_porte_la_date.derives.0.nom}} | {{suivi.ce_qui_porte_la_date.derives.0.retard_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.0.marge_totale_j::n1}} j | **{{suivi.ce_qui_porte_la_date.derives.0.marge_totale_restante_j::n1}} j** | oui | non |
+| {{suivi.ce_qui_porte_la_date.derives.1.tache}} · {{suivi.ce_qui_porte_la_date.derives.1.nom}} | {{suivi.ce_qui_porte_la_date.derives.1.retard_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.1.marge_totale_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.1.marge_totale_restante_j::n1}} j | non | non |
+| {{suivi.ce_qui_porte_la_date.derives.2.tache}} · {{suivi.ce_qui_porte_la_date.derives.2.nom}} | {{suivi.ce_qui_porte_la_date.derives.2.retard_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.2.marge_totale_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.2.marge_totale_restante_j::n1}} j | non | non |
+| {{suivi.ce_qui_porte_la_date.derives.3.tache}} · {{suivi.ce_qui_porte_la_date.derives.3.nom}} | {{suivi.ce_qui_porte_la_date.derives.3.retard_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.3.marge_totale_j::n1}} j | {{suivi.ce_qui_porte_la_date.derives.3.marge_totale_restante_j::n1}} j | non | non |
 
-Les deux cas existent, et aucun des deux ne se devine : un indice global et un indice de chemin
-critique répondent à deux questions différentes, et il faut les calculer tous les deux. Le premier
-dit si le chantier produit ce qui était prévu ; le second, et lui seul, dit si la **date** tient.
+**La date tient** — aucune dérive ne dépasse sa marge totale. Mais la ligne du haut est celle à
+suivre : la fabrication de charpente a consommé
+{{suivi.ce_qui_porte_la_date.derives.0.retard_j::n1}} de ses
+{{suivi.ce_qui_porte_la_date.derives.0.marge_totale_j::n1}} jours, il lui en reste
+**{{suivi.ce_qui_porte_la_date.derives.0.marge_totale_restante_j::n1}}**, et sa marge **libre** est
+nulle : son retard pousse déjà son successeur.
 
-Et sur ce chantier, une raison de plus de se méfier du global : une tâche en avance hors du chemin
-ne rattrape rien. Le levage au-dessus de la voie est épinglé au jour
-{{planification.consignations.CHLV.debut::n0}} par sa fenêtre de consignation — tout ce qui le
-précède attend de toute façon.
+{{suivi.ce_qui_porte_la_date.ce_qu_il_faut_suivre}}
+
+:::figure {"fn":"barres","args":"suivi.figures.marges","titre":"Marge totale restante après dérive, tâche par tâche","num":4,"large":true,"options":{"unite":"jours de marge totale restante"},"voir":["La ligne de base, à gauche, est le zéro : une tâche qui l'atteint devient critique et la date bouge. Aucune n'y est, et une s'en approche.","{{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.tache}} n'a plus que {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_restante_j::n1}} jours. C'est la seule ligne de ce point mensuel qui appelle une action, et elle ne se voit sur aucun indice de performance.","Les trois autres dérives sont plus visibles en points d'avancement et moins graves en jours : une dérive de deux jours sur une tâche qui en a deux cents de marge n'est pas un sujet de réunion."],"erreur":"Classer les dérives par leur taille en points d'avancement. Ce qui compte est le rapport entre le retard en JOURS et la marge de la tâche — et ce rapport ne se lit ni sur un SPI, ni sur un tableau d'avancement."}
 :::
 
-:::figure {"fn":"barres","args":"suivi.figures.indices","titre":"Quatre indices de performance au même instant","num":4,"large":true,"options":{"unite":"indice (1,00 = conforme au prévu)","bande":{"$":"suivi.figures.indices_bande"},"libelle_bande":"conforme","origine":{"$":"suivi.figures.indices_origine"}},"voir":["Le CPI et le SPI ne se lisent pas sur la même assiette : le premier compare des dirhams produits à des dirhams dépensés, le second des dirhams produits à des dirhams prévus. Les mettre côte à côte est utile ; les moyenner ne veut rien dire.","Les deux SPI de durée encadrent la question du délai. Celui du chemin critique, {{suivi.spi_du_chemin.SPI_en_duree_du_chemin::n3}}, est le seul qui engage une date.","{{suivi.figures.indices_hors_bande.length}} indices sur {{suivi.figures.indices.length}} sont hors de la bande de conformité — {{suivi.figures.indices_hors_bande.0}} et {{suivi.figures.indices_hors_bande.1}} — et pourtant aucun n'est alarmant isolément. L'axe ne part pas de zéro, et c'est volontaire : à cette échelle, quatre barres parties de zéro auraient toutes la même longueur et la figure ne montrerait rien."],"erreur":"Piloter sur un indice unique. Un tableau de bord à un chiffre est un tableau de bord qui cache trois questions — le coût, le volume produit, et la date — dont une seule intéresse le maître d'ouvrage au moment de la réception."}
+:::encart {"genre":"voir","titre":"Pourquoi ce module ne publie plus de « SPI du chemin critique »"}
+Il en publiait un, et c'était sa contribution annoncée. Il valait
+{{suivi.ce_qui_porte_la_date.SPI_sur_la_plus_longue_chaine_demarree::n3}} — mais il portait sur la
+plus longue **chaîne** du réseau, pas sur les tâches à marge nulle, et les deux tiers de ses tâches
+avaient quarante jours de marge. Toute sa « dérive » venait d'une seule tâche non critique.
+
+L'erreur n'était pas arithmétique : le calcul était juste. Elle était dans l'objet mesuré, et c'est
+la famille d'erreurs la plus coûteuse de ce cours — un indice qui porte un nom qu'il ne mérite pas
+se lit comme s'il le méritait.
 :::
 
 ### d. À partir de quand un CPI veut-il dire quelque chose ?
@@ -199,18 +217,27 @@ distingue du bruit.
 ### e. Le visa de la situation, côté maîtrise d'œuvre
 
 L'entreprise dépose une situation sur son **déclaré**. La maîtrise d'œuvre la vise sur le
-**constaté**. L'écart, ici, fait {{suivi.visa.montant_retire_MAD::n0}} MAD, soit
-{{suivi.visa.reduction_pct::n1}} % de la situation.
+**constaté**. L'écart porte sur {{suivi.visa.travaux_retires_MAD::n0}} MAD de **travaux**, et fait
+baisser le **net à payer** de {{suivi.visa.reduction_du_net_MAD::n0}} MAD, soit
+{{suivi.visa.reduction_pct::n1}} % — deux nombres différents, et c'est le second qui se paie.
 
 | Poste | Déclaré | Constaté | Écart | À retirer |
 |---|---:|---:|---:|---:|
 | {{suivi.visa.lignes_reduites.0.poste}} · {{suivi.visa.lignes_reduites.0.libelle}} | {{suivi.visa.lignes_reduites.0.declare_pct::n1}} % | {{suivi.visa.lignes_reduites.0.constate_pct::n1}} % | {{suivi.visa.lignes_reduites.0.ecart_pts::n1}} pts | {{suivi.visa.lignes_reduites.0.ecart_MAD::n0}} MAD |
 | {{suivi.visa.lignes_reduites.1.poste}} · {{suivi.visa.lignes_reduites.1.libelle}} | {{suivi.visa.lignes_reduites.1.declare_pct::n1}} % | {{suivi.visa.lignes_reduites.1.constate_pct::n1}} % | {{suivi.visa.lignes_reduites.1.ecart_pts::n1}} pts | {{suivi.visa.lignes_reduites.1.ecart_MAD::n0}} MAD |
 | {{suivi.visa.lignes_reduites.2.poste}} · {{suivi.visa.lignes_reduites.2.libelle}} | {{suivi.visa.lignes_reduites.2.declare_pct::n1}} % | {{suivi.visa.lignes_reduites.2.constate_pct::n1}} % | {{suivi.visa.lignes_reduites.2.ecart_pts::n1}} pts | {{suivi.visa.lignes_reduites.2.ecart_MAD::n0}} MAD |
-| | | | **Total** | **{{suivi.visa.montant_retire_MAD::n0}} MAD** |
+| | | | **Total travaux** | **{{suivi.visa.travaux_retires_MAD::n0}} MAD** |
 
 Net déclaré {{suivi.visa.net_declare_MAD::n0}} MAD → **net visé
-{{suivi.visa.net_vise_MAD::n0}} MAD**.
+{{suivi.visa.net_vise_MAD::n0}} MAD**, soit {{suivi.visa.reduction_du_net_MAD::n0}} MAD de moins.
+
+:::encart {"genre":"piege","titre":"Le net ne baisse pas du montant des travaux retirés"}
+{{suivi.visa.pourquoi_la_reduction_est_plus_faible_que_les_travaux_retires}}
+
+En pratique : on ne vise pas un net, on **rejoue la situation** sur le constaté — mêmes formules,
+même ordre, retenue de garantie et remboursement d'avance recalculés sur le montant révisé. Le net
+visé est la sortie de ce second passage, jamais une soustraction faite sur le net déposé.
+:::
 
 **Les six contrôles d'un visa**, dans cet ordre, parce que chacun conditionne le suivant :
 
@@ -285,7 +312,7 @@ obligations réglementaires du marché. **Aucune valeur normative n'est donnée*
 | La **levée d'un point d'arrêt** sous contrainte de situation | on lève pour pouvoir facturer | un point d'arrêt se lève sur un essai, pas sur un calendrier de paiement |
 
 **Le lien avec tout ce module.** Le § S4e montre qu'un visa retire
-{{suivi.visa.montant_retire_MAD::n0}} MAD à une situation. Ce refus est légitime et il a un effet de
+{{suivi.visa.travaux_retires_MAD::n0}} MAD de travaux à une situation. Ce refus est légitime et il a un effet de
 bord : l'entreprise cherchera à avancer plus vite le mois suivant. **Un visa bien fait s'accompagne
 d'une date de reconstat**, pas seulement d'une réduction — sans quoi la réduction se transforme en
 pression sur le chantier, et la pression se transforme en risque.
@@ -298,7 +325,9 @@ pression sur le chantier, et la pression se transforme en risque.
 | Avancement planifié calculé au prorata du temps | toutes les tâches au même pourcentage | un écart qui ne peut rien détecter : il partage son hypothèse avec ce qu'il mesure |
 | Valeur acquise valorisée sur le **déclaré** | le CPI s'améliore au moment où la situation est déposée | ici, plus d'un million de dirhams de VA fictive |
 | VP prise sur la courbe en jours-hommes | les indices bougent sans que rien ne bouge sur le chantier | plus de vingt points d'écart en milieu de chantier |
-| Pilotage sur le SPI global seul | le tableau de bord est rouge, la date tient — ou l'inverse | {{suivi.spi_du_chemin.ecart_pts::n1}} points d'écart ici, et dans le sens qu'on n'attendait pas |
+| Pilotage sur un SPI pour juger de la date | le tableau de bord est rouge, la date tient — ou l'inverse | ici le SPI vaut {{suivi.ce_qui_porte_la_date.SPI_en_duree_global::n3}} et ne dit rien de la date : aucune tâche à marge nulle n'a commencé |
+| « SPI du chemin critique » calculé sur la plus longue chaîne | un indice qui porte un nom qu'il ne mérite pas | {{suivi.ce_qui_porte_la_date.SPI_sur_la_plus_longue_chaine_demarree::n3}} ici, sur des tâches qui ont jusqu'à {{suivi.ce_qui_porte_la_date.derives.2.marge_totale_j::n0}} jours de marge |
+| Dérives classées par leur taille en points d'avancement | la plus visible passe en premier | la seule qui compte est celle dont la marge restante approche zéro — {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.tache}}, {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_restante_j::n1}} j |
 | CPI annoncé trop tôt | une alerte sur les deux premières situations | on mesure la comptabilité analytique, pas le chantier |
 | Situation visée sans attachement signé | la quantité payée n'a pas de constat | un litige au décompte final, et il se gagne sur la pièce |
 | Avenant chiffré sur les seuls travaux | le délai n'y figure pas | {{suivi.modification.part_cachee_pct::n1}} % du coût réel de la modification |
@@ -323,32 +352,54 @@ intéresse le service comptable, pas la réunion de chantier. Le **temporel**
 ({{suivi.avancements.temporel_pct::n1}} %) ne mesure que le calendrier : il serait identique sur un
 chantier à l'arrêt.
 
-*Le piège : citer le temporel parce qu'il est le plus facile à calculer. Sur ce chantier il est le
-plus bas des trois, ce qui donnerait une impression de retard là où le chantier est en avance de
-{{suivi.avancements.ecart_physique_temporel_pts::n1}} points sur sa production.*
+*Le piège, et il en cache un second. Le premier : citer le temporel parce qu'il est le plus facile à
+calculer — il est le plus bas des trois et donne une impression de retard que rien n'étaye. Le
+second, plus coûteux : conclure de l'écart inverse que le chantier est **en avance**. Le physique
+dépasse le temporel de {{suivi.avancements.ecart_physique_temporel_pts::n1}} points, mais c'est une
+part de budget comparée à une part de délai — deux dénominateurs différents, l'erreur même que cette
+section dénonce. Le seul avance/retard lisible compare le physique **constaté** au physique
+**planifié** à la même date : {{suivi.avancements.physique_constate_sur_ouvrages_pct::n1}} % contre
+{{suivi.avancements.physique_planifie_pct::n1}} %, soit
+{{suivi.avancements.avance_ou_retard_pts::n1}} points — un **retard**. Les deux lectures de l'écart
+sont fausses, et dans des sens opposés.*
 :::
 
-:::exercice {"titre":"2 · Lire deux SPI qui ne disent pas la même chose","niveau":"probleme"}
-Le SPI global en durée vaut {{suivi.spi_du_chemin.SPI_en_duree_global::n3}}, celui du chemin critique
-{{suivi.spi_du_chemin.SPI_en_duree_du_chemin::n3}}. Votre directeur veut savoir si la date tient.
-Que lui dites-vous, et quelle action proposez-vous ?
+:::exercice {"titre":"2 · « La date tient-elle ? » — et pourquoi aucun indice ne répond","niveau":"probleme"}
+Votre tableau de bord affiche un SPI en durée de
+{{suivi.ce_qui_porte_la_date.SPI_en_duree_global::n3}}. Votre directeur veut savoir si la date de fin
+tient. Le chef de projet d'un autre site vous conseille de recalculer « le SPI du chemin critique ».
+Que faites-vous, et que lui répondez-vous ?
 
-**Corrigé.** « **La date tient mieux que le tableau de bord ne le suggère.** L'indice global est tiré
-vers le bas par la fabrication de charpente, {{suivi.etats.constate.CHFA::n0}} % constatés contre
-{{suivi.etats.planifie.CHFA::n0}} % prévus — mais cette tâche dispose de
-{{planification.durees.CHFA.marge_totale_j::n0}} jours de marge et son retard y est absorbé. Sur les
-tâches qui portent réellement la date, l'indice est de
-{{suivi.spi_du_chemin.SPI_en_duree_du_chemin::n3}}. »
+**Corrigé.** D'abord le calcul qu'on vous conseille : il **n'existe pas à cette date**. Les tâches à
+marge nulle sont {{suivi.ce_qui_porte_la_date.taches_a_marge_nulle.length}} — levage sous
+consignation, façades, second œuvre, essais, réception — et
+**{{suivi.ce_qui_porte_la_date.taches_a_marge_nulle_demarrees.length}}** ont commencé. Un indice de
+performance sur elles est un 0/0. Ce que donne l'outil quand on le lui demande quand même, c'est
+l'indice de la plus **longue chaîne** démarrée,
+{{suivi.ce_qui_porte_la_date.SPI_sur_la_plus_longue_chaine_demarree::n3}} — un nombre rassurant,
+calculé sur huit tâches dont certaines ont près de deux cents jours de marge. Il ne mesure pas le
+chemin critique ; il porte seulement son nom.
 
-**L'action n'est pourtant pas « ne rien faire »**, et c'est le second temps du raisonnement : une
-marge consommée n'est plus disponible. La charpente a mangé une partie de la sienne ; si elle
-continue au même rythme, elle deviendra critique. L'action est donc de **relancer le fournisseur
-maintenant**, pendant que le retard est encore gratuit, et de suivre la marge restante comme un
-indicateur à part entière.
+Ce qui répond à la question est une **marge**, tâche par tâche :
 
-*Le piège, dans les deux sens : conclure « tout va bien » d'un bon indice de chemin critique, ou
-déclencher un plan de rattrapage coûteux sur un mauvais indice global. Les deux indices se lisent
-ensemble, et aucun ne se lit sans la marge.*
+> « La date tient. Quatre tâches ont dérivé ; aucune n'a dépassé sa marge totale. Celle qui s'en
+> approche est {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.nom}} :
+> {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.retard_j::n1}} jours de retard sur
+> {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_j::n1}} jours de marge, il lui
+> en reste **{{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_restante_j::n1}}**.
+> Sa marge **libre** est déjà consommée : son retard pousse le levage, qui attend aussi la fenêtre
+> de consignation. »
+
+**L'action n'est pas « ne rien faire »** — c'est le second temps du raisonnement. Une marge
+consommée ne se reconstitue pas. La relance du fournisseur se fait **maintenant**, pendant que le
+retard est encore gratuit ; au-delà de
+{{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_restante_j::n1}} jours de plus, la
+même dérive se paie en date de livraison de la gare. Et comme la fenêtre de consignation ne se
+déplace pas, un levage repoussé ne rattrape pas : il attend la fenêtre suivante.
+
+*Le piège de cet exercice est le conseil du collègue : il est de bonne foi, la formule est la bonne,
+et le résultat ne veut rien dire parce que son assiette est vide. Avant de calculer un indice,
+vérifiez que ce qu'il mesure a commencé.*
 :::
 
 :::exercice {"titre":"3 · Choisir une prévision à terminaison","niveau":"probleme"}
@@ -387,9 +438,11 @@ Un conducteur de travaux vous remet ce point mensuel :
 **Corrigé.**
 
 1. **« 23 % » est l'avancement temporel**, présenté comme l'avancement du chantier. Le physique est à
-   {{suivi.avancements.physique_pct::n1}} % : le chantier est en **avance** de
-   {{suivi.avancements.ecart_physique_temporel_pts::n1}} points sur sa production, et le point mensuel
-   annonce l'inverse.
+   {{suivi.avancements.physique_pct::n1}} %, et c'est lui qui répond. Attention au réflexe inverse :
+   l'écart de {{suivi.avancements.ecart_physique_temporel_pts::n1}} points entre les deux **ne dit
+   pas** que le chantier est en avance — les deux pourcentages n'ont pas le même dénominateur. Au
+   constat contre planifié, le chantier a {{suivi.avancements.avance_ou_retard_pts::n1}} points de
+   retard sur sa production.
 2. **L'avancement au prorata est faux par construction.** Mettre 23 % sur chaque tâche donne 23 % à
    des tâches terminées et 23 % à des tâches jamais commencées. Un avancement se **dérive** de l'état
    du réseau — et surtout, un prorata ne peut rien détecter, puisqu'il partage son hypothèse avec ce
@@ -402,7 +455,9 @@ Un conducteur de travaux vous remet ce point mensuel :
    prorata est un CPI faux.
 4. **« Conforme à notre métré » n'est pas le critère.** La situation se vise sur l'**attachement
    contradictoire**, pas sur le métré d'étude. Ici le visa retire
-   {{suivi.visa.montant_retire_MAD::n0}} MAD sur {{suivi.visa.lignes_reduites.length}} postes.
+   {{suivi.visa.travaux_retires_MAD::n0}} MAD de travaux sur {{suivi.visa.lignes_reduites.length}} postes,
+   et un net visé de {{suivi.visa.net_vise_MAD::n0}} MAD obtenu en rejouant la situation, pas en
+   soustrayant ces travaux du net déposé.
 5. **Passer au trimestre est l'inverse de ce que la situation demande.** Le SPI est à
    {{suivi.valeur_acquise.SPI::n3}} et une tâche a consommé une partie de sa marge. On espace un
    reporting quand les indices sont stables **et** que la marge ne se consomme pas — pas quand on
@@ -454,8 +509,8 @@ Parce qu'il serait identique pour toutes les tâches, y compris celles qui sont 
 **3. Sur quel état valorise-t-on la valeur acquise ?**
 Le **constaté**. Valoriser le déclaré ferait monter le CPI au moment où l'entreprise dépose sa situation : un indice qui se nourrit d'une déclaration mesure la déclaration.
 
-**4. Votre SPI global est à {{suivi.spi_du_chemin.SPI_en_duree_global::n2}}. La date est-elle en danger ?**
-**On ne peut pas le dire avec ce chiffre.** Un indice global pondère par les budgets et ne voit pas le chemin critique. Ici celui du chemin vaut {{suivi.spi_du_chemin.SPI_en_duree_du_chemin::n3}} : la date tient mieux que le tableau de bord. Mais une marge consommée n'est plus disponible — c'est elle qu'il faut suivre.
+**4. Votre SPI en durée vaut {{suivi.ce_qui_porte_la_date.SPI_en_duree_global::n2}}. La date est-elle en danger ?**
+**On ne peut pas le dire avec ce chiffre, et pas davantage avec un « SPI du chemin critique ».** Un indice global pondère par les budgets et noie une dérive critique dans les tâches à marge ; et à cette date, aucune des {{suivi.ce_qui_porte_la_date.taches_a_marge_nulle.length}} tâches à marge nulle n'a commencé, donc l'indice restreint n'est pas défini. Ce qui répond est la **marge totale restante** de chaque tâche qui a dérivé : ici {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_restante_j::n1}} jours sur {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.tache}}, et la date tient. Une marge consommée n'est pourtant plus disponible — c'est elle qu'on suit.
 
 **5. À partir de quel avancement un CPI devient-il un indicateur ?**
 Quand l'incertitude sur le coût réel passe sous la dérive qu'on cherche. Ici, {{suivi.fiabilite_du_cpi.avancement_ou_le_CPI_devient_lisible_pct::n1}} % d'avancement — et ce seuil dépend du bruit supposé, pas d'une règle universelle.
@@ -491,10 +546,11 @@ Planifié →(dérive, **se pilote**)→ Constaté →(déclaration, **se vise**
 |---|---:|
 | CPI | {{suivi.valeur_acquise.CPI::n3}} |
 | SPI (valeur) | {{suivi.valeur_acquise.SPI::n3}} |
-| SPI en durée, global | {{suivi.spi_du_chemin.SPI_en_duree_global::n3}} |
-| **SPI en durée, chemin critique** | **{{suivi.spi_du_chemin.SPI_en_duree_du_chemin::n3}}** |
+| SPI en durée, global | {{suivi.ce_qui_porte_la_date.SPI_en_duree_global::n3}} |
+| Indice sur les tâches à marge nulle | **non défini** — aucune n'a commencé |
+| **Marge totale restante la plus faible** | **{{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.tache}} · {{suivi.ce_qui_porte_la_date.derive_la_plus_menacante.marge_totale_restante_j::n1}} j** |
 | EAC retenue (dérive systématique) | {{suivi.valeur_acquise.EAC_si_la_derive_persiste_MAD::n0}} MAD |
-| Retiré au visa | {{suivi.visa.montant_retire_MAD::n0}} MAD ({{suivi.visa.reduction_pct::n1}} %) |
+| Retiré au visa | {{suivi.visa.travaux_retires_MAD::n0}} MAD de travaux → net −{{suivi.visa.reduction_du_net_MAD::n0}} MAD ({{suivi.visa.reduction_pct::n1}} %) |
 | CPI lisible à partir de | {{suivi.fiabilite_du_cpi.avancement_ou_le_CPI_devient_lisible_pct::n1}} % d'avancement |
 
 **Les six contrôles d'un visa de situation**

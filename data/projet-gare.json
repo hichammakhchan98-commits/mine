@@ -1896,6 +1896,14 @@
     "note": "la tache touchee est sur le chemin critique : le delai se repercute entier"
    },
    "_nature": "ordre de service de la maitrise d'ouvrage — travaux supplementaires"
+  },
+  "bande_de_conformite_des_indices": {
+   "valeur": [
+    0.95,
+    1.05
+   ],
+   "_nature": "decision",
+   "note": "bande dans laquelle un indice de performance est juge conforme. C'est un SEUIL D'ALERTE choisi, pas une propriete des indices : il se discute avec la maitrise d'ouvrage et il se declare. Il ne vaut que pour des indices DEFINIS sur leur base (D-037)."
   }
  },
  "gros_oeuvre": {
@@ -2004,6 +2012,27 @@
      6.0
     ],
     "note": "duree visee pour qu'un coulage demarre a l'aube se termine avant la montee en temperature. Ce n'est pas une contrainte physique mais une decision de conduite : elle fixe le nombre de toupies a commander."
+   },
+   "sens_d_avancement": {
+    "valeur": "dans la longueur",
+    "_nature": "decision",
+    "note": "on avance dans la longueur de la zone (15 m) et chaque bande traverse sa largeur (24 m). Le sens n'est pas neutre : avancer dans l'autre sens donnerait des bandes 60 % plus grosses et un debit minimal d'autant. Il se choisit sur la position de la pompe et le sens de portee des poutres, et il se declare."
+   },
+   "heure_de_fin_voulue_h": {
+    "valeur": 10.0,
+    "fourchette": [
+     9.0,
+     12.0
+    ],
+    "note": "heure a laquelle le surfacage doit etre termine en ete, avant que la temperature ne rende la finition impossible. C'est de cette heure qu'on recule pour trouver celle du demarrage."
+   },
+   "lever_du_soleil_ete_h": {
+    "valeur": 6.3,
+    "fourchette": [
+     6.0,
+     6.7
+    ],
+    "note": "lever du soleil a la mi-juillet dans la region de Marrakech, environ 6 h 20. Sert a dire si le coulage demarre de nuit — et donc s'il faut eclairer."
    }
   },
   "points_d_arret": {

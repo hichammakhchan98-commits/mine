@@ -474,3 +474,60 @@ est unique et vit dans `suivi_chantier.date_arret_j`.
 **La leçon, pour les modules suivants** : quand deux modules ont besoin de la même grandeur d'état,
 la question n'est pas « comment la recalculer pareil ? » mais « où la mettre pour qu'elle n'existe
 qu'une fois ? ».
+
+## D-040 — 26/10/2026 — Un effet sur le planning se mesure en rejouant le réseau, il ne se déduit pas d'un type de marge
+
+**Décision.** Quand un module doit savoir si une décision retarde le chantier, il **rejoue le
+réseau de D2** avec la nouvelle durée et lit la date de fin. Il ne compare pas la rallonge à une
+marge.
+
+**Raison.** C3 déclenchait les frais de durée dès que la rallonge dépassait la marge **libre**,
+alors que la question posée — « la fin du chantier bouge-t-elle ? » — appelle la marge **totale**.
+Il imputait 154 611 MAD à un parc de coffrage qui ne retardait rien, et l'optimum basculait de 430 à
+850 m². Le module publiait pourtant, deux lignes plus bas, la marge totale (39,81 j) et la clé
+`le_plancher_porte_t_il_la_date = false`. Choisir le bon type de marge est une question piégeuse qui
+reviendra à chaque module ; la mesurer ne l'est pas.
+
+**Impact.** `impact_sur_le_chantier` rejoue `planification` et publie `retard_du_chantier_j` et
+`le_plancher_devient_critique`. Les lignes du tableau portent en plus leur **régime** — dans la
+marge libre, entre libre et totale, au-delà — parce que les trois ne se traitent pas de la même
+façon : gratuit au sens des frais de durée n'est pas gratuit au sens du risque.
+
+**Portée** : toute question « est-ce que ça retarde ? » dans les modules suivants (B3e, C7, REC).
+
+## D-041 — 26/10/2026 — Un optimum de coût n'est pas une décision, et le module doit le dire
+
+**Décision.** Quand un module publie un optimum, il publie **à côté** ce que le modèle ne price pas,
+et le prix de l'autre choix. L'optimum n'est jamais présenté comme la recommandation.
+
+**Raison.** Corrigé de D-040, l'optimum de coût du parc de coffrage tombe sur **le plus petit parc
+testé** (430 m², une seule zone de coffrage) : il coûte 85 020 MAD contre 163 265 pour le parc
+déclaré, et il consomme 32,55 des 39,81 jours de marge totale du plancher. Le calcul est juste, et
+suivre son verdict serait imprudent : il parie qu'aucun aléa ne touchera le plancher pendant trois
+mois. Un module qui publie « optimum : 430 m² » et s'arrête enseigne le contraire du métier.
+
+**Impact.** `plus_petit_parc_sans_rallonge` (1 300 m²), `ecart_entre_les_deux_choix_MAD` (78 245 MAD
+— le prix de l'assurance) et `ce_que_le_cout_ne_decide_pas` sont publiés et lus par le module. La
+thèse de C3 est désormais celle-là. Et le test qui épinglait la conclusion narrative (« l'optimum
+n'est ni le plus petit ni le plus grand ») est remplacé par le test de la **règle**.
+
+## D-042 — 26/10/2026 — Un indice qu'on ne peut pas définir se publie comme indéfini
+
+**Décision.** Un indice de performance dont l'assiette est vide ne reçoit pas de valeur de
+substitution : le module publie l'absence et nomme ce qui répond à la place.
+
+**Raison.** D4 annonçait comme contribution un « SPI du chemin critique ». À la date d'arrêt, aucune
+des six tâches à marge nulle n'a commencé : l'indice est un 0/0. Le nombre publié
+(0,9774) portait en réalité sur la plus **longue chaîne** démarrée, dont la plupart des tâches ont
+jusqu'à 199 jours de marge. Le calcul était juste, l'objet mesuré ne l'était pas — et un indice qui
+porte un nom qu'il ne mérite pas se lit comme s'il le méritait.
+
+**Impact.** `ce_qui_porte_la_date` remplace `spi_du_chemin_critique` et publie
+`un_indice_sur_elles_est_il_defini: false`, puis la **marge totale restante** par tâche dérivée
+(CHFA : 6,67 j sur 17,47). S3c, S4c, l'exercice 2, le quiz Q4 et la fiche mémo sont réécrits autour
+de cette réponse. Même règle pour les pourcentages : l'écart entre avancement physique et
+avancement temporel compare deux dénominateurs différents et ne conclut aucun avance-retard — le
+seul lisible est constaté contre planifié à la même date (−3,42 points, un retard, là où l'écart au
+temporel suggérait +11,98 d'avance).
+
+**Portée** : prolonge D-037 (domaine de définition d'un ratio) au cas où le domaine est **vide**.

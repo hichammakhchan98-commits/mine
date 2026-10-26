@@ -14,9 +14,9 @@ Vous savez ce qu'est une banche, un étai, une reprise de bétonnage. Ce module 
 Il traite trois choses qu'un manuel d'exécution ne donne pas, parce qu'elles demandent un calcul et
 non une description :
 
-1. **le parc de coffrage est une contrainte de cadence**, souvent la première, et il a un optimum
-   économique qui n'est ni le plus grand ni le plus petit — et qui dépend de la **marge** du
-   plancher, pas de sa durée ;
+1. **le parc de coffrage est une contrainte de cadence**, souvent la première ; son optimum
+   économique se calcule, il tombe sur le **plus petit parc possible**, et ce résultat est exact
+   sans être une décision — c'est le cœur de ce module ;
 2. **par temps chaud, ce n'est pas la cadence qui commande le bétonnage**, c'est le temps de
    maniabilité : le débit minimal pour éviter une reprise froide se calcule, et il décide du nombre
    de toupies — mais ce n'est pas lui qui décide de l'heure à laquelle on finit ;
@@ -70,16 +70,36 @@ deux.
 
 ### a. Le parc de coffrage a un optimum, et il dépend de la marge
 
-Trois termes, et le troisième est celui qu'on oublie :
+Trois termes, et le troisième ne se déduit pas, il se **mesure** :
 
 - le **loyer** du parc, proportionnel à sa taille **et** à la durée ;
 - le **montage et le repli**, proportionnels à sa taille seulement ;
-- les **frais de durée** du chantier — mais **seulement si l'allongement dépasse la marge** du
-  plancher.
+- les **frais de durée** du chantier — et pour savoir s'ils courent, on **rejoue le réseau de D2**
+  avec la nouvelle durée du plancher et on lit la date de fin.
 
-C'est ce dernier point qui décide de tout. Un parc plus petit allonge le plancher ; tant que
-l'allongement tient dans la marge, il ne coûte **rien au chantier**. Ce qu'un petit parc achète,
-ce n'est pas du délai : c'est de la **marge**.
+:::encart {"genre":"alerte","titre":"Pourquoi on rejoue le réseau au lieu de comparer à une marge"}
+La première version de ce module comparait l'allongement à la marge **libre** du plancher. C'était
+le mauvais seuil : la marge libre répond à « un successeur bouge-t-il ? », et la question posée ici
+est « la **fin du chantier** bouge-t-elle ? », qui appelle la marge **totale**. L'écart entre les
+deux — {{gros-oeuvre.parc.marge_libre_j::n1}} et {{gros-oeuvre.parc.marge_totale_j::n1}} jours — a
+suffi à imputer plus de 150 000 MAD de frais de durée à un parc qui ne retardait rien, et à faire
+basculer l'optimum.
+
+Le module publiait pourtant les deux clés qui le démentaient, deux lignes plus bas : la marge totale,
+et le fait que le plancher ne porte pas la date. Rejouer le réseau rend la question du **type** de
+marge sans objet : on mesure l'effet au lieu de le déduire d'une définition. C'est plus cher en
+calcul et c'est la seule façon de ne pas se tromper de seuil.
+:::
+
+Trois régimes en sortent, et ils ne se traitent pas pareil :
+
+| Régime | Ce qui bouge | Ce que ça coûte |
+|---|---|---|
+| rallonge ≤ marge **libre** ({{gros-oeuvre.parc.marge_libre_j::n1}} j) | rien | zéro |
+| entre marge libre et marge **totale** ({{gros-oeuvre.parc.marge_totale_j::n1}} j) | les **successeurs** se décalent, la fin tient | zéro en frais de durée — **pas** zéro en risque |
+| au-delà de la marge totale | la **fin du chantier** | les frais de durée, {{gros-oeuvre.parc.frais_de_duree_MAD_par_jour_ouvre::n0}} MAD par jour ouvré |
+
+Ce qu'un petit parc achète n'est donc pas du délai : c'est de la **marge**.
 
 ### b. Par temps chaud : deux contraintes, pas une
 
@@ -100,37 +120,54 @@ la température à laquelle on finit. **Deux contraintes, deux décisions diffé
 
 ### a. Quel parc de coffrage commander ?
 
-| Parc | Zones | Cadence du parc | Cadence tenue | Durée | Rallonge | Marge restante | Loyer + montage | Frais de durée | **Total** |
+| Parc | Zones | Cadence du parc | Cadence tenue | Durée | Rallonge | Retard du chantier | Marge totale restante | Loyer + montage | **Total** |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| {{gros-oeuvre.parc.lignes.0.parc_m2}} m² | {{gros-oeuvre.parc.lignes.0.zones_simultanees}} | {{gros-oeuvre.parc.lignes.0.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.0.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.0.duree_du_plancher_j::n1}} j | +{{gros-oeuvre.parc.lignes.0.rallonge_j::n1}} j | **dépasse de {{gros-oeuvre.parc.lignes.0.depassement_j::n1}} j** | {{gros-oeuvre.parc.lignes.0.loyer_et_montage_MAD::n0}} | {{gros-oeuvre.parc.lignes.0.frais_de_duree_MAD::n0}} | {{gros-oeuvre.parc.lignes.0.total_MAD::n0}} |
-| **{{gros-oeuvre.parc.lignes.1.parc_m2}} m²** | {{gros-oeuvre.parc.lignes.1.zones_simultanees}} | {{gros-oeuvre.parc.lignes.1.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.1.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.1.duree_du_plancher_j::n1}} j | +{{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} j | {{gros-oeuvre.parc.lignes.1.marge_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.1.loyer_et_montage_MAD::n0}} | 0 | **{{gros-oeuvre.parc.lignes.1.total_MAD::n0}}** |
-| {{gros-oeuvre.parc.lignes.2.parc_m2}} m² *(déclaré)* | {{gros-oeuvre.parc.lignes.2.zones_simultanees}} | {{gros-oeuvre.parc.lignes.2.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.2.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.2.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.2.marge_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.2.loyer_et_montage_MAD::n0}} | 0 | {{gros-oeuvre.parc.lignes.2.total_MAD::n0}} |
-| {{gros-oeuvre.parc.lignes.3.parc_m2}} m² | {{gros-oeuvre.parc.lignes.3.zones_simultanees}} | {{gros-oeuvre.parc.lignes.3.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.3.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.3.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.3.marge_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.3.loyer_et_montage_MAD::n0}} | 0 | {{gros-oeuvre.parc.lignes.3.total_MAD::n0}} |
-| {{gros-oeuvre.parc.lignes.4.parc_m2}} m² | {{gros-oeuvre.parc.lignes.4.zones_simultanees}} | {{gros-oeuvre.parc.lignes.4.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.4.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.4.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.4.marge_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.4.loyer_et_montage_MAD::n0}} | 0 | {{gros-oeuvre.parc.lignes.4.total_MAD::n0}} |
-| {{gros-oeuvre.parc.lignes.5.parc_m2}} m² | {{gros-oeuvre.parc.lignes.5.zones_simultanees}} | {{gros-oeuvre.parc.lignes.5.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.5.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.5.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.5.marge_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.5.loyer_et_montage_MAD::n0}} | 0 | {{gros-oeuvre.parc.lignes.5.total_MAD::n0}} |
+| **{{gros-oeuvre.parc.lignes.0.parc_m2}} m²** *(optimum de coût)* | {{gros-oeuvre.parc.lignes.0.zones_simultanees}} | {{gros-oeuvre.parc.lignes.0.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.0.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.0.duree_du_plancher_j::n1}} j | +{{gros-oeuvre.parc.lignes.0.rallonge_j::n1}} j | {{gros-oeuvre.parc.lignes.0.retard_du_chantier_j::n1}} j | {{gros-oeuvre.parc.lignes.0.marge_totale_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.0.loyer_et_montage_MAD::n0}} | **{{gros-oeuvre.parc.lignes.0.total_MAD::n0}}** |
+| {{gros-oeuvre.parc.lignes.1.parc_m2}} m² | {{gros-oeuvre.parc.lignes.1.zones_simultanees}} | {{gros-oeuvre.parc.lignes.1.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.1.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.1.duree_du_plancher_j::n1}} j | +{{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} j | {{gros-oeuvre.parc.lignes.1.retard_du_chantier_j::n1}} j | {{gros-oeuvre.parc.lignes.1.marge_totale_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.1.loyer_et_montage_MAD::n0}} | {{gros-oeuvre.parc.lignes.1.total_MAD::n0}} |
+| **{{gros-oeuvre.parc.lignes.2.parc_m2}} m²** *(déclaré, et premier sans rallonge)* | {{gros-oeuvre.parc.lignes.2.zones_simultanees}} | {{gros-oeuvre.parc.lignes.2.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.2.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.2.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.2.retard_du_chantier_j::n1}} j | {{gros-oeuvre.parc.lignes.2.marge_totale_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.2.loyer_et_montage_MAD::n0}} | **{{gros-oeuvre.parc.lignes.2.total_MAD::n0}}** |
+| {{gros-oeuvre.parc.lignes.3.parc_m2}} m² | {{gros-oeuvre.parc.lignes.3.zones_simultanees}} | {{gros-oeuvre.parc.lignes.3.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.3.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.3.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.3.retard_du_chantier_j::n1}} j | {{gros-oeuvre.parc.lignes.3.marge_totale_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.3.loyer_et_montage_MAD::n0}} | {{gros-oeuvre.parc.lignes.3.total_MAD::n0}} |
+| {{gros-oeuvre.parc.lignes.4.parc_m2}} m² | {{gros-oeuvre.parc.lignes.4.zones_simultanees}} | {{gros-oeuvre.parc.lignes.4.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.4.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.4.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.4.retard_du_chantier_j::n1}} j | {{gros-oeuvre.parc.lignes.4.marge_totale_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.4.loyer_et_montage_MAD::n0}} | {{gros-oeuvre.parc.lignes.4.total_MAD::n0}} |
+| {{gros-oeuvre.parc.lignes.5.parc_m2}} m² | {{gros-oeuvre.parc.lignes.5.zones_simultanees}} | {{gros-oeuvre.parc.lignes.5.cadence_du_parc_j::n2}} j | {{gros-oeuvre.parc.lignes.5.cadence_tenue_j::n2}} j | {{gros-oeuvre.parc.lignes.5.duree_du_plancher_j::n1}} j | — | {{gros-oeuvre.parc.lignes.5.retard_du_chantier_j::n1}} j | {{gros-oeuvre.parc.lignes.5.marge_totale_restante_j::n1}} j | {{gros-oeuvre.parc.lignes.5.loyer_et_montage_MAD::n0}} | {{gros-oeuvre.parc.lignes.5.total_MAD::n0}} |
 
-**L'optimum est à {{gros-oeuvre.parc.optimum.parc_m2}} m²** —
-{{gros-oeuvre.parc.optimum.zones_simultanees}} zones simultanées — et il n'est **ni le plus petit ni
-le plus grand**. Trois lectures de ce tableau :
+**La colonne « retard du chantier » est à zéro partout.** Quelle que soit la taille du parc, même
+la plus petite, le réseau rejoué donne la même date de fin : le plancher dispose d'une marge totale
+de {{gros-oeuvre.parc.marge_totale_j::n1}} jours et l'allongement le plus brutal en consomme
+{{gros-oeuvre.parc.lignes.0.rallonge_j::n1}}. **Aucun frais de durée ne court.**
 
-1. **En dessous, le parc devient la borne.** À {{gros-oeuvre.parc.lignes.0.parc_m2}} m², une seule
-   zone tient à la fois : la cadence tombe à {{gros-oeuvre.parc.lignes.0.cadence_du_parc_j::n2}} jours,
-   le plancher double de durée, l'allongement **dépasse la marge** de
-   {{gros-oeuvre.parc.lignes.0.depassement_j::n1}} jours et les frais de durée du chantier entier se
-   réveillent. L'économie de loyer est largement reperdue.
-2. **Au-dessus de l'optimum, on paie sans rien acheter.** Dès
-   {{gros-oeuvre.parc.lignes.2.parc_m2}} m², ce sont les **équipes** qui bornent : ajouter des tables
-   ne raccourcit plus rien. Chaque m² de plus est du loyer pur.
-3. **Le parc déclaré dans les données du projet coûte
-   {{gros-oeuvre.parc.lignes.2.total_MAD::n0}} MAD contre
-   {{gros-oeuvre.parc.optimum.total_MAD::n0}}** pour l'optimum. Ce que cet écart achète, ce n'est pas
-   du délai — c'est {{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} jours de marge rendue au plancher.
+Donc l'**optimum de coût est le plus petit parc** :
+{{gros-oeuvre.parc.optimum_de_cout.parc_m2}} m², une seule zone de coffrage,
+{{gros-oeuvre.parc.optimum_de_cout.total_MAD::n0}} MAD. Le calcul est juste. Et il ne faut pas le
+suivre.
 
-:::figure {"fn":"barres","args":"gros-oeuvre.figures.parc","titre":"Coût total du coffrage selon la taille du parc","num":2,"large":true,"options":{"unite":"milliers de MAD — loyer, montage et frais de durée"},"voir":["Les barres dessinent un U, et c'est tout l'intérêt : le plus petit parc n'est pas le moins cher, parce qu'il fait dépasser la marge et réveille les frais de durée du chantier entier.","À droite du minimum, le coût remonte linéairement : ce sont les équipes qui bornent, et chaque m² de table en plus est du loyer qui n'achète rien.","Le minimum est à {{gros-oeuvre.parc.optimum.parc_m2}} m², soit {{gros-oeuvre.parc.optimum.zones_simultanees}} zones de coffrage simultanées — et non les {{gros-oeuvre.parc.parc_declare_m2}} m² que le projet avait posés. Un parc se compte en m² de TABLES : une zone en demande {{tranche-plancher.quantites.coffrage_m2::n1}} pour {{tranche-plancher.quantites.surface_m2::n0}} m² de plancher coulé."],"erreur":"Dimensionner un parc sur la surface d'une zone multipliée par le nombre d'équipes. La bonne grandeur est l'IMMOBILISATION divisée par la cadence : une zone retient son coffrage pendant sa cure, où aucune équipe n'est présente."}
+:::encart {"genre":"alerte","titre":"Un optimum de coût n'est pas une décision"}
+{{gros-oeuvre.parc.ce_que_le_cout_ne_decide_pas}}
 :::
 
-:::encart {"genre":"alerte","titre":"Ce que ce calcul ne chiffre pas"}
-{{gros-oeuvre.parc.ce_que_le_calcul_ne_price_pas}}
+Les deux choix qui se discutent vraiment sont donc ceux-ci :
+
+| | Parc | Coût | Marge totale restante |
+|---|---:|---:|---:|
+| **Optimum de coût** | {{gros-oeuvre.parc.optimum_de_cout.parc_m2}} m² | {{gros-oeuvre.parc.optimum_de_cout.total_MAD::n0}} MAD | {{gros-oeuvre.parc.optimum_de_cout.marge_totale_restante_j::n1}} j |
+| **Premier parc sans rallonge** | {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.parc_m2}} m² | {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.total_MAD::n0}} MAD | {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.marge_totale_restante_j::n1}} j |
+
+**{{gros-oeuvre.parc.ecart_entre_les_deux_choix_MAD::n0}} MAD d'écart**, et c'est le prix d'une
+assurance : {{gros-oeuvre.parc.comment_on_tranche}}
+
+Deux lectures de détail, qui comptent pour tout autre chantier :
+
+1. **En dessous de {{gros-oeuvre.parc.lignes.1.parc_m2}} m², le parc devient la borne.** À
+   {{gros-oeuvre.parc.lignes.0.parc_m2}} m², une seule zone tient à la fois : la cadence tombe à
+   {{gros-oeuvre.parc.lignes.0.cadence_du_parc_j::n2}} jours et le plancher **double** de durée.
+   Si le plancher portait la date — ce qui serait le cas sur un chantier sans fenêtre de
+   consignation — les frais de durée réveillés dépasseraient largement l'économie de loyer.
+2. **Au-dessus de {{gros-oeuvre.parc.lignes.2.parc_m2}} m², on paie sans rien acheter.** Ce sont les
+   **équipes** qui bornent : ajouter des tables ne raccourcit plus rien. Chaque m² est du loyer pur,
+   et c'est le seul régime du tableau où l'arbitrage est simple.
+
+:::figure {"fn":"barres","args":"gros-oeuvre.figures.parc","titre":"Coût total du coffrage selon la taille du parc","num":2,"large":true,"options":{"unite":"milliers de MAD — loyer, montage et frais de durée"},"voir":["Le coût croît de façon monotone avec la taille du parc : sur ce chantier, aucun parc ne fait bouger la date de fin, donc aucun ne déclenche de frais de durée. L'optimum de coût est le plus petit, et c'est précisément ce qui rend ce graphique insuffisant pour décider.","Entre {{gros-oeuvre.parc.optimum_de_cout.parc_m2}} et {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.parc_m2}} m², l'écart est de {{gros-oeuvre.parc.ecart_entre_les_deux_choix_MAD::n0}} MAD — et ce que cet argent achète ne figure sur aucune barre : de la marge, donc de la capacité à encaisser un aléa.","Un parc se compte en m² de TABLES : une zone en demande {{tranche-plancher.quantites.coffrage_m2::n1}} pour {{tranche-plancher.quantites.surface_m2::n0}} m² de plancher coulé, soit un facteur {{tranche-plancher.quantites.ratio_coffrage_m2_par_m2::n3}}."],"erreur":"Lire ce graphique comme un arbitrage complet. Il ne porte que ce qui se chiffre — le loyer et le retard de la fin. La grandeur qui manque est dessinée à la figure 3."}
+:::
+
+:::figure {"fn":"barres","args":"gros-oeuvre.figures.marges","titre":"Ce que chaque parc laisse de marge au plancher","num":3,"large":true,"options":{"unite":"jours de marge totale restante","bande":{"$":"gros-oeuvre.figures.marges_bande"},"libelle_bande":"entre marge libre et marge totale"},"voir":["C'est la figure que le coût ne montre pas. Le parc le moins cher laisse {{gros-oeuvre.parc.optimum_de_cout.marge_totale_restante_j::n1}} jours de marge au plancher ; le premier parc sans rallonge en laisse {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.marge_totale_restante_j::n1}}.","La bande grise va de la marge libre à la marge totale. Un parc qui y tombe ne retarde pas la fin du chantier mais décale ses successeurs : gratuit au sens des frais de durée, pas au sens de l'organisation.","Lues ensemble, les figures 2 et 3 posent la vraie question : {{gros-oeuvre.parc.ecart_entre_les_deux_choix_MAD::n0}} MAD pour {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.marge_totale_restante_j::n1}} jours de marge au lieu de {{gros-oeuvre.parc.optimum_de_cout.marge_totale_restante_j::n1}}. Ça se discute ; ça ne se calcule pas."],"erreur":"Traiter la marge comme gratuite parce qu'elle ne coûte rien tant qu'on ne la dépasse pas. Une marge dépensée en loyer économisé n'est plus là pour l'aléa, et l'aléa, lui, n'a pas de fourchette déclarée."}
 :::
 
 ### b. Combien de toupies commander pour le coulage de demain ?
@@ -147,7 +184,7 @@ Le débit à tenir est **×{{gros-oeuvre.betonnage.rapport_35_sur_20::n2}} plus 
 {{gros-oeuvre.betonnage.temperature_de_calcul_C::n0}} °C qu'à 20 °C, pour exactement le même ouvrage.
 C'est le même béton, la même dalle, la même équipe — et une contrainte d'organisation qui double.
 
-:::figure {"fn":"barres","args":"gros-oeuvre.figures.debits","titre":"Débit minimal pour éviter une reprise froide, selon la température du béton frais","num":3,"large":true,"options":{"unite":"m³/h — volume d'une bande divisé par le temps de maniabilité"},"voir":["Le volume en jeu est celui d'une BANDE — {{gros-oeuvre.betonnage.volume_d_une_bande_m3::n1}} m³ — et non celui de la zone entière. Une dalle se coule par bandes qui se rattrapent, pas en couches superposées.","Le temps de maniabilité se contracte plus vite que la température ne monte : de 20 à {{gros-oeuvre.betonnage.temperature_de_calcul_C::n0}} °C, il est divisé par {{gros-oeuvre.betonnage.rapport_35_sur_20::n2}}.","Ce débit est un PLANCHER, pas un objectif : il dit à quelle vitesse il faut avancer pour que les bandes se rejoignent. Il ne dit rien de l'heure à laquelle on finit."],"erreur":"Raisonner en couches horizontales sur toute la surface. Une première version de ce calcul le faisait et demandait 138 m³/h et vingt-deux toupies pour une dalle de 25 cm. L'arithmétique était juste ; l'image de l'ouvrage était fausse."}
+:::figure {"fn":"barres","args":"gros-oeuvre.figures.debits","titre":"Débit minimal pour éviter une reprise froide, selon la température du béton frais","num":4,"large":true,"options":{"unite":"m³/h — volume d'une bande divisé par le temps de maniabilité"},"voir":["Le volume en jeu est celui d'une BANDE — {{gros-oeuvre.betonnage.volume_d_une_bande_m3::n1}} m³ — et non celui de la zone entière. Une dalle se coule par bandes qui se rattrapent, pas en couches superposées.","Le temps de maniabilité se contracte plus vite que la température ne monte : de 20 à {{gros-oeuvre.betonnage.temperature_de_calcul_C::n0}} °C, il est divisé par {{gros-oeuvre.betonnage.rapport_35_sur_20::n2}}.","Ce débit est un PLANCHER, pas un objectif : il dit à quelle vitesse il faut avancer pour que les bandes se rejoignent. Il ne dit rien de l'heure à laquelle on finit."],"erreur":"Raisonner en couches horizontales sur toute la surface. Une première version de ce calcul le faisait et demandait 138 m³/h et vingt-deux toupies pour une dalle de 25 cm. L'arithmétique était juste ; l'image de l'ouvrage était fausse."}
 :::
 
 Le débit **tenu**, ensuite — celui qui décide de l'heure de fin. Une toupie de
@@ -161,19 +198,21 @@ Le débit **tenu**, ensuite — celui qui décide de l'heure de fin. Une toupie 
 | {{gros-oeuvre.betonnage.options_de_rotation.1.toupies}} | {{gros-oeuvre.betonnage.options_de_rotation.1.debit_tenu_m3_h::n1}} m³/h | {{gros-oeuvre.betonnage.options_de_rotation.1.duree_du_coulage_h::n2}} h | |
 | **{{gros-oeuvre.betonnage.options_de_rotation.2.toupies}}** | **{{gros-oeuvre.betonnage.options_de_rotation.2.debit_tenu_m3_h::n1}} m³/h** | **{{gros-oeuvre.betonnage.options_de_rotation.2.duree_du_coulage_h::n2}} h** | **retenu** — sous la cible de {{gros-oeuvre.betonnage.duree_cible_du_coulage_h::n0}} h |
 | {{gros-oeuvre.betonnage.options_de_rotation.4.toupies}} | {{gros-oeuvre.betonnage.options_de_rotation.4.debit_tenu_m3_h::n1}} m³/h | {{gros-oeuvre.betonnage.options_de_rotation.4.duree_du_coulage_h::n2}} h | |
-| {{gros-oeuvre.betonnage.options_de_rotation.6.toupies}} | {{gros-oeuvre.betonnage.options_de_rotation.6.debit_tenu_m3_h::n1}} m³/h | {{gros-oeuvre.betonnage.options_de_rotation.6.duree_du_coulage_h::n2}} h | la pompe commence à borner |
+| {{gros-oeuvre.betonnage.options_de_rotation.5.toupies}} | {{gros-oeuvre.betonnage.options_de_rotation.5.debit_tenu_m3_h::n1}} m³/h | {{gros-oeuvre.betonnage.options_de_rotation.5.duree_du_coulage_h::n2}} h | la pompe commence à borner |
 
 {{gros-oeuvre.betonnage.deux_contraintes}}
 
-:::figure {"fn":"barres","args":"gros-oeuvre.figures.toupies","titre":"Durée du coulage selon le nombre de toupies en rotation","num":4,"large":true,"options":{"unite":"heures de coulage pour une zone de plancher","bande":{"$":"gros-oeuvre.figures.toupies_cible"},"libelle_bande":"avant la chaleur"},"voir":["Deux toupies suffisent à tenir le débit minimal — à ne pas faire de reprise froide — et pourtant le coulage durerait {{gros-oeuvre.betonnage.options_de_rotation.0.duree_du_coulage_h::n1}} heures et finirait à la pire heure de la journée.","Le gain s'écrase : passer de deux à quatre toupies divise la durée par deux, passer de six à huit ne gagne plus rien parce que la pompe borne à {{gros-oeuvre.betonnage.debit_pratique_d_une_pompe_m3_h::n0}} m³/h.","C'est la deuxième contrainte — finir avant la chaleur — qui décide de la commande, pas la première."],"erreur":"Commander les toupies sur le débit minimal. Le minimum interdit un défaut ; il ne fait pas finir le coulage à temps. Les deux nombres ne répondent pas à la même question et le second est plus grand."}
+:::figure {"fn":"barres","args":"gros-oeuvre.figures.toupies","titre":"Durée du coulage selon le nombre de toupies en rotation","num":5,"large":true,"options":{"unite":"heures de coulage pour une zone de plancher","bande":{"$":"gros-oeuvre.figures.toupies_cible"},"libelle_bande":"avant la chaleur"},"voir":["{{gros-oeuvre.betonnage.toupies_pour_tenir_le_minimum}} toupies suffisent à tenir le débit minimal — à ne pas faire de reprise froide — et pourtant le coulage durerait {{gros-oeuvre.betonnage.options_de_rotation.0.duree_du_coulage_h::n1}} heures.","Le gain s'écrase vers la droite : la pompe borne à {{gros-oeuvre.betonnage.debit_pratique_d_une_pompe_m3_h::n0}} m³/h, et au-delà les camions attendent au lieu de livrer.","Trois contraintes se superposent, et c'est la plus exigeante qui commande : le minimum anti-reprise ({{gros-oeuvre.betonnage.toupies_pour_tenir_le_minimum}} toupies), la cible horaire ({{gros-oeuvre.betonnage.option_qui_tient_la_cible_horaire.toupies}}), et le cycle du module TV qui suppose {{gros-oeuvre.betonnage.debit_qu_implique_le_cycle_TV_m3_h::n0}} m³/h, soit {{gros-oeuvre.betonnage.toupies_retenues}}."],"erreur":"Commander les toupies sur le débit minimal. Le minimum interdit un défaut ; il ne fait pas finir le coulage à temps. Les deux nombres ne répondent pas à la même question et le second est plus grand."}
 :::
 
 **Quand le débit n'est pas tenable.** {{gros-oeuvre.betonnage.parade_si_le_debit_n_est_pas_tenable}}
 
 Et la décision de la veille : {{gros-oeuvre.fenetre_de_coulage.regle}} Avec
-{{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h de coulage, un démarrage à
-{{gros-oeuvre.fenetre_de_coulage.demarrage_conseille}} fait finir vers
-{{gros-oeuvre.fenetre_de_coulage.fin_attendue}}.
+{{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h de coulage, et une fin voulue à
+{{gros-oeuvre.fenetre_de_coulage.heure_de_fin_voulue}}, le démarrage se déduit :
+**{{gros-oeuvre.fenetre_de_coulage.demarrage_deduit}}**. Le soleil se lève à
+{{gros-oeuvre.fenetre_de_coulage.lever_du_soleil}} à cette saison :
+{{gros-oeuvre.fenetre_de_coulage.consequence_securite}}
 
 ### c. Les points d'arrêt, et pourquoi ils sautent
 
@@ -226,12 +265,22 @@ du cycle**.
 ⟦V3|volume d'une toupie|8 m³|m³|6 à 10|2026⟧,
 ⟦V3|durée de rotation d'une toupie|75 min|min|45 à 120|2026|aller, attente, vidange, retour, lavage — centrale à une vingtaine de minutes⟧,
 ⟦V3|débit pratique d'une pompe automotrice|45 m³/h|m³/h|25 à 70|2026|débit de chantier, déplacements de flèche et attentes de toupie compris — et non le débit catalogue⟧,
-⟦V3|durée cible d'un coulage|4 h|h|3 à 6|2026|pour qu'un coulage démarré à l'aube finisse avant la montée en température ; décision de conduite, pas contrainte physique⟧.
+⟦V3|durée cible d'un coulage|4 h|h|3 à 6|2026|pour qu'un coulage démarré à l'aube finisse avant la montée en température ; décision de conduite, pas contrainte physique⟧,
+⟦V3|heure de fin voulue d'un coulage d'été|10 h|h|9 à 12|2026|heure à laquelle le surfaçage doit être terminé ; c'est d'elle qu'on recule pour trouver l'heure de démarrage⟧,
+⟦V3|lever du soleil à la mi-juillet, région de Marrakech|6,3 h|h|6,0 à 6,7|2026|sert à dire si le coulage démarre de nuit, et donc s'il faut éclairer⟧.
+
+Et une **décision**, qui n'est pas une hypothèse et n'a donc pas de fourchette : le **sens
+d'avancement** des bandes — {{gros-oeuvre.betonnage.sens_d_avancement}}, soit
+{{gros-oeuvre.betonnage.nb_de_bandes}} bandes de
+{{gros-oeuvre.betonnage.largeur_de_bande_m::n0}} m traversant les
+{{gros-oeuvre.betonnage.longueur_de_bande_m::n0}} m de la zone. Avancer dans l'autre sens donnerait
+des bandes 60 % plus grosses et un débit minimal d'autant : le choix se fait sur la position de la
+pompe et le sens de portée des poutres, et il se **déclare**.
 
 Le **cycle**, la **cadence** et la **marge** ne sont pas déclarés ici : ils viennent des modules TV
 et D2, et ce module les lit.
 
-## S4c · Sécurité : quatre opérations que ce cycle décide
+## S4c · Sécurité : six opérations que ce cycle décide
 
 Le § 3.4 impose de dire ce qu'un cycle décide en matière de risque. Les dispositions ci-dessous sont
 **essentielles et non exhaustives** ; elles ne remplacent ni le plan de sécurité du chantier, ni les
@@ -244,6 +293,8 @@ l'interdit, et c'est précisément le cœur du premier point.
 | **Étaiement de reprise** | combien de niveaux restent étayés sous celui qu'on coule | un plancher jeune ne porte pas seul le poids du plancher suivant ; la dépose des étais de reprise suit une note, pas une place à libérer |
 | **Travail en hauteur** sur le coffrage | la pression de rotation sur la pose et la dépose | protections périphériques posées **avant** le coffrage et déposées **après** — une rotation serrée pousse exactement à l'inverse |
 | **Coulage par temps chaud** | l'heure et la durée du coulage | un coulage qui déborde dans la chaleur, c'est une équipe sous contrainte thermique **et** un béton qui prend plus vite : le risque pour les hommes et le risque pour l'ouvrage montent ensemble |
+| **Démarrage avant le jour** | l'heure de démarrage, déduite de l'heure de fin voulue | si le démarrage tombe avant le lever du soleil, le coulage commence de nuit : éclairage de l'aire et des circulations, balisage de la zone de manœuvre, un homme dédié au guidage des camions. Ici le démarrage déduit est {{gros-oeuvre.fenetre_de_coulage.demarrage_deduit}} pour un lever à {{gros-oeuvre.fenetre_de_coulage.lever_du_soleil}} |
+| **Manœuvre de la pompe et des toupies** | le nombre de camions sur l'aire en même temps — {{gros-oeuvre.betonnage.toupies_retenues}} ici | zone de manœuvre balisée et interdite aux piétons, calage et stabilisateurs de la pompe vérifiés avant déploiement de la flèche, et personne sous la flèche. Plus on commande de toupies pour tenir l'horaire, plus l'aire est encombrée : les deux décisions sont liées |
 
 **Le lien avec tout ce module, et c'est le plus important.** Le § S4a montre qu'un parc plus petit
 coûte moins cher tant que l'allongement tient dans la marge. Il montre aussi ce qui arrive quand la
@@ -255,10 +306,10 @@ où le chantier a pris du retard ailleurs et qu'on cherche des jours là où il 
 
 | Erreur | Comment elle se voit | Ce qu'elle coûte |
 |---|---|---|
-| Parc dimensionné sur la surface d'une zone | il manque des tables dès la troisième zone | la cadence tombe à {{gros-oeuvre.parc.lignes.0.cadence_du_parc_j::n1}} j, le plancher double |
-| Parc commandé large « pour être tranquille » | aucun symptôme, et c'est le problème | {{gros-oeuvre.parc.lignes.5.loyer_et_montage_MAD::n0}} MAD au lieu de {{gros-oeuvre.parc.optimum.total_MAD::n0}} |
+| Parc dimensionné sur la surface de **plancher** d'une zone, et non sur sa surface de **coffrage** | il manque {{tranche-plancher.quantites.ratio_coffrage_m2_par_m2::n3}} fois les tables prévues : on croit tenir trois zones, on en tient deux et demie | la cadence passe de {{gros-oeuvre.parc.lignes.2.cadence_tenue_j::n1}} à {{gros-oeuvre.parc.lignes.1.cadence_tenue_j::n1}} j sans qu'on sache pourquoi |
+| Parc commandé large « pour être tranquille » | aucun symptôme, et c'est le problème | {{gros-oeuvre.parc.lignes.5.total_MAD::n0}} MAD au lieu de {{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.total_MAD::n0}} pour la même cadence |
 | Durée de décoffrage traitée comme un critère | le planning tient, les éprouvettes suivent de loin | un plancher décoffré trop tôt ne se répare pas |
-| Toupies commandées sur le débit minimal | le coulage s'éternise et finit à 13 h | {{gros-oeuvre.betonnage.options_de_rotation.0.duree_du_coulage_h::n1}} h au lieu de {{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h, en pleine chaleur |
+| Toupies commandées sur le débit minimal seul | le coulage s'éternise | {{gros-oeuvre.betonnage.options_de_rotation.0.duree_du_coulage_h::n1}} h au lieu de {{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h — et un cycle de zone qui ne tient plus |
 | Bétonnage raisonné en couches, pas en bandes | des débits absurdes, qu'on finit par ignorer | un calcul faux abandonné vaut un calcul pas fait |
 | Point d'arrêt demandé le matin pour couler l'après-midi | le visa est donné à la légère ou refusé | dans les deux cas, personne n'a vu le ferraillage |
 | Protections déposées avant la dépose du coffrage | le gain de dix minutes par zone | le seul risque de ce module qui ne se répare pas |
@@ -273,24 +324,30 @@ Une zone fait {{tranche-plancher.quantites.surface_m2::n0}} m² et immobilise so
 **Corrigé.** Deux pièges, et le premier se voit à l'unité.
 
 Nombre de zones simultanément coffrées :
-{{gros-oeuvre.immobilisation_du_coffrage.duree_j::n2}} / {{gros-oeuvre.cycle.cadence_j::n1}} = 2,37,
-soit **3 zones** — on arrondit vers le haut, parce qu'une fraction de zone coffrée occupe quand même
-un jeu de tables.
+{{gros-oeuvre.immobilisation_du_coffrage.duree_j::n2}} / {{gros-oeuvre.cycle.cadence_j::n2}} =
+{{gros-oeuvre.immobilisation_du_coffrage.zones_simultanees_exact::n2}}, soit
+**{{tranche-plancher.variantes.reference.zones_coffrees_simultanement}} zones** — on arrondit vers le
+haut, parce qu'une fraction de zone coffrée occupe quand même un jeu de tables.
 
-Parc minimum : 3 × **{{tranche-plancher.quantites.coffrage_m2::n1}}** =
-**{{gros-oeuvre.parc.lignes.2.parc_m2}} m²**, et c'est précisément le parc déclaré au projet. Le
+Parc minimum : {{tranche-plancher.variantes.reference.zones_coffrees_simultanement}} ×
+**{{tranche-plancher.quantites.coffrage_m2::n1}}** =
+**{{tranche-plancher.variantes.reference.coffrage_mobilise_m2::n0}} m²**. Le projet a commandé
+{{gros-oeuvre.parc.parc_declare_m2}} m², soit
+{{gros-oeuvre.immobilisation_du_coffrage.battement_du_parc_declare_m2::n0}} m² de battement — un
+battement, pas un calcul : il faut savoir lequel des deux nombres on cite. Le
 piège est le facteur qu'on multiplie : un parc est un stock de **tables**, donc on multiplie la
 surface de **coffrage** d'une zone ({{tranche-plancher.quantites.coffrage_m2::n1}} m²), pas sa
 surface de plancher ({{tranche-plancher.quantites.surface_m2::n0}} m²). L'écart est de
 {{tranche-plancher.quantites.ratio_coffrage_m2_par_m2::n3}}, soit 18 % — assez pour croire qu'on a
 trois zones de parc quand on n'en a que deux et demie.
 
-*Et pourtant l'optimum économique est à {{gros-oeuvre.parc.optimum.parc_m2}} m², avec
-{{gros-oeuvre.parc.optimum.zones_simultanees}} zones seulement. La différence : le dimensionnement
-ci-dessus répond à « quel parc pour ne pas ralentir ? », l'optimum à « quel parc pour dépenser le
-moins ? ». Ralentir de {{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} jours ne coûte rien ici, parce
-que le plancher a {{gros-oeuvre.parc.marge_disponible_j::n1}} jours de marge libre. Les deux
-questions sont légitimes ; ce sont les réponses qu'il ne faut pas confondre.*
+*Et pourtant l'optimum de coût est à {{gros-oeuvre.parc.optimum_de_cout.parc_m2}} m², avec
+{{gros-oeuvre.parc.optimum_de_cout.zones_simultanees}} zone seulement. La différence : le
+dimensionnement ci-dessus répond à « quel parc pour ne pas ralentir ? », l'optimum de coût à « quel
+parc pour dépenser le moins ? ». Ralentir ne coûte rien ici au sens des frais de durée, parce que le
+plancher a {{gros-oeuvre.parc.marge_totale_j::n1}} jours de marge totale. Les deux questions sont
+légitimes, et aucune des deux n'est la bonne seule : la troisième — « combien de marge suis-je prêt
+à dépenser ? » — est celle qui tranche, et elle n'a pas de réponse calculée.*
 :::
 
 :::exercice {"titre":"2 · Combien de toupies pour demain ?","niveau":"application"}
@@ -316,12 +373,19 @@ Pour tenir sous {{gros-oeuvre.betonnage.duree_cible_du_coulage_h::n0}} h, il en 
 **{{gros-oeuvre.betonnage.toupies_retenues}}**, et le coulage dure
 {{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h.
 
-**Réponse : {{gros-oeuvre.betonnage.toupies_retenues}} toupies**, démarrage
-{{gros-oeuvre.fenetre_de_coulage.demarrage_conseille}}.
+**Et la troisième contrainte, celle qui commande**, n'est dans aucun des deux calculs précédents :
+le **cycle** du module TV suppose un bétonnage en
+{{gros-oeuvre.betonnage.duree_du_betonnage_au_cycle_TV_h::n2}} h, soit
+{{gros-oeuvre.betonnage.debit_qu_implique_le_cycle_TV_m3_h::n0}} m³/h. C'est ce cycle qui a servi à
+bâtir le planning de D2 et les prix de D1. Retenir moins de toupies reviendrait à casser une chaîne
+de calcul en aval pour économiser un camion.
 
-*Le piège : s'arrêter au premier calcul parce qu'il est le plus technique. Le minimum interdit un
-défaut ; il ne fait pas finir le coulage à temps. Et au-delà de
-{{gros-oeuvre.betonnage.options_de_rotation.6.toupies}} toupies, la pompe borne : commander plus
+**Réponse : {{gros-oeuvre.betonnage.toupies_retenues}} toupies**,
+{{gros-oeuvre.betonnage.duree_du_coulage_h::n2}} h de coulage, démarrage
+{{gros-oeuvre.fenetre_de_coulage.demarrage_deduit}}.
+
+*Le piège : s'arrêter au premier calcul parce qu'il est le plus technique. Et au-delà de
+{{gros-oeuvre.betonnage.options_de_rotation.5.toupies}} toupies, la pompe borne : commander plus
 n'achète plus rien, sinon des camions qui attendent et du béton qui vieillit dans la cuve.*
 :::
 
@@ -335,25 +399,29 @@ propose {{gros-oeuvre.parc.lignes.1.parc_m2}} m² tout de suite au lieu des
 Avec {{gros-oeuvre.parc.lignes.1.parc_m2}} m², la cadence tombe de
 {{gros-oeuvre.parc.lignes.2.cadence_tenue_j::n2}} à
 {{gros-oeuvre.parc.lignes.1.cadence_tenue_j::n2}} jours et le plancher s'allonge de
-{{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} jours. Le plancher dispose de
-{{gros-oeuvre.parc.marge_disponible_j::n1}} jours de marge libre : l'allongement y tient, aucune
-autre tâche ne bouge, la date du chantier **ne bouge pas**. Et le loyer est plus faible :
+{{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} jours. L'allongement tient dans la marge **libre**
+({{gros-oeuvre.parc.marge_libre_j::n1}} jours) : aucune tâche successeur ne bouge, et le réseau
+rejoué confirme que la date du chantier **ne bouge pas** —
+{{gros-oeuvre.parc.lignes.1.retard_du_chantier_j::n1}} jour de retard. Et le loyer est plus faible :
 {{gros-oeuvre.parc.lignes.1.total_MAD::n0}} MAD au lieu de
 {{gros-oeuvre.parc.lignes.2.total_MAD::n0}}.
 
 **Ce qu'il faut dire en plus, et qui est le vrai sujet** : vous venez de dépenser
-{{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} jours d'une marge qui en comptait
-{{gros-oeuvre.parc.marge_disponible_j::n1}}. Il en reste
-{{gros-oeuvre.parc.lignes.1.marge_restante_j::n1}}. Ce n'est pas gratuit : c'est payé en marge, et la
-marge sert à encaisser les aléas qui n'ont pas encore eu lieu. La bonne formulation en réunion est
-« j'accepte, et je note que le plancher descend à
-{{gros-oeuvre.parc.lignes.1.marge_restante_j::n1}} jours de marge », pas « ça passe ».
+{{gros-oeuvre.parc.lignes.1.rallonge_j::n1}} jours d'une marge totale qui en comptait
+{{gros-oeuvre.parc.marge_totale_j::n1}}. Il en reste
+{{gros-oeuvre.parc.lignes.1.marge_totale_restante_j::n1}}. Ce n'est pas gratuit : c'est payé en
+marge, et la marge sert à encaisser les aléas qui n'ont pas encore eu lieu. La bonne formulation en
+réunion est « j'accepte, et je note que le plancher descend à
+{{gros-oeuvre.parc.lignes.1.marge_totale_restante_j::n1}} jours de marge », pas « ça passe ».
 
-*Et si la livraison glissait encore, jusqu'à {{gros-oeuvre.parc.lignes.0.parc_m2}} m² — une seule zone de coffrage ? Là, non :
-l'allongement dépasserait la marge de {{gros-oeuvre.parc.lignes.0.depassement_j::n1}} jours, la date
-du chantier bougerait, et les frais de durée réveillés —
-{{gros-oeuvre.parc.lignes.0.frais_de_duree_MAD::n0}} MAD — coûteraient bien plus que le loyer
-économisé.*
+*Et si la livraison glissait encore, jusqu'à {{gros-oeuvre.parc.lignes.0.parc_m2}} m² — une seule
+zone de coffrage ? Le calcul dit encore oui : le réseau rejoué donne
+{{gros-oeuvre.parc.lignes.0.retard_du_chantier_j::n1}} jour de retard, et c'est même l'optimum de
+coût. **Et pourtant non.** L'allongement de {{gros-oeuvre.parc.lignes.0.rallonge_j::n1}} jours
+laisserait au plancher {{gros-oeuvre.parc.lignes.0.marge_totale_restante_j::n1}} jours de marge, soit
+pratiquement rien, et décalerait tous ses successeurs. Accepter revient à parier qu'aucun aléa ne
+touchera le plancher pendant trois mois. Le calcul ne price pas ce pari ; c'est à vous de le refuser,
+et de l'écrire.*
 :::
 
 :::exercice {"titre":"4 · Trouver les erreurs dans ce plan de bétonnage","niveau":"revue critique"}
@@ -370,7 +438,7 @@ Une entreprise vous soumet au visa le plan de bétonnage d'une zone de mezzanine
 
 1. **Démarrage à 9 h en juillet.** Avec {{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h de
    coulage, on finit vers 13 h, au plus chaud. Le démarrage se cale sur l'heure à laquelle on veut
-   avoir **fini** : {{gros-oeuvre.fenetre_de_coulage.demarrage_conseille}} ici.
+   avoir **fini** : {{gros-oeuvre.fenetre_de_coulage.demarrage_deduit}} ici.
 2. **Le débit catalogue de la pompe n'existe pas sur un chantier.** 90 m³/h est une valeur d'essai ;
    le débit pratique, déplacements de flèche et attentes de toupie compris, est de l'ordre de
    {{gros-oeuvre.betonnage.debit_pratique_d_une_pompe_m3_h::n0}} m³/h. Chiffrer sur le catalogue fait
@@ -407,6 +475,9 @@ sinon le visa du ferraillage se donne entre deux toupies.*
    prévenue la veille ?
 8. Le critère de **décoffrage** est-il une résistance, avec les éprouvettes qui vont avec ?
 9. Les **protections** périphériques sont-elles posées avant le coffrage et déposées après ?
+10. Le **démarrage déduit** tombe-t-il avant le lever du soleil, et l'éclairage est-il prévu ?
+11. L'**aire de manœuvre** de la pompe et des toupies est-elle balisée pour le nombre de camions
+    réellement commandé ?
 
 **Glossaire**
 
@@ -426,7 +497,7 @@ sinon le visa du ferraillage se donne entre deux toupies.*
 Sur l'**immobilisation divisée par la cadence**, et non sur la surface d'une zone. Une zone retient ses tables pendant sa cure, où aucune équipe n'est présente : ici {{gros-oeuvre.immobilisation_du_coffrage.part_de_cure_pct::n0}} % du cycle.
 
 **2. Un parc plus petit allonge le plancher de trois jours. Combien cela coûte-t-il ?**
-**Rien, tant que l'allongement tient dans la marge.** Ce qu'un petit parc achète n'est pas du délai, c'est de la marge — et la marge sert aux aléas. Au-delà, chaque jour de dépassement fait courir les frais de durée du chantier entier.
+**Rien en frais de durée, tant que la fin du chantier ne bouge pas** — et pour le savoir, on rejoue le réseau au lieu de comparer à une marge, parce qu'il y en a deux et qu'on se trompe de seuil. Ce qu'un petit parc achète n'est pas du délai, c'est de la **marge**, et la marge sert aux aléas. Un optimum de coût qui recommande un seul jeu de tables dit en réalité « tout se passera bien » : c'est une hypothèse, pas un calcul.
 
 **3. Quelle est la ressource qui borne la cadence de ce plancher ?**
 L'{{gros-oeuvre.cycle.ressource_qui_borne}}. Pas la grue, pas le parc — mais il a fallu calculer les trois pour le savoir, et la réponse change dès qu'on touche à l'une d'elles.
@@ -463,11 +534,12 @@ La troisième est celle qu'on oublie, et souvent celle qui borne.
 | Cycle d'une zone | {{gros-oeuvre.cycle.duree_j::n2}} j |
 | Cadence de rotation | {{gros-oeuvre.cycle.cadence_j::n1}} j · bornée par l'{{gros-oeuvre.cycle.ressource_qui_borne}} |
 | Immobilisation du coffrage | {{gros-oeuvre.immobilisation_du_coffrage.duree_j::n2}} j, dont {{gros-oeuvre.immobilisation_du_coffrage.part_de_cure_pct::n0}} % de cure |
-| **Parc optimal** | **{{gros-oeuvre.parc.optimum.parc_m2}} m²** ({{gros-oeuvre.parc.optimum.zones_simultanees}} zones) — déclaré {{gros-oeuvre.parc.parc_declare_m2}} m² |
-| Marge libre du plancher | {{gros-oeuvre.parc.marge_disponible_j::n1}} j |
+| Optimum de **coût** | {{gros-oeuvre.parc.optimum_de_cout.parc_m2}} m² — et ce n'est pas la décision |
+| Premier parc **sans rallonge** | **{{gros-oeuvre.parc.plus_petit_parc_sans_rallonge.parc_m2}} m²**, +{{gros-oeuvre.parc.ecart_entre_les_deux_choix_MAD::n0}} MAD |
+| Marges du plancher (libre / totale) | {{gros-oeuvre.parc.marge_libre_j::n1}} / {{gros-oeuvre.parc.marge_totale_j::n1}} j |
 | Débit minimal à {{gros-oeuvre.betonnage.temperature_de_calcul_C::n0}} °C | {{gros-oeuvre.betonnage.debit_dimensionnant_m3_h::n1}} m³/h |
 | **Toupies à commander** | **{{gros-oeuvre.betonnage.toupies_retenues}}** → {{gros-oeuvre.betonnage.duree_du_coulage_h::n1}} h de coulage |
-| Démarrage conseillé | {{gros-oeuvre.fenetre_de_coulage.demarrage_conseille}} |
+| Démarrage conseillé | {{gros-oeuvre.fenetre_de_coulage.demarrage_deduit}} |
 
 **Les deux contraintes du bétonnage par temps chaud**
 

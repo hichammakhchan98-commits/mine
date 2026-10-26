@@ -66,45 +66,85 @@ def cadence_bornee_par_le_parc(parc_m2: float, surface_zone_m2: float,
             "cadence_min_j": round(immobilisation_j / zones, 2), "faisable": True}
 
 
-def optimum_du_parc(d: dict, q: dict, regle: dict, immobilisation: dict,
-                    nb_zones: int, cycle_j: float, frais_par_mois: float,
-                    jours_ouvres_par_mois: float, critique: bool,
-                    marge_j: float) -> dict:
-    """Le parc qui minimise la somme du loyer et des frais de duree.
+def impact_sur_le_chantier(d: dict, duree_mezz: float, duree_mezz_reference: float,
+                           cache: dict) -> dict:
+    """De combien la fin du CHANTIER bouge si le plancher dure plus longtemps.
 
-    Trois termes, et le troisieme est celui qu'on oublie :
+    On ne raisonne pas sur un type de marge : on REJOUE le reseau de D2 avec la nouvelle
+    duree du plancher et on lit la date de fin. C'est la seule facon d'etre sur, et la
+    passe adversariale a montre pourquoi : la premiere version declenchait les frais de
+    duree des que la rallonge depassait la marge LIBRE, alors que la question posee —
+    « la fin du chantier bouge-t-elle ? » — appelle la marge TOTALE. Elle imputait
+    154 611 MAD de frais de duree a un parc qui ne retardait rien, et faisait basculer
+    l'optimum. Le module publiait pourtant, deux lignes plus bas, la marge totale et le
+    fait que le plancher ne porte pas la date.
+
+    Rejouer le reseau rend la question de la marge sans objet : on mesure l'effet au
+    lieu de le deduire d'une definition.
+    """
+    cle = round(duree_mezz, 3)
+    if cle in cache:
+        return cache[cle]
+    pl = d["planning"]
+    q = pln.quantites_chantier(d, pl)
+    t = pln.durees_chantier(d, pl, q, duree_mezz)
+    f = pln.planning_avec_fenetres(d, t)
+    res = pln.voie_A_parcours(f["taches"])
+    if "_reference" not in cache:
+        t0 = pln.durees_chantier(d, pl, q, duree_mezz_reference)
+        f0 = pln.planning_avec_fenetres(d, t0)
+        cache["_reference"] = pln.voie_A_parcours(f0["taches"])["duree"]
+    ref = cache["_reference"]
+    out = {"duree_du_chantier_j": round(res["duree"], 2),
+           "retard_du_chantier_j": round(max(0.0, res["duree"] - ref), 2),
+           "le_plancher_devient_critique": bool(
+               abs(pln.marges(res, t, pln.liens_resolus(d, t))["MEZZ"]["marge_totale_j"]) < 1e-6)}
+    cache[cle] = out
+    return out
+
+
+def optimum_du_parc(d: dict, q: dict, regle: dict, immobilisation: dict,
+                    nb_zones: int, cycle_j: float, frais_par_jour_ouvre: float,
+                    marge_libre_j: float, marge_totale_j: float) -> dict:
+    """Le parc qui minimise la somme du loyer et de ce que l'allongement coute.
+
+    Trois termes, et le troisieme se MESURE au lieu de se deduire :
       - le LOYER du parc, proportionnel a sa taille ET a la duree ;
       - le MONTAGE, proportionnel a sa taille seulement ;
-      - les FRAIS DE DUREE du chantier, proportionnels a la duree seulement — et ils ne
-        bougent QUE si le plancher porte la date du chantier.
+      - les FRAIS DE DUREE du chantier, et uniquement si le reseau rejoue montre que la
+        fin bouge vraiment.
 
-    C'est ce dernier point qui renverse la conclusion sur ce chantier-ci.
+    Trois regimes apparaissent, et ils ne se traitent pas de la meme facon. Tant que la
+    rallonge tient dans la marge LIBRE, rien ne bouge. Entre la marge libre et la marge
+    TOTALE, les successeurs se decalent mais la fin tient : c'est gratuit au sens des
+    frais de duree, et ce n'est pas gratuit au sens du risque. Au-dela, la fin bouge.
     """
     g = d["gros_oeuvre"]["coffrage"]
     loyer = g["location_MAD_m2_mois"]["valeur"]
     montage = g["montage_demontage_MAD_m2"]["valeur"]
     surf = regle["surface_zone_m2"]
-    # duree de reference : celle que les equipes tiennent quand le parc ne borne pas
     duree_reference = (nb_zones - 1) * regle["cadence_j"] + cycle_j
+    jm = regle["jours_ouvres_par_mois_calendaire"]
+    cache = {}
     lignes = []
     for parc in g["parcs_a_comparer_m2"]:
         b = cadence_bornee_par_le_parc(parc, surf, immobilisation["duree_j"])
         if not b["faisable"]:
             lignes.append({**b, "retenue": False})
             continue
-        # la cadence reellement tenue est la plus CONTRAIGNANTE des deux bornes
         cad = max(regle["cadence_j"], b["cadence_min_j"])
         duree = (nb_zones - 1) * cad + cycle_j
-        mois = duree / jours_ouvres_par_mois
-        cout_parc = parc * loyer * mois + parc * montage
-        # Ce que l'allongement coute DEPEND DE LA MARGE. Tant qu'il tient dedans, il ne
-        # coute rien au chantier ; au-dela, il repousse la fin et les frais de duree
-        # courent sur le depassement. Ignorer la marge faisait choisir le plus petit
-        # parc possible, qui doublait la duree du plancher sans cout apparent.
         rallonge = max(0.0, duree - duree_reference)
-        depassement = max(0.0, rallonge - marge_j)
-        cout_duree = (frais_par_mois * depassement / jours_ouvres_par_mois
-                      if (critique or depassement > 0) else 0.0)
+        imp = impact_sur_le_chantier(d, duree, duree_reference, cache)
+        mois = duree / jm
+        cout_parc = parc * loyer * mois + parc * montage
+        cout_duree = frais_par_jour_ouvre * imp["retard_du_chantier_j"]
+        if rallonge <= marge_libre_j + 1e-6:
+            regime = "dans la marge libre — rien ne bouge"
+        elif rallonge <= marge_totale_j + 1e-6:
+            regime = "entre marge libre et marge totale — les successeurs se decalent, la fin tient"
+        else:
+            regime = "au-dela de la marge totale — la fin du chantier bouge"
         lignes.append({
             "parc_m2": parc, "zones_simultanees": b["zones_simultanees"],
             "cadence_du_parc_j": b["cadence_min_j"],
@@ -114,9 +154,11 @@ def optimum_du_parc(d: dict, q: dict, regle: dict, immobilisation: dict,
                              else "les equipes"),
             "duree_du_plancher_j": round(duree, 2),
             "rallonge_j": round(rallonge, 2),
-            "marge_consommee_j": round(min(rallonge, marge_j), 2),
-            "marge_restante_j": round(max(0.0, marge_j - rallonge), 2),
-            "depassement_j": round(depassement, 2),
+            "regime": regime,
+            "marge_libre_restante_j": round(max(0.0, marge_libre_j - rallonge), 2),
+            "marge_totale_restante_j": round(max(0.0, marge_totale_j - rallonge), 2),
+            "retard_du_chantier_j": imp["retard_du_chantier_j"],
+            "le_plancher_devient_critique": imp["le_plancher_devient_critique"],
             "loyer_et_montage_MAD": round(cout_parc, 2),
             "frais_de_duree_MAD": round(cout_duree, 2),
             "total_MAD": round(cout_parc + cout_duree, 2),
@@ -124,38 +166,46 @@ def optimum_du_parc(d: dict, q: dict, regle: dict, immobilisation: dict,
     retenues = [x for x in lignes if x.get("total_MAD") is not None]
     best = min(retenues, key=lambda x: x["total_MAD"])
     for x in lignes:
-        x["optimum"] = x is best
-    # le parc actuellement declare dans data/, pour comparaison
+        x["optimum_de_cout"] = x is best
     actuel = d["materiel"]["tables_coffrantes_m2"]
     b_act = cadence_bornee_par_le_parc(actuel, surf, immobilisation["duree_j"])
-    cad_act = max(regle["cadence_j"], b_act["cadence_min_j"])
+    # Le parc qui ne consomme AUCUNE marge : celui a partir duquel les equipes bornent.
+    sans_marge = min((x for x in retenues if x["rallonge_j"] < 1e-6),
+                     key=lambda x: x["parc_m2"], default=None)
     return {
-        "lignes": lignes, "optimum": best,
+        "lignes": lignes, "optimum_de_cout": best,
+        "plus_petit_parc_sans_rallonge": sans_marge,
         "duree_de_reference_j": round(duree_reference, 2),
-        "marge_disponible_j": marge_j,
+        "marge_libre_j": marge_libre_j, "marge_totale_j": marge_totale_j,
         "parc_declare_m2": actuel,
         "cadence_du_parc_declare_j": b_act["cadence_min_j"],
         "le_parc_declare_borne_t_il": b_act["cadence_min_j"] > regle["cadence_j"],
-        "le_plancher_porte_t_il_la_date": critique,
+        "ecart_entre_les_deux_choix_MAD": round(
+            (sans_marge["total_MAD"] - best["total_MAD"]) if sans_marge else 0.0, 2),
         "lecture": (
-            "Le parc optimal minimise la SOMME du loyer et de ce que l'allongement "
-            "coute. Et l'allongement ne coute RIEN tant qu'il tient dans la marge du "
-            "plancher : c'est la marge, et non le delai, qu'un parc plus petit achete. "
-            "Au-dela, chaque jour de depassement repousse la fin du chantier et fait "
-            "courir les frais de duree. L'optimum est donc le plus petit parc dont "
-            "l'allongement reste dans la marge — et il est tres en dessous du reflexe "
-            "de chantier, qui est de commander large."),
-        "ce_que_le_calcul_ne_price_pas": (
-            "Une marge depensee en loyer de coffrage n'est plus disponible pour l'alea. "
-            "Ce calcul la traite comme gratuite jusqu'a epuisement, ce qui est vrai au "
-            "sens comptable et faux au sens du risque. Le choix du parc le plus serre "
-            "revient a parier qu'il n'y aura pas d'alea sur le plancher — un pari qui "
-            "ne figure sur aucune ligne du bordereau."),
+            "L'optimum de COUT est le plus petit parc dont l'allongement ne retarde pas "
+            "la fin du chantier — et sur ce chantier, c'est le plus petit parc tout "
+            "court, parce que le plancher dispose d'une marge totale large. Le calcul "
+            "est juste et la conclusion n'est pas une decision : voir ci-dessous."),
+        "ce_que_le_cout_ne_decide_pas": (
+            "Le modele ne price que le loyer et le retard de la fin. Il ne price pas : "
+            "(1) la marge consommee, qui ne sera plus la pour l'alea — et l'optimum de "
+            "cout en mange l'essentiel ; (2) le decalage des SUCCESSEURS, qui n'est "
+            "gratuit qu'au sens des frais de duree et qui peut creer des conflits de "
+            "ressource ailleurs ; (3) la capacite a rattraper, qui disparait avec la "
+            "marge. Un optimum de cout qui recommande un seul jeu de tables dit en "
+            "realite : « tout se passera bien ». C'est une hypothese, pas un calcul, et "
+            "elle ne figure sur aucune ligne du tableau."),
+        "comment_on_tranche": (
+            "En nommant ce qu'on achete. Le plus petit parc coute le moins et laisse "
+            "le plancher sans marge utile. Le premier parc qui ne consomme aucune marge "
+            "coute davantage et rend le plancher insensible a l'alea. L'ecart entre les "
+            "deux est le prix de cette assurance : il se discute, il ne se calcule pas."),
     }
 
 
 # ------------------------------------------------------ betonnage par temps chaud
-def debit_minimal(d: dict, q: dict) -> dict:
+def debit_minimal(d: dict, q: dict, duree_betonnage_tv_h: float) -> dict:
     """Le debit qu'il faut tenir pour ne pas creer de reprise froide.
 
     Une couche de beton accepte d'etre vibree avec la suivante pendant un certain temps.
@@ -171,11 +221,19 @@ def debit_minimal(d: dict, q: dict) -> dict:
     b = d["gros_oeuvre"]["betonnage_temps_chaud"]
     cz = d["geometrie"]["mezzanine"]["zones_de_coulage"]
     larg = b["largeur_de_bande_m"]["valeur"]
-    # une bande traverse la zone dans sa plus petite dimension
-    traverse = min(cz["longueur_zone_m"], cz["largeur_zone_m"])
-    ep_dalle = d["geometrie"]["mezzanine"]["dalle"]["epaisseur_m"] \
-        if "dalle" in d["geometrie"]["mezzanine"] else q["beton_dalle_m3"] / q["surface_m2"]
-    vol_bande = larg * traverse * ep_dalle
+    # Sens d'avancement : une bande traverse la zone dans la dimension choisie, et on
+    # avance dans l'autre. Le choix n'est pas neutre — il change le debit minimal de
+    # 60 % — il est donc DECLARE dans data/ et non pris par un min() silencieux.
+    sens = b["sens_d_avancement"]["valeur"]
+    L, l = cz["longueur_zone_m"], cz["largeur_zone_m"]
+    traverse, avance = (l, L) if sens == "dans la longueur" else (L, l)
+    n_bandes = math.ceil(avance / larg)
+    # Le volume d'une bande est celui de la ZONE divise par le nombre de bandes : il
+    # porte ainsi les poutres, qu'une bande traverse comme le reste. Une version
+    # precedente multipliait largeur x traverse x epaisseur de DALLE, et laissait les
+    # 8,4 m3 de poutres — la ou une reprise froide est le plus grave — hors du calcul.
+    vol_bande = q["beton_m3"] / n_bandes
+    ep_dalle = q["beton_dalle_m3"] / q["surface_m2"]
     out = {}
     for cle in ("a_20_degres", "a_30_degres", "a_35_degres"):
         t = b["temps_de_maniabilite_h"][cle]["valeur"]
@@ -205,13 +263,34 @@ def debit_minimal(d: dict, q: dict) -> dict:
         if tenu >= pompe - 1e-9:
             break
     cible = b["duree_cible_du_coulage_h"]["valeur"]
-    choisie = next((o for o in options if o["duree_du_coulage_h"] <= cible), options[-1])
+    # Troisieme contrainte, et c'est elle qui commande : le CYCLE du module TV pose deja
+    # une duree de betonnage. Si C3 en retenait une autre, deux modules publieraient deux
+    # durees pour le meme coulage — exactement ce que l'introduction de ce module
+    # reproche. On lit donc la duree du TV et on cherche l'attelage qui la tient.
+    duree_tv = duree_betonnage_tv_h
+    debit_tv = q["beton_m3"] / duree_tv
+    n_tv = math.ceil(debit_tv / debit_par_toupie)
+    if all(o["toupies"] != n_tv for o in options) and n_tv <= 12:
+        tenu = min(pompe, n_tv * debit_par_toupie)
+        options.append({"toupies": n_tv, "debit_tenu_m3_h": round(tenu, 1),
+                        "duree_du_coulage_h": round(q["beton_m3"] / tenu, 2),
+                        "au_dessus_du_minimum": bool(tenu >= ref),
+                        "borne_par": "la pompe" if n_tv * debit_par_toupie > pompe
+                                     else "la rotation des toupies"})
+        options.sort(key=lambda o: o["toupies"])
+    choisie = next(o for o in options if o["toupies"] == n_tv)
+    sous_cible = next((o for o in options if o["duree_du_coulage_h"] <= cible), options[-1])
     return {
         "surface_zone_m2": q["surface_m2"],
         "largeur_de_bande_m": larg, "longueur_de_bande_m": traverse,
+        "sens_d_avancement": sens, "avance_sur_m": avance,
         "epaisseur_de_dalle_m": round(ep_dalle, 3),
         "volume_d_une_bande_m3": round(vol_bande, 2),
-        "nb_de_bandes": math.ceil(max(cz["longueur_zone_m"], cz["largeur_zone_m"]) / larg),
+        "nb_de_bandes": n_bandes,
+        "controle_les_bandes_font_la_zone": {
+            "somme_des_bandes_m3": round(vol_bande * n_bandes, 2),
+            "volume_de_la_zone_m3": q["beton_m3"],
+            "ecart_m3": round(vol_bande * n_bandes - q["beton_m3"], 4)},
         "par_temperature": out,
         "temperature_de_calcul_C": b["temperature_de_calcul_C"]["valeur"],
         "debit_dimensionnant_m3_h": ref,
@@ -222,9 +301,21 @@ def debit_minimal(d: dict, q: dict) -> dict:
         "toupies_pour_tenir_le_minimum": n_toupies,
         "options_de_rotation": options,
         "duree_cible_du_coulage_h": cible,
+        "duree_du_betonnage_au_cycle_TV_h": round(duree_tv, 2),
+        "debit_qu_implique_le_cycle_TV_m3_h": round(debit_tv, 1),
+        "option_qui_tient_la_cible_horaire": sous_cible,
         "option_retenue": choisie,
         "toupies_retenues": choisie["toupies"],
         "duree_du_coulage_h": choisie["duree_du_coulage_h"],
+        "trois_contraintes": (
+            f"Le minimum anti-reprise demande {n_toupies} toupies. La cible horaire — "
+            f"finir en moins de {cible:.0f} h — en demande "
+            f"{sous_cible['toupies']}. Et le CYCLE du module TV, qui a servi a batir tout "
+            f"le planning, suppose un betonnage en {duree_tv:.2f} h, soit "
+            f"{debit_tv:.0f} m3/h : {n_tv} toupies. C'est la plus exigeante des trois qui "
+            "commande, et c'est celle du cycle — parce qu'elle est deja dans le planning "
+            "de D2 et dans le prix de D1. Retenir moins reviendrait a casser une chaine "
+            "de calcul en aval pour economiser un camion."),
         "volume_de_la_zone_m3": q["beton_m3"],
         "deux_contraintes": (
             f"Le debit MINIMAL de {ref:.1f} m3/h interdit la reprise froide entre deux "
@@ -257,26 +348,48 @@ def debit_minimal(d: dict, q: dict) -> dict:
 
 
 def fenetre_de_coulage(d: dict, deb: dict) -> dict:
-    """A quelle heure demarrer un coulage pour qu'il finisse avant la chaleur.
+    """A quelle heure demarrer pour avoir FINI avant la chaleur.
 
-    Non normatif et tres concret : c'est la decision que prend un chef de chantier la
-    veille, et elle depend d'une duree de coulage qu'on vient de calculer.
+    L'heure de demarrage se deduit, elle ne se pose pas : on part de l'heure a laquelle
+    on veut avoir fini et on recule de la duree du coulage. Une version precedente
+    posait « 05:30 » en constante tout en publiant la regle inverse.
     """
+    b = d["gros_oeuvre"]["betonnage_temps_chaud"]
+    fin_voulue = b["heure_de_fin_voulue_h"]["valeur"]
     duree = deb["duree_du_coulage_h"]
+    debut = fin_voulue - duree
+    lever = b["lever_du_soleil_ete_h"]["valeur"]
+
+    def hhmm(x):
+        h = int(x)
+        return f"{h:02d} h {int(round((x - h) * 60)):02d}"
+
     return {
         "duree_du_coulage_h": duree,
-        "demarrage_conseille": "05:30",
-        "fin_attendue": f"{5 + int(duree + .5)}h{'30' if (duree % 1) < .5 else '00'} environ",
+        "heure_de_fin_voulue": hhmm(fin_voulue),
+        "demarrage_deduit": hhmm(debut),
+        "lever_du_soleil": hhmm(lever),
+        "demarrage_avant_le_jour": bool(debut < lever),
+        "eclairage_necessaire_h": round(max(0.0, lever - debut), 2),
         "regle": (
-            "On fait tenir le coulage dans la premiere moitie de la matinee, avant que "
-            "la temperature du beton frais ne monte. Ce qui decide de l'heure de "
-            "demarrage, ce n'est pas l'horaire de l'equipe : c'est l'heure a laquelle on "
-            "veut avoir FINI."),
+            "On part de l'heure a laquelle on veut avoir FINI et on recule de la duree "
+            "du coulage. Ce qui decide de l'heure de demarrage, ce n'est pas l'horaire "
+            "de l'equipe : c'est la temperature a laquelle on surfacera."),
+        "consequence_securite": (
+            f"Le demarrage deduit tombe {round(max(0.0, lever - debut) * 60)} minutes "
+            "AVANT le lever du soleil : la premiere partie du coulage se fait de nuit. "
+            "Cela se prepare — eclairage de l'aire de coulage et des circulations, "
+            "balisage de la zone de manoeuvre de la pompe et des toupies, et un homme "
+            "dedie au guidage des camions. Un coulage de nuit improvise pour fuir la "
+            "chaleur echange un risque contre un autre."
+            if debut < lever else
+            "Le demarrage deduit tombe apres le lever du soleil : pas d'eclairage "
+            "specifique a prevoir pour le coulage lui-meme."),
     }
 
 
 # ------------------------------------------------------------ points d'arret
-def points_d_arret(d: dict, reseau: list) -> dict:
+def points_d_arret(d: dict, reseau: list, cycle_j: float) -> dict:
     """Les points d'arret du cycle, avec leur duree et leur double lecture.
 
     Un point d'arret est une TACHE : il a une duree, il est sur le chemin critique du
@@ -291,9 +404,11 @@ def points_d_arret(d: dict, reseau: list) -> dict:
         "liste": pa, "nombre": len(pa),
         "duree_totale_j": round(total, 3),
         "duree_dans_le_cycle_j": par_id["PTA"].duree,
-        "part_du_cycle_pct": round(par_id["PTA"].duree / sum(
-            t.duree for t in reseau if t.id in ("COF", "FEP", "FED", "PTA", "BET", "CUR", "DEC")
-        ) * 100, 1),
+        "part_du_cycle_pct": round(par_id["PTA"].duree / cycle_j * 100, 2),
+        "_denominateur": ("la DUREE du cycle, pas la somme des durees de ses taches : "
+                          "les taches se recouvrent, leur somme vaut 10,45 j pour un "
+                          "cycle de 8,05 j, et rapporter a la somme minorait la part "
+                          "d'un tiers"),
         "double_lecture": {
             "entreprise": (
                 "Prevoir le point d'arret au planning avec sa duree, et prevenir la "
@@ -350,8 +465,14 @@ def figures(opt: dict, deb: dict, immo: dict, reseau: list, debuts: dict,
             cycle_j: float) -> dict:
     ok = [x for x in opt["lignes"] if x.get("total_MAD") is not None]
     return {
-        "parc": [{"libelle": f"{x['parc_m2']} m² · {x['zones_simultanees']} zone(s)",
+        "parc": [{"libelle": f"{x['parc_m2']} m² · {x['zones_simultanees']} zone(s)"
+                             + (" · optimum de coût" if x["optimum_de_cout"] else "")
+                             + (" · sans rallonge" if x is opt["plus_petit_parc_sans_rallonge"]
+                                else ""),
                   "valeur": round(x["total_MAD"] / 1e3, 1)} for x in ok],
+        "marges": [{"libelle": f"{x['parc_m2']} m² · {x['zones_simultanees']} zone(s)",
+                    "valeur": x["marge_totale_restante_j"]} for x in ok],
+        "marges_bande": [opt["marge_libre_j"], opt["marge_totale_j"]],
         "cadences": [{"libelle": f"{x['parc_m2']} m²",
                       "valeur": x["cadence_tenue_j"]} for x in ok],
         "debits": [{"libelle": f"{cle.replace('a_', '').replace('_degres', ' °C')} — "
@@ -407,12 +528,28 @@ def tout_calculer(d: dict) -> dict:
     fd = pr["bordereau"]["frais_de_duree"]
 
     nb_zones = d["geometrie"]["mezzanine"]["zones_de_coulage"]["nb_zones"]
+    # Les frais de duree sont LUS chez D1 — au jour ouvre, tels qu'il les publie — et
+    # non re-derives ici : les re-deriver donnait 15 143 MAD/j contre 16 268, soit 7,4 %
+    # d'ecart, dans le module qui ouvre sur « trois modules qui recalculent la meme
+    # grandeur en publient trois valeurs ».
+    regle["jours_ouvres_par_mois_calendaire"] = fd["conversion"]["jours_ouvres_par_mois_calendaire"]
     opt = optimum_du_parc(d, q, regle, immo, nb_zones, cycle_j,
-                          fd["cout_MAD_par_mois"],
-                          fd["conversion"]["jours_ouvres_par_mois_calendaire"], critique,
-                          pl["durees"]["MEZZ"]["marge_libre_j"])
-    opt["marge_totale_du_plancher_j"] = marge
-    deb = debit_minimal(d, q)
+                          fd["cout_MAD_par_jour_ouvre"],
+                          pl["durees"]["MEZZ"]["marge_libre_j"],
+                          pl["durees"]["MEZZ"]["marge_totale_j"])
+    opt["frais_de_duree_MAD_par_jour_ouvre"] = fd["cout_MAD_par_jour_ouvre"]
+    opt["_source_des_frais"] = "calc/sorties/prix.json — bordereau.frais_de_duree"
+    # Les deux nombres de l'exercice 1 : le quotient exact avant arrondi, et le
+    # battement entre le parc qu'on calcule et celui que le projet a commande. Les
+    # ecrire a la main faisait publier « 3 x 424,3 = 1 300 », une egalite fausse de 2 %
+    # (le produit vaut 1 273 ; 1 300 est le stock declare).
+    immo["zones_simultanees_exact"] = round(immo["duree_j"] / regle["cadence_j"], 2)
+    immo["zones_simultanees"] = math.ceil(immo["duree_j"] / regle["cadence_j"] - 1e-9)
+    immo["parc_minimum_m2"] = round(immo["zones_simultanees"] * q["coffrage_m2"], 1)
+    immo["battement_du_parc_declare_m2"] = round(
+        opt["parc_declare_m2"] - immo["parc_minimum_m2"], 1)
+    deb = debit_minimal(d, q, t["betonnage_h"] if "betonnage_h" in t
+                        else t["betonnage_j"] * 8)
     return {
         "cycle": {"duree_j": round(cycle_j, 2), "cadence_j": regle["cadence_j"],
                   "ressource_qui_borne": regle["ressource_qui_borne"],
@@ -422,7 +559,7 @@ def tout_calculer(d: dict) -> dict:
         "parc": opt,
         "betonnage": deb,
         "fenetre_de_coulage": fenetre_de_coulage(d, deb),
-        "points_d_arret": points_d_arret(d, reseau),
+        "points_d_arret": points_d_arret(d, reseau, cycle_j),
         "controles_avant_coulage": controles_avant_coulage(d),
         "figures": figures(opt, deb, immo, reseau, debuts, cycle_j),
     }
@@ -440,6 +577,8 @@ if __name__ == "__main__":
           f"({r['cycle']['ressource_qui_borne']}) | immobilisation "
           f"{r['immobilisation_du_coffrage']['duree_j']} j dont "
           f"{r['immobilisation_du_coffrage']['part_de_cure_pct']} % de cure | "
-          f"parc optimal {o['optimum']['parc_m2']} m2 (declare {o['parc_declare_m2']}) | "
+          f"parc : optimum de cout {o['optimum_de_cout']['parc_m2']} m2, "
+          f"sans rallonge {o['plus_petit_parc_sans_rallonge']['parc_m2']} m2 "
+          f"(declare {o['parc_declare_m2']}) | "
           f"debit a 35 °C {b['debit_dimensionnant_m3_h']} m3/h, "
           f"{b['toupies_retenues']} toupies en {b['duree_du_coulage_h']} h")

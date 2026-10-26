@@ -907,7 +907,7 @@ def situation(d: dict, bord: dict, declare: dict) -> dict:
     }
 
 
-def courbe_de_depense(bord: dict, res: dict, durees: dict) -> dict:
+def courbe_de_depense(bord: dict, res: dict, durees: dict, segments: dict) -> dict:
     """Profil de DEPENSE dans le temps — qui n'est pas la courbe en S de D2.
 
     La courbe en S du module D2 est en jours-hommes : elle mesure le travail. Celle-ci
@@ -918,15 +918,26 @@ def courbe_de_depense(bord: dict, res: dict, durees: dict) -> dict:
     tresorerie : c'est la meme erreur que de repartir un avancement au prorata du
     temps au lieu de le deriver de l'etat physique.
 
-    Chaque poste etale son debourse uniformement sur la duree de SA tache ; les frais
-    indexes sur la duree s'etalent sur le chantier entier.
+    Chaque poste etale son debourse uniformement sur ses SEGMENTS DE TRAVAIL ; les frais
+    indexes sur la duree, eux, s'etalent sur le chantier entier, parce qu'ils courent
+    aussi quand personne ne travaille. C'est la meme assiette que la valeur acquise de
+    D4, et ce doit l'etre : deux grandeurs qu'on soustrait l'une de l'autre ne peuvent
+    pas etre batees sur deux decoupages differents.
     """
     duree = res["duree"]
     fin = int(math.ceil(duree))
     seg = []
     for p in bord["postes"]:
-        deb, f = res["tot"][p["poste"]]
-        seg.append((deb, max(f, deb + 1e-9), p["debourse_sec_total_MAD"]))
+        # Le debourse d'un poste s'etale sur ses SEGMENTS DE TRAVAIL, pas sur son span
+        # debut->fin : une tache qui attend sa fenetre de consignation ne depense pas.
+        # Etaler sur le span faisait diverger la valeur planifiee de la valeur acquise,
+        # qui est derivee des segments — 16,5 % d'erreur sur l'ecart de delai de D4.
+        segs = segments[p["poste"]]
+        total = sum(b2 - a2 for a2, b2 in segs) or 1e-9
+        for a2, b2 in segs:
+            seg.append((a2, max(b2, a2 + 1e-9),
+                        p["debourse_sec_total_MAD"] * (b2 - a2) / total))
+    # les frais indexes sur la duree, eux, courent bien sur toute la duree
     seg.append((0.0, duree, bord["frais_de_duree"]["total_MAD"]))
     total = sum(m for _, _, m in seg)
 
@@ -1232,7 +1243,7 @@ def tout_calculer(d: dict, duree_mezz: float, cadence_mezz: float, cycle_mezz: f
 
     cal = pln.calendrier(res["duree"], pl["calendrier"])
     bord = bordereau(d, q, t, res["duree"], cal)
-    dep = courbe_de_depense(bord, res, t)
+    dep = courbe_de_depense(bord, res, t, seg)
     durees_dates = {i: {**t[i], "debut_j": res["tot"][i][0], "fin_j": res["tot"][i][1]}
                     for i in pln.NOMS}
     etats = trois_etats(d, avancement_planifie(

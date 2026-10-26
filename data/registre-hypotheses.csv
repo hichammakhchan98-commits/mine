@@ -158,3 +158,5 @@ H156;volume d'une toupie;8 m³;m³;6 à 10;2026;C3;volume d'une toupie
 H157;durée de rotation d'une toupie;75 min;min;45 à 120;2026;C3;aller, attente, vidange, retour, lavage — centrale à une vingtaine de minutes
 H158;débit pratique d'une pompe automotrice;45 m³/h;m³/h;25 à 70;2026;C3;débit de chantier, déplacements de flèche et attentes de toupie compris — et non le débit catalogue
 H159;durée cible d'un coulage;4 h;h;3 à 6;2026;C3;pour qu'un coulage démarré à l'aube finisse avant la montée en température , décision de conduite, pas contrainte physique
+H160;heure de fin voulue d'un coulage d'été;10 h;h;9 à 12;2026;C3;heure à laquelle le surfaçage doit être terminé , c'est d'elle qu'on recule pour trouver l'heure de démarrage
+H161;lever du soleil à la mi-juillet, région de Marrakech;6,3 h;h;6,0 à 6,7;2026;C3;sert à dire si le coulage démarre de nuit, et donc s'il faut éclairer
