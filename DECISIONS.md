@@ -531,3 +531,40 @@ seul lisible est constaté contre planifié à la même date (−3,42 points, un
 temporel suggérait +11,98 d'avance).
 
 **Portée** : prolonge D-037 (domaine de définition d'un ratio) au cas où le domaine est **vide**.
+
+## D-043 — 26/10/2026 — Une comparaison circulaire n'est pas une seconde voie, et le module doit le dire
+
+**Décision.** Quand les deux termes d'une comparaison viennent de la même source, le module écrit
+que ce n'est pas une vérification au sens du § 3.3, et nomme ce qui garantit vraiment le résultat.
+
+**Raison.** B3e comparait le métré de son plan au ratio kg/m³ et concluait « l'ordre de grandeur
+tient ». Mais le plan fictif avait été *calibré* sur ce même ratio quelques heures plus tôt : la
+comparaison vérifiait le calibrage, et le résultat était une tautologie. Pire, un test épinglait la
+conclusion — « le plan reste dans la fourchette » — c'est-à-dire exactement le défaut que C3 avait
+dû corriger (D-041). Un cours qui se décerne une vérification qu'il n'a pas faite enseigne la
+mauvaise habitude en même temps que la bonne méthode.
+
+**Impact.** La section devient « contrôle d'ordre de grandeur », `_ce_n_est_pas_une_seconde_voie`
+est publié et lu, le test de conclusion est remplacé par le test de la règle, et le module nomme ce
+qui garantit le métré : l'étalonnage externe de la masse linéique, la vérification dimensionnelle,
+et une **seconde traversée depuis le dessin** (0,005 % d'écart), dont la portée exacte est écrite —
+elle vérifie la chaîne de calcul, pas le plan.
+
+**Portée** : tout module qui calibre une donnée sur une référence perd le droit de s'en servir comme
+contre-calcul. À vérifier dans B7c, où les deux voies du nombre de plages partagent le rendement.
+
+## D-044 — 26/10/2026 — Un plan pédagogique n'a pas le droit de contredire ce que le module en dit
+
+**Décision.** Une donnée fictive peut être non dimensionnée ; elle ne peut pas contredire une
+affirmation du module qui la commente. Quand le module dit « la logique se voit », la donnée doit la
+montrer.
+
+**Raison.** Le plan de ferraillage de B3e portait 13,4 cm² d'acier sur appui intermédiaire contre
+24,2 cm² en travée, pendant que la légende de sa figure 2 écrivait « les chapeaux à cheval sur les
+appuis : la logique se voit sans aucun calcul, c'est la forme du moment ». Sur trois travées égales,
+le moment sur appui vaut environ 1,25 fois celui de travée : l'acier supérieur devait dépasser
+l'inférieur. C'est de la RDM pure, V1, et la phase § 5.0 ne protège pas de cette erreur-là — elle
+interdit de dimensionner, pas de respecter l'équilibre.
+
+**Impact.** B2 passe à 5 HA25, rapport 1,18, et un test l'impose avec ses bornes. Le mot « fictif »
+ne couvre plus rien : il dit que le plan n'est pas vérifié, pas qu'il peut être incohérent.

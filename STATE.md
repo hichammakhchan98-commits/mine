@@ -7,7 +7,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Reprise (mode B — à lire en premier à chaque séance)
 
 - **Dernier livrable** : `B3e` — béton armé en exécution. Zip : `cours-genie-civil-P1-B3e.zip`
-- **Passe /devil de B3e : à lancer.** C3 et D4 : faites, bloquants corrigés.
+- **Toutes les passes /devil sont faites**, tous les bloquants corrigés (B3e : 36 défauts,
+  11 bloquants, dont **trois erreurs de modèle physique**).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
@@ -57,32 +58,37 @@ E1, TV, D2, D1 : **minimum 2 partout** après correction des bloquants. Détail 
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
 valeurs clés depuis `data/` seul. E1 : 50 (3 passes) · TV : 117 (5 passes) · D2 : 32 · D1 : 28 ·
-C3 : 33 · D4 : 32 (une passe chacun, D-034). **Bloquants : 15 · 8 · 7 · 6 · 8, tous corrigés.**
+C3 : 33 · D4 : 32 · B3e : 36 (une passe chacun, D-034).
+**Bloquants : 15 · 8 · 7 · 6 · 8 · 11, tous corrigés.**
 Détail de chaque défaut, de sa preuve et de la suite donnée : `QA/`.
 
-**Les six familles qui reviennent**, et ce sont elles qu'il faut chercher dans les modules suivants :
-(1) une grandeur d'état **saisie** au lieu d'être dérivée ; (2) un paramètre déclaré, publié, et que
-**rien ne lit** (D2-B1, D1-B6, C3-M8) ; (3) un ratio ou un indice lu **hors de son domaine**, voire
-sur un domaine vide (D1, D4-B5, D-037, D-042) ; (4) une figure ou une légende qui ne montre pas la
-série annoncée ; (5) deux modules qui recalculent la même grandeur et en publient deux valeurs
-(D1-M1, C3-B3, C3-B5, D-039) ; (6) une conclusion **déduite** d'une définition piégeuse — marge libre
-contre marge totale — au lieu d'être mesurée (C3-B1, D-040).
+**Une septième famille, découverte par B3e et plus grave que les six autres : l'erreur de MODÈLE
+PHYSIQUE.** Une formule de recouvrement qui ne couvre pas l'ouvrage, une nappe qui laisse 18 m² de
+dalle nue, un plan qui met l'acier du mauvais côté de la poutre. Aucun contrôle de cohérence ne les
+voit : il faut refaire la géométrie. Les chercher d'abord dans tout module qui pose une géométrie.
+
+**Les six autres familles** : (1) une grandeur d'état **saisie** au lieu d'être dérivée ; (2) un
+paramètre déclaré, publié, que **rien ne lit** ; (3) un ratio ou un indice lu **hors de son
+domaine**, voire sur un domaine vide (D-037, D-042) ; (4) une figure ou une légende qui ne montre
+pas la série annoncée ; (5) deux modules qui recalculent la même grandeur (D-039) ; (6) une
+conclusion **déduite** d'une définition piégeuse au lieu d'être mesurée (D-040).
 
 **Ce qui les trouve** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie, et
 des captures regardées. **Jamais un test** — les contrôles étaient verts avant chaque passe.
 
-**Deux fautes de méthode à ne pas reproduire.** D4 a modifié les fichiers de D1 pendant sa passe
-adversariale : un livrable en relecture est figé. Et un test de C3 épinglait la **conclusion
-narrative** du module (« l'optimum n'est ni le plus petit ni le plus grand ») au lieu de sa règle :
-corrigé le bloquant, le test rougissait et poussait à déplacer les données. Un test vérifie une
-règle, jamais un résultat raconté.
+**Deux fautes de méthode à ne pas reproduire.** D4 a modifié les fichiers de D1 pendant sa passe :
+un livrable en relecture est figé. Et deux fois — C3 puis B3e — un test épinglait la **conclusion
+narrative** au lieu de la règle. Un test vérifie une règle, jamais un résultat raconté (D-041,
+D-043).
 
 **La règle qui en sort** : toute grandeur d'état est **dérivée** et un test refait la dérivation ;
 tout paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verdict publié est une
 sortie de `calc/`** ; toute V3 est registrée et vérifiée dans sa fourchette ; un module à risque
 porte ses dispositions de sécurité (§ 3.4) ; chaque contrôle rendant un verdict porte son canari.
 **Canaris** : 14 sur E1 et TV, 11 inventés par les relecteurs, 5 par D2, 7 par D1, 6 par C3, 7 par
-D4 ; tous rouges.
+D4, 9 par B3e ; tous rouges. Et l'un d'eux, ajouté en corrigeant B3e-B-2, a trouvé seul une
+**quatrième** erreur de géométrie que la passe n'avait pas vue : un canari utile ne confirme pas,
+il cherche.
 
 **Dette déclarée de la TV** : scalaires V3 sans fourchette hors registre · deux bibliothèques hors
 vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
@@ -94,17 +100,11 @@ vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité q
 
 ## Simplifications déclarées (§ R6)
 
-| # | Simplification | Où |
-|---|---|---|
-| 1 | **Une scène 3D par vue** (seconde option du § 4.4), plafond de 4 contextes WebGL, et non un renderer unique à viewport/scissor | `src/civil3d/scene.js` |
-| 2 | Le contour du cadre est une **polyligne dense** (0,007 % sous la formule fermée), pas un arc exact | `src/civil3d/armatures.js` |
-| 3 | Fiches-module des paliers 2 et 3 sobres, à revoir à l'ouverture du palier | `cadrage/05-sommaire.md` |
-| 4 | `print.css` imprime un substitut textuel de la 3D ; vérifié par relecture, **pas** par un test | `assets/print.css` |
-| 5 | **Cadres sans crochets** : métré minorant d'environ 3 % (valeur constructive interdite en § 5.0) | `data/demo-cage.json` |
-| 6 | Coffrage modélisé **sans étaiement**, décoffrage animé sans condition de résistance | page de démonstration |
-| 7 | Vérification dimensionnelle **déportée** dans un fichier : si une formule change sans qu'il suive, le contrôle ne le voit pas | `calc/verif_unites.py` |
-| 8 | Un seul relevé d'avancement dans `data/` : le constat est publié comme un point, pas comme une courbe | `calc/cycle_plancher.py` |
-| 9 | Le 16ᵉ contrôle de sécurité ne cherche qu'un mot : une section S7c vidée de sa substance mais contenant « sécurité » resterait verte | `build/check.mjs` |
+Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une scène 3D par vue ·
+contour de cadre en polyligne · fiches P2/P3 sobres · substitut textuel de la 3D à l'impression ·
+cadres sans crochets (métré minorant, 0,08 % du total) · coffrage sans étaiement en démonstration ·
+vérification dimensionnelle déportée · un seul relevé d'avancement dans `data/` · le contrôle de
+sécurité ne cherche qu'un mot.
 
 ## Dette
 
@@ -123,6 +123,7 @@ vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité q
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
 | 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
 | 17 | **C3, non corrigés** : le `floor` du parc ne mord sur aucune ligne du tableau (m5) · cure de 2 j insensible sur sa fourchette, non publiée (m6) · loyer et montage sans leurs bornes dans le tableau (m7) · loyer sans battement de livraison ni repli : **borne basse** (m8) · deux durées du plancher coexistent dans `data/` (m10) | avant la revue de palier |
+| 20 | **B3e, non corrigés** : les 17 majeurs et 8 mineurs que la correction des bloquants n'a pas emportés — dont ~20 nombres techniques encore écrits à la main (§ 4.3) et trois listes fermées de points de contrôle avant coulage (C3 en a deux, B3e une) sans renvoi croisé (D-039 non appliqué entre les deux modules). Détail : `QA/B3e-passe1.md` | avant la revue de palier |
 | 19 | **B3e** : le plan de ferraillage est **fictif et calibré** sur les ratios V3, non dimensionné — une première version posée à vue pesait 35 à 43 % de moins. Le module le dit quatre fois ; il reste qu'aucune de ses sections n'est justifiée. Levée : module **B3c** à l'arrivée du BAEL | levée du § 5.0 |
 | 18 | **D4, non corrigés** : les 15 majeurs et 9 mineurs que la réécriture de S3c, S4c, de l'exercice 2 et de la fiche mémo n'a pas emportés (détail : `QA/D4-passe1.md`) | avant la revue de palier |
 | 16 | **D1, non corrigés** (D-034) : figure 4 écrite en dur dans `figures()` au lieu d'être générée depuis `data/` (M6) · un seul canari pour cinq verdicts (M9) · nombres encore écrits à la main (M10) · dix mineurs. Et une **simplification déclarée** : tous les totaux de D1 sont calculés **sans** la ligne de divers calibrée (28,7 %), donc ce sont des bornes basses | avant la revue de palier |
