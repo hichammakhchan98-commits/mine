@@ -568,3 +568,47 @@ interdit de dimensionner, pas de respecter l'équilibre.
 
 **Impact.** B2 passe à 5 HA25, rapport 1,18, et un test l'impose avec ses bornes. Le mot « fictif »
 ne couvre plus rien : il dit que le plan n'est pas vérifié, pas qu'il peut être incohérent.
+
+## D-045 — 27/10/2026 — Une plage de consignation est une plage de NUIT, et la tâche sous interception paie son rendement
+
+**Décision.** Les consignations du cas phare sont des plages de **nuit de 6 h**. La durée d'une tâche
+sous interception est multipliée par le **facteur d'interception** — rendement du temps × abattement
+de cadence de nuit — calculé une seule fois dans `calc/plage.py` et lu par D2 comme par B7c.
+
+**Raison.** D2 donnait à la tâche de levage sous consignation la durée d'un travail de jour, puis la
+logeait dans des fenêtres comme si chacune produisait huit heures. Or une plage de 6 h ne laisse que
+**2,85 h** de travail : prise de possession, consignation caténaire, amenée, repli, déconsignation et
+marge de restitution en consomment 3,15 h, dont 1,25 h tenues par l'exploitant et que rien
+n'accélère. Avec l'abattement de cadence de nuit, le facteur vaut **×4,01**. Le lecteur a tranché
+entre l'hypothèse « journée » que `data` déclarait et l'hypothèse « nuit », plus conforme à une
+ligne en service.
+
+**Impact.** Chantier **363 → 600 jours ouvrés**, fin 2028-05-01 → **2029-04-23**. Le levage passe de
+5 à 17 fenêtres. D1 (frais de durée, trésorerie) et D4 (BAC, avancements) suivent par le build ;
+C3 rejouait déjà le réseau et suit seul. La phrase de D2 qui disait « un chantier de dix-huit mois »
+est devenue une variable.
+
+**Ce qui n'est PAS décidé ici** : la méthode de montage. Voir D-046.
+
+## D-046 — 27/10/2026 — 600 jours n'est pas une réponse : les leviers sont en études, et ils se mesurent
+
+**Décision.** B7c publie les leviers et l'effet **mesuré** de chacun en rejouant le réseau, nomme ce
+que le calcul ne price pas, et **ne choisit pas** à la place du lecteur. La durée de référence du
+cours reste celle de la méthode déclarée aujourd'hui.
+
+**Raison.** Un planning qu'on rallonge de onze mois pour absorber un rendement de 48 % est un
+planning que personne n'a discuté. Les leviers existent et aucun n'est dans le planning : négocier
+une plage plus longue (−137 j pour 8 h), pré-assembler au sol pour réduire la part levée sous
+interception (−195 j à 15 %), ou les deux (**−237 j**, soit 363 jours — exactement la durée que le
+cours publiait avant la correction). Le planning initial avait raison **par accident** : il était
+atteignable, mais seulement avec une méthode de montage et une stratégie de plages que personne
+n'avait écrites.
+
+**Impact.** `leviers()` rejoue le réseau pour chaque combinaison (D-040). Chaque ligne porte sa
+contrepartie — emprise au sol, grue plus forte, arbitrage de l'exploitant contre la circulation — et
+le module signale les leviers qui **sortent de la fourchette déclarée** : réduire la part sous
+interception à 15 % n'est pas choisir une valeur basse de l'hypothèse, c'est adopter une autre
+méthode de montage.
+
+**Ce qui reste au lecteur** : adopter ou non une combinaison. Tant qu'il ne l'a pas fait, le cours
+porte la durée de la méthode actuelle, et dit pourquoi.

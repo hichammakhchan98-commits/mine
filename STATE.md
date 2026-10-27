@@ -6,13 +6,13 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `B3e` — béton armé en exécution. Zip : `cours-genie-civil-P1-B3e.zip`
+- **Dernier livrable** : `B7c` — bâtiments ferroviaires. Zip : `cours-genie-civil-P1-B7c.zip`
 - **Toutes les passes /devil sont faites**, tous les bloquants corrigés (B3e : 36 défauts,
   11 bloquants, dont **trois erreurs de modèle physique**).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `B7c` — Bâtiments ferroviaires (quais, voie, systèmes, sous exploitation).
+- **Prochain module** : `C7` — Qualité, HSE, environnement. **Passe /devil de B7c : à lancer.**
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -28,7 +28,7 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Statut des modules
 
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
-**24 livraisons**, dont **7 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
+**24 livraisons**, dont **8 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
 - **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 32 défauts, 8 bloquants
   — D-035), `D1` (métrés et prix, 28 défauts, 7 bloquants corrigés), `D4` (suivi),
@@ -123,6 +123,8 @@ sécurité ne cherche qu'un mot.
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
 | 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
 | 17 | **C3, non corrigés** : le `floor` du parc ne mord sur aucune ligne du tableau (m5) · cure de 2 j insensible sur sa fourchette, non publiée (m6) · loyer et montage sans leurs bornes dans le tableau (m7) · loyer sans battement de livraison ni repli : **borne basse** (m8) · deux durées du plancher coexistent dans `data/` (m10) | avant la revue de palier |
+| 21 | **Le chantier dure désormais 600 j ouvrés** (fin 2029-04-23) au lieu de 363, parce que B7c a corrigé la tâche sous consignation. D1 et D4 ont suivi par le build ; leurs **textes** n'ont pas été relus ligne à ligne avec les nouvelles dates (D-045, choix du lecteur : laisser le build propager) | avant la revue de palier |
+| 22 | **Flake de rendu** : les deux contrôles 3D de `00-demo-cage` échouent par intermittence sur un avertissement du moteur WebGL logiciel, et passent au rejeu. Ce n'est pas un défaut du cours, c'est l'environnement — mais un contrôle qui échoue au hasard finit par ne plus être lu | à outiller |
 | 20 | **B3e, non corrigés** : les 17 majeurs et 8 mineurs que la correction des bloquants n'a pas emportés — dont ~20 nombres techniques encore écrits à la main (§ 4.3) et trois listes fermées de points de contrôle avant coulage (C3 en a deux, B3e une) sans renvoi croisé (D-039 non appliqué entre les deux modules). Détail : `QA/B3e-passe1.md` | avant la revue de palier |
 | 19 | **B3e** : le plan de ferraillage est **fictif et calibré** sur les ratios V3, non dimensionné — une première version posée à vue pesait 35 à 43 % de moins. Le module le dit quatre fois ; il reste qu'aucune de ses sections n'est justifiée. Levée : module **B3c** à l'arrivée du BAEL | levée du § 5.0 |
 | 18 | **D4, non corrigés** : les 15 majeurs et 9 mineurs que la réécriture de S3c, S4c, de l'exercice 2 et de la fiche mémo n'a pas emportés (détail : `QA/D4-passe1.md`) | avant la revue de palier |
@@ -141,8 +143,8 @@ dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
 
 ## Effort consommé (§ 13.2)
 
-**13 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e = 1 chacun, plus 1
-pour les passes et corrections de C3 et D4.
-**Avancement sur le programme du 31/10** : **7 livraisons sur 18**. À la cadence constatée, il en
-reste 3 à 5 atteignables sur les 11 annoncées, et non 11. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les
+**14 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c = 1 chacun,
+plus 1 pour les passes et corrections de C3 et D4.
+**Avancement sur le programme du 31/10** : **8 livraisons sur 18**. À la cadence constatée, il en
+reste 2 à 4 atteignables sur les 10 annoncées. Ordre tenu : C7, REC. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les
 premiers coupés. C'est dit au lecteur, pas découvert le 31.

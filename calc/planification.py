@@ -18,6 +18,7 @@ import json, math, pathlib, sys
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "calc"))
+import plage as pg                                                      # noqa: E402
 from cpm import Tache, contre_calcul, voie_A_parcours     # noqa: E402
 
 
@@ -134,8 +135,20 @@ def durees_chantier(d: dict, pl: dict, q: dict, duree_mezzanine_j: float) -> dic
     j_total = _cal(t_total, c["charpente_t_j_atelier"]["valeur"], e["ateliers_charpente"])
     calculee("CHAP", j_total * (1 - part),
              "charpente_t x (1 - part sous consignation) / (charpente_t_j_atelier x ateliers)")
-    calculee("CHLV", j_total * part,
-             "charpente_t x part sous consignation / (charpente_t_j_atelier x ateliers)")
+    # Une journee de consignation n'est PAS une journee de travail. Entre la prise de
+    # possession et la restitution, une part fixe est consommee — prise de possession,
+    # consignation catenaire, amenee, repli, deconsignation, marge de restitution — et
+    # deux de ces postes appartiennent a l'exploitant. Sur une plage de nuit, le travail
+    # effectif tombe sous la moitie, et la cadence de nuit perd encore. Les deux effets
+    # se MULTIPLIENT : le facteur se lit dans calc/plage.py, qui le tient aussi pour B7c
+    # (D-039 — une grandeur, un seul endroit).
+    #
+    # Avant cette correction, D2 donnait a CHLV la duree d'un travail de jour et la
+    # logeait dans des fenetres de consignation comme si elles produisaient huit heures.
+    facteur = pg.facteur_d_interception(d, heures_par_jour=pl["calendrier"]["heures_par_jour"])
+    calculee("CHLV", j_total * part * facteur,
+             "charpente_t x part sous consignation / (charpente_t_j_atelier x ateliers) "
+             "x facteur d'interception (rendement de plage x abattement de nuit)")
     calculee("COUV", _cal(q["surface_couverture_m2"], c["couverture_m2_j_atelier"]["valeur"],
                           e["ateliers_couverture"]),
              "surface_couverture_m2 / (couverture_m2_j_atelier x ateliers_couverture)")
@@ -693,6 +706,33 @@ def paliers_de_la_courbe(pts: list, seuil_pts: float = 0.05) -> list:
     return [x for x in out if x["a_j"] - x["de_j"] >= 5]
 
 
+def _resume_des_paliers(paliers: list) -> dict:
+    """Les paliers groupes par cause, pour que la legende n'ait pas a les compter.
+
+    Une version precedente ecrivait « puis quatre paliers entre deux fenetres » en toutes
+    lettres. Le chantier en a maintenant seize : le texte etait faux, et il ne pouvait pas
+    se corriger seul puisqu'il etait tape a la main (§ 4.3). Grouper dit d'ailleurs mieux
+    ce qu'il y a a voir — ce n'est pas un palier, c'est une serie.
+    """
+    groupes = []
+    for p in paliers:
+        if groupes and groupes[-1]["cause"] == p["cause"]:
+            groupes[-1]["nombre"] += 1
+            groupes[-1]["a_j"] = p["a_j"]
+        else:
+            groupes.append({"cause": p["cause"], "nombre": 1,
+                            "de_j": p["de_j"], "a_j": p["a_j"]})
+    for g in groupes:
+        g["jours"] = round(g["a_j"] - g["de_j"], 1)
+    return {
+        "nb_paliers": len(paliers),
+        "groupes": groupes,
+        "phrase": " ; puis ".join(
+            (f"{g['nombre']} paliers — {g['cause']}" if g["nombre"] > 1 else g["cause"])
+            for g in groupes),
+    }
+
+
 def _cause_du_palier(pal: dict, res: dict, durees: dict, detail: dict) -> str:
     """Quelle tache explique un palier : on la CHERCHE, on ne la devine pas.
 
@@ -1006,6 +1046,8 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
     liens = [{"de": p, "vers": i, "critique": mg[i]["critique"] and mg[p]["critique"]}
              for i in sous_reseau for p, _ in lr[i] if p in sous_reseau]
 
+    _pal_s = [{**pal, "cause": _cause_du_palier(pal, res, t, f["detail_fenetres"])}
+              for pal in paliers_de_la_courbe(cs)]
     return {
         "quantites": q,
         "durees": {i: {**t[i], "duree_etalee_j": round(etalees[i], 2), **mg[i],
@@ -1061,9 +1103,8 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
                          "etiquette": _cause_du_palier(pal, res, t, f["detail_fenetres"]).split(" · ")[0]}
                         for pal in paliers_de_la_courbe(cs)],
         },
-        "paliers_de_la_courbe_s": [
-            {**pal, "cause": _cause_du_palier(pal, res, t, f["detail_fenetres"])}
-            for pal in paliers_de_la_courbe(cs)],
+        "paliers_de_la_courbe_s": _pal_s,
+        "resume_des_paliers": _resume_des_paliers(_pal_s),
     }
 
 

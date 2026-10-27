@@ -237,5 +237,41 @@ leve("ratio d'acier rapporte a une surface",
      lambda: (masse / (360 * u.m**2)).to(u.kg / u.m**3))
 leve("longueur faconnee additionnee a une masse", lambda: (Lf + masse).to(u.m))
 
+# ---------------------------------------------------------------- plage.py / ferroviaire.py (B7c)
+print("\nplage.py et ferroviaire.py — rendement d'une plage de consignation")
+_fv = json.loads((SORTIES / "ferroviaire.json").read_text(encoding="utf-8"))
+_p = _fv["plage"]
+nominale = _p["duree_nominale_h"] * u.hour
+fixe = _p["part_fixe_h"] * u.hour
+utile = (nominale - fixe).to(u.hour)
+dit(str(utile.units) == "hour", "travail effectif = plage - part fixe est en heures",
+    f"{utile.magnitude:.2f} h")
+rendement = (utile / nominale).to(u.dimensionless)
+dit(rendement.dimensionless, "le rendement est sans dimension",
+    f"{rendement.magnitude * 100:.1f} %")
+jour = 8 * u.hour
+facteur = (jour / utile / (1 - _p["abattement_de_cadence_nuit_pct"] / 100)).to(u.dimensionless)
+dit(facteur.dimensionless, "le facteur d'interception est sans dimension",
+    f"x{facteur.magnitude:.2f}")
+_nr = _fv["point_de_non_retour"]
+cad = _nr["cadence_de_nuit_t_h"] * u.tonne / u.hour
+duree_op = (_nr["masse_d_une_piece_t"] * u.tonne / cad).to(u.hour)
+dit(str(duree_op.units) == "hour", "duree d'une operation = masse / cadence est en heures",
+    f"{duree_op.magnitude:.2f} h")
+masse_max = (utile * cad).to(u.tonne)
+dit(str(masse_max.units) == "metric_ton", "masse levable = temps utile x cadence est en tonnes",
+    f"{masse_max.magnitude:.2f} t")
+_c = _fv["cout"]
+cout_utile = (_c["cout_d_une_plage_MAD_par_compagnon"] * u.MAD / utile).to(u.MAD / u.hour)
+dit(str(cout_utile.units) == "MAD / hour", "cout de l'heure utile = cout de la plage / temps utile",
+    f"{cout_utile.magnitude:.0f} MAD/h")
+
+leve("rendement calcule en soustrayant des tonnes d'une duree",
+     lambda: (nominale - 1 * u.tonne).to(u.hour))
+leve("masse levable obtenue en multipliant deux durees",
+     lambda: (utile * nominale).to(u.tonne))
+leve("facteur d'interception compare a un cout",
+     lambda: (facteur + 1 * u.MAD).to(u.dimensionless))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

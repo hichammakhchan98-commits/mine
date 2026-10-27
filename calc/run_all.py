@@ -6,6 +6,7 @@ RACINE = pathlib.Path(__file__).resolve().parent
 ETAPES = [
     ("Etalonnage perimetre", [sys.executable, str(RACINE / "etalonnage" / "perimetre_cadre.py")]),
     ("Etalonnage CPM",       [sys.executable, str(RACINE / "etalonnage" / "cpm_cas_ferme.py")]),
+    ("Etalonnage plage",     [sys.executable, str(RACINE / "etalonnage" / "plage_cas_ferme.py")]),
     ("Calculs cage",         [sys.executable, str(RACINE / "cage.py")]),
     ("Etalonnage plancher",  [sys.executable, str(RACINE / "etalonnage" / "plancher_cas_ferme.py")]),
     ("Calculs plancher",     [sys.executable, str(RACINE / "cycle_plancher.py")]),
@@ -24,6 +25,8 @@ ETAPES = [
     ("Etalonnage ferraillage", [sys.executable, str(RACINE / "etalonnage" / "ferraillage_cas_ferme.py")]),
     ("Ferraillage (B3e)",    [sys.executable, str(RACINE / "ferraillage.py")]),
     ("Tests ferraillage",    [sys.executable, str(RACINE / "tests" / "test_ferraillage.py")]),
+    ("Ferroviaire (B7c)",    [sys.executable, str(RACINE / "ferroviaire.py")]),
+    ("Tests ferroviaire",    [sys.executable, str(RACINE / "tests" / "test_ferroviaire.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:

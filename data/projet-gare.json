@@ -2314,5 +2314,220 @@
         }
       ]
     }
+  },
+  "ferroviaire": {
+    "_role": "Ce qu'une gare ajoute a un chantier de batiment : on construit a cote d'une voie EXPLOITEE. D2 modelise deja les consignations a l'echelle du JOUR (fenetres de 3 j ouvres, une par mois). Ce bloc descend d'un cran — ce qui se passe A L'INTERIEUR d'une plage — et il ne redefinit rien de ce que D2 porte deja.",
+    "niveau_preuve": "V3",
+    "annee_ref": 2026,
+    "plage_travaux": {
+      "_role": "Une plage de nuit n'est pas une nuit de travail. Entre la fermeture a la circulation et la restitution, une part fixe est consommee par la prise de possession, la consignation, le repli et la restitution. Cette part ne depend NI de l'effectif NI de la quantite a realiser : c'est elle qui decide du rendement, et c'est elle qu'on oublie en planifiant.",
+      "duree_nominale_h": {
+        "valeur": 6.0,
+        "fourchette": [
+          4.0,
+          8.0
+        ],
+        "note": "duree de fermeture a la circulation accordee par l'exploitant, de la derniere circulation a la premiere du matin"
+      },
+      "prise_de_possession_h": {
+        "valeur": 0.5,
+        "fourchette": [
+          0.25,
+          1.0
+        ],
+        "note": "balisage, verification de la fermeture effective, mise en place de l'agent de securite ferroviaire"
+      },
+      "consignation_catenaire_h": {
+        "valeur": 0.75,
+        "fourchette": [
+          0.5,
+          1.5
+        ],
+        "note": "consignation electrique, mise a la terre et verification d'absence de tension. Operation d'un agent habilite de l'exploitant, pas de l'entreprise : sa duree ne se negocie pas"
+      },
+      "amenee_des_moyens_h": {
+        "valeur": 0.4,
+        "fourchette": [
+          0.2,
+          1.0
+        ],
+        "note": "acheminement des engins et du personnel jusqu'a la zone de travail une fois la voie prise"
+      },
+      "repli_des_moyens_h": {
+        "valeur": 0.5,
+        "fourchette": [
+          0.25,
+          1.0
+        ],
+        "note": "evacuation des engins, depose des mises a la terre, nettoyage"
+      },
+      "deconsignation_h": {
+        "valeur": 0.5,
+        "fourchette": [
+          0.25,
+          1.0
+        ],
+        "note": "levee de consignation et controle de liberation du gabarit avant restitution"
+      },
+      "marge_de_restitution_h": {
+        "valeur": 0.5,
+        "fourchette": [
+          0.25,
+          1.0
+        ],
+        "note": "marge NON NEGOCIABLE avant la premiere circulation. Elle n'est pas une precaution de planificateur : une voie restituee en retard arrete un train, et le cout n'a plus rien a voir avec celui du chantier"
+      },
+      "abattement_de_cadence_nuit_pct": {
+        "valeur": 30,
+        "fourchette": [
+          15,
+          45
+        ],
+        "note": "perte de rendement du travail de nuit a effectif egal : eclairage artificiel, fatigue, zone etroite, co-activite avec l'agent de securite"
+      },
+      "majoration_horaire_nuit_pct": {
+        "valeur": 50,
+        "fourchette": [
+          30,
+          100
+        ],
+        "note": "majoration du taux horaire pour le travail de nuit. ⚠ a verifier dans le CPS et la convention applicable : c'est une valeur CONTRACTUELLE, pas une hypothese technique"
+      }
+    },
+    "sous_interception": {
+      "_role": "Classer les taches en TROIS familles, et non en deux. L'erreur de planification la plus courante n'est pas de mal estimer une duree : c'est de ranger dans « hors interception » une tache qui n'y est pas.",
+      "familles": [
+        {
+          "famille": "hors interception",
+          "definition": "aucune partie de l'ouvrage, du moyen ni de l'homme n'entre dans le gabarit ni ne le surplombe",
+          "exemple": "gros oeuvre du hall cote ville"
+        },
+        {
+          "famille": "sous interception",
+          "definition": "l'ouvrage, un engin ou une charge entre dans le gabarit ou le surplombe, meme brievement",
+          "exemple": "levage des treillis de couverture au-dessus des quais"
+        },
+        {
+          "famille": "a proximite",
+          "definition": "pas d'entree dans le gabarit, mais une defaillance y conduirait — c'est la famille qu'on oublie, et elle demande un dispositif de securite sans demander de fermeture",
+          "exemple": "grue dont la fleche peut survoler la voie en cas de mise en girouette, echafaudage en bordure de quai"
+        }
+      ],
+      "_quantite_sous_interception": "Le tonnage leve sous interception n'est PAS declare ici : il se DERIVE du tonnage de charpente publie par D2 (312 t) et de sa part soumise a consignation (35 %), soit 109 t. Le declarer donnerait au cours deux tonnages pour le meme ouvrage — la famille de defaut la plus frequente des passes adversariales (C3-B3, C3-B5). Un premier brouillon de ce bloc portait 185 t : faux de 69 %.",
+      "masse_d_une_piece_t": {
+        "valeur": 8.0,
+        "fourchette": [
+          4.0,
+          18.0
+        ],
+        "note": "masse d'une piece de charpente levee d'un seul tenant au-dessus de la voie. C'est elle qui fixe la duree d'une OPERATION elementaire, donc le point de non-retour : plus la piece est lourde, moins il y a de levages, mais chacun devient impossible a fractionner."
+      },
+      "_cadence": "La cadence de levage n'est PAS declaree ici : elle se DERIVE de la duree que D2 donne a la tache et du tonnage sous interception. La declarer donnerait au cours deux cadences pour le meme levage."
+    },
+    "interfaces": {
+      "_role": "Les intervenants d'un chantier de gare. Le nombre d'INTERFACES possibles croit comme n(n-1)/2 : c'est ce que le chef de projet suivi passe son temps a tenir, et personne ne le lui dit a l'embauche.",
+      "intervenants": [
+        {
+          "id": "MOA-G",
+          "nom": "Maitre d'ouvrage de la gare",
+          "type": "decision"
+        },
+        {
+          "id": "GI",
+          "nom": "Gestionnaire d'infrastructure (voie, catenaire, signalisation)",
+          "type": "decision",
+          "note": "AUTRE maitre d'ouvrage : il ne recoit pas d'ordre du premier, il se coordonne avec lui"
+        },
+        {
+          "id": "EXPL",
+          "nom": "Exploitant ferroviaire (circulation, information voyageurs)",
+          "type": "decision"
+        },
+        {
+          "id": "MOE",
+          "nom": "Maitrise d'oeuvre du batiment",
+          "type": "decision"
+        },
+        {
+          "id": "ENT-GO",
+          "nom": "Entreprise gros oeuvre",
+          "type": "execution"
+        },
+        {
+          "id": "ENT-CM",
+          "nom": "Entreprise charpente metallique",
+          "type": "execution"
+        },
+        {
+          "id": "ENT-SY",
+          "nom": "Entreprises systemes (courants faibles, information)",
+          "type": "execution"
+        },
+        {
+          "id": "SEC",
+          "nom": "Securite ferroviaire (agents de securite, annonceurs)",
+          "type": "securite"
+        }
+      ],
+      "interfaces_actives": [
+        {
+          "de": "GI",
+          "a": "ENT-CM",
+          "objet": "plages de consignation et habilitations",
+          "nature": "decision",
+          "delai_de_demande_j": 120
+        },
+        {
+          "de": "EXPL",
+          "a": "MOA-G",
+          "objet": "maintien du service pendant les travaux",
+          "nature": "decision",
+          "delai_de_demande_j": 180
+        },
+        {
+          "de": "GI",
+          "a": "ENT-SY",
+          "objet": "raccordement aux systemes existants",
+          "nature": "decision",
+          "delai_de_demande_j": 90
+        },
+        {
+          "de": "MOE",
+          "a": "ENT-GO",
+          "objet": "reservations pour les lots systemes",
+          "nature": "decision",
+          "delai_de_demande_j": 45
+        },
+        {
+          "de": "SEC",
+          "a": "ENT-CM",
+          "objet": "dispositif de securite de chaque plage",
+          "nature": "decision",
+          "delai_de_demande_j": 15
+        },
+        {
+          "de": "EXPL",
+          "a": "ENT-GO",
+          "objet": "acces chantier et circulation voyageurs",
+          "nature": "information",
+          "delai_de_demande_j": 7
+        },
+        {
+          "de": "MOA-G",
+          "a": "MOE",
+          "objet": "modifications de programme",
+          "nature": "decision",
+          "delai_de_demande_j": 30
+        }
+      ],
+      "delai_de_demande_de_plage_j": {
+        "valeur": 120,
+        "fourchette": [
+          60,
+          240
+        ],
+        "note": "delai entre la demande d'une plage de consignation et son obtention. C'est le parametre qui rend une plage perdue IRRATTRAPABLE : on ne la redemande pas pour la semaine suivante"
+      }
+    }
   }
 }

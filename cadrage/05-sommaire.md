@@ -796,3 +796,37 @@ Schemas : coupe ferraillee · elevation ferraillee (nouveau generateur) · masse
 Exercices : 1 application + 1 probleme + 1 cas ouvert   Quiz : 7 questions
 Tests : calc/tests/test_ferraillage.py (60 controles, 6 canaris) + verif_unites + rendu
 ```
+
+### B7c — Bâtiments ferroviaires (écrit le 27/10/2026)
+```text
+ID : B7c              Titre : Batiments ferroviaires — construire a cote d'une voie exploitee
+Palier : P1           Type : conception + execution, non normatif     Niveau : [N]     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Options : O1 — sans objet (aucun plan : le module porte des DUREES et des interfaces) · O2 ✓ (n = 3)
+          · O3 — sans objet · O4 ✓ (double lecture implicite : l'exploitant tient deux postes de la
+          part fixe) · O5 ✓ (cout de l'heure utile) · O6 ○ non retenu · O7 ✓ (rendement etalonne sur
+          solution fermee ; les leviers MESURES en rejouant le reseau)
+Partie ⏸ : gabarit, distances de securite aux catenaires, hauteur et lacune quai-materiel, charges
+          ferroviaires, resistance au feu des locaux techniques. PRINCIPE et consequence chantier
+          seulement, jamais la valeur.
+Contenu propre : decomposition d'une plage de consignation et part fixe irreductible ; les deux
+          effets qui se multiplient (rendement du temps x abattement de nuit) ; point de non-retour
+          et ses DEUX seuils de conception (masse maximale levable, plage minimale) ; les leviers,
+          chacun mesure en rejouant le reseau de D2 ; cout de l'heure UTILE avec son domaine ;
+          matrice d'interfaces et la distinction decision / information ; plusieurs maitres
+          d'ouvrage
+Donnees lues : data/projet-gare.json -> ferroviaire.*, planning.contraintes_exploitation ;
+          calc/sorties/planification.json (tonnage, durees), prix.json (taux horaire)
+Donnees ecrites : calc/sorties/ferroviaire.json ; et calc/plage.py est LU PAR D2 (D-039)
+Contre-calcul : le rendement est une soustraction, etalonnee sur cas fermes ; les leviers sont
+          mesures en rejouant le reseau (D-040), jamais deduits. Les deux voies du nombre de plages
+          partageraient le rendement : le module ne les presente donc PAS comme independantes (D-043)
+Etalonnage : calc/etalonnage/plage_cas_ferme.py (soustraction, composition des deux effets, cas
+          limites qui levent, monotonie, jeu reel recalcule)
+Double lecture entreprise / MOE : ✓     Fiche memo S8 : ✓ (4 reflexes, 2 seuils)
+Schemas : decomposition d'une plage · duree de chantier par levier · etalement du levage par levier
+Exercices : 1 application + 1 probleme + 1 cas ouvert   Quiz : 7 questions
+Tests : calc/tests/test_ferroviaire.py (40 controles, 3 canaris) + etalonnage + verif_unites + rendu
+EFFET SUR LE COURS : ce module a corrige le planning de D2 (tache sous consignation chiffree comme
+          un travail de jour). Chantier 363 -> 600 j ouvres, fin 2028-05-01 -> 2029-04-23.
+```

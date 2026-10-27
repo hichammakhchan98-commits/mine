@@ -333,10 +333,26 @@
     };
     // Les paliers sont fournis par calc/ (il les CHERCHE), jamais devines par la
     // legende : la version precedente commentait un palier qui n'etait pas celui-la.
-    for (const pal of (o.paliers || [])) {
+    // Les bandes se dessinent toutes ; les ETIQUETTES se regroupent par cause. Sur un
+    // chantier a dix-sept fenetres de consignation, seize paliers portaient la meme
+    // etiquette et le bandeau devenait illisible — « CHL\CHL\CHL… ». Regrouper dit
+    // d'ailleurs mieux ce qu'il y a a voir : ce n'est pas un palier, c'est une serie.
+    const paliers = o.paliers || [];
+    for (const pal of paliers) {
       g += rect(r.x(pal.de_j), r.y(100), r.x(pal.a_j) - r.x(pal.de_j), r.y(0) - r.y(100),
         { remplissage: "#e9e6de", couleur: "none", ep: 0 });
-      g += texte((r.x(pal.de_j) + r.x(pal.a_j)) / 2, r.y(100) - 4, pal.etiquette || "palier",
+    }
+    // groupes consecutifs de meme etiquette
+    const groupes = [];
+    for (const pal of paliers) {
+      const et = pal.etiquette || "palier";
+      const dern = groupes[groupes.length - 1];
+      if (dern && dern.etiquette === et) { dern.a_j = pal.a_j; dern.n += 1; }
+      else groupes.push({ etiquette: et, de_j: pal.de_j, a_j: pal.a_j, n: 1 });
+    }
+    for (const gr of groupes) {
+      const lab = gr.n > 1 ? `${gr.etiquette} x${gr.n}` : gr.etiquette;
+      g += texte((r.x(gr.de_j) + r.x(gr.a_j)) / 2, r.y(100) - 4, lab,
         { taille: 8.5, mono: 1, ancre: "middle", couleur: "#8a7f66" });
     }
     g += trace("prevu", "#41607d", "6 4");

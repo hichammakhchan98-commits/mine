@@ -283,7 +283,7 @@ Un marché, lui, s'engage sur des **dates**. Entre les deux, deux conversions, e
 Sans les intempéries, la fin tomberait le {{planification.calendrier.fin_sans_alea}}. **Cinq semaines
 d'écart** sur une seule hypothèse, et c'est celle qu'on oublie le plus souvent de poser.
 
-:::figure {"fn":"courbeS","args":"planification.figures.courbe_s","titre":"Courbe en S du chantier, en jours-hommes de travail","num":6,"large":true,"options":{"paliers":{"$":"planification.figures.paliers"}},"voir":["L'assiette est le travail consommé (jours-hommes), pas le temps écoulé et pas l'étalement : une courbe bâtie sur le temps serait une droite, et une courbe bâtie sur l'étalement compterait des jours-hommes que personne ne fait.","Les bandes grises sont les paliers, et leur cause est CHERCHÉE par le calcul, pas devinée par cette légende : {{planification.paliers_de_la_courbe_s.0.cause}}, puis quatre paliers entre deux fenêtres de consignation, puis {{planification.paliers_de_la_courbe_s.5.cause}}.","La pente maximale donne le pic de besoin en main-d'œuvre. Le pic de TRÉSORERIE, lui, ne se lit pas ici : il suit les dirhams, pas les heures, et c'est le module D1 qui le trace."],"erreur":"Présenter une courbe en S construite sur l'écoulement du temps. Elle est toujours jolie, toujours en S, et ne mesure rien. La variante plus subtile est de la bâtir sur la durée des barres du Gantt : elle compte alors le travail d'une équipe qui attend une fenêtre, et gonfle le total."}
+:::figure {"fn":"courbeS","args":"planification.figures.courbe_s","titre":"Courbe en S du chantier, en jours-hommes de travail","num":6,"large":true,"options":{"paliers":{"$":"planification.figures.paliers"}},"voir":["L'assiette est le travail consommé (jours-hommes), pas le temps écoulé et pas l'étalement : une courbe bâtie sur le temps serait une droite, et une courbe bâtie sur l'étalement compterait des jours-hommes que personne ne fait.","Les {{planification.resume_des_paliers.nb_paliers}} bandes grises sont les paliers, et leur cause est CHERCHÉE par le calcul, pas devinée par cette légende : {{planification.resume_des_paliers.phrase}}.","La pente maximale donne le pic de besoin en main-d'œuvre. Le pic de TRÉSORERIE, lui, ne se lit pas ici : il suit les dirhams, pas les heures, et c'est le module D1 qui le trace."],"erreur":"Présenter une courbe en S construite sur l'écoulement du temps. Elle est toujours jolie, toujours en S, et ne mesure rien. La variante plus subtile est de la bâtir sur la durée des barres du Gantt : elle compte alors le travail d'une équipe qui attend une fenêtre, et gonfle le total."}
 :::
 
 #### La date n'est pas un nombre, c'est un intervalle
@@ -304,8 +304,8 @@ courtes et plus espacées, intempéries maximales — et l'inverse pour l'optimi
 | Pessimiste (×{{planification.fourchette_de_date.facteur_pessimiste::n2}}) | {{planification.fourchette_de_date.pessimiste.duree_j::n0}} | {{planification.fourchette_de_date.pessimiste.duree_avec_intemperies_j::n0}} | {{planification.fourchette_de_date.pessimiste.fin}} |
 
 **{{planification.fourchette_de_date.etendue_j::n0}} jours d'étendue, soit
-{{planification.fourchette_de_date.etendue_pct_de_la_retenue::n0}} % de la durée retenue.** Trois ans
-d'écart entre les deux bornes, pour un chantier de dix-huit mois.
+{{planification.fourchette_de_date.etendue_pct_de_la_retenue::n0}} % de la durée retenue**, pour un
+chantier de {{planification.calendrier.mois_calendaires::n0}} mois calendaires.
 
 Ce chiffre est inconfortable et il est juste. Il ne dit pas que le planning est faux : il dit que
 **la précision d'une date ne peut pas dépasser celle de ses entrées**, et qu'annoncer
