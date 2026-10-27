@@ -89,12 +89,10 @@ D-043).
 
 **La règle qui en sort** : toute grandeur d'état est **dérivée** et un test refait la dérivation ;
 tout paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verdict publié est une
-sortie de `calc/`** ; toute V3 est registrée et vérifiée dans sa fourchette ; un module à risque
-porte ses dispositions de sécurité (§ 3.4) ; chaque contrôle rendant un verdict porte son canari.
-**Canaris** : 14 sur E1 et TV, 11 inventés par les relecteurs, 5 par D2, 7 par D1, 6 par C3, 7 par
-D4, 9 par B3e ; tous rouges. Et l'un d'eux, ajouté en corrigeant B3e-B-2, a trouvé seul une
-**quatrième** erreur de géométrie que la passe n'avait pas vue : un canari utile ne confirme pas,
-il cherche.
+sortie de `calc/`** ; toute V3 est registrée et vérifiée dans sa fourchette ; deux modules qui
+chiffrent la même tâche **trouvent les mêmes heures** ; chaque contrôle rendant un verdict porte son
+canari. **73 canaris, tous rouges** — et deux d'entre eux ont trouvé seuls une erreur que la passe
+n'avait pas vue : un canari utile ne confirme pas, il cherche.
 
 **Dette déclarée de la TV** : scalaires V3 sans fourchette hors registre · deux bibliothèques hors
 vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
