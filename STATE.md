@@ -44,11 +44,11 @@ Ordre de livraison **en vigueur** : `cadrage/07-programme-31-10.md`.
 
 ## Ce que le socle livre (Étape 1, § 5.2)
 
-Charte et impression (contrastes AA) · SVG paramétrique (`assets/svgkit.js`, 12 générateurs, chacun
-déclarant ses options — le build **échoue** sur une option inconnue) · 3D (`src/civil3d/`, bundle
-IIFE 765 ko) · build qui échoue sur variable absente, légende incomplète, nombre normatif non balisé
-ou accident de gabarit · `calc/` : contre-calcul à deux voies, étalonnages sur solution fermée,
-`pint` · **16 contrôles** `npm run check`, captures de toutes les figures.
+Charte et impression (AA) · SVG paramétrique (`assets/svgkit.js`, 12 générateurs déclarant leurs
+options) · 3D (bundle IIFE 765 ko) · build qui échoue sur variable absente, légende incomplète,
+nombre normatif non balisé, option inconnue ou accident de gabarit · `calc/` : contre-calcul à deux
+voies, étalonnages sur solution fermée, `pint` · **16 contrôles** `npm run check`, captures de
+toutes les figures.
 
 ## Grilles d'auto-évaluation § 7.2
 
