@@ -114,8 +114,7 @@ sécurité ne cherche qu'un mot.
 
 | # | Dette | Échéance |
 |---|---|---|
-| 1 | 12 modules du palier 1 inaccessibles faute de documents normatifs | levée du § 5.0 |
-| 2 | Aucun bordereau : tout le volet économique reste V3 | question 7, sans réponse |
+| 1-2 | 12 modules inaccessibles faute de normes · aucun bordereau fourni, tout l'économique reste V3 | levée du § 5.0 |
 | 3 | Dates du palier 1 : **hypothèse V3** (fin du P1 actif au 15/03/2027), non confirmée | § 5.5 |
 | 4 | Logiciel aux éléments finis du lecteur inconnu — nécessaire avant B6b (⏸) | avant B6b |
 | 5 | Référentiel ferroviaire non identifié (quais, gabarits, caténaire) | CPS du marché |
