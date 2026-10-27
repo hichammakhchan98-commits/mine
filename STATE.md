@@ -12,7 +12,7 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `C7` — Qualité, HSE, environnement. **Passe /devil de B7c : à lancer.**
+- **Prochain module** : `C7` — Qualité, HSE, environnement. Toutes les passes sont faites.
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -58,12 +58,18 @@ E1, TV, D2, D1 : **minimum 2 partout** après correction des bloquants. Détail 
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
 valeurs clés depuis `data/` seul. E1 : 50 (3 passes) · TV : 117 (5 passes) · D2 : 32 · D1 : 28 ·
-C3 : 33 · D4 : 32 · B3e : 36 (une passe chacun, D-034).
-**Bloquants : 15 · 8 · 7 · 6 · 8 · 11, tous corrigés.**
+C3 : 33 · D4 : 32 · B3e : 36 · B7c : 33 (une passe chacun, D-034).
+**Bloquants : 15 · 8 · 7 · 6 · 8 · 11 · 11, tous corrigés.**
 Détail de chaque défaut, de sa preuve et de la suite donnée : `QA/`.
 
-**Une septième famille, découverte par B3e et plus grave que les six autres : l'erreur de MODÈLE
-PHYSIQUE.** Une formule de recouvrement qui ne couvre pas l'ouvrage, une nappe qui laisse 18 m² de
+**La huitième famille, trouvée par B7c, est la plus insidieuse : le CHANGEMENT D'UNITÉ SILENCIEUX.**
+Une grandeur garde son nom (« jours ») et change de contenu (des plages de 6 h). Aucune vérification
+dimensionnelle ne le voit — `pint` lit des heures des deux côtés. Le seul contrôle qui l'attrape est
+celui que personne n'avait écrit : **deux modules qui chiffrent la même tâche doivent trouver les
+mêmes heures**. Il est en place, et il a exposé un second écart du même genre dès sa première
+exécution.
+
+**La septième, découverte par B3e : l'erreur de MODÈLE PHYSIQUE.** Une formule de recouvrement qui ne couvre pas l'ouvrage, une nappe qui laisse 18 m² de
 dalle nue, un plan qui met l'acier du mauvais côté de la poutre. Aucun contrôle de cohérence ne les
 voit : il faut refaire la géométrie. Les chercher d'abord dans tout module qui pose une géométrie.
 
@@ -123,6 +129,7 @@ sécurité ne cherche qu'un mot.
 | 12 | Le contre-calcul n° 1 ne passe que sur **27 %** de la fourchette déclarée : publié comme tel | attachements réels |
 | 13 | Aucun contrôle ne vérifie qu'une figure **montre ce qu'elle prétend montrer** : 3 bloquants de la TV et 6 de D2 ont franchi tous les contrôles verts | à outiller, et c'est la dette la plus lourde |
 | 17 | **C3, non corrigés** : le `floor` du parc ne mord sur aucune ligne du tableau (m5) · cure de 2 j insensible sur sa fourchette, non publiée (m6) · loyer et montage sans leurs bornes dans le tableau (m7) · loyer sans battement de livraison ni repli : **borne basse** (m8) · deux durées du plancher coexistent dans `data/` (m10) | avant la revue de palier |
+| 23 | **D1 et D2 divergent de ×2,1 sur les heures du plancher de mezzanine** (3 219 contre 6 880 h) : D1 compte les heures productives à la cadence, D2 tout l'effectif de zone présent pendant tout le cycle. Écart antérieur, exposé par le nouveau contrôle croisé, déclaré comme exception nommée dans `test_prix.py` | avant la revue de palier |
 | 21 | **Le chantier dure désormais 600 j ouvrés** (fin 2029-04-23) au lieu de 363, parce que B7c a corrigé la tâche sous consignation. D1 et D4 ont suivi par le build ; leurs **textes** n'ont pas été relus ligne à ligne avec les nouvelles dates (D-045, choix du lecteur : laisser le build propager) | avant la revue de palier |
 | 22 | **Flake de rendu** : les deux contrôles 3D de `00-demo-cage` échouent par intermittence sur un avertissement du moteur WebGL logiciel, et passent au rejeu. Ce n'est pas un défaut du cours, c'est l'environnement — mais un contrôle qui échoue au hasard finit par ne plus être lu | à outiller |
 | 20 | **B3e, non corrigés** : les 17 majeurs et 8 mineurs que la correction des bloquants n'a pas emportés — dont ~20 nombres techniques encore écrits à la main (§ 4.3) et trois listes fermées de points de contrôle avant coulage (C3 en a deux, B3e une) sans renvoi croisé (D-039 non appliqué entre les deux modules). Détail : `QA/B3e-passe1.md` | avant la revue de palier |
