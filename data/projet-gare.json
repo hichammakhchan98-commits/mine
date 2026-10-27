@@ -2529,5 +2529,285 @@
         "note": "delai entre la demande d'une plage de consignation et son obtention. C'est le parametre qui rend une plage perdue IRRATTRAPABLE : on ne la redemande pas pour la semaine suivante"
       }
     }
+  },
+  "qualite_hse": {
+    "_role": "Ce qui rend la securite et la qualite PILOTABLES : des heures exposees, un cout de non-qualite, et des criticites. Aucune valeur normative ici — ni frequence de prelevement, ni critere de resistance, ni distance de securite : toutes sont reglementaires et restent ⏸. Ce que ce bloc porte, ce sont des ordres de grandeur declares et les parametres d'un cas d'etude.",
+    "niveau_preuve": "V3",
+    "annee_ref": 2026,
+    "exposition": {
+      "_role": "L'exposition au risque ne se compte pas en effectif mais en HEURES TRAVAILLEES : c'est le denominateur de tous les indicateurs de securite, et c'est ce qui permet de comparer deux chantiers de tailles differentes.",
+      "taux_de_frequence_reference": {
+        "valeur": 28.0,
+        "fourchette": [
+          12.0,
+          50.0
+        ],
+        "note": "accidents avec arret par million d'heures travaillees. Ordre de grandeur du BTP, declare : ⚠ a confronter aux statistiques de l'entreprise et du pays. Ce n'est PAS un objectif, c'est une reference de calcul."
+      },
+      "taux_de_gravite_reference": {
+        "valeur": 1.4,
+        "fourchette": [
+          0.6,
+          3.0
+        ],
+        "note": "journees perdues par millier d'heures travaillees. Meme statut."
+      },
+      "surexposition_du_travail_de_nuit": {
+        "valeur": 1.8,
+        "fourchette": [
+          1.2,
+          3.0
+        ],
+        "note": "coefficient multiplicateur du risque pour une heure travaillee de nuit : eclairage artificiel, fatigue, zone etroite, co-activite ferroviaire. Ordre de grandeur declare, non une statistique du projet."
+      },
+      "_taches_de_nuit": "lues dans planning.contraintes_exploitation.taches_soumises"
+    },
+    "non_conformite": {
+      "_role": "Le cas d'etude : un defaut de parement sur un voile de noyau. Ce qui est chiffre n'est pas la reprise seule — c'est tout ce que la NC declenche.",
+      "ouvrage": "voile de noyau, parement vu en hall voyageurs",
+      "surface_m2": {
+        "valeur": 48.0,
+        "fourchette": [
+          20.0,
+          120.0
+        ],
+        "note": "surface de parement affectee par des nids de cailloux et des fuites de laitance sur une levee"
+      },
+      "cout_de_reprise_MAD_m2": {
+        "valeur": 420.0,
+        "fourchette": [
+          250.0,
+          700.0
+        ],
+        "note": "piquage, ragreage, reprise de parement, protection des abords. Varie fortement selon que le parement reste vu ou sera doublé"
+      },
+      "duree_de_reprise_j": {
+        "valeur": 3.0,
+        "fourchette": [
+          1.5,
+          6.0
+        ],
+        "note": "intervention plus sechage avant reconstat"
+      },
+      "delai_de_decision_j": {
+        "valeur": 4.0,
+        "fourchette": [
+          1.0,
+          10.0
+        ],
+        "note": "entre le constat et l'ordre de reprise : expertise, avis du BET sur l'incidence structurelle, accord sur la methode. C'est le poste qu'on oublie, et souvent le plus long"
+      },
+      "durcissement_du_controle_pct": {
+        "valeur": 25.0,
+        "fourchette": [
+          0.0,
+          60.0
+        ],
+        "note": "augmentation du temps de controle sur les levees suivantes apres une NC de parement. Effet reel et rarement chiffre : une NC coute aussi sur les ouvrages qui n'en ont pas"
+      },
+      "heures_de_controle_par_levee": {
+        "valeur": 1.5,
+        "fourchette": [
+          0.5,
+          3.0
+        ],
+        "note": "temps de controle d'une levee de voile en situation normale"
+      },
+      "levees_restantes": {
+        "valeur": 22,
+        "fourchette": [
+          10,
+          40
+        ],
+        "note": "levees de voile restant a couler apres la NC"
+      }
+    },
+    "plan_de_controle": {
+      "_role": "Un plan de controle n'est pas une liste de bonnes intentions : chaque ligne porte QUI controle, QUAND, sur QUEL critere, en COMBIEN DE TEMPS le resultat arrive, et CE QUI SE PASSE si c'est non conforme. Une ligne sans ces cinq colonnes ne se pilote pas.",
+      "lignes": [
+        {
+          "controle": "Reception des aciers",
+          "qui": "entreprise, visa MOE",
+          "quand": "a la livraison",
+          "critere": "bons de livraison et certificats conformes a la commande",
+          "delai_du_resultat_j": 0,
+          "si_non_conforme": "refus de dechargement — le seul moment ou le refus ne coute rien",
+          "sur_le_chemin_critique": false
+        },
+        {
+          "controle": "Ferraillage avant coulage",
+          "qui": "MOE, point d'arret",
+          "quand": "avant betonnage",
+          "critere": "conformite au plan vise (module B3e)",
+          "delai_du_resultat_j": 0,
+          "si_non_conforme": "point d'arret non leve, reprise et reconstat date",
+          "sur_le_chemin_critique": true
+        },
+        {
+          "controle": "Affaissement au cone",
+          "qui": "entreprise",
+          "quand": "a chaque toupie",
+          "critere": "plage d'acceptation du marche (⏸)",
+          "delai_du_resultat_j": 0,
+          "si_non_conforme": "toupie refusee — decision de quelques minutes, a prendre avant le dechargement",
+          "sur_le_chemin_critique": true
+        },
+        {
+          "controle": "Eprouvettes — resistance",
+          "qui": "laboratoire agree",
+          "quand": "au coulage",
+          "critere": "critere du marche (⏸)",
+          "delai_du_resultat_j": 28,
+          "si_non_conforme": "expertise, essais complementaires, et decision sur un ouvrage deja construit : c'est le controle dont le resultat arrive le plus tard",
+          "sur_le_chemin_critique": false
+        },
+        {
+          "controle": "Parement apres decoffrage",
+          "qui": "MOE",
+          "quand": "au decoffrage",
+          "critere": "aspect de reference accepte",
+          "delai_du_resultat_j": 0,
+          "si_non_conforme": "constat, expertise, reprise — le cas d'etude de ce module",
+          "sur_le_chemin_critique": true
+        },
+        {
+          "controle": "Geometrie et implantation",
+          "qui": "geometre, visa MOE",
+          "quand": "avant et apres coulage",
+          "critere": "tolerances du marche (⏸)",
+          "delai_du_resultat_j": 1,
+          "si_non_conforme": "selon l'ecart : acceptation, reprise, ou reprise d'etudes",
+          "sur_le_chemin_critique": true
+        }
+      ]
+    },
+    "risques": {
+      "_role": "Echelles ORDINALES de 1 a 4. La criticite f x g x d sert a CLASSER, jamais a chiffrer : multiplier des rangs ne produit pas une grandeur.",
+      "echelle": {
+        "1": "tres faible",
+        "2": "faible",
+        "3": "fort",
+        "4": "tres fort"
+      },
+      "liste": [
+        {
+          "risque": "Chute de hauteur depuis un coffrage ou une passerelle",
+          "f": 3,
+          "g": 4,
+          "d": 2,
+          "parade": "protections périphériques posees AVANT le coffrage et déposées APRES ; la rotation serree pousse exactement a l'inverse"
+        },
+        {
+          "risque": "Heurt par engin ou circulation de chantier",
+          "f": 3,
+          "g": 4,
+          "d": 2,
+          "parade": "plan de circulation, séparation des flux piétons et engins, guidage"
+        },
+        {
+          "risque": "Chute de charge en levage",
+          "f": 2,
+          "g": 4,
+          "d": 2,
+          "parade": "élingage vérifié, zone d'exclusion sous charge, personne dessous"
+        },
+        {
+          "risque": "Électrisation à proximité de la caténaire",
+          "f": 1,
+          "g": 4,
+          "d": 3,
+          "parade": "consignation par agent habilité, VAT, mise a la terre (module B7c)"
+        },
+        {
+          "risque": "Ensevelissement en fouille",
+          "f": 2,
+          "g": 4,
+          "d": 3,
+          "parade": "blindage ou talutage, accès par échelle, pas de stockage en crête"
+        },
+        {
+          "risque": "Effondrement d'étaiement",
+          "f": 1,
+          "g": 4,
+          "d": 4,
+          "parade": "note d'etaiement visée, montage conforme, décoffrage sur résistance"
+        },
+        {
+          "risque": "Trouble musculo-squelettique au ferraillage",
+          "f": 4,
+          "g": 2,
+          "d": 3,
+          "parade": "façonnage en atelier, aides a la manutention, rotation des postes"
+        },
+        {
+          "risque": "Exposition au bruit et aux poussières",
+          "f": 4,
+          "g": 2,
+          "d": 3,
+          "parade": "captage a la source, arrosage, EPI, mesurage"
+        }
+      ]
+    },
+    "dechets": {
+      "_role": "Flux de dechets d'un chantier de gros oeuvre, en kg par m2 d'emprise construite. Ordres de grandeur declares.",
+      "flux": [
+        {
+          "flux": "Beton et gravats",
+          "kg_m2": {
+            "valeur": 38.0,
+            "fourchette": [
+              20.0,
+              70.0
+            ]
+          },
+          "valorisation_pct": 80
+        },
+        {
+          "flux": "Acier et metaux",
+          "kg_m2": {
+            "valeur": 4.5,
+            "fourchette": [
+              2.0,
+              9.0
+            ]
+          },
+          "valorisation_pct": 95
+        },
+        {
+          "flux": "Bois de coffrage",
+          "kg_m2": {
+            "valeur": 6.0,
+            "fourchette": [
+              3.0,
+              12.0
+            ]
+          },
+          "valorisation_pct": 60
+        },
+        {
+          "flux": "Emballages et divers",
+          "kg_m2": {
+            "valeur": 3.5,
+            "fourchette": [
+              1.5,
+              8.0
+            ]
+          },
+          "valorisation_pct": 40
+        },
+        {
+          "flux": "Dechets dangereux (huiles, adjuvants, aerosols)",
+          "kg_m2": {
+            "valeur": 0.4,
+            "fourchette": [
+              0.1,
+              1.2
+            ]
+          },
+          "valorisation_pct": 0
+        }
+      ],
+      "_dangereux": "Les dechets dangereux pesent peu et commandent tout le reste : ils imposent un stockage separe, un bordereau de suivi et une filiere agreee. Les melanger a une benne de gravats declasse la benne entiere."
+    }
   }
 }

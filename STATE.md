@@ -6,13 +6,13 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `B7c` — bâtiments ferroviaires. Zip : `cours-genie-civil-P1-B7c.zip`
+- **Dernier livrable** : `C7` — qualité, HSE. Zip : `cours-genie-civil-P1-C7.zip`
 - **Toutes les passes /devil sont faites**, tous les bloquants corrigés (B3e : 36 défauts,
   11 bloquants, dont **trois erreurs de modèle physique**).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `C7` — Qualité, HSE, environnement. Toutes les passes sont faites.
+- **Prochain module** : `REC` — réception, DOE, garanties. **Passe /devil de C7 : à lancer.**
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -28,7 +28,7 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Statut des modules
 
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
-**24 livraisons**, dont **8 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
+**24 livraisons**, dont **9 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
 - **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 32 défauts, 8 bloquants
   — D-035), `D1` (métrés et prix, 28 défauts, 7 bloquants corrigés), `D4` (suivi),
@@ -142,8 +142,8 @@ registrées**, 172 sur 172 couvertes. Détail dans git et dans `QA/`.
 
 ## Effort consommé (§ 13.2)
 
-**14 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c = 1 chacun,
-plus 1 pour les passes et corrections de C3 et D4.
-**Avancement sur le programme du 31/10** : **8 livraisons sur 18**. À la cadence constatée, il en
-reste 2 à 4 atteignables sur les 10 annoncées. Ordre tenu : C7, REC. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les
+**16 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7 = 1 chacun,
+plus 2 pour les passes et corrections de C3, D4 et B7c.
+**Avancement sur le programme du 31/10** : **9 livraisons sur 18**. Il reste `REC` dans l'ordre
+annoncé ; au-delà, le budget sera dépassé. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les
 premiers coupés. C'est dit au lecteur, pas découvert le 31.

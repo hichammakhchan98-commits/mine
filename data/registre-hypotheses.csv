@@ -175,3 +175,9 @@ H173;abattement de cadence du travail de nuit, à effectif égal;30;%;15 à 45;2
 H174;masse d'une pièce de charpente levée d'un seul tenant au-dessus de la voie;8;t;4 à 18;2026;B7c;fixe la durée d'une opération élémentaire, donc le point de non-retour : plus la pièce est lourde, moins il y a de levages, mais chacun devient impossible à fractionner
 H175;majoration du taux horaire pour le travail de nuit;50;%;30 à 100;2026;B7c;valeur CONTRACTUELLE et non technique : à vérifier dans le CPS et la convention applicable
 H176;délai entre la demande d'une plage de consignation et son obtention;120;jours;60 à 240;2026;B7c;c'est ce délai qui rend une plage perdue irrattrapable : on ne la redemande pas pour la semaine suivante
+H177;surexposition du travail de nuit, par heure travaillée;1,8;—;1,2 à 3,0;2026;C7;éclairage artificiel, fatigue, zone étroite, co-activité ferroviaire : ordre de grandeur déclaré, non une statistique du projet
+H178;taux de gravité, journées perdues par millier d'heures;1,4;—;0,6 à 3,0;2026;C7;ordre de grandeur du BTP, à confronter aux statistiques de l'entreprise
+H179;taux de fréquence, accidents avec arrêt par million d'heures;28;—;12 à 50;2026;C7;ordre de grandeur du BTP, à confronter aux statistiques de l'entreprise : ce n'est pas un objectif, c'est une référence de calcul
+H180;coût de reprise d'un parement vu;420;MAD/m²;250 à 700;2026;C7;piquage, ragréage, reprise de parement et protection des abords : varie fortement selon que le parement reste vu ou sera doublé
+H181;déchets d'acier et de métaux d'un chantier de gros œuvre;4,5;kg/m²;2,0 à 9,0;2026;C7;chutes de façonnage et emballages métalliques, rapportées à l'emprise construite
+H182;déchets d'emballages et divers d'un chantier de gros œuvre;3,5;kg/m²;1,5 à 8,0;2026;C7;films, palettes, cartons et divers non triés à la source

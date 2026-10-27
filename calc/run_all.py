@@ -27,6 +27,8 @@ ETAPES = [
     ("Tests ferraillage",    [sys.executable, str(RACINE / "tests" / "test_ferraillage.py")]),
     ("Ferroviaire (B7c)",    [sys.executable, str(RACINE / "ferroviaire.py")]),
     ("Tests ferroviaire",    [sys.executable, str(RACINE / "tests" / "test_ferroviaire.py")]),
+    ("Qualite HSE (C7)",     [sys.executable, str(RACINE / "qualite.py")]),
+    ("Tests qualite",        [sys.executable, str(RACINE / "tests" / "test_qualite.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:

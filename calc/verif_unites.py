@@ -273,5 +273,35 @@ leve("masse levable obtenue en multipliant deux durees",
 leve("facteur d'interception compare a un cout",
      lambda: (facteur + 1 * u.MAD).to(u.dimensionless))
 
+# ---------------------------------------------------------------- qualite.py (C7)
+print("\nqualite.py — exposition, cout de non-qualite, dechets")
+_q = json.loads((SORTIES / "qualite.json").read_text(encoding="utf-8"))
+_e = _q["exposition"]
+heures = _e["heures_ponderees_par_le_risque"] * u.hour
+tf = _e["taux_de_frequence_de_reference"] / (1e6 * u.hour)   # accidents par million d'heures
+acc = (tf * heures).to(u.dimensionless)
+dit(acc.dimensionless, "accidents = taux de frequence x heures est un nombre",
+    f"{acc.magnitude:.2f}")
+tg = _e["taux_de_gravite_de_reference"] * u.day / (1000 * u.hour)
+jours = (tg * heures).to(u.day)
+dit(str(jours.units) == "day", "journees perdues = taux de gravite x heures est en jours",
+    f"{jours.magnitude:.1f} j")
+_n = _q["non_conformite"]
+fd = _n["frais_de_duree_MAD_par_jour_ouvre"] * u.MAD / u.day
+immo = _n["jours_immobilises"] * u.day
+dit(str((fd * immo).to(u.MAD).units) == "MAD",
+    "cout d'immobilisation = frais par jour x jours est en MAD",
+    f"{(fd * immo).to(u.MAD).magnitude:.0f} MAD")
+_de = _q["dechets"]
+ratio = _de["lignes"][0]["kg_m2"] * u.kg / u.m**2
+tonnes = (ratio * _de["emprise_m2"] * u.m**2).to(u.tonne)
+dit(str(tonnes.units) == "metric_ton", "dechets = ratio x emprise est en tonnes",
+    f"{tonnes.magnitude:.1f} t")
+
+leve("accidents obtenus en multipliant un taux par une surface",
+     lambda: (tf * (100 * u.m**2)).to(u.dimensionless))
+leve("journees perdues additionnees a un cout", lambda: (jours + 1 * u.MAD).to(u.day))
+leve("dechets calcules sur une duree", lambda: (ratio * immo).to(u.tonne))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

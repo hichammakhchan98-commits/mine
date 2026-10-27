@@ -830,3 +830,35 @@ Tests : calc/tests/test_ferroviaire.py (40 controles, 3 canaris) + etalonnage + 
 EFFET SUR LE COURS : ce module a corrige le planning de D2 (tache sous consignation chiffree comme
           un travail de jour). Chantier 363 -> 600 j ouvres, fin 2028-05-01 -> 2029-04-23.
 ```
+
+### C7 — Qualité, HSE, environnement (écrit le 27/10/2026)
+```text
+ID : C7               Titre : Qualite, HSE, environnement — ce qui rend la securite pilotable
+Palier : P1           Type : execution     Niveau : [C]     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Options : O1 — sans objet · O2 ✓ (n = 3) · O3 — sans objet · O4 ✓ · O5 ✓ (cout de non-qualite) ·
+          O6 ○ non retenu · O7 ✓ — RELEVE par rapport a la fiche d'origine, qui le disait « non
+          retenu, aucun calcul normatif ». Il y a bien un noyau calculable, et il est entierement
+          non normatif : l'exposition en heures, le cout complet d'une NC, l'effet planning mesure
+          en rejouant le reseau, et la criticite comme ordre et non comme grandeur.
+Partie ⏸ : frequences de prelevement, criteres de resistance et de conformite, tolerances,
+          distances de securite, seuils d'exposition, obligations de tri. METHODE et place dans le
+          plan seulement, jamais la valeur.
+Contenu propre : l'exposition se compte en HEURES (TF, TG) et la nuit pese plus que ses heures ;
+          les cinq colonnes d'un plan de controle, plus le DELAI DU RESULTAT qui change la nature
+          du controle ; le cout complet d'une non-conformite, dont 85 % sans facture ; la meme NC
+          selon la marge de l'ouvrage — absorbee, transmise, ou AMPLIFIEE sous consignation ; la
+          criticite comme produit de rangs, ses ex aequo et son seuil arbitraire ; les dechets et
+          le flux qui pese le moins en commandant le plus
+Donnees lues : data/projet-gare.json -> qualite_hse.* ; calc/sorties/planification.json (heures
+          par tache, reseau), prix.json (frais de duree, taux horaire)
+Donnees ecrites : calc/sorties/qualite.json
+Contre-calcul : l'effet planning est MESURE en rejouant le reseau sur trois taches choisies par
+          leur MARGE (D-040), jamais deduit ; les trois regimes sortent du calcul, pas du texte
+Double lecture entreprise / MOE : ✓     Fiche memo S8 : ✓ (4 reflexes, 5+1 colonnes)
+Schemas : heures par tache · cascade du cout d'une NC · criticite classee
+Exercices : 1 application + 1 probleme + 1 revue critique   Quiz : 7 questions
+Tests : calc/tests/test_qualite.py (56 controles, 4 canaris) + verif_unites + rendu
+EFFET SUR LE COURS : premier module a consommer les heures par tache que la correction de B7c a
+          rendues fiables. Sans le controle croise D1/D2, son indicateur central etait faux.
+```

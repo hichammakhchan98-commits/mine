@@ -612,3 +612,44 @@ méthode de montage.
 
 **Ce qui reste au lecteur** : adopter ou non une combinaison. Tant qu'il ne l'a pas fait, le cours
 porte la durée de la méthode actuelle, et dit pourquoi.
+
+## D-047 — 27/10/2026 — L'exposition au risque se compte en heures, et le cours en a désormais le droit
+
+**Décision.** Tous les indicateurs de sécurité du cours portent des **heures travaillées** au
+dénominateur, lues dans `planification.json → heures_de_main_oeuvre_par_tache`. Jamais un effectif,
+jamais une durée.
+
+**Raison.** C'est la seule assiette qui absorbe à la fois l'effectif et la durée : dix compagnons
+pendant deux ans et cent pendant deux mois n'ont ni le même risque ni le même nombre d'heures. C'est
+le même raisonnement que D4 applique aux avancements — un pourcentage sans dénominateur ne se
+compare à rien.
+
+**Ce qui l'a rendu possible.** Jusqu'à la passe de B7c, le cours n'avait pas d'heures fiables : D1
+et D2 en publiaient deux jeux, dans un rapport de quatre sur la tâche sous consignation. Le contrôle
+croisé mis en place à cette occasion garantit maintenant qu'ils trouvent les mêmes. **Sans lui,
+l'indicateur central de C7 aurait été faux, et il aurait eu l'air juste.**
+
+**Impact.** C7 publie l'exposition par tâche, la part de la nuit dans les heures (8,0 %) et dans le
+risque pondéré (13,5 %), et le nombre d'accidents qu'un taux de référence appliqué à ces heures
+donnerait — avec la mention explicite que ce n'est ni une prévision ni un objectif.
+
+## D-048 — 27/10/2026 — Une non-conformité se hiérarchise sur sa marge ; un risque, jamais
+
+**Décision.** Le cours distingue explicitement deux logiques de priorisation qui cohabitent dans le
+même tableau de bord : la **qualité** se hiérarchise sur la marge de l'ouvrage, la **sécurité** ne
+se hiérarchise pas ainsi.
+
+**Raison.** La même non-conformité, sept jours d'immobilisation, donne trois résultats mesurés en
+rejouant le réseau : **absorbée** sur un ouvrage à grande marge, **transmise** intégralement sur un
+ouvrage à marge nulle, et **amplifiée d'un facteur six** sur une tâche sous consignation — qui ne
+rate pas sa reprise mais sa fenêtre, un mois plus tard. Rien de cela ne se voit sur le chantier :
+les trois ouvrages se ressemblent.
+
+Mais appliquer la même règle à la sécurité serait une faute : un risque de gravité maximale se
+traite quelle que soit la marge de la tâche. On n'arbitre pas une vie contre un rang, et les deux
+logiques doivent être nommées pour ne pas se contaminer.
+
+**Impact.** `impact_sur_le_planning` choisit les tâches comparées **par leur marge**, jamais en dur —
+le classement change dès que le planning change, ce qui vient d'arriver. Et C7 publie la criticité
+comme un **ordre** : cinq risques y sont ex æquo, et le module dit que c'est une propriété des
+échelles courtes, pas une équivalence des risques.
