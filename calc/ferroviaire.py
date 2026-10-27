@@ -131,6 +131,13 @@ def point_de_non_retour(d: dict, dec: dict, duree_operation_h: float,
             f"Une piece de {piece:.0f} t demande {duree_operation_h:.2f} h. Le travail "
             f"peut commencer a {hhmm(t_debut)}, le point de non-retour tombe a "
             f"{hhmm(t_limite)} : il reste {marge:.2f} h pour decider de lancer."),
+        "_divisibilite": (
+            "Le nombre de plages d'un levier suppose que le levage se divise librement — "
+            "qu'on peut s'arreter a la fin de chaque plage. C'est une BORNE INFERIEURE. "
+            "Des pieces indivisibles la rendent optimiste, et peuvent la rendre "
+            "inatteignable : si une seule piece ne tient pas dans une plage, aucun nombre "
+            "de plages ne suffit. Les deux resultats de ce module se lisent ensemble, et "
+            "c'est le second qui commande."),
         "les_deux_seuils": (
             f"Dans une plage de {dec['duree_nominale_h']:.0f} h, la piece la plus lourde "
             f"qu'on puisse lever pese {piece_max:.2f} t. Et pour lever la piece de "
@@ -188,6 +195,62 @@ def _rejoue(d: dict, part_pct: float, plage_h: float, fenetre_j: int, cache: dic
     return out
 
 
+def comparaison_de_plages(d: dict, durees_h: tuple = (4.0, 6.0, 8.0, 10.0)) -> dict:
+    """Ce qu'une heure de FERMETURE produit, selon la duree de la plage.
+
+    C'est l'argument de negociation du module, et il se calcule. Deux plages de 4 h ne
+    valent pas une plage de 8 h : la part fixe est payee DEUX FOIS. Raisonner en « total
+    d'heures de fermeture » est donc faux, et c'est le raisonnement que tient naturellement
+    celui qui accorde les plages.
+    """
+    lignes = []
+    for h in durees_h:
+        try:
+            r = pg.rendement(d, h)
+            u, rend = r["travail_effectif_h"], r["rendement_pct"]
+        except ValueError:
+            u, rend = 0.0, 0.0
+        lignes.append({"plage_h": h, "utile_h": round(u, 2), "rendement_pct": rend,
+                       "utile_par_heure_de_fermeture": round(u / h, 3)})
+    ref = max(lignes, key=lambda x: x["utile_par_heure_de_fermeture"])
+    pire = min((x for x in lignes if x["utile_h"] > 0),
+               key=lambda x: x["utile_par_heure_de_fermeture"])
+    return {
+        "lignes": lignes,
+        "meilleure_plage_h": ref["plage_h"], "pire_plage_utile_h": pire["plage_h"],
+        "rapport_meilleure_sur_pire": round(
+            ref["utile_par_heure_de_fermeture"] / pire["utile_par_heure_de_fermeture"], 2),
+        "deux_courtes_contre_une_longue": {
+            "deux_de_4h_utile_h": round(2 * next(x["utile_h"] for x in lignes if x["plage_h"] == 4.0), 2),
+            "une_de_8h_utile_h": next(x["utile_h"] for x in lignes if x["plage_h"] == 8.0),
+            "rapport": round(next(x["utile_h"] for x in lignes if x["plage_h"] == 8.0)
+                             / (2 * next(x["utile_h"] for x in lignes if x["plage_h"] == 4.0)), 2),
+        },
+        "lecture": (
+            "La part fixe se paie A CHAQUE PLAGE. Deux plages courtes la paient deux "
+            "fois : a duree de fermeture egale, elles produisent beaucoup moins qu'une "
+            "plage longue. L'argument a porter en reunion n'est donc pas « c'est trop "
+            "court », qui est une opinion, mais ce rapport, qui est une soustraction."),
+    }
+
+
+def _cadence_de_nuit(d: dict) -> float:
+    """Cadence de levage de nuit — UNE definition, partagee par tout le module.
+
+    Elle se derive de la duree de travail DE JOUR que D2 publie, jamais de la duree
+    stretchee : celle-ci est un nombre de PLAGES, et la diviser redonnerait la cadence
+    divisee par le facteur d'interception.
+    """
+    pl = json.loads((RACINE / "calc" / "sorties" / "planification.json")
+                    .read_text(encoding="utf-8"))
+    ce = d["planning"]["contraintes_exploitation"]
+    t = pl["quantites"]["charpente_t"] * ce["part_levage_sous_consignation_pct"]["valeur"] / 100
+    jour_t_h = (t / pl["durees"]["CHLV"]["duree_de_travail_de_jour_j"]
+                / d["planning"]["calendrier"]["heures_par_jour"])
+    abat = d["ferroviaire"]["plage_travaux"]["abattement_de_cadence_nuit_pct"]["valeur"] / 100
+    return jour_t_h * (1 - abat)
+
+
 def leviers(d: dict, dec: dict) -> dict:
     """Quand une operation ne tient pas dans ses plages, on ne rallonge pas le planning.
 
@@ -223,7 +286,12 @@ def leviers(d: dict, dec: dict) -> dict:
         r = pg.rendement(d, ph)
         fact = pg.facteur_d_interception(d, ph)
         m = _rejoue(d, part, ph, fj, cache)
+        # Un levier qui reduit la part levee le fait en PRE-ASSEMBLANT : moins de
+        # levages, mais des pieces plus lourdes. La masse maximale levable, elle, ne
+        # depend que de la plage. Les publier cote a cote est le seul moyen de voir
+        # qu'un levier peut rendre l'operation MOINS faisable.
         lignes.append({
+            "masse_maximale_levable_t": round(r["travail_effectif_h"] * _cadence_de_nuit(d), 2),
             "levier": nom, "part_sous_interception_pct": part,
             "plage_h": ph, "nuits_par_fenetre": fj,
             "travail_effectif_h": r["travail_effectif_h"],
@@ -246,6 +314,13 @@ def leviers(d: dict, dec: dict) -> dict:
             "planning a rallonger : c'est une methode a changer. Les leviers sont tous "
             "en amont du chantier — negocier la plage, pre-assembler au sol — et aucun "
             "ne s'actionne depuis le planning."),
+        "le_piege_du_pre_assemblage": (
+            "Reduire la part levee sous interception se fait en PRE-ASSEMBLANT au sol : "
+            "moins de levages, mais des pieces plus lourdes. Or la masse maximale levable "
+            "dans une plage ne depend que de la plage, pas de la methode. Un levier qui "
+            "divise le nombre de levages en doublant la masse des pieces peut donc rendre "
+            "l'operation MOINS faisable : la colonne « masse maximale levable » est la "
+            "pour le verifier, et seuls les leviers qui allongent la PLAGE la deplacent."),
         "_le_levier_le_plus_efficace_n_est_pas_gratuit": (
             "Reduire la part levee sous interception allonge le pre-assemblage au sol : "
             "D2 lie deja les deux taches (CHAP = total x (1 - part)), et le reseau "
@@ -355,12 +430,8 @@ def tout_calculer(d: dict) -> dict:
     pl = json.loads((RACINE / "calc" / "sorties" / "planification.json")
                     .read_text(encoding="utf-8"))
     # Duree d'une operation elementaire de levage : une piece de charpente, lue chez D2.
-    ce = d["planning"]["contraintes_exploitation"]
-    tonnage = pl["quantites"]["charpente_t"] * ce["part_levage_sous_consignation_pct"]["valeur"] / 100
-    cad_jour_t_h = tonnage / pl["durees"]["CHLV"]["duree_j"] \
-        * pg.facteur_d_interception(d) / d["planning"]["calendrier"]["heures_par_jour"]
+    cad_nuit = _cadence_de_nuit(d)
     piece_t = d["ferroviaire"]["sous_interception"]["masse_d_une_piece_t"]["valeur"]
-    cad_nuit = cad_jour_t_h * (1 - dec["abattement_de_cadence_nuit_pct"] / 100)
     duree_op = piece_t / cad_nuit
     lev = leviers(d, dec)
     return {
@@ -368,6 +439,7 @@ def tout_calculer(d: dict) -> dict:
         "point_de_non_retour": point_de_non_retour(d, dec, duree_op, cad_nuit),
         "leviers": lev,
         "cout": cout_de_l_heure_utile(d, dec),
+        "comparaison_de_plages": comparaison_de_plages(d),
         "interfaces": matrice_d_interfaces(d),
         "figures": {
             "plage": [{"libelle": x["poste"], "valeur": x["h"]} for x in dec["detail"]],

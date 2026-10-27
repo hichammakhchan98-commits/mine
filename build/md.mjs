@@ -22,9 +22,14 @@ export function extraireBalises(texte, module) {
 function rendreBalises(s) {
   return s.replace(RE_BALISE, (_, niv, ref, reste) => {
     const champs = reste.split("|").map((x) => x.trim());
+    // champs = [valeur, unite, fourchette, annee, note] — l'ordre du registre CSV.
+    // Le libelle etait decale d'un rang : il annoncait « fourchette » devant l'annee et
+    // « annee » devant la note, dans TOUS les modules. Le registre, lui, etait juste.
     const titre = niv === "V3"
-      ? `${niv} — ${ref}` + (champs[3] ? ` · fourchette ${champs[3]}` : "")
-        + (champs[4] ? ` · annee ${champs[4]}` : "")
+      ? `${niv} — ${ref} : ${champs[0] ?? ""}${champs[1] ? " " + champs[1] : ""}`
+        + (champs[2] ? ` · fourchette ${champs[2]}${champs[1] ? " " + champs[1] : ""}` : "")
+        + (champs[3] ? ` · ${champs[3]}` : "")
+        + (champs[4] ? ` · ${champs[4]}` : "")
       : `${niv} — ${ref}`;
     return `${esc(champs[0])}<sup class="preuve preuve-${niv}" title="${esc(titre)}">${niv}</sup>`;
   });
@@ -104,7 +109,21 @@ export function compiler(src, ctx) {
 
     // tableau
     if (estTableau(i)) {
-      const cellules = (r) => r.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      // Une balise de preuve ⟦V3|…|…⟧ contient des « | » : les decouper comme des
+      // separateurs de cellule eclate la balise en sept colonnes et la rend en syntaxe
+      // brute. Le registre, lui, etait juste — il se genere depuis la SOURCE — si bien
+      // que sept passes adversariales et seize controles n'ont rien vu : la page etait
+      // cassee et tous les compteurs au vert. On protege donc l'interieur des balises
+      // avant de decouper.
+      const cellules = (r) => {
+        const gardes = [];
+        const masque = r.replace(/⟦[^⟧]*⟧/g, (m) => {
+          gardes.push(m);
+          return `\u0000${gardes.length - 1}\u0000`;
+        });
+        return masque.trim().replace(/^\||\|$/g, "").split("|")
+          .map((c) => c.trim().replace(/\u0000(\d+)\u0000/g, (_, k) => gardes[+k]));
+      };
       const entete = cellules(lignes[i]);
       const aligns = cellules(lignes[i + 1]).map((a) => a.startsWith(":") && a.endsWith(":") ? "center"
         : a.endsWith(":") ? "right" : "left");

@@ -321,5 +321,46 @@ verifie("le type d'un poste suit la famille de sa duree",
             for p in bord["postes"] if p["type"] in ("forfait", "unitaire")),
         "calculee -> unitaire, declaree -> forfait, imposee -> fourniture")
 
+# ------------------------------------------------- D1 contre D2 : les MEMES heures
+# Le controle qui manquait, et qui aurait vu d'un coup le gonflement d'un facteur
+# quatre sur le levage sous consignation : deux modules qui chiffrent la meme tache
+# doivent trouver le meme nombre d'heures de main d'oeuvre. D1 les derive de ses
+# cadences, D2 de ses durees et de ses effectifs — deux chemins independants.
+print("\n--- D1 contre D2 : heures de main d'oeuvre par tache ---")
+_pl2 = json.loads((RACINE / "calc" / "sorties" / "planification.json").read_text(encoding="utf-8"))
+_h2 = _pl2["heures_de_main_oeuvre_par_tache"]
+# Exception DECLAREE, avec sa raison, pour qu'elle ne puisse pas deriver en silence.
+_EXCEPTIONS = {
+    "MEZZ": ("le plancher de mezzanine est herite du module TV : D1 compte les heures "
+             "PRODUCTIVES de chaque equipe a sa cadence, D2 compte tout l'effectif de "
+             "la zone present pendant tout le cycle — cure et point d'arret compris. "
+             "L'ecart est reel et anterieur a ce controle ; il est declare en dette."),
+}
+_ecarts = []
+for _po in r["bordereau"]["postes"]:
+    _i = _po["poste"]
+    _d1 = _po.get("heures_totales")
+    if not _d1 or _i not in _h2 or not _h2[_i]:
+        continue
+    _rap = _d1 / _h2[_i]
+    if _i in _EXCEPTIONS:
+        verifie(f"{_i} : ecart D1/D2 connu et declare", abs(_rap - 1) > 0.05,
+                f"x{_rap:.2f} — {_EXCEPTIONS[_i][0][:60]}…")
+        continue
+    ok = abs(_rap - 1) < 0.02
+    if not ok:
+        _ecarts.append(f"{_i} x{_rap:.2f}")
+    verifie(f"{_i} : D1 et D2 trouvent les memes heures", ok,
+            f"{_d1:.0f} contre {_h2[_i]:.0f} h")
+verifie("aucune tache hors exception ne diverge entre les deux modules",
+        not _ecarts, "; ".join(_ecarts) or "toutes a x1,00")
+verifie("canari : le levage sous consignation diverge si D1 le chiffre a la cadence",
+        abs(next(p["main_oeuvre"]["heures_payees_h"] for p in r["bordereau"]["postes"]
+                 if p["poste"] == "CHLV")
+            - next(p["main_oeuvre"]["heures_de_travail_a_la_cadence_h"]
+                   for p in r["bordereau"]["postes"] if p["poste"] == "CHLV")) > 100,
+        "les heures PAYEES et les heures de TRAVAIL different : c'est le cout de "
+        "l'heure utile, et il est desormais au bordereau")
+
 print(f"\n{len(echecs)} echec(s)." if echecs else "\nTests des prix : tous verts.")
 sys.exit(1 if echecs else 0)

@@ -164,13 +164,14 @@ H162;longueur de recouvrement portée par le plan fictif;1,00;m;0,60 à 1,60;202
 H163;ratio d'acier d'une poutre de plancher, rapporté à la retombée sous dalle;180;kg/m³;140 à 220;2026;B3e;ordre de grandeur de prédimensionnement, aucun document normatif fourni , la base — retombée et non section pleine — change entièrement le verdict
 H164;ratio d'acier d'une dalle de plancher, rapporté au volume de dalle seul;80;kg/m³;65 à 100;2026;B3e;ordre de grandeur de prédimensionnement, aucun document normatif fourni
 H165;cales d'enrobage en partie courante de dalle;4;cales/m²;2 à 6;2026;B3e;hypothèse de commande, dépend du type de cale et du diamètre de la nappe
-H166;durée d'une plage de consignation accordée;6;h;4 à 8;2026;B7c;de la dernière circulation à la première du matin
-H167;prise de possession et balisage d'une plage;0,50;h;0,25 à 1,0;2026;B7c;vérification de la fermeture effective et mise en place de l'agent de sécurité
-H168;consignation caténaire, mise à la terre et vérification d'absence de tension;0,75;h;0,5 à 1,5;2026;B7c;opération d'un agent habilité de l'exploitant : sa durée ne se négocie pas
+H166;prise de possession et balisage d'une plage;0,50;h;0,25 à 1,0;2026;B7c;vérification de la fermeture effective et mise en place de l'agent de sécurité
+H167;consignation caténaire, mise à la terre et vérification d'absence de tension;0,75;h;0,5 à 1,5;2026;B7c;opération d'un agent habilité de l'exploitant : sa durée ne se négocie pas
+H168;amenée des moyens sur la zone de travail;0,40;h;0,2 à 1,0;2026;B7c;acheminement des engins et du personnel une fois la voie prise
 H169;repli des moyens et dépose des mises à la terre;0,50;h;0,25 à 1,0;2026;B7c;évacuation des engins et nettoyage
 H170;déconsignation et contrôle de libération du gabarit;0,50;h;0,25 à 1,0;2026;B7c;acte formel de l'exploitant avant restitution
 H171;marge de restitution avant la première circulation;0,50;h;0,25 à 1,0;2026;B7c;marge NON NÉGOCIABLE : une voie restituée en retard arrête un train
-H172;abattement de cadence du travail de nuit, à effectif égal;30;%;15 à 45;2026;B7c;éclairage artificiel, fatigue, zone étroite, co-activité avec l'agent de sécurité
-H173;masse d'une pièce de charpente levée d'un seul tenant au-dessus de la voie;8;t;4 à 18;2026;B7c;fixe la durée d'une opération élémentaire, donc le point de non-retour : plus la pièce est lourde, moins il y a de levages, mais chacun devient impossible à fractionner
-H174;majoration du taux horaire pour le travail de nuit;50;%;30 à 100;2026;B7c;valeur CONTRACTUELLE et non technique : à vérifier dans le CPS et la convention applicable
-H175;délai entre la demande d'une plage de consignation et son obtention;120;jours;60 à 240;2026;B7c;c'est ce délai qui rend une plage perdue irrattrapable : on ne la redemande pas pour la semaine suivante
+H172;durée d'une plage de consignation accordée;6,00;h;4 à 8;2026;B7c;de la dernière circulation à la première du matin
+H173;abattement de cadence du travail de nuit, à effectif égal;30;%;15 à 45;2026;B7c;éclairage artificiel, fatigue, zone étroite, co-activité avec l'agent de sécurité
+H174;masse d'une pièce de charpente levée d'un seul tenant au-dessus de la voie;8;t;4 à 18;2026;B7c;fixe la durée d'une opération élémentaire, donc le point de non-retour : plus la pièce est lourde, moins il y a de levages, mais chacun devient impossible à fractionner
+H175;majoration du taux horaire pour le travail de nuit;50;%;30 à 100;2026;B7c;valeur CONTRACTUELLE et non technique : à vérifier dans le CPS et la convention applicable
+H176;délai entre la demande d'une plage de consignation et son obtention;120;jours;60 à 240;2026;B7c;c'est ce délai qui rend une plage perdue irrattrapable : on ne la redemande pas pour la semaine suivante

@@ -67,13 +67,15 @@ moyens. Ici, non. C'est pourquoi un chef de projet suivi de chantier ferroviaire
 
 | Poste | Durée | Tenu par | |
 |---|---:|---|---|
-| {{ferroviaire.plage.detail.0.poste}} | ⟦V3|durée d'une plage de consignation accordée|6|h|4 à 8|2026|de la dernière circulation à la première du matin⟧ h | {{ferroviaire.plage.detail.0.tenu_par}} | avant |
-| {{ferroviaire.plage.detail.1.poste}} | ⟦V3|prise de possession et balisage d'une plage|0,50|h|0,25 à 1,0|2026|vérification de la fermeture effective et mise en place de l'agent de sécurité⟧ h | {{ferroviaire.plage.detail.1.tenu_par}} | avant |
-| {{ferroviaire.plage.detail.2.poste}} | ⟦V3|consignation caténaire, mise à la terre et vérification d'absence de tension|0,75|h|0,5 à 1,5|2026|opération d'un agent habilité de l'exploitant : sa durée ne se négocie pas⟧ h | {{ferroviaire.plage.detail.2.tenu_par}} | avant |
-| **{{ferroviaire.plage.detail.3.poste}}** | **{{ferroviaire.plage.detail.3.h::n2}} h** | {{ferroviaire.plage.detail.3.tenu_par}} | |
+| {{ferroviaire.plage.detail.0.poste}} | ⟦V3|prise de possession et balisage d'une plage|0,50|h|0,25 à 1,0|2026|vérification de la fermeture effective et mise en place de l'agent de sécurité⟧ h | {{ferroviaire.plage.detail.0.tenu_par}} | avant |
+| {{ferroviaire.plage.detail.1.poste}} | ⟦V3|consignation caténaire, mise à la terre et vérification d'absence de tension|0,75|h|0,5 à 1,5|2026|opération d'un agent habilité de l'exploitant : sa durée ne se négocie pas⟧ h | {{ferroviaire.plage.detail.1.tenu_par}} | avant |
+| {{ferroviaire.plage.detail.2.poste}} | ⟦V3|amenée des moyens sur la zone de travail|0,40|h|0,2 à 1,0|2026|acheminement des engins et du personnel une fois la voie prise⟧ h | {{ferroviaire.plage.detail.2.tenu_par}} | avant |
+| **{{ferroviaire.plage.detail.3.poste}}** | **{{ferroviaire.plage.detail.3.h::n2}} h** | {{ferroviaire.plage.detail.3.tenu_par}} | *calculé* |
 | {{ferroviaire.plage.detail.4.poste}} | ⟦V3|repli des moyens et dépose des mises à la terre|0,50|h|0,25 à 1,0|2026|évacuation des engins et nettoyage⟧ h | {{ferroviaire.plage.detail.4.tenu_par}} | après |
 | {{ferroviaire.plage.detail.5.poste}} | ⟦V3|déconsignation et contrôle de libération du gabarit|0,50|h|0,25 à 1,0|2026|acte formel de l'exploitant avant restitution⟧ h | {{ferroviaire.plage.detail.5.tenu_par}} | après |
 | {{ferroviaire.plage.detail.6.poste}} | ⟦V3|marge de restitution avant la première circulation|0,50|h|0,25 à 1,0|2026|marge NON NÉGOCIABLE : une voie restituée en retard arrête un train⟧ h | {{ferroviaire.plage.detail.6.tenu_par}} | après |
+| **Plage nominale** | ⟦V3|durée d'une plage de consignation accordée|6,00|h|4 à 8|2026|de la dernière circulation à la première du matin⟧ h | l'exploitant l'accorde | |
+| **Part fixe** | **{{ferroviaire.plage.part_fixe_h::n2}} h** | dont {{ferroviaire.plage.part_tenue_par_l_exploitant_h::n2}} h par l'exploitant | *calculé* |
 
 {{ferroviaire.plage.lecture}}
 
@@ -146,7 +148,8 @@ aucun planning parce qu'elle n'y était pas prévue.
 
 | | Avant | Après |
 |---|---:|---:|
-| Durée de travail de la tâche de levage | 12,13 j | {{ferroviaire.leviers.reference.CHLV_travail_j::n1}} j |
+| Durée de travail de jour (inchangée) | 12,13 j | {{planification.durees.CHLV.duree_de_travail_de_jour_j::n2}} j |
+| **Plages de consignation à consommer** | — | **{{ferroviaire.leviers.reference.CHLV_travail_j::n1}}** |
 | Fenêtres de consignation nécessaires | 5 | **{{ferroviaire.leviers.reference.fenetres_CHLV}}** |
 | Étalement du levage | 80 j | {{ferroviaire.leviers.reference.etalement_CHLV_j::n0}} j |
 | Dont immobilisation improductive | 68 j | {{ferroviaire.leviers.reference.immobilisation_improductive_j::n0}} j |
@@ -164,28 +167,54 @@ Chaque levier ci-dessous est **mesuré** en rejouant le réseau de D2, jamais d�
 trois : pré-assembler au sol raccourcit la tâche sous interception **et** allonge celle au sol, et
 seul le réseau dit ce qui l'emporte.
 
-| Levier | Plage | Utile | Facteur | Fenêtres | Étalement | Chantier | Écart |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| {{ferroviaire.leviers.lignes.0.levier}} | {{ferroviaire.leviers.lignes.0.plage_h::n0}} h | {{ferroviaire.leviers.lignes.0.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.0.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.0.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.0.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.0.duree_du_chantier_j::n0}} j | — |
-| {{ferroviaire.leviers.lignes.1.levier}} | {{ferroviaire.leviers.lignes.1.plage_h::n0}} h | {{ferroviaire.leviers.lignes.1.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.1.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.1.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.1.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.1.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.1.ecart_de_date_j::n0}} j |
-| {{ferroviaire.leviers.lignes.2.levier}} | {{ferroviaire.leviers.lignes.2.plage_h::n0}} h | {{ferroviaire.leviers.lignes.2.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.2.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.2.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.2.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.2.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.2.ecart_de_date_j::n0}} j |
-| {{ferroviaire.leviers.lignes.3.levier}} | {{ferroviaire.leviers.lignes.3.plage_h::n0}} h | {{ferroviaire.leviers.lignes.3.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.3.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.3.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.3.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.3.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.3.ecart_de_date_j::n0}} j |
-| {{ferroviaire.leviers.lignes.4.levier}} | {{ferroviaire.leviers.lignes.4.plage_h::n0}} h | {{ferroviaire.leviers.lignes.4.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.4.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.4.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.4.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.4.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.4.ecart_de_date_j::n0}} j |
-| **{{ferroviaire.leviers.lignes.5.levier}}** | {{ferroviaire.leviers.lignes.5.plage_h::n0}} h | {{ferroviaire.leviers.lignes.5.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.5.facteur_d_interception::n2}} | **{{ferroviaire.leviers.lignes.5.fenetres_CHLV}}** | **{{ferroviaire.leviers.lignes.5.etalement_CHLV_j::n0}} j** | **{{ferroviaire.leviers.lignes.5.duree_du_chantier_j::n0}} j** | **{{ferroviaire.leviers.lignes.5.ecart_de_date_j::n0}} j** |
-| {{ferroviaire.leviers.lignes.6.levier}} | {{ferroviaire.leviers.lignes.6.plage_h::n0}} h | {{ferroviaire.leviers.lignes.6.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.6.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.6.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.6.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.6.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.6.ecart_de_date_j::n0}} j |
+| Levier | Plage | Utile | Facteur | Pièce max | Fenêtres | Étalement | Chantier | Écart |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| {{ferroviaire.leviers.lignes.0.levier}} | {{ferroviaire.leviers.lignes.0.plage_h::n0}} h | {{ferroviaire.leviers.lignes.0.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.0.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.0.masse_maximale_levable_t::n2}} t | {{ferroviaire.leviers.lignes.0.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.0.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.0.duree_du_chantier_j::n0}} j | — |
+| {{ferroviaire.leviers.lignes.1.levier}} | {{ferroviaire.leviers.lignes.1.plage_h::n0}} h | {{ferroviaire.leviers.lignes.1.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.1.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.1.masse_maximale_levable_t::n2}} t | {{ferroviaire.leviers.lignes.1.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.1.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.1.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.1.ecart_de_date_j::n0}} j |
+| {{ferroviaire.leviers.lignes.2.levier}} | {{ferroviaire.leviers.lignes.2.plage_h::n0}} h | {{ferroviaire.leviers.lignes.2.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.2.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.2.masse_maximale_levable_t::n2}} t | {{ferroviaire.leviers.lignes.2.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.2.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.2.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.2.ecart_de_date_j::n0}} j |
+| {{ferroviaire.leviers.lignes.3.levier}} | {{ferroviaire.leviers.lignes.3.plage_h::n0}} h | {{ferroviaire.leviers.lignes.3.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.3.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.3.masse_maximale_levable_t::n2}} t | {{ferroviaire.leviers.lignes.3.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.3.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.3.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.3.ecart_de_date_j::n0}} j |
+| {{ferroviaire.leviers.lignes.4.levier}} | {{ferroviaire.leviers.lignes.4.plage_h::n0}} h | {{ferroviaire.leviers.lignes.4.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.4.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.4.masse_maximale_levable_t::n2}} t | {{ferroviaire.leviers.lignes.4.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.4.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.4.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.4.ecart_de_date_j::n0}} j |
+| **{{ferroviaire.leviers.lignes.5.levier}}** | {{ferroviaire.leviers.lignes.5.plage_h::n0}} h | {{ferroviaire.leviers.lignes.5.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.5.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.5.masse_maximale_levable_t::n2}} t | **{{ferroviaire.leviers.lignes.5.fenetres_CHLV}}** | **{{ferroviaire.leviers.lignes.5.etalement_CHLV_j::n0}} j** | **{{ferroviaire.leviers.lignes.5.duree_du_chantier_j::n0}} j** | **{{ferroviaire.leviers.lignes.5.ecart_de_date_j::n0}} j** |
+| {{ferroviaire.leviers.lignes.6.levier}} | {{ferroviaire.leviers.lignes.6.plage_h::n0}} h | {{ferroviaire.leviers.lignes.6.travail_effectif_h::n2}} h | ×{{ferroviaire.leviers.lignes.6.facteur_d_interception::n2}} | {{ferroviaire.leviers.lignes.6.masse_maximale_levable_t::n2}} t | {{ferroviaire.leviers.lignes.6.fenetres_CHLV}} | {{ferroviaire.leviers.lignes.6.etalement_CHLV_j::n0}} j | {{ferroviaire.leviers.lignes.6.duree_du_chantier_j::n0}} j | {{ferroviaire.leviers.lignes.6.ecart_de_date_j::n0}} j |
 
-:::figure {"fn":"barres","args":"ferroviaire.figures.leviers_dates","titre":"Durée du chantier sous chaque levier — mesurée en rejouant le réseau","num":2,"large":true,"options":{"unite":"jours ouvrés de chantier"},"voir":["La ligne en gras du tableau ramène le chantier à {{ferroviaire.leviers.lignes.5.duree_du_chantier_j::n0}} jours, c'est-à-dire exactement la durée que le planning publiait AVANT qu'on découvre le rendement de plage. Le planning avait raison — par accident.","Aucun de ces leviers n'est un levier de planificateur : ils se décident en études, dans la méthode de montage et dans la demande de plages, six mois avant le premier levage.","Les deux premiers leviers gagnent presque autant l'un que l'autre. Ce n'est pas une coïncidence : ils agissent sur les deux facteurs du même produit."],"erreur":"Lire ce graphique comme un menu où l'on prend le moins cher. La dernière ligne demande cinq nuits consécutives de consignation : c'est l'exploitant qui décide, et il décide contre la circulation."}
+:::figure {"fn":"barres","args":"ferroviaire.figures.leviers_dates","titre":"Durée du chantier sous chaque levier — mesurée en rejouant le réseau","num":2,"large":true,"options":{"unite":"jours ouvrés de chantier"},"voir":["La ligne en gras du tableau ramène le chantier à {{ferroviaire.leviers.lignes.5.duree_du_chantier_j::n0}} jours, c'est-à-dire exactement la durée que le planning publiait AVANT qu'on découvre le rendement de plage. Le planning avait raison — par accident.","Aucun de ces leviers n'est un levier de planificateur : ils se décident en études, dans la méthode de montage et dans la demande de plages, six mois avant le premier levage.","Deux leviers très différents — une plage de {{ferroviaire.leviers.lignes.1.plage_h::n0}} h, ou du pré-assemblage ramenant la part à {{ferroviaire.leviers.lignes.3.part_sous_interception_pct::n0}} % — donnent presque le même gain ({{ferroviaire.leviers.lignes.1.ecart_de_date_j::n0}} et {{ferroviaire.leviers.lignes.3.ecart_de_date_j::n0}} jours). Ils agissent sur les deux facteurs du même produit, et c'est pour cela qu'ils se valent ICI — pas parce que l'un vaudrait l'autre en général."],"erreur":"Lire ce graphique comme un menu où l'on prend le moins cher. La dernière ligne demande cinq nuits consécutives de consignation : c'est l'exploitant qui décide, et il décide contre la circulation."}
 :::
 
-:::figure {"fn":"barres","args":"ferroviaire.figures.leviers","titre":"Étalement du levage sous chaque levier","num":3,"large":true,"options":{"unite":"jours ouvrés entre le premier et le dernier levage"},"voir":["C'est la grandeur que le chef de projet suivi voit sur son planning : non pas le travail, mais l'ATTENTE entre deux fenêtres. Entre elles, la charpente au-dessus des quais n'avance pas d'un kilogramme.","L'écart entre la première barre et la dernière — {{ferroviaire.leviers.lignes.0.etalement_CHLV_j::n0}} contre {{ferroviaire.leviers.lignes.6.etalement_CHLV_j::n0}} jours — ne se gagne pas sur le chantier : il se gagne en études et en négociation.","Comparez avec la figure 2 : l'étalement varie plus que la durée du chantier, parce que le réseau absorbe une partie du gain. C'est la raison pour laquelle on MESURE l'effet au lieu de le déduire."],"erreur":"Confondre cet étalement avec une durée de travail. Les {{ferroviaire.leviers.reference.immobilisation_improductive_j::n0}} jours d'immobilisation improductive de la première ligne ne sont facturables à personne, et ils courent."}
+:::figure {"fn":"barres","args":"ferroviaire.figures.leviers","titre":"Étalement du levage sous chaque levier","num":3,"large":true,"options":{"unite":"jours ouvrés entre le premier et le dernier levage"},"voir":["C'est la grandeur que le chef de projet suivi voit sur son planning : non pas le travail, mais l'ATTENTE entre deux fenêtres. Entre elles, la charpente au-dessus des quais n'avance pas d'un kilogramme.","L'écart entre la première barre et la dernière — {{ferroviaire.leviers.lignes.0.etalement_CHLV_j::n0}} contre {{ferroviaire.leviers.lignes.6.etalement_CHLV_j::n0}} jours — ne se gagne pas sur le chantier : il se gagne en études et en négociation.","Comparez avec la figure 2 : l'étalement varie plus que la durée du chantier, parce que le réseau absorbe une partie du gain. C'est la raison pour laquelle on MESURE l'effet au lieu de le déduire."],"erreur":"Confondre cet étalement avec une durée de travail. Les {{ferroviaire.leviers.reference.immobilisation_improductive_j::n0}} jours d'immobilisation improductive de la première ligne ne produisent aucun ouvrage — mais ils coûtent : ils portent les frais de durée du chantier, que le module D1 chiffre. Qui les supporte au final est une question de MARCHÉ, pas de métré, et elle se lit dans le CPS."}
 :::
 
 **Ce que ce tableau établit, et c'est le résultat du module :**
 
-> Les 363 jours du planning n'étaient pas atteignables en travaillant plus. Ils n'étaient
-> atteignables qu'avec une **méthode de montage** et une **stratégie de plages** que personne
-> n'avait écrites. Le planning avait raison par accident, et un planning qui a raison par accident
-> se trompera au premier aléa.
+> Les {{ferroviaire.leviers.lignes.5.duree_du_chantier_j::n0}} jours du planning n'étaient pas
+> atteignables en travaillant plus. Ils n'étaient atteignables qu'avec une **méthode de montage**
+> et une **stratégie de plages** que personne n'avait écrites.
+
+**Attention à ce que cette ligne est, et à ce qu'elle n'est pas.** Elle retombe à un dixième de jour
+près sur la durée que le cours publiait avant la correction — mais ce n'est **pas le même
+planning** : le pré-assemblage allonge la tâche au sol de sept jours, le levage se fait sur un
+contenu tout autre, et le chemin critique n'a pas la même forme. Deux plannings différents qui
+durent le même temps, c'est une **coïncidence**, pas une validation. Le planning initial avait
+raison par accident — et un planning qui a raison par accident se trompera au premier aléa, parce
+que personne ne sait pourquoi il avait raison.
+
+:::encart {"genre":"alerte","titre":"Et pourtant aucun de ces leviers ne rend l'opération faisable"}
+Lisez la colonne **Pièce max**. Elle ne dépend que de la durée de la plage, jamais de la méthode :
+{{ferroviaire.leviers.lignes.0.masse_maximale_levable_t::n2}} t à
+{{ferroviaire.leviers.lignes.0.plage_h::n0}} h,
+{{ferroviaire.leviers.lignes.2.masse_maximale_levable_t::n2}} t à
+{{ferroviaire.leviers.lignes.2.plage_h::n0}} h. La pièce prévue en pèse
+{{ferroviaire.point_de_non_retour.masse_d_une_piece_t::n0}}. **Aucune ligne de ce tableau ne permet
+de la lever.**
+
+{{ferroviaire.leviers.le_piege_du_pre_assemblage}}
+
+Et le levier le plus efficace sur les dates est précisément celui qui aggrave le problème :
+pré-assembler au sol **alourdit** les pièces. Un tableau de leviers qui ne porte que des jours
+laisse croire qu'on a le choix ; avec la colonne des masses, on voit que le seul levier qui déplace
+la faisabilité est **la durée de la plage**.
+:::
+
+{{ferroviaire.point_de_non_retour._divisibilite}}
 
 {{ferroviaire.leviers._le_levier_le_plus_efficace_n_est_pas_gratuit}}
 
@@ -291,28 +320,42 @@ mois avant — pas la veille avec le chef de chantier.*
 :::
 
 :::exercice {"titre":"2 · L'exploitant propose des plages de 4 h","niveau":"probleme"}
-Négociation en cours. L'exploitant refuse les plages de {{ferroviaire.plage.duree_nominale_h::n0}} h
-et propose à la place **deux fois plus de plages de 4 h**. Son argument : « vous aurez le même
-nombre d'heures au total ». Acceptez-vous ?
+Négociation en cours. L'exploitant refuse les plages de
+{{ferroviaire.plage.duree_nominale_h::n0}} h et propose à la place **deux fois plus de plages de
+4 h**. Son argument : « vous aurez deux fois plus d'heures de fermeture ». Acceptez-vous ?
 
-**Corrigé. Non, et c'est démontrable en une ligne.**
+**Corrigé. Non, et c'est démontrable en une soustraction.**
 
 La part fixe vaut {{ferroviaire.plage.seuil_de_plage_inutile_h::n2}} h **par plage**, qu'elle dure
-4 h ou 10 h. Une plage de 4 h laisse donc
-{{ferroviaire.plage.seuil_de_plage_inutile_h::n2}} h de préalables pour 0,85 h de travail : le
-rendement tombe à 21 %. Deux plages de 4 h donnent 1,7 h utile, là où une seule plage de
-{{ferroviaire.plage.duree_nominale_h::n0}} h en donne
-{{ferroviaire.plage.travail_effectif_h::n2}}. **Le même nombre d'heures de fermeture produit
-{{ferroviaire.plage.travail_effectif_h::n2}} / 1,7 ≈ 1,7 fois moins d'ouvrage.**
+4 h ou 10 h. Deux plages courtes la paient donc **deux fois**.
 
-L'argument à porter en réunion n'est donc pas « c'est trop court », qui est une opinion, mais :
-« **en dessous de {{ferroviaire.plage.seuil_de_plage_inutile_h::n2}} h, une plage ne produit rien du
-tout**, et à 4 h elle produit cinq fois moins par heure de fermeture qu'à 10 h. » C'est un calcul, il
-se vérifie, et il déplace la discussion du confort de l'entreprise vers l'efficacité de la
-fermeture — qui est l'intérêt de l'exploitant aussi.
+| Plage | Utile | Rendement | Utile par heure de **fermeture** |
+|---:|---:|---:|---:|
+| {{ferroviaire.comparaison_de_plages.lignes.0.plage_h::n0}} h | {{ferroviaire.comparaison_de_plages.lignes.0.utile_h::n2}} h | {{ferroviaire.comparaison_de_plages.lignes.0.rendement_pct::n1}} % | {{ferroviaire.comparaison_de_plages.lignes.0.utile_par_heure_de_fermeture::n3}} |
+| {{ferroviaire.comparaison_de_plages.lignes.1.plage_h::n0}} h | {{ferroviaire.comparaison_de_plages.lignes.1.utile_h::n2}} h | {{ferroviaire.comparaison_de_plages.lignes.1.rendement_pct::n1}} % | {{ferroviaire.comparaison_de_plages.lignes.1.utile_par_heure_de_fermeture::n3}} |
+| {{ferroviaire.comparaison_de_plages.lignes.2.plage_h::n0}} h | {{ferroviaire.comparaison_de_plages.lignes.2.utile_h::n2}} h | {{ferroviaire.comparaison_de_plages.lignes.2.rendement_pct::n1}} % | {{ferroviaire.comparaison_de_plages.lignes.2.utile_par_heure_de_fermeture::n3}} |
+| {{ferroviaire.comparaison_de_plages.lignes.3.plage_h::n0}} h | {{ferroviaire.comparaison_de_plages.lignes.3.utile_h::n2}} h | {{ferroviaire.comparaison_de_plages.lignes.3.rendement_pct::n1}} % | {{ferroviaire.comparaison_de_plages.lignes.3.utile_par_heure_de_fermeture::n3}} |
+
+**La comparaison à durée de fermeture égale.** Deux plages de 4 h, c'est 8 h de voie fermée, et
+elles donnent {{ferroviaire.comparaison_de_plages.deux_courtes_contre_une_longue.deux_de_4h_utile_h::n2}} h
+utiles. **Une seule** plage de 8 h ferme la voie aussi longtemps et en donne
+{{ferroviaire.comparaison_de_plages.deux_courtes_contre_une_longue.une_de_8h_utile_h::n2}} h, soit
+**{{ferroviaire.comparaison_de_plages.deux_courtes_contre_une_longue.rapport::n2}} fois plus**.
+
+Et d'une plage à l'autre, le rendement par heure de fermeture varie d'un facteur
+**{{ferroviaire.comparaison_de_plages.rapport_meilleure_sur_pire::n2}}** entre la plus courte et la
+plus longue.
+
+{{ferroviaire.comparaison_de_plages.lecture}}
 
 *Ce que cet exercice enseigne : la part fixe est l'argument de négociation le plus solide d'un
-chantier ferroviaire, et c'est une soustraction.*
+chantier ferroviaire, et c'est une soustraction. Elle déplace aussi la discussion — du confort de
+l'entreprise vers l'efficacité de la fermeture, qui est l'intérêt de l'exploitant.*
+
+*Et le piège du piège : « deux fois plus d'heures de fermeture » n'est pas « deux fois plus
+d'heures ». Raisonner en total d'heures de fermeture est exactement le raisonnement que tient
+naturellement celui qui accorde les plages. Il n'est pas de mauvaise foi : il compte une grandeur
+qui n'est pas celle qui produit.*
 :::
 
 :::exercice {"titre":"3 · Le planning est en retard de onze mois. Que proposez-vous ?","niveau":"cas_ouvert"}

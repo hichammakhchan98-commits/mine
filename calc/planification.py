@@ -145,10 +145,8 @@ def durees_chantier(d: dict, pl: dict, q: dict, duree_mezzanine_j: float) -> dic
     #
     # Avant cette correction, D2 donnait a CHLV la duree d'un travail de jour et la
     # logeait dans des fenetres de consignation comme si elles produisaient huit heures.
-    facteur = pg.facteur_d_interception(d, heures_par_jour=pl["calendrier"]["heures_par_jour"])
-    calculee("CHLV", j_total * part * facteur,
-             "charpente_t x part sous consignation / (charpente_t_j_atelier x ateliers) "
-             "x facteur d'interception (rendement de plage x abattement de nuit)")
+    calculee("CHLV", j_total * part,
+             "charpente_t x part sous consignation / (charpente_t_j_atelier x ateliers)")
     calculee("COUV", _cal(q["surface_couverture_m2"], c["couverture_m2_j_atelier"]["valeur"],
                           e["ateliers_couverture"]),
              "surface_couverture_m2 / (couverture_m2_j_atelier x ateliers_couverture)")
@@ -162,6 +160,24 @@ def durees_chantier(d: dict, pl: dict, q: dict, duree_mezzanine_j: float) -> dic
     declaree("SECO", "second_oeuvre_lots_techniques_j")
     declaree("ESSA", "essais_mise_en_service_j")
     declaree("RECE", "reception_j")
+    # Le facteur d'interception s'applique a TOUTES les taches soumises a consignation,
+    # pas a la seule qui a servi d'exemple. La version precedente ne le donnait qu'a
+    # CHLV : PSOU, pourtant dans `taches_soumises`, gardait une duree de travail de jour,
+    # et la these du module n'etait appliquee qu'a une tache sur deux.
+    #
+    # Apres cette multiplication, la duree d'une tache soumise n'est plus un nombre de
+    # JOURNEES : c'est un nombre de PLAGES. Tout ce qui la lit doit le savoir — d'ou
+    # `heures_sur_site_par_jour`, qui pondere les jours-hommes par la duree reelle d'une
+    # plage au lieu de huit heures.
+    facteur = pg.facteur_d_interception(
+        d, heures_par_jour=pl["calendrier"]["heures_par_jour"])
+    for i in pl["contraintes_exploitation"]["taches_soumises"]:
+        out[i]["duree_de_travail_de_jour_j"] = out[i]["duree_j"]
+        out[i]["facteur_d_interception"] = round(facteur, 3)
+        out[i]["duree_j"] = round(out[i]["duree_j"] * facteur, 2)
+        out[i]["unite"] = "plages de consignation, et non journees de 8 h"
+        out[i]["formule"] = (out[i].get("formule", "duree declaree")
+                             + " x facteur d'interception")
     return out
 
 
@@ -441,6 +457,24 @@ def marges(res: dict, durees: dict, liens: dict) -> dict:
 
 
 # ------------------------------------------------------------- ressources
+def heures_sur_site_par_jour(d: dict, pl: dict) -> dict:
+    """Combien d'heures un compagnon passe sur le chantier par jour de tache.
+
+    Huit heures en temps normal. Sous interception, la duree de la PLAGE — une nuit de
+    six heures n'est pas une journee de huit. La distinction decide des jours-hommes, et
+    son oubli a coute cher : la duree d'une tache sous interception porte deja le facteur
+    d'interception, si bien qu'un jour de cette tache est en realite une PLAGE. La
+    compter comme huit heures multipliait ses jours-hommes par quatre alors que le
+    travail, lui, n'avait pas bouge d'une heure — et D1, qui chiffre ses heures par la
+    cadence, ne suivait pas : les deux modules publiaient deux nombres d'heures pour le
+    meme levage.
+    """
+    h_j = pl["calendrier"]["heures_par_jour"]
+    soumises = set(pl["contraintes_exploitation"]["taches_soumises"])
+    plage = d["ferroviaire"]["plage_travaux"]["duree_nominale_h"]["valeur"]
+    return {i: (plage if i in soumises else h_j) for i in NOMS}
+
+
 def effectifs_par_tache(d: dict, pl: dict, durees: dict) -> dict:
     """Effectif present sur le chantier, tache par tache.
 
@@ -662,7 +696,8 @@ def calendrier(duree_ouvree: float, cal: dict) -> dict:
 
 
 # ------------------------------------------------------------- courbe en S
-def courbe_en_s(res: dict, eff: dict, segments: dict, pas: int = 1) -> list:
+def courbe_en_s(res: dict, eff: dict, segments: dict, pas: int = 1,
+                heures: dict | None = None, h_ref: float = 8.0) -> list:
     """Avancement en % des jours-hommes de TRAVAIL, date par date.
 
     L'assiette n'est ni le nombre de taches finies, ni le temps ecoule, ni l'etalement :
@@ -672,17 +707,21 @@ def courbe_en_s(res: dict, eff: dict, segments: dict, pas: int = 1) -> list:
     segments de travail produit en prime les vrais paliers : entre deux fenetres de
     consignation, et pendant le sechage, la courbe est PLATE.
     """
+    # Un jour de tache sous interception est une PLAGE, pas une journee : on pondere
+    # par les heures reellement passees sur site, sinon la courbe compte quatre fois le
+    # travail d'un levage qui n'a pas quadruple.
+    w = {i: (heures or {}).get(i, h_ref) / h_ref for i in NOMS}
     fin = int(math.ceil(res["duree"]))
-    total = sum(eff[i] * sum(b - a for a, b in segments[i]) for i in NOMS)
+    total = sum(eff[i] * w[i] * sum(b - a for a, b in segments[i]) for i in NOMS)
     pts = []
     for k in range(0, fin + 1, pas):
         acc = 0.0
         for i in NOMS:
             for a, b in segments[i]:
                 if k >= b:
-                    acc += eff[i] * (b - a)
+                    acc += eff[i] * w[i] * (b - a)
                 elif k > a:
-                    acc += eff[i] * (k - a)
+                    acc += eff[i] * w[i] * (k - a)
         pts.append({"j": k, "prevu": round(acc / total * 100, 1) if total else 0.0})
     return pts
 
@@ -1018,7 +1057,13 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
     grue = conflits_de_grue(d, seg, eff)
     grue_lissee = conflits_de_grue(d, seg, eff, lis["decalages_utilises_j"])
     grue_res = resoudre_le_conflit_de_grue(d, seg, eff, mg, lis["decalages_utilises_j"])
-    cs = courbe_en_s(res, eff, seg, 5)
+    h_site = heures_sur_site_par_jour(d, pl)
+    cs = courbe_en_s(res, eff, seg, 5, h_site, pl["calendrier"]["heures_par_jour"])
+    # Les heures de main d'oeuvre, par tache : c'est le nombre que D1 doit retrouver.
+    # Deux modules qui chiffrent la meme tache doivent trouver les memes heures — le
+    # controle qui manquait, et qui aurait vu le gonflement d'un facteur quatre.
+    heures_par_tache = {i: round(eff[i] * sum(b - a for a, b in seg[i]) * h_site[i], 1)
+                        for i in NOMS}
     cal = calendrier(res["duree"], pl["calendrier"])
     cc2 = contre_calcul_chemin(res, f["contre_calcul"]["chemin_critique"], etalees, lr,
                                f["debuts_imposes"])
@@ -1103,6 +1148,8 @@ def tout_calculer(d: dict, pl: dict, duree_mezzanine_j: float, cadence_mezz: flo
                          "etiquette": _cause_du_palier(pal, res, t, f["detail_fenetres"]).split(" · ")[0]}
                         for pal in paliers_de_la_courbe(cs)],
         },
+        "heures_sur_site_par_jour": h_site,
+        "heures_de_main_oeuvre_par_tache": heures_par_tache,
         "paliers_de_la_courbe_s": _pal_s,
         "resume_des_paliers": _resume_des_paliers(_pal_s),
     }

@@ -215,6 +215,42 @@ def heures_forfait(d: dict, poste: str, durees: dict) -> dict:
                     "visible. Aucune heure n'est comptee pour ce poste."}
 
 
+def _heures_sous_interception(d: dict, poste: str, qte: float, durees: dict,
+                              h: dict) -> dict:
+    """Pour une tache soumise a consignation, les heures payees viennent de D2.
+
+    Ce qu'on paie n'est pas le travail : c'est la presence sur site pendant la plage,
+    majoree de la nuit. Le rapport entre les deux est precisement ce que le module B7c
+    appelle le cout de l'heure utile — et il n'a de sens que s'il est AU BORDEREAU,
+    pas seulement dans un encart.
+    """
+    soumises = set(d["planning"]["contraintes_exploitation"]["taches_soumises"])
+    if poste not in soumises or qte <= 0:
+        return h
+    plages = durees[poste]["duree_j"]
+    eff = d["planning"]["effectifs_chantier_V3"]["effectif_par_tache"].get(poste)
+    if eff is None:
+        cpa = d["planning"]["effectifs_chantier_V3"]["compagnons_par_atelier"]
+        eff = cpa.get("charpente", 0) * d["planning"]["effectifs_chantier_V3"].get(
+            "ateliers_charpente", 1)
+    plage_h = d["ferroviaire"]["plage_travaux"]["duree_nominale_h"]["valeur"]
+    maj = d["ferroviaire"]["plage_travaux"]["majoration_horaire_nuit_pct"]["valeur"] / 100
+    heures = plages * eff * plage_h
+    taux = dict(h["taux"])
+    taux["taux_de_jour_MAD_h"] = taux["taux_MAD_h"]
+    taux["majoration_de_nuit_pct"] = maj * 100
+    taux["taux_MAD_h"] = round(taux["taux_MAD_h"] * (1 + maj), 2)
+    return {**h, "h_par_unite": round(heures / qte, 5), "taux": taux,
+            "heures_payees_h": round(heures, 1),
+            "heures_de_travail_a_la_cadence_h": round(h["h_par_unite"] * qte, 1),
+            "_source": "calc/sorties/planification.json — duree en PLAGES x effectif x "
+                       "duree de plage",
+            "_pourquoi": (
+                "on paie la plage entiere, majoree de la nuit, pour les heures utiles "
+                "qu'elle contient : le rapport entre les heures payees et les heures de "
+                "travail est le cout de l'heure utile du module B7c.")}
+
+
 def sous_detail(d: dict, poste: str, qte: float, durees: dict) -> dict:
     """Un poste du bordereau, du debourse sec au prix de vente."""
     sd = d["prix_unitaires_MAD"]["sous_details"][poste]
@@ -227,6 +263,13 @@ def sous_detail(d: dict, poste: str, qte: float, durees: dict) -> dict:
     if typ == "unitaire":
         mats, engs = consommations(d, poste)
         h = heures_par_unite(d, poste)
+        # Une tache SOUS INTERCEPTION ne se paie pas a la cadence : on paie la PLAGE
+        # entiere, majoree de la nuit, pour les heures utiles qu'elle contient. D1
+        # chiffrait ces postes a la cadence d'atelier et D2 les etalait sur des plages :
+        # les deux modules publiaient deux nombres d'heures pour le meme levage, dans un
+        # rapport de quatre. Les heures viennent desormais de D2, qui sait combien de
+        # plages la tache consomme, et la majoration de nuit s'applique au taux.
+        h = _heures_sous_interception(d, poste, qte, durees, h)
         mo = h["h_par_unite"] * h["taux"]["taux_MAD_h"]
         o["main_oeuvre"] = {**h, "montant_MAD_par_unite": round(mo, 2)}
         o["materiaux"] = mats
