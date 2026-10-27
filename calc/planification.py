@@ -308,7 +308,8 @@ def etalement_sous_fenetres(duree: float, debut_au_plus_tot: float,
             "immobilisation_improductive_j": round((fin - debut) - duree, 2)}
 
 
-def planning_avec_fenetres(d: dict, durees: dict, iterations: int = 30) -> dict:
+def planning_avec_fenetres(d: dict, durees: dict, iterations: int = 30,
+                           retards: dict | None = None) -> dict:
     """Point fixe : la fenetre depend de la date, la date depend de la fenetre.
 
     Une fenetre de consignation agit sur la tache de DEUX facons, et il a fallu une
@@ -334,7 +335,12 @@ def planning_avec_fenetres(d: dict, durees: dict, iterations: int = 30) -> dict:
     soumises = ce["taches_soumises"]
     lr = liens_resolus(d, durees)
     etale = {i: durees[i]["duree_j"] for i in durees}
-    debut_impose = {i: 0.0 for i in durees}
+    # `retards` retarde le DEBUT d'une tache sans toucher a sa duree. C'est ainsi qu'une
+    # immobilisation se modelise : une reprise ne rend pas la tache plus longue, elle la
+    # fait commencer plus tard. L'ajouter a la duree serait en plus une erreur d'unite
+    # pour une tache sous consignation, dont la duree est un nombre de PLAGES.
+    ret = retards or {}
+    debut_impose = {i: float(ret.get(i, 0.0)) for i in durees}
     # date a laquelle le reseau NU serait pret : c'est contre elle que se mesure
     # l'attente. Mesuree contre le reseau deja contraint, elle vaut zero par
     # construction et l'information se perd.
@@ -344,7 +350,7 @@ def planning_avec_fenetres(d: dict, durees: dict, iterations: int = 30) -> dict:
         r = voie_A_parcours([Tache(i, NOMS[i], etale[i], lr[i], debut_impose[i]) for i in NOMS])
         change = False
         for i in soumises:
-            d0 = r["tot"][i][0]
+            d0 = max(r["tot"][i][0], float(ret.get(i, 0.0)))
             e = etalement_sous_fenetres(durees[i]["duree_j"], d0, fen, per, prem)
             e["debut_du_reseau_nu"] = round(nu["tot"][i][0], 2)
             e["attente_avant_premiere_fenetre_j"] = round(e["debut"] - nu["tot"][i][0], 2)

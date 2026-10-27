@@ -386,9 +386,18 @@ Fiche memo S8 : ✓     Exercices : 2 application + 1 probleme   Quiz : 6 questi
 ```text
 ID : C7               Titre : Qualite, HSE, environnement — plans de controle, essais, risques
 Palier : P1           Type : execution     Niveau : [C]     Etat : ▶ actif
-Socle : S1 a S8        Options : O1 ○ non retenu · O2 ✓ (n = 4 : logigramme de NC, plan de controle,
-          arbre des causes, matrice de risques) · O3 – · O4 ✓ · O5 ✓ · O6 ✓ · O7 ○ non retenu
-Sans objet : O1/O3 — pas d'ouvrage. O7 — aucun calcul normatif.
+Socle : S1 a S8        Options : O1 ○ non retenu · O2 ✓ (n = 4 : heures exposees par tache, cout
+          d'une NC par ouvrage, risques classes par criticite, flux de dechets) · O3 – ·
+          O4 ✓ PARTIEL · O5 ✓ · O6 ✓ · O7 ✓ (etalonnage sur cas fermes + seconde voie D1/D2)
+Sans objet : O1/O3 — pas d'ouvrage.
+O4 partiel, et c'est declare : le module livre les CONTROLES, les points d'arret avec leur duree,
+          la securite et la double lecture entreprise / MOE. Il ne livre ni sequence, ni materiel,
+          ni cadence, ni effectif : ils vivent en C1 a C3 et en C6, et les y dupliquer ferait deux
+          sources pour une meme grandeur (D-039). La fiche cochait O4 en plein ; la passe
+          adversariale a montre que quatre des six elements manquaient.
+O7 : pas de contre-calcul normatif — il n'y a rien a dimensionner — mais le module a son
+          etalonnage sur cas fermes (calc/etalonnage/qualite_cas_ferme.py, dont deux INVARIANTS)
+          et sa seconde voie : D1 et D2 doivent trouver les memes heures, tache par tache.
 Contenu propre : construire un plan de controle qui sert a quelque chose (qui controle, quand, sur quel
           critere, que se passe-t-il si c'est non conforme) ; points d'arret et leur negociation ;
           traitement d'une non-conformite de bout en bout ; echafaudages, fouilles, travail en hauteur,

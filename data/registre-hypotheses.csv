@@ -178,6 +178,11 @@ H176;délai entre la demande d'une plage de consignation et son obtention;120;jo
 H177;surexposition du travail de nuit, par heure travaillée;1,8;—;1,2 à 3,0;2026;C7;éclairage artificiel, fatigue, zone étroite, co-activité ferroviaire : ordre de grandeur déclaré, non une statistique du projet
 H178;taux de gravité, journées perdues par millier d'heures;1,4;—;0,6 à 3,0;2026;C7;ordre de grandeur du BTP, à confronter aux statistiques de l'entreprise
 H179;taux de fréquence, accidents avec arrêt par million d'heures;28;—;12 à 50;2026;C7;ordre de grandeur du BTP, à confronter aux statistiques de l'entreprise : ce n'est pas un objectif, c'est une référence de calcul
-H180;coût de reprise d'un parement vu;420;MAD/m²;250 à 700;2026;C7;piquage, ragréage, reprise de parement et protection des abords : varie fortement selon que le parement reste vu ou sera doublé
-H181;déchets d'acier et de métaux d'un chantier de gros œuvre;4,5;kg/m²;2,0 à 9,0;2026;C7;chutes de façonnage et emballages métalliques, rapportées à l'emprise construite
-H182;déchets d'emballages et divers d'un chantier de gros œuvre;3,5;kg/m²;1,5 à 8,0;2026;C7;films, palettes, cartons et divers non triés à la source
+H180;coût de reprise d'un parement vu;420 MAD/m²;MAD/m²;250 à 700;2026;C7;piquage, ragréage, reprise de parement et protection des abords : varie fortement selon que le parement reste vu ou sera doublé
+H181;heure de contrôle d'un cadre, charges comprises;140 MAD/h;MAD/h;90 à 240;2026;C7;maîtrise d'œuvre, bureau d'études ou service qualité : recoupé sur les frais d'encadrement du module D1, de l'ordre de 25 000 MAD par mois et par cadre
+H182;déchets de béton et gravats d'un chantier de gros œuvre;38;kg/m²;20 à 70;2026;C7;chutes de coulage, démolition d'ouvrages provisoires, reprises et parements piqués, rapportées à l'emprise construite
+H183;déchets d'acier et de métaux d'un chantier de gros œuvre;4,5;kg/m²;2,0 à 9,0;2026;C7;chutes de façonnage et emballages métalliques, rapportées à l'emprise construite
+H184;déchets de bois de coffrage;6,0;kg/m²;3,0 à 12,0;2026;C7;bois de calage, chutes de coffrage traditionnel et contreplaqué en fin de rotation
+H185;déchets d'emballages et divers d'un chantier de gros œuvre;3,5;kg/m²;1,5 à 8,0;2026;C7;films, palettes, cartons et divers non triés à la source
+H186;déchets dangereux d'un chantier de gros œuvre;0,4;kg/m²;0,2 à 0,8;2026;C7;huiles de décoffrage, fonds d'adjuvants, aérosols, chiffons souillés, cartouches de mastic
+H187;heures travaillées par compagnon et par an;1 800 h;h/an;1 600 à 1 950;2026;C7;intempéries, congés et absences déduits : recoupé sur le calendrier de ce cours, qui donne environ 2 080 heures brutes avant retenues

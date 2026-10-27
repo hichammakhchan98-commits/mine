@@ -653,3 +653,116 @@ logiques doivent être nommées pour ne pas se contaminer.
 le classement change dès que le planning change, ce qui vient d'arriver. Et C7 publie la criticité
 comme un **ordre** : cinq risques y sont ex æquo, et le module dit que c'est une propriété des
 échelles courtes, pas une équivalence des risques.
+
+---
+
+## D-049 — 27/10/2026 — Un résultat publié sans ses bornes est une fausse précision
+
+**Décision.** Tout résultat chiffré d'un module publie ses **deux bornes** à côté de sa valeur, et
+le module dit **laquelle de ses entrées** porte l'incertitude. La règle D-036, qui n'imposait les
+bornes qu'aux dates et aux durées, est étendue aux coûts, aux taux, aux tonnages et aux parts.
+
+**Raison.** La passe adversariale de C7 a recalculé le module à ses propres fourchettes : coût
+d'une non-conformité de 45 601 à 348 165 MAD, accidents attendus de 0,71 à 3,38, part de la nuit
+dans le risque de 9,4 à 20,7 %. Le module publiait une valeur unique, au centime dans les figures.
+Toutes ses entrées sont pourtant des hypothèses déclarées à fourchette large : la précision
+affichée était celle de l'arithmétique, pas celle de la connaissance.
+
+**Et une conséquence qui ne se voyait pas sans les bornes** : ce qui résiste au balayage n'est
+jamais le montant, c'est le **rapport**. L'écart entre les trois régimes de coût reste d'un ordre
+de grandeur quelles que soient les bornes retenues ; c'est donc lui que le module enseigne, et le
+montant n'est qu'une illustration. Publier les bornes a changé ce que le module dit, pas seulement
+ce qu'il affiche.
+
+**Impact.** `calc/qualite.py` publie des bornes sur l'exposition, le coût, les déchets et les
+taux ; cinq tests de règle vérifient que la valeur nominale tombe entre ses bornes, dans l'ordre.
+Les figures sont arrondies à trois chiffres significatifs (§ 3.6), et un canari refuse toute valeur
+de figure publiée au centime.
+
+---
+
+## D-050 — 27/10/2026 — Les bornes d'un retard se mesurent ; et sous consignation, le retard est quantifié
+
+**Décision.** Les bornes d'un retard ne se déduisent jamais d'une règle de trois sur
+l'immobilisation : le réseau est **rejoué** à chaque borne (D-040 appliqué aux bornes elles-mêmes).
+Et les paliers obtenus sont publiés comme tels.
+
+**Raison.** Six rejeux du réseau, de une demi-journée à vingt-cinq jours d'immobilisation, ne
+rendent que **deux retards distincts** : 20 et 40 jours ouvrés, soit un et deux fois la période
+entre deux fenêtres de consignation. Une demi-journée perdue coûte déjà le palier entier ; les
+dix-neuf jours suivants ne coûtent rien de plus. La règle de trois, elle, aurait donné 7 et 46
+jours — deux nombres qui ne sortent d'aucun réseau, et une pente là où il y a une marche.
+
+Trois conséquences de pilotage en découlent, et aucune n'était dans le module avant la mesure :
+avant la fenêtre tout se joue sur quelques heures ; une fois la fenêtre ratée, se presser ne
+rachète rien ; et ce qui se négocie n'est pas la durée de la reprise mais la **période des
+fenêtres**, qui appartient à l'exploitant et que personne ne borne jamais — alors qu'elle déplace
+la fin du chantier de 510 à 750 jours ouvrés à elle seule.
+
+**Correction d'un chiffre de D-048.** Cette décision-là, écrite avant la correction des bloquants
+de B7c, citait « un facteur six » et « deux fenêtres ». Le réseau corrigé donne **×2,86 et une
+seule fenêtre** pour sept jours d'immobilisation. La thèse de D-048 est inchangée ; son chiffre
+était celui d'un réseau faux, et l'explication « la fenêtre suivante, un mois plus tard » n'aurait
+de toute façon expliqué que la moitié du retard qu'elle accompagnait.
+
+---
+
+## D-051 — 27/10/2026 — Un prix porte une note qui dit à quoi il s'applique ; l'ignorer est une erreur invisible
+
+**Décision.** Avant d'employer un prix de `data/`, on lit la **note** qui l'accompagne. Un poste
+dont la note dit « compagnon, charges comprises » ne paie pas une heure de contrôle, une heure
+d'encadrement ni une heure d'études.
+
+**Raison.** C7 chiffrait le durcissement du contrôle après une non-conformité — des heures de
+maîtrise d'œuvre et de bureau d'études — au taux horaire du compagnon, et concluait sur cette
+ligne-là que « le durcissement ne pèse rien ». Le taux était sous-estimé d'un facteur trois. La
+conclusion survit au bon taux, et c'est précisément ce qui rend l'erreur dangereuse : rien dans le
+résultat ne la signale. Elle n'a été trouvée qu'en lisant la note attachée au prix.
+
+**Impact.** `prix_unitaires_MAD.ressources.main_oeuvre_MAD_h.controleur` : 140 MAD/h (90 à 240),
+recoupé sur les frais d'encadrement du module D1. Un test exige que ce taux soit strictement
+supérieur à celui du compagnon, et la vérification dimensionnelle contrôle que la ligne vaut bien
+un taux horaire multiplié par des heures.
+
+---
+
+## D-052 — 27/10/2026 — Un chantier n'a qu'un plan de contrôle, à trois mailles emboîtées
+
+**Décision.** Quand plusieurs modules publient des contrôles du même ouvrage, chacun **déclare sa
+maille** et **renvoie** aux deux autres. Et chaque ligne porte deux colonnes distinctes : qui
+**exécute** le contrôle, qui le **vise**.
+
+**Raison.** Trois listes coexistaient sans se connaître : six contrôles d'ensemble (C7), cinq
+points d'arrêt du cycle de gros œuvre (C3), sept contrôles d'armatures (B3e). Deux d'entre elles
+attribuaient le même acte à des acteurs différents — l'affaissement au cône à l'entreprise ici, à
+la maîtrise d'œuvre là. Les deux attributions étaient justes, parce que ce ne sont pas les mêmes
+actes : l'entreprise fait l'essai, la maîtrise d'œuvre vise l'autorisation de bétonnage dans la
+minute qui suit. Une seule colonne « qui » ne pouvait pas porter les deux, et c'est ainsi qu'un
+contrôle finit par n'être fait par personne — chacun croyant que c'est l'autre.
+
+**Impact.** Les six lignes de C7 portent `qui`, `visa`, `point_d_arret`, `duree_h` et
+`detaille_par` ; le périmètre du plan et l'articulation des trois mailles sont publiés et testés.
+La règle sur les critères chiffrés est précisée au passage : un critère **peut** porter une valeur
+à condition de nommer le document dont elle vient et de marquer ⏸ ce qui est normatif. C'est la
+forme que B3e emploie ; C7 la condamnait sans la nuancer, et condamnait donc un module livré.
+
+---
+
+## D-053 — 27/10/2026 — Un indicateur se publie avec son assiette, ou il ne se publie pas
+
+**Décision.** Tout indicateur rapporté à un dénominateur publie **le périmètre de ce
+dénominateur** : quelles heures, de quelles entreprises, sur quelle période.
+
+**Raison.** C7 écrivait que le cours connaît ses heures « exactement, tâche par tâche ». Deux
+frontières étaient tues. La première : l'assiette ne couvre que les heures **sur site** — les
+études, le séchage et surtout la **fabrication en atelier** de 312 tonnes de charpente en sont
+exclus, avec tout le soudage et le meulage qu'ils représentent. La seconde, plus piégeuse : la
+tâche la plus lourde de l'assiette pèse 46 % des heures et est très probablement sous-traitée. Un
+taux de fréquence calculé sur le seul périmètre de l'entreprise générale serait structurellement
+meilleur sans qu'aucun accident ait été évité — il aurait simplement retiré du dénominateur les
+heures les plus exposées.
+
+**Impact.** C7 publie ses deux frontières, leur conséquence (un taux de chantier ne couvre pas
+l'atelier : il faut le demander au fabricant) et la règle des trois questions à poser devant tout
+taux présenté. Même raisonnement que D4 sur les avancements : un pourcentage sans dénominateur
+n'est pas un indicateur.

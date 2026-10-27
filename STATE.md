@@ -7,12 +7,12 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Reprise (mode B — à lire en premier à chaque séance)
 
 - **Dernier livrable** : `C7` — qualité, HSE. Zip : `cours-genie-civil-P1-C7.zip`
-- **Toutes les passes /devil sont faites**, tous les bloquants corrigés (B3e : 36 défauts,
-  11 bloquants, dont **trois erreurs de modèle physique**).
+- **Toutes les passes /devil sont faites**, tous les bloquants corrigés. C7 : **45 défauts,
+  13 bloquants, 22 majeurs — livraison refusée en première passe**, tous traités (D-049 à D-052).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `REC` — réception, DOE, garanties. **Passe /devil de C7 : à lancer.**
+- **Prochain module** : `REC` — réception, DOE, garanties (dernier du P1).
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -30,13 +30,15 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
 **24 livraisons**, dont **9 faites** et 16 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
-- **Livré** : `E1` (socle), `TV` (tranche verticale), `D2` (planification, 32 défauts, 8 bloquants
-  — D-035), `D1` (métrés et prix, 28 défauts, 7 bloquants corrigés), `D4` (suivi),
-  `C3` (gros œuvre, 33 défauts, 6 bloquants — D-040, D-041), `D4` (suivi et contrôle, 32 défauts,
-  8 bloquants — D-042), `B3e` (béton armé en exécution, passe à lancer). Toutes les autres passes
-  sont faites, tous leurs bloquants corrigés.
-- ▶ **actifs, non écrits** : A1, A2a, A5a, B5a-exec, B7b, B7c, C1, C2, C3, C4, C6, C7,
-  D1, D2, D3, D4, D6, D7, M3D, REC, RC1
+- **Livré (9)** : `E1` (socle) · `TV` (tranche verticale) · `D2` (planification, 32 défauts,
+  8 bloquants — D-035) · `D1` (métrés et prix, 28 défauts, 7 bloquants) · `D4` (suivi et contrôle,
+  32 défauts, 8 bloquants — D-042) · `C3` (gros œuvre, 33 défauts, 6 bloquants — D-040, D-041) ·
+  `B3e` (béton armé en exécution, 36 défauts, 11 bloquants dont **trois erreurs de modèle
+  physique**) · `B7c` (bâtiments ferroviaires, 39 défauts, 11 bloquants dont le **changement
+  d'unité silencieux** — D-045 à D-048) · `C7` (qualité et HSE, 45 défauts, 13 bloquants —
+  D-049 à D-052). Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
+- ▶ **actifs, non écrits (15)** : A1, A2a, A5a, B5a-exec, B7b, C1, C2, C4, C6, D3, D6, D7,
+  M3D, REC, RC1
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
 Fiches-module : `cadrage/05-sommaire.md` (périmètre d'origine, conservé pour mémoire).
@@ -100,11 +102,7 @@ glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
 
 ## Simplifications déclarées (§ R6)
 
-Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une scène 3D par vue ·
-contour de cadre en polyligne · fiches P2/P3 sobres · substitut textuel de la 3D à l'impression ·
-cadres sans crochets (métré minorant, 0,08 % du total) · coffrage sans étaiement en démonstration ·
-vérification dimensionnelle déportée · un seul relevé d'avancement dans `data/` · le contrôle de
-sécurité ne cherche qu'un mot.
+Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une scène 3D par vue · contour de cadre en polyligne · fiches P2/P3 sobres · substitut textuel de la 3D à l'impression · cadres sans crochets (métré minorant, 0,08 % du total) · coffrage sans étaiement en démonstration · vérification dimensionnelle déportée · un seul relevé d'avancement dans `data/` · le contrôle de sécurité ne cherche qu'un mot.
 
 ## Dette
 
@@ -125,6 +123,7 @@ sécurité ne cherche qu'un mot.
 | 23 | **D1 et D2 divergent de ×2,1 sur les heures du plancher de mezzanine** (3 219 contre 6 880 h) : D1 compte les heures productives à la cadence, D2 tout l'effectif de zone présent pendant tout le cycle. Écart antérieur, exposé par le nouveau contrôle croisé, déclaré comme exception nommée dans `test_prix.py` | avant la revue de palier |
 | 21 | **Le chantier dure désormais 600 j ouvrés** (fin 2029-04-23) au lieu de 363, parce que B7c a corrigé la tâche sous consignation. D1 et D4 ont suivi par le build ; leurs **textes** n'ont pas été relus ligne à ligne avec les nouvelles dates (D-045, choix du lecteur : laisser le build propager) | avant la revue de palier |
 | 22 | **Flake de rendu** : les deux contrôles 3D de `00-demo-cage` échouent par intermittence sur un avertissement du moteur WebGL logiciel, et passent au rejeu. Ce n'est pas un défaut du cours, c'est l'environnement — mais un contrôle qui échoue au hasard finit par ne plus être lu | à outiller |
+| 24 | **C7, non corrigés** : la pondération de nuit (coefficient 1,8) et l'abattement de cadence de nuit de B7c (30 %) restent deux coefficients distincts pour une même cause — leurs notes se croisent désormais, mais aucune n'est dérivée de l'autre · 4 mineurs de forme (détail : `QA/C7-passe1.md`) | avant la revue de palier |
 | 20 | **B3e, non corrigés** : les 17 majeurs et 8 mineurs que la correction des bloquants n'a pas emportés — dont ~20 nombres techniques encore écrits à la main (§ 4.3) et trois listes fermées de points de contrôle avant coulage (C3 en a deux, B3e une) sans renvoi croisé (D-039 non appliqué entre les deux modules). Détail : `QA/B3e-passe1.md` | avant la revue de palier |
 | 19 | **B3e** : le plan de ferraillage est **fictif et calibré** sur les ratios V3, non dimensionné — une première version posée à vue pesait 35 à 43 % de moins. Le module le dit quatre fois ; il reste qu'aucune de ses sections n'est justifiée. Levée : module **B3c** à l'arrivée du BAEL | levée du § 5.0 |
 | 18 | **D4, non corrigés** : les 15 majeurs et 9 mineurs que la réécriture de S3c, S4c, de l'exercice 2 et de la fiche mémo n'a pas emportés (détail : `QA/D4-passe1.md`) | avant la revue de palier |
@@ -138,12 +137,9 @@ Jeux figés en 1.0, valeurs de conception inchangées. Ajouts : le bloc `armatur
 ferraillage fictif calibré, B3e) et le bloc `ferroviaire` (plages de consignation, interfaces,
 B7c). Corrigé par les passes : parc de tables, étais, `suivi.quantites_relevees`, `materiel`,
 `cycle_zone`, portées des nappes, segments de cadres, base des ratios d'acier. **176 hypothèses V3
-registrées**, 172 sur 172 couvertes. Détail dans git et dans `QA/`.
+registrées**, 189 sur 189 couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Détail dans git et dans `QA/`.
 
 ## Effort consommé (§ 13.2)
 
-**16 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7 = 1 chacun,
-plus 2 pour les passes et corrections de C3, D4 et B7c.
-**Avancement sur le programme du 31/10** : **9 livraisons sur 18**. Il reste `REC` dans l'ordre
-annoncé ; au-delà, le budget sera dépassé. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les
-premiers coupés. C'est dit au lecteur, pas découvert le 31.
+**17 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
+**Avancement sur le programme du 31/10** : **9 livraisons sur 18**. Il reste `REC` dans l'ordre annoncé ; au-delà, le budget sera dépassé. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les premiers coupés. C'est dit au lecteur, pas découvert le 31.

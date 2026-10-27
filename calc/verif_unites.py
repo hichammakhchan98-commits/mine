@@ -277,7 +277,10 @@ leve("facteur d'interception compare a un cout",
 print("\nqualite.py — exposition, cout de non-qualite, dechets")
 _q = json.loads((SORTIES / "qualite.json").read_text(encoding="utf-8"))
 _e = _q["exposition"]
-heures = _e["heures_ponderees_par_le_risque"] * u.hour
+# Les accidents se calculent sur les heures REELLES : la ponderation de la nuit
+# repartit le risque, elle ne l'ajoute pas. Appliquer un taux de branche a des heures
+# ponderees le compterait deux fois.
+heures = _e["heures_totales"] * u.hour
 tf = _e["taux_de_frequence_de_reference"] / (1e6 * u.hour)   # accidents par million d'heures
 acc = (tf * heures).to(u.dimensionless)
 dit(acc.dimensionless, "accidents = taux de frequence x heures est un nombre",
@@ -288,19 +291,45 @@ dit(str(jours.units) == "day", "journees perdues = taux de gravite x heures est 
     f"{jours.magnitude:.1f} j")
 _n = _q["non_conformite"]
 fd = _n["frais_de_duree_MAD_par_jour_ouvre"] * u.MAD / u.day
+# Les frais de duree suivent le RETARD MESURE du chantier, pas l'immobilisation de la
+# tache : sur un ouvrage a marge, le retard est nul et aucun frais n'est du.
+retard = _n["par_ouvrage"][0]["retard_du_chantier_j"] * u.day
+dit(str((fd * retard).to(u.MAD).units) == "MAD",
+    "cout de retard = frais par jour x jours de RETARD est en MAD",
+    f"{(fd * retard).to(u.MAD).magnitude:.0f} MAD")
 immo = _n["jours_immobilises"] * u.day
-dit(str((fd * immo).to(u.MAD).units) == "MAD",
-    "cout d'immobilisation = frais par jour x jours est en MAD",
-    f"{(fd * immo).to(u.MAD).magnitude:.0f} MAD")
 _de = _q["dechets"]
 ratio = _de["lignes"][0]["kg_m2"] * u.kg / u.m**2
 tonnes = (ratio * _de["emprise_m2"] * u.m**2).to(u.tonne)
 dit(str(tonnes.units) == "metric_ton", "dechets = ratio x emprise est en tonnes",
     f"{tonnes.magnitude:.1f} t")
 
+# L'heure de CONTROLE est un prix par heure de cadre, pas par heure de production :
+# le durcissement du controle est un nombre d'heures fois ce taux, et rien d'autre.
+taux_ctrl = _n["taux_de_l_heure_de_controle_MAD"] * u.MAD / u.hour
+h_ctrl = _n["heures_de_controle_ajoutees"] * u.hour
+ctrl = (taux_ctrl * h_ctrl).to(u.MAD)
+dit(str(ctrl.units) == "MAD",
+    "durcissement du controle = taux horaire x heures est en MAD",
+    f"{ctrl.magnitude:.0f} MAD")
+# Le retard sous consignation est un multiple de la PERIODE des fenetres : deux durees,
+# et leur rapport est un nombre pur. Un retard divise par une periode qui serait en
+# heures donnerait un nombre different — c'est le genre d'erreur que B7c a deja produit.
+_qd = _q["quantification_du_retard"]
+pas = _qd["pas_j"] * u.day
+palier = _qd["paliers_observes_j"][0] * u.day
+dit((palier / pas).to(u.dimensionless).dimensionless,
+    "palier de retard / periode des fenetres est un nombre de fenetres",
+    f"{(palier / pas).to(u.dimensionless).magnitude:.0f} fenetre(s)")
+
+leve("heures de controle payees au prix d'un metre carre",
+     lambda: (h_ctrl * (420 * u.MAD / u.m**2)).to(u.MAD))
+leve("palier de retard compare a une periode exprimee en heures",
+     lambda: (palier + _qd["pas_j"] * u.MAD).to(u.day))
 leve("accidents obtenus en multipliant un taux par une surface",
      lambda: (tf * (100 * u.m**2)).to(u.dimensionless))
 leve("journees perdues additionnees a un cout", lambda: (jours + 1 * u.MAD).to(u.day))
+leve("retard de chantier additionne a un cout", lambda: (retard + 1 * u.MAD).to(u.day))
 leve("dechets calcules sur une duree", lambda: (ratio * immo).to(u.tonne))
 
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
