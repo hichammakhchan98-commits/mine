@@ -139,12 +139,11 @@ sécurité ne cherche qu'un mot.
 
 ## Données modifiées depuis la dernière livraison
 
-Jeux figés en 1.0, valeurs de conception inchangées. Corrigé par les passes /devil : le parc de
-tables (420 → 1 300, l'ancienne valeur contredisait le planning), les étais (densité au m² + durée
-de maintien), `suivi.quantites_relevees` (refaits sur l'état **physique** et non sur un prorata),
-`materiel.nb_grues`, et le bloc `cycle_zone` — cure, décoffrage, point d'arrêt, deux taux de
-recouvrement, marge de rotation, tâches servies par la grue, effectif par tâche — qui vivait en dur
-dans `calc/`. **27 hypothèses V3 registrées**, 20 sur 20 couvertes.
+Jeux figés en 1.0, valeurs de conception inchangées. Ajouts : le bloc `armatures` (plan de
+ferraillage fictif calibré, B3e) et le bloc `ferroviaire` (plages de consignation, interfaces,
+B7c). Corrigé par les passes : parc de tables, étais, `suivi.quantites_relevees`, `materiel`,
+`cycle_zone`, portées des nappes, segments de cadres, base des ratios d'acier. **176 hypothèses V3
+registrées**, 172 sur 172 couvertes. Détail dans git et dans `QA/`.
 
 ## Effort consommé (§ 13.2)
 
