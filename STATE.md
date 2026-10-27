@@ -94,13 +94,9 @@ chiffrent la même tâche **trouvent les mêmes heures** ; chaque contrôle rend
 canari. **73 canaris, tous rouges** — et deux d'entre eux ont trouvé seuls une erreur que la passe
 n'avait pas vue : un canari utile ne confirme pas, il cherche.
 
-**Dette déclarée de la TV** : scalaires V3 sans fourchette hors registre · deux bibliothèques hors
-vérification dimensionnelle · glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
-
-## Valeurs V2 en attente de vérification par le lecteur
-
-**Aucune** (§ 5.0.6 ; `npm run check` échoue sur toute balise V2 tant que
-`normes_disponibles = false`). Cadrage : `cadrage/registre-sources-cadrage.csv`, E0-S01 et E0-S06 « à vérifier ».
+**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle ·
+glossaire S7 absent · contrôle de sécurité qui ne cherche qu'un mot.
+**Valeurs V2 en attente** : aucune (§ 5.0.6, le build échoue sur toute balise V2).
 
 ## Simplifications déclarées (§ R6)
 
