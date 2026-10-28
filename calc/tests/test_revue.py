@@ -62,14 +62,17 @@ for eid, e in _corrige.items():
 # UNE exception, nommee : E4 ne deplace aucun nombre parce que c'est une erreur de
 # LECTURE — le chiffre est juste et c'est la comparaison qui ne l'est pas. Elle doit
 # alors porter sa propre explication, et le test l'exige.
-_SANS_ECART = {"E4": "erreur de lecture : le chiffre est juste, la comparaison ne l'est "
-                     "pas. Elle porte « _le_piege_dans_le_piege » a la place."}
+# La REGLE, et non l'identifiant : une erreur qui ne deplace pas son nombre est une
+# erreur de LECTURE, et elle doit alors porter son explication propre. Nommer « E4 »
+# dans le test epinglerait un choix de l'auteur (D-041, D-043) ; nommer la propriete
+# laisse la regle vraie si une autre erreur de lecture est ajoutee demain.
 for eid, l in _fausses.items():
     ecart = abs(l["valeur"] - l["juste"]) / max(abs(l["juste"]), 1e-9)
-    if eid in _SANS_ECART:
-        verifie(f"{eid} : exception nommee, et elle s'explique",
-                "_le_piege_dans_le_piege" in _corrige[eid],
-                _SANS_ECART[eid][:60])
+    if ecart < 1e-9:
+        verifie(f"{eid} : ecart nul, donc erreur de LECTURE — elle doit s'expliquer",
+                "_le_piege_dans_le_piege" in _corrige[eid]
+                and len(_corrige[eid].get("_le_piege_dans_le_piege", "")) > 80,
+                "le chiffre est juste, la comparaison ne l'est pas")
         continue
     verifie(f"{eid} : l'erreur deplace reellement le nombre",
             ecart > 0.05,
@@ -86,10 +89,10 @@ for eid, e in _corrige.items():
 # ------------------------------------------------- 3. les lignes justes le sont
 print("\n--- les lignes justes valent ce que publie leur module ---")
 _attendu = {
-    "L1": S["suivi"]["avancements"]["physique_pct"],
+    "L1": S["suivi"]["avancements"]["physique_constate_sur_ouvrages_pct"],
     "L9": S["ferraillage"]["ordre_de_grandeur"]["elements"][0]["ratio_du_plan_kg_m3"],
     "L10": S["qualite"]["dechets"]["part_dangereuse_pct"],
-    "L11": S["valeur-acquise"]["CPI"],
+    "L11": S["suivi"]["valeur_acquise"]["CPI"],
 }
 for lid, v in _attendu.items():
     l = next(x for x in do["lignes"] if x["id"] == lid)
@@ -102,7 +105,7 @@ verifie("chaque ligne nomme le module d'ou elle sort",
 # ------------------------------------------------- 4. les valeurs justes des fausses
 print("\n--- et les valeurs JUSTES des lignes fausses viennent des modules ---")
 _justes = {
-    "E6": S["suivi"]["avancements"]["physique_pct"],
+    "E6": S["suivi"]["avancements"]["physique_constate_sur_ouvrages_pct"],
     "E3": S["planification"]["durees"]["CHLV"]["duree_j"],
     "E5": next(x["total_MAD"] for x in S["qualite"]["non_conformite"]["par_ouvrage"]
                if x["tache"] == "NOYX"),
@@ -139,6 +142,71 @@ verifie("E4 : le chiffre est juste, et c'est la COMPARAISON qui est fausse",
         and "ALERTE" in _e4["affiche"]
         and "_le_piege_dans_le_piege" in _corrige["E4"],
         "une erreur de lecture, pas de calcul")
+
+# ------------------------------------------------- 4b. la source dit-elle vrai ?
+print("\n--- chaque ligne annonce une source : y trouve-t-on sa valeur ? ---")
+# LE test qui manquait. Une ligne du dossier annoncait « module D4 » et portait la
+# valeur d'un AUTRE module : le lecteur qui l'aurait signalee aurait eu raison contre le
+# corrige. C'est la faute la plus grave qu'un dossier a corriger puisse commettre, et
+# aucun test ne la voyait.
+_verifiables = [x for x in do["lignes"] if x.get("chemin_juste")]
+verifie("au moins quatre lignes portent un chemin verifiable",
+        len(_verifiables) >= 4,
+        f"{len(_verifiables)} sur {len(do['lignes'])} — les autres sont des valeurs "
+        "composees, dont le chemin ne serait pas un chemin")
+for l in _verifiables:
+    cur, ok = S, True
+    for k in l["chemin_juste"]:
+        if isinstance(cur, dict) and k in cur:
+            cur = cur[k]
+        else:
+            ok = False
+            break
+    verifie(f"{l['id']} : le chemin annonce existe et donne la valeur juste",
+            ok and abs(float(cur) - l["juste"]) < 0.01,
+            f"{'.'.join(l['chemin_juste'])} = {cur if ok else 'introuvable'}")
+    verifie(f"{l['id']} : et le module cite dans la source est celui du chemin",
+            sansaccent(l["chemin_juste"][0].split("-")[0]) in sansaccent(l["source"]),
+            l["source"])
+# canari qui CHERCHE : un chemin fausse doit faire echouer le controle ci-dessus.
+_c = list(_verifiables[0]["chemin_juste"])
+_c[-1] = _c[-1] + "_inexistant"
+_cur, _ok = S, True
+for k in _c:
+    if isinstance(_cur, dict) and k in _cur:
+        _cur = _cur[k]
+    else:
+        _ok = False
+        break
+verifie("canari : un chemin fausse ne resout plus", not _ok,
+        ".".join(_c) + " est bien introuvable")
+
+print("\n--- le cout annonce porte-t-il la bonne unite ? ---")
+# Le corrige d'une erreur d'UNITE qui se trompe d'unite dans son cout : c'est arrive.
+_UNITES = {"E1": "MAD", "E2": "MAD", "E3": "PLAGES", "E5": "MAD", "E6": "points",
+           "E7": "jours"}
+for eid, u in _UNITES.items():
+    verifie(f"{eid} : le cout est libelle dans l'unite de la grandeur",
+            sansaccent(u) in sansaccent(_corrige[eid]["ce_qu_elle_coute"]),
+            f"« {u} » attendu dans le cout")
+verifie("E4 : le cout dit explicitement qu'il n'est pas en argent",
+        sansaccent("rien en argent") in sansaccent(_corrige["E4"]["ce_qu_elle_coute"]))
+
+# ------------------------------------------------- 4c. le compte des passes
+print("\n--- ce que les passes ont trouve : compte, et non affirme ---")
+_p = do["passes"]
+verifie("chaque rapport compte est un fichier de QA/ qui existe",
+        all((RACINE / "QA" / r["rapport"]).exists() for r in _p["rapports"])
+        and _p["nb_rapports"] == len(_p["rapports"]),
+        f"{_p['nb_rapports']} rapports")
+verifie("le total est la somme des gravites",
+        _p["nb_defauts"] == sum(_p["total"].values()),
+        f"{_p['nb_defauts']} defauts dont {_p['total']['bloquant']} bloquants")
+verifie("et la somme par rapport redonne le total",
+        all(sum(_p["total"][g] for g in _p["total"])
+            == sum(r[g] for r in _p["rapports"] for g in _p["total"]) for _ in [0]))
+verifie("la methode de comptage est declaree, et sa limite avec",
+        "borne basse" in _p["methode"] and "tableaux" in _p["methode"])
 
 # ------------------------------------------------- 5. les appats
 print("\n--- les appats : savoir dire RAS est la moitie du metier ---")

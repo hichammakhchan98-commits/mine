@@ -37,8 +37,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   physique**) · `B7c` (bâtiments ferroviaires, 39 défauts, 11 bloquants dont le **changement
   d'unité silencieux** — D-045 à D-048) · `C7` (qualité et HSE, 45 défauts, 13 bloquants —
   D-049 à D-052) · `REC` (réception, DOE, garanties, 28 défauts dont 8 bloquants — D-054 à
-  D-057) · `RC1` (revue critique du palier, § 5.5). Toutes les passes sont faites, tous les
-  bloquants et majeurs corrigés.
+  D-057) · `RC1` (revue critique du palier, § 5.5, 23 défauts dont 6 bloquants — D-058).
+  Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
 - ▶ **actifs, non écrits (13)** : A1, A2a, A5a, B5a-exec, B7b, C1, C2, C4, C6, D3, D6, D7, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
@@ -124,6 +124,7 @@ Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une s
 | 23 | **D1 et D2 divergent de ×2,1 sur les heures du plancher de mezzanine** (3 219 contre 6 880 h) : D1 compte les heures productives à la cadence, D2 tout l'effectif de zone présent pendant tout le cycle. Écart antérieur, exposé par le nouveau contrôle croisé, déclaré comme exception nommée dans `test_prix.py` | avant la revue de palier |
 | 21 | **Le chantier dure désormais 600 j ouvrés** (fin 2029-04-23) au lieu de 363, parce que B7c a corrigé la tâche sous consignation. D1 et D4 ont suivi par le build ; leurs **textes** n'ont pas été relus ligne à ligne avec les nouvelles dates (D-045, choix du lecteur : laisser le build propager) | avant la revue de palier |
 | 22 | **Flake de rendu** : les deux contrôles 3D de `00-demo-cage` échouent par intermittence sur un avertissement du moteur WebGL logiciel, et passent au rejeu. Ce n'est pas un défaut du cours, c'est l'environnement — mais un contrôle qui échoue au hasard finit par ne plus être lu | à outiller |
+| 27 | **Le comptage des défauts des passes est une borne basse.** `calc/revue.py` compte les cellules de gravité des tableaux de `QA/` — 16 rapports, 411 défauts, 93 bloquants au dernier build. Un rapport qui présenterait ses défauts hors tableau serait sous-compté ; la limite est publiée avec le chiffre | à outiller si besoin |
 | 26 | **D1 et REC divergent sur la date de restitution de la retenue de garantie.** D1 écrit qu'elle « ne revient qu'après la réception » et bâtit sa courbe de trésorerie là-dessus ; REC dit qu'elle est immobilisée jusqu'à une date que le marché fixe (⏸), postérieure. REC ne contredit plus D1 frontalement, mais le besoin de trésorerie publié par D1 est optimiste de la durée de la garantie | revue de palier |
 | 25 | **La date de fin publiée par D2 ne comprend pas une réception décomposée.** REC mesure, en rejouant le réseau, que les deux tâches de fin du planning demandent 16 jours ouvrés de plus que ce qu'elles portent : ESSA 15 j prévus pour 25 demandés, RECE 10 pour 16. Soit **16 jours de fin**, de 260 000 à 2 046 000 MAD selon que le chantier est ou non sous pénalités. Les deux durées sont des décisions de ce cours, posées à deux moments (D-055) ; l'écart n'est pas reporté dans `data/` tant que le lecteur n'a pas tranché | revue de palier |
 | 24 | **C7, non corrigés** : la pondération de nuit (coefficient 1,8) et l'abattement de cadence de nuit de B7c (30 %) restent deux coefficients distincts pour une même cause — leurs notes se croisent désormais, mais aucune n'est dérivée de l'autre · 4 mineurs de forme (détail : `QA/C7-passe1.md`) | avant la revue de palier |

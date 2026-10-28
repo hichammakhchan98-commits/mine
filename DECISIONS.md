@@ -885,9 +885,15 @@ module où elle s'est produite, le rapport de la passe qui l'a trouvée et la d�
 **Raison.** Une erreur inventée se repère à son air d'erreur. Celles-ci ont deux propriétés qu'on
 ne fabrique pas. Elles sont **réalistes**, puisqu'elles ont été commises par quelqu'un qui
 connaissait la règle et l'écrivait trois paragraphes plus loin — le module C7 imputait des frais de
-durée à un ouvrage dont il publiait la marge deux sections après. Et elles sont **invisibles aux
-contrôles** : les dix passes du palier ont trouvé 309 défauts dont 79 bloquants sur un dépôt dont
-les seize contrôles automatiques étaient verts à chaque fois.
+durée à un ouvrage dont il publiait la marge deux sections après. Et elles sont **presque
+invisibles aux contrôles** : les rapports de `QA/` comptent plus de quatre-vingt-dix bloquants sur
+un dépôt dont les seize contrôles de la chaîne étaient verts à chaque fois, et deux seulement ont
+été trouvés par un contrôle écrit — deux canaris, c'est-à-dire des tests écrits pour **chercher**.
+
+Le compte lui-même est une leçon. La première version de cette décision annonçait « 309 défauts
+dont 79 bloquants sur dix passes » : les trois nombres étaient faux, et c'est le pire défaut qu'un
+module sur la relecture puisse commettre. Ils sont maintenant **comptés dans les rapports à chaque
+build**, avec la limite du comptage déclarée à côté du résultat.
 
 Elles ont aussi une propriété commune qui fait toute la valeur de l'exercice : **leur arithmétique
 est juste**. Aucune ne se trouve en refaisant une addition. Elles se trouvent en posant sept
@@ -895,9 +901,16 @@ questions sur une grandeur — de quel calendrier, sous quelle condition, quelle
 quel dénominateur, mesuré ou déduit, quelle marge. C'est cela qu'un chef de projet suivi doit
 savoir faire, et aucun tableau de bord ne le fait à sa place.
 
-**Impact.** `calc/revue.py` construit le dossier depuis les sorties réelles des neuf modules du
-palier, puis mute sept lignes par une fonction déclarée : le corrigé est la comparaison, il ne peut
-pas dériver. Un test exige la bijection entre lignes fausses et corrigé, et qu'une erreur
-**déplace réellement son nombre** — avec une exception nommée, E4, qui est une erreur de lecture et
-ne déplace rien. Quatre lignes justes servent d'appâts : un relecteur qui ne sait pas dire « RAS »
-avec sa preuve n'est pas un relecteur, et l'Annexe 4 l'exige déjà de ses propres passes.
+**Impact.** `calc/revue.py` construit le dossier depuis les sorties réelles des modules du palier,
+puis mute sept lignes par une fonction déclarée : le corrigé est la comparaison, il ne peut pas
+dériver. Trois tests le tiennent : la **bijection** entre lignes fausses et corrigé ; qu'une erreur
+**déplace réellement son nombre**, sauf si son écart est nul — elle est alors une erreur de lecture
+et doit porter son explication propre, règle nommée par sa **propriété** et non par l'identifiant
+de l'erreur ; et que **le chemin annoncé par chaque ligne donne bien sa valeur**. Ce dernier
+manquait, et c'est ainsi qu'une ligne a pu citer un module qui ne publiait pas sa valeur : le
+lecteur qui l'aurait signalée aurait eu raison contre le corrigé.
+
+Quatre lignes justes servent d'appâts : un relecteur qui ne sait pas dire « RAS » avec sa preuve
+n'est pas un relecteur, et l'Annexe 4 l'exige déjà de ses propres passes. Et une règle en est
+sortie pour les appâts eux-mêmes : **un appât doit être défendable**, c'est-à-dire que le lecteur
+qui le signale doit avoir tort — s'il a raison, ce n'est pas un appât, c'est un défaut.

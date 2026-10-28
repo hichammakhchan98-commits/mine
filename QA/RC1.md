@@ -50,8 +50,52 @@ main : il est la comparaison entre la valeur affichée et la valeur juste.
 
 ## Ce que cette revue constate sur le palier
 
-Dix passes adversariales, **309 défauts dont 79 bloquants**, et aucun trouvé par la chaîne
-automatique — verte à chaque fois. Les trois gestes qui les ont trouvés : recalculer trois valeurs
-à partir des données seules, rapprocher deux nombres publiés par le même document, et ouvrir les
-captures. La dette n° 13 du dépôt — « aucun contrôle ne vérifie qu'une figure montre ce qu'elle
-prétend montrer » — reste la plus lourde, et elle est confirmée une dixième fois.
+Les chiffres de cette section sont **comptés par `calc/revue.py` à chaque build**, dans les
+tableaux de `QA/`, cellule de gravité par cellule de gravité — et non recopiés. La première version
+de ce module en annonçait trois qui étaient faux ; dans un module qui enseigne la relecture, c'est
+le défaut le plus grave possible, et c'est la passe de RC1 qui l'a trouvé.
+
+Au dernier comptage : **16 rapports de relecture, 411 défauts dont 93 bloquants**, sur un dépôt
+dont les seize contrôles de la chaîne étaient verts à chaque fois. Le comptage est une **borne
+basse** : il ne voit que les cellules de gravité d'un tableau.
+
+Deux exceptions, et elles sont la vraie leçon : **deux canaris ont trouvé seuls une erreur que la
+passe n'avait pas vue**, et la vérification dimensionnelle a trouvé une année comptée à 365,25
+jours. Les trois sont des contrôles écrits pour **chercher**, pas pour confirmer.
+
+Les trois gestes qui ont trouvé le reste : recalculer trois valeurs à partir des données seules,
+rapprocher deux nombres publiés par le même document, et ouvrir les captures. La dette n° 13 du
+dépôt — « aucun contrôle ne vérifie qu'une figure montre ce qu'elle prétend montrer » — reste la
+plus lourde, et elle est confirmée une fois de plus : la passe de RC1 a trouvé, en ouvrant la
+capture, une légende rendue comme un titre centré à cent cinquante pixels du filet qu'elle
+expliquait.
+
+
+---
+
+## Suite donnée à la passe adversariale de RC1 (28/10/2026)
+
+**6 bloquants, 10 majeurs, 7 mineurs. Les six bloquants sont corrigés**, ainsi que les majeurs qui
+les conditionnent. Détail dans `QA/RC1-passe1.md` ; ce qui suit est ce que la correction a changé.
+
+| # | Ce qui était faux | Ce qui a changé |
+|---|---|---|
+| **B1** | La ligne L11 annonçait « module D4 » et portait le CPI de la **tranche verticale** (0,951, un plancher à 2,8 MMAD) au lieu de celui du chantier (0,8962). Un lecteur qui signalait la ligne avait raison **contre le corrigé** — la faute la plus grave qu'un dossier à corriger puisse commettre | La ligne porte le CPI du chantier. Et surtout : **un test résout désormais le chemin annoncé par chaque ligne** et exige qu'il donne la valeur affichée. C'est le test qui manquait, et il a un canari |
+| **B2** | E6 comparait la moyenne non pondérée à `physique_pct` (31,15 %), qui porte en plus les frais de durée et se rapporte au marché. **Une faute de dénominateur dans le corrigé de l'erreur de dénominateur** | La valeur juste est `physique_constate_sur_ouvrages_pct` (34,01 %), qui pondère les **mêmes tâches** par leur budget. L'écart passe de 26,3 à 23,4 points |
+| **B3** | « Aucun des bloquants n'a été trouvé par un contrôle automatique » : faux. Deux canaris en ont trouvé seuls, et `STATE.md` le dit | L'encart dit l'exception et en tire la leçon : un contrôle écrit pour **chercher** trouve ; un contrôle écrit pour confirmer ne trouve rien |
+| **B4** | « 309 défauts dont 79 bloquants sur dix passes » : trois nombres inventés | `compte_des_passes()` les compte dans `QA/` à chaque build — 16 rapports, 411 défauts, 93 bloquants — **avec la limite du comptage déclarée** : c'est une borne basse |
+| **B5** | E3 chiffrait son coût en « 36,5 jours de chantier » quand la source déclare l'unité « plages de consignation ». **Une faute d'unité dans le corrigé de l'erreur d'unité** | Le coût est en plages, et l'effet au planning est donné par l'étalement que D2 publie : 320,6 jours calendaires contre les 12,1 que le dossier laisse croire. Un test vérifie l'unité de chaque coût |
+| **B6** | E4 concluait que « comparer les deux n'alerte sur rien ». Or sur la **bonne base**, le cours publie 7,77 % contre [15 ; 30] : l'alerte est réelle, et c'est la dette n° 10 | Le corrigé dit que l'alerte existe et qu'il faut l'instruire : **une alerte juste pour une mauvaise raison reste à instruire ; c'est la raison qu'on corrige, pas l'alerte** |
+
+**Majeurs corrigés** : le dossier porte un **rappel des données du marché** (montant, clause de
+pénalité et son calendrier, plafond, frais de durée, terme contractuel non atteint, marge de NOYX)
+sans lequel E1 et E5 étaient indécidables ; les coûts de E2, E5 et E7 portent leurs **bornes**, et
+E7 sert de contre-exemple — son palier de 20 jours est invariant sur toute l'étendue (D-050) ; la
+légende de la figure ne fond plus les familles de E2 et E5 et dit l'asymétrie de l'axe linéaire ;
+la légende de la barre rouge se pose **au bout de la barre** qu'elle explique ; le document
+s'intitule « point d'avancement et prévision de fin » et non « de fin de chantier » ; l'exemption
+du test de E4 nomme sa **propriété** (écart nul ⇒ explication obligatoire) et non son identifiant.
+
+**Et une règle nouvelle pour les appâts** : un appât doit être **défendable** — le lecteur qui le
+signale doit avoir tort. S'il a raison, ce n'est pas un appât, c'est un défaut. C'est exactement ce
+qui s'est passé avec L11.

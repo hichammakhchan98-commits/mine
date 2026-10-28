@@ -973,11 +973,19 @@
       g += texte(xZero, H - 8, String(base).replace(".", ","),
         { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
     g += texte(L - 6, H - 8, o.unite || "", { taille: 9, ancre: "end", couleur: "#6b7682" });
-    // La legende d'alerte se pose EN HAUT, a gauche : en bas, elle rencontrait
-    // l'etiquette d'origine de l'axe et l'unite.
-    if (o.legende_alerte && items.some((x) => x.alerte))
-      g += texte(lab, 16, o.legende_alerte,
-        { taille: 9, couleur: "#8c3b2e", gras: 1 });
+    // La legende d'alerte se pose AU BOUT DE LA BARRE qu'elle explique, et non en
+    // titre centre : posee en haut, elle flottait a cent cinquante pixels de son filet
+    // de trois, et rien ne disait a quelle barre elle se rapportait.
+    if (o.legende_alerte) {
+      const i = items.findIndex((x) => x.alerte);
+      if (i >= 0) {
+        const v = Number(items[i].valeur);
+        const xv = X(v);
+        const x = Math.max(xZero, xv) + 10 + String(items[i].valeur).length * 5.5;
+        g += texte(x, 30 + i * lig + 9, o.legende_alerte,
+          { taille: 9, base: "middle", couleur: "#8c3b2e", gras: 1 });
+      }
+    }
     return { svg: g, largeur: L, hauteur: H };
   }
 

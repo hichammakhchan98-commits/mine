@@ -19,6 +19,15 @@ Ce dossier-ci a une particularité :
 
 {{revue.dossier._pourquoi_ces_sept_la}}
 
+**Et ce que les relectures de ce palier ont réellement trouvé**, compté et non affirmé :
+
+{{revue.dossier._ce_que_les_passes_ont_trouve}}
+
+*La première version de ce module annonçait « 309 défauts dont 79 bloquants sur dix passes ». Les
+trois nombres étaient faux. C'est le pire défaut qu'un module sur la relecture puisse commettre :
+demander qu'on le croie sur parole au moment où il apprend à ne croire personne. Les chiffres
+ci-dessus sont désormais comptés dans les rapports eux-mêmes, à chaque build.*
+
 Chacune a donc deux vertus qu'une erreur inventée n'aurait pas. Elle est **réaliste**, puisqu'elle
 a été commise par quelqu'un qui connaissait la règle et l'écrivait trois paragraphes plus loin. Et
 elle est **invisible aux contrôles** : les dix passes ont toutes trouvé leurs défauts sur un dépôt
@@ -53,9 +62,22 @@ n'importe quelle note de chantier trouvera plus que celui qui recalcule tout.
 
 ## S3 · Le dossier soumis au visa
 
-> **Note de synthèse — point de fin de chantier**
+> **Note de synthèse — point d'avancement et prévision de fin**
 > Gare voyageurs · situation à la date d'arrêt du module D4
 > Émetteur : conduite de travaux · Destinataire : chef de projet suivi, pour visa
+
+**Rappel des données du marché**, jointes à la note — sans elles, deux des lignes ne se vérifient
+pas, et une note qui ne les rappelle pas est déjà critiquable :
+
+| | |
+|---|---|
+| {{revue.dossier.contexte.0.libelle}} | {{revue.dossier.contexte.0.valeur}} |
+| {{revue.dossier.contexte.1.libelle}} | {{revue.dossier.contexte.1.valeur}} |
+| {{revue.dossier.contexte.2.libelle}} | {{revue.dossier.contexte.2.valeur}} |
+| {{revue.dossier.contexte.3.libelle}} | {{revue.dossier.contexte.3.valeur}} |
+| {{revue.dossier.contexte.4.libelle}} | **{{revue.dossier.contexte.4.valeur}}** |
+| {{revue.dossier.contexte.5.libelle}} | {{revue.dossier.contexte.5.valeur}} |
+| {{revue.dossier.contexte.6.libelle}} | {{revue.dossier.contexte.6.valeur}} |
 
 Le document ci-dessous est celui qu'on vous soumet. **Lisez-le avant d'ouvrir le corrigé**, et
 notez sur une feuille les numéros de ligne qui vous paraissent douteux — ainsi que la raison. Le
@@ -153,8 +175,10 @@ aucun test qui l'attrape — il faut relire le nom de la grandeur qu'on emprunte
 
 **Et le piège dans le piège.** {{revue.dossier.erreurs.3._le_piege_dans_le_piege}}
 
-*C'est la seule des sept qui ne déplace aucun nombre — et c'est pourquoi un test du module la
-déclare comme une exception nommée, au lieu de la laisser passer en silence.*
+*C'est la seule des sept qui ne déplace aucun nombre. Le test du module ne l'exempte donc pas par
+son nom — ce serait épingler un choix de l'auteur (D-041) — mais par sa **propriété** : une erreur
+dont l'écart est nul est une erreur de lecture, et elle doit alors porter son explication propre.
+La règle reste vraie si une autre erreur de lecture est ajoutée demain.*
 :::
 
 :::exercice {"titre":"E5 · Ligne L7 — le coût de la non-conformité","niveau":"revue_critique"}
@@ -201,7 +225,7 @@ repérer de tous — à condition de lire le document en entier avant de viser.*
 *La valeur juste est {{revue.dossier.lignes.7.juste::n0}} jours.*
 :::
 
-:::figure {"fn":"barres","args":"revue.dossier.figures.ecarts","titre":"De combien chaque erreur déplace son nombre, et dans quel sens","num":1,"large":true,"options":{"unite":"écart de la valeur affichée à la valeur juste, en %","legende_alerte":"erreur de lecture : le nombre est juste"},"voir":["{{revue.dossier.sens_des_ecarts.gonflent}} erreurs GONFLENT le nombre, {{revue.dossier.sens_des_ecarts.minorent}} le MINORENT, et {{revue.dossier.sens_des_ecarts.sans_ecart}} ne le déplace pas. Les deux sens sont dangereux, et le second l'est davantage : une provision surestimée se discute en réunion, une durée minorée se découvre sur le chantier.","Les écarts ne se comparent pas entre eux comme des gravités. E4 déplace le nombre de 0 % et n'est pas bénigne pour autant : elle fait relayer une fausse alerte, et c'est le temps de relecture des vraies qu'elle consomme.","Les deux plus gros écarts — E2 et E5 — sont des coûts inventés, et tous deux viennent de la même faute : appliquer une grandeur hors de la condition sous laquelle elle vaut."],"erreur":"Trier les erreurs par la hauteur de leur barre pour décider lesquelles corriger. Cette figure mesure un écart, pas une gravité : celle qui coûte le plus cher sur ce chantier (E3, 36,5 jours sur une tâche à marge nulle) n'est pas la plus haute."}
+:::figure {"fn":"barres","args":"revue.dossier.figures.ecarts","titre":"De combien chaque erreur déplace son nombre, et dans quel sens","num":1,"large":true,"options":{"unite":"écart de la valeur affichée à la valeur juste, en %","legende_alerte":"erreur de lecture : le nombre est juste"},"voir":["{{revue.dossier.sens_des_ecarts.gonflent}} erreurs GONFLENT le nombre, {{revue.dossier.sens_des_ecarts.minorent}} le MINORENT, et {{revue.dossier.sens_des_ecarts.sans_ecart}} ne le déplace pas. Les deux sens sont dangereux, et le second l'est davantage : une provision surestimée se discute en réunion, une durée minorée se découvre sur le chantier.","Les écarts ne se comparent pas entre eux comme des gravités. E4 déplace le nombre de 0 % et n'est pas bénigne pour autant : elle fait classer sans suite une alerte qui, sur la bonne base, est réelle — c'est la dette n° 10 du dépôt.","Les deux plus gros écarts sont E2 et E5, et ce ne sont PAS la même faute : l'une applique un prix hors de la condition où il vaut, l'autre impute un coût à un ouvrage qui ne décale rien. Deux familles, un même ordre de grandeur — la hauteur ne dit pas la nature.","L'axe est linéaire et il flatte les surestimations : +687 % est un facteur 7,9, et −75 % un facteur 4. Une barre deux fois plus longue n'est pas une erreur deux fois plus grave, ni deux fois plus grande."],"erreur":"Trier les erreurs par la hauteur de leur barre pour décider lesquelles corriger. Cette figure mesure un écart, pas une gravité : celle qui coûte le plus cher sur ce chantier — E3, qui retire {{revue.dossier.lignes.2.juste::n1}} moins {{revue.dossier.lignes.2.valeur::n1}} plages de consignation à une tâche à marge nulle — n'est que la troisième en hauteur."}
 :::
 
 ## S4g · Sécurité : ce qu'une erreur de relecture fait au chantier
@@ -259,16 +283,22 @@ passes de relecture hostile, {{revue.dossier.nb_erreurs}} familles, et un consta
 
 | Ce qui N'A PAS trouvé les erreurs | Ce qui les a trouvées |
 |---|---|
-| Les seize contrôles automatiques — verts à chaque passe, dix fois sur dix | **Recalculer trois valeurs à partir des données seules**, sans lire le raisonnement de l'auteur |
+| Les seize contrôles de la chaîne — verts à chaque passe, à chaque fois | **Recalculer trois valeurs à partir des données seules**, sans lire le raisonnement de l'auteur |
 | Les tests du module — ils vérifient que le code fait ce qu'il dit, pas que ce qu'il dit soit juste | **Rapprocher deux nombres publiés par le même document** à deux sections d'écart |
-| La vérification dimensionnelle — elle a trouvé une année de 365,25 jours, et aucun des sept défauts de ce dossier | **Ouvrir les captures et les regarder** : six passes sur dix y ont trouvé un défaut |
+| La vérification dimensionnelle — elle a trouvé une année de 365,25 jours, et aucun des sept défauts de ce dossier | **Ouvrir les captures et les regarder** : la plupart des passes y ont trouvé un défaut |
 | La relecture par l'auteur — elle lit ce qu'il a voulu écrire | **Relire le nom de la grandeur empruntée au module voisin** |
 
 :::encart {"genre":"piege","titre":"Le constat le plus inconfortable du palier"}
-**Aucun des 79 défauts bloquants de ce palier n'a été trouvé par un contrôle automatique.** Tous
-l'ont été par une relecture humaine, hostile, qui recalculait. Les contrôles ne sont pas inutiles —
-ils empêchent les défauts déjà rencontrés de revenir, et c'est beaucoup — mais ils ne trouvent que
-ce qu'on leur a appris à chercher.
+**La quasi-totalité des défauts bloquants de ce palier a été trouvée par une relecture humaine,
+hostile, qui recalculait** — et non par les seize contrôles de la chaîne, verts à chaque fois. Il y
+a deux exceptions, et elles sont instructives : **deux canaris ont trouvé seuls une erreur que la
+passe n'avait pas vue**, et la vérification dimensionnelle a trouvé une année comptée à 365,25
+jours. Les trois ont un point commun : ce sont des contrôles **écrits pour chercher**, pas pour
+confirmer. Un canari qui se contente de vérifier que le résultat attendu sort ne trouve rien ;
+celui qui rejoue le calcul avec l'erreur et exige que le nombre publié change, oui.
+
+Les contrôles ne sont donc pas inutiles — ils empêchent les défauts déjà rencontrés de revenir, et
+c'est beaucoup. Mais ils ne trouvent que ce qu'on leur a appris à chercher.
 
 La conséquence pratique, pour un chef de projet suivi : **le temps de relecture ne se remplace pas
 par un tableau de bord.** Un indicateur vert dit qu'aucune des alarmes prévues ne s'est déclenchée.
