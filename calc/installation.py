@@ -416,7 +416,7 @@ def base_vie(d: dict, pl: dict) -> dict:
             "qui se passe alors ne se voit sur aucun indicateur — les compagnons "
             "mangent dehors, se changent dans les véhicules, et l'encadrement apprend "
             "le problème par le turn-over. C'est la même faute que dimensionner une "
-            "grue sur une demande moyenne (§ S4b) ou lire un avancement sans son "
+            "grue sur une demande moyenne (§ S3b) ou lire un avancement sans son "
             "dénominateur (module D4) : une moyenne ne remplace jamais un profil."),
         "_l_arrondi_n_est_pas_une_perte": (
             f"La surface installée dépasse la surface calculée de "
@@ -429,7 +429,8 @@ def base_vie(d: dict, pl: dict) -> dict:
 
 
 # ------------------------------------------------- 5. le coût de l'installation
-def cout(d: dict, pr: dict, bv: dict, nb_grues: int) -> dict:
+def cout(d: dict, pr: dict, bv: dict, nb_grues: int,
+         nb_grues_somme: int | None = None) -> dict:
     """Deux morceaux qui n'obéissent pas à la même chose : un fixe, un loyer."""
     g = d["installation"]["grue"]
     b = d["installation"]["base_vie"]
@@ -461,6 +462,16 @@ def cout(d: dict, pr: dict, bv: dict, nb_grues: int) -> dict:
         # Un mois gagne, rapporte au cout fixe : c'est la seule facon honnete de comparer
         # un loyer a une remise. « Plus que 18 % de remise » etait faux — 18 % de
         # 1 460 000 MAD font plus qu'un mois de loyer.
+        # Ce que couterait le parc obtenu en ADDITIONNANT les voies, au lieu d'en
+        # prendre le maximum. Ecrire « quinze pour cent du marche » a la main donnait un
+        # ordre de grandeur invente la ou le calcul etait a portee.
+        "part_du_marche_si_somme_des_voies_pct": round(
+            ((g["montage_demontage_MAD"]["valeur"]
+              + g["massif_de_fondation_MAD"]["valeur"]) * nb_grues_somme
+             + b["installation_MAD"]["valeur"]
+             + (loyer_grue_mois * nb_grues_somme + loyer_bv_mois) * duree_mois)
+            / marche * 100, 2) if nb_grues_somme else None,
+        "parc_si_somme_des_voies": nb_grues_somme,
         "un_mois_en_part_du_fixe_pct": round(
             (loyer_grue_mois * nb_grues + loyer_bv_mois) / fixe * 100, 1) if fixe else None,
         "part_du_marche_pct": round(total / marche * 100, 2),
@@ -472,7 +483,7 @@ def cout(d: dict, pr: dict, bv: dict, nb_grues: int) -> dict:
             f"{_f(total / marche * 100, 2)} % du marché : {_f(fixe)} MAD de coût fixe — "
             f"montage, massif, raccordements — et {_f(loyer)} MAD de loyer sur "
             f"{_f(duree_mois, 1)} mois. La part fixe ne pèse que "
-            f"{_f(fixe / total * 100)} % du total."),
+            f"{_f(fixe / total * 100, 1)} % du total."),
         "_les_deux_morceaux_n_obeissent_pas_a_la_meme_chose": (
             "Le coût fixe dépend d'une DÉCISION : combien de grues, quelle base-vie. Le "
             "loyer dépend de la DURÉE DU CHANTIER, c'est-à-dire d'un planning que "
@@ -553,8 +564,9 @@ def pourquoi_ce_parc(d: dict, pl: dict, deb: dict, couv: list) -> dict:
             "tâches en même temps), le DÉBIT (trop de levages par jour), la GÉOMÉTRIE "
             "(un bâtiment plus long que la portée). Elles ne s'additionnent pas — on "
             "retient le MAXIMUM, parce qu'une seule grue de plus répond souvent aux "
-            "trois à la fois. Les additionner conduirait à quatre grues sur un chantier "
-            "qui en demande deux, et c'est une erreur qu'on voit."),
+            f"trois à la fois. Les additionner conduirait ici à "
+            f"{sum(v['parc'] for v in voies if v['parc'])} grues sur un chantier qui en "
+            f"demande {retenu}, et c'est une erreur qu'on voit."),
         "_une_voie_qui_ne_tranche_pas": (
             f"Le débit donne {par_debit} grue et ne vote pas pour autant : son taux de "
             f"charge nominal est de {_f(deb['taux_de_charge_pct'])} %, mais ses bornes "
@@ -657,7 +669,8 @@ def tout_calculer(d: dict) -> dict:
     deb = debit(d, go, pl)
     bv = base_vie(d, pl)
     parc = pourquoi_ce_parc(d, pl, deb, couv)
-    co = cout(d, pr, bv, parc["parc_retenu"] or 1)
+    co = cout(d, pr, bv, parc["parc_retenu"] or 1,
+              sum(v["parc"] for v in parc["voies"] if v["parc"]))
     vois = voisinage(d, couv)
     # La variante retenue est celle que figures() dessine : une seule definition, lue au
     # meme endroit par les aires et par le plan masse (D-039).

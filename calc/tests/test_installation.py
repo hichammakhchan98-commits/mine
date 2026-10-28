@@ -275,6 +275,24 @@ verifie("le module dit que les deux morceaux n'obeissent pas a la meme chose",
         dit(co["_les_deux_morceaux_n_obeissent_pas_a_la_meme_chose"],
             "decision", "duree du chantier"))
 # L'ecart avec D1 est PUBLIE, pas tu : D1 budgete une grue, C1 en retient deux.
+verifie("le parc « somme des voies » est bien la somme, pas le maximum",
+        co["parc_si_somme_des_voies"]
+        == sum(v["parc"] for v in pa["voies"] if v["parc"])
+        and co["parc_si_somme_des_voies"] > co["nb_grues"],
+        f"{co['parc_si_somme_des_voies']} contre {co['nb_grues']} retenues")
+verifie("et il coute strictement plus cher, en part du marche",
+        co["part_du_marche_si_somme_des_voies_pct"] > co["part_du_marche_pct"],
+        f"{co['part_du_marche_si_somme_des_voies_pct']} % contre "
+        f"{co['part_du_marche_pct']} %")
+verifie("le parc « somme des voies » est bien la somme, pas le maximum",
+        co["parc_si_somme_des_voies"]
+        == sum(v["parc"] for v in pa["voies"] if v["parc"])
+        and co["parc_si_somme_des_voies"] > co["nb_grues"],
+        f"{co['parc_si_somme_des_voies']} contre {co['nb_grues']} retenues")
+verifie("et il coute strictement plus cher, en part du marche",
+        co["part_du_marche_si_somme_des_voies_pct"] > co["part_du_marche_pct"],
+        f"{co['part_du_marche_si_somme_des_voies_pct']} % contre "
+        f"{co['part_du_marche_pct']} %")
 verifie("l'ecart avec le bordereau de D1 est publie",
         co["ecart_avec_D1_MAD"] == round(
             _fd["lignes"]["grue_tour_location"]["MAD_mois"] * (co["nb_grues"] - 1)

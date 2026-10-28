@@ -19,8 +19,8 @@ est déjà engagée avant le premier levage.
 Ce module traite donc quatre questions **qui se calculent sans aucune norme** :
 
 1. **ce que la grue atteint n'est pas ce qu'elle peut y poser** — une grue qui couvre
-   {{installation.couverture.1.couverture_pct::n1}} % de l'emprise n'y sert la pièce la plus lourde
-   que sur {{installation.couverture.1.part_servie_pct.Élément de charpente de couverture::n1}} %
+   {{installation.couverture.0.couverture_pct::n1}} % de l'emprise n'y sert la pièce la plus lourde
+   que sur {{installation.couverture.0.part_servie_pct.Élément de charpente de couverture::n1}} %
    (§ S2) ;
 2. **le nombre de grues a trois raisons indépendantes de dépasser un** — le temps, le débit, la
    géométrie — et il faut savoir laquelle tranche, et laquelle n'a pas le droit de voter (§ S3c) ;
@@ -142,9 +142,9 @@ Trois lectures, et la troisième colonne est celle qui décide.
   le point le plus défavorable descend à
   {{installation.couverture.1.distance_la_plus_defavorable_m::n1}} m — où la grue tient encore
   {{installation.couverture.1.charge_au_point_le_plus_defavorable_t::n2}} t.
-- La variante C, décalée côté ville, perd
-  {{installation.couverture.2.couverture_pct::n1}} % de couverture et surtout l'essentiel de la part
-  servie : {{installation.couverture.2.part_servie_pct.Élément de charpente de couverture::n1}} %
+- La variante C, décalée côté ville, ne couvre plus que
+  {{installation.couverture.2.couverture_pct::n1}} % de l'emprise, et perd surtout l'essentiel de la
+  part servie : {{installation.couverture.2.part_servie_pct.Élément de charpente de couverture::n1}} %
   seulement. On y reviendra au § S3d, parce que c'est aussi la variante la moins intrusive.
 
 :::figure {"fn":"planMasse","args":"installation.figures.plan_masse","titre":"Plan masse de la variante retenue, avec le point le plus défavorable","num":2,"large":true,"options":{"point_defavorable":{"$":"installation.figures.point_defavorable"},"gabarit":{"$":"installation.figures.plan_masse.gabarit"}},"voir":["L'emprise est le rectangle de {{gare.geometrie.emprise_m.0::n0}} × {{gare.geometrie.emprise_m.1::n0}} m ; les cercles sont les portées des grues, et ils sortent largement du bâtiment.","La ligne rouge est le gabarit de la voie, à {{installation.voisinage.y_du_gabarit_m::n0}} m de la façade côté ville. Les deux cercles la franchissent : c'est le § S3d, et il se voit ici avant d'être calculé.","Le point marqué est celui que le calcul désigne comme le plus défavorable : {{installation.figures.point_defavorable.libelle}}. Il est dans un angle, et c'est toujours dans un angle.","Les cercles ne sont pas le plan d'installation : ils disent où la grue arrive. Ce qu'elle peut y poser est l'objet de la figure 1.","Ce que ce plan ne montre pas : la parcelle. Le cours ne la déclare pas, et c'est elle qui, sur un chantier réel, limite les aires de stockage."],"erreur":"Valider un plan masse parce que les cercles couvrent le bâtiment. La variante A couvre {{installation.couverture.0.couverture_pct::n1}} % de l'emprise et ne sert la pièce la plus lourde que sur {{installation.couverture.0.part_servie_pct.Élément de charpente de couverture::n1}} % : le dessin est juste, la conclusion est fausse."}
@@ -158,8 +158,9 @@ Trois lectures, et la troisième colonne est celle qui décide.
 La géométrie dit combien de grues il faut pour **atteindre** l'ouvrage. Elle ne dit rien de combien
 il en faut pour **suivre la cadence**. C'est une seconde question, indépendante, et elle se calcule.
 
-Une grue fait {{installation.debit.cycles_par_heure::n1}} levages complets par heure —
-⟦V3|cycles complets par heure d'une grue à tour en gros œuvre de bâtiment : élingage, montée, orientation, descente, pose, décrochage, retour|7,0 levages/h|levages/h|4,0 à 12,0|2026|dépend surtout de la distance et de la préparation au sol, très peu de la grue elle-même⟧ —
+Une grue fait
+⟦V3|cycles complets par heure d'une grue à tour en gros œuvre de bâtiment : élingage, montée, orientation, descente, pose, décrochage, retour|7,0|levages par heure|4,0 à 12,0|2026|dépend surtout de la distance et de la préparation au sol, très peu de la grue elle-même⟧
+levages complets par heure — élingage, montée, orientation, descente, pose, décrochage, retour —,
 travaille {{installation.debit.heures_par_jour::n0}} heures, dont
 ⟦V3|part des heures de présence réellement passées à lever|65|%|40 à 85|2026|le reste : attentes de l'équipe au sol, repas, vent, maintenance, tâches sans grue. La valeur est en pourcentage dans data/, et son nom le dit : écrite 0,65 et publiée « 65 % », elle mettait au registre un nombre que data/ ne contenait pas⟧ %
 à lever. Soit **{{installation.debit.capacite_levages_par_jour::n1}} levages par jour**
@@ -309,8 +310,10 @@ question binaire — doit-elle être dans le rayon de la grue ?
 
 {{installation.cout.lecture}}
 
-Les trois entrées de ce coût sont des hypothèses déclarées :
+Quatre de ses entrées sont des hypothèses déclarées ici :
 ⟦V3|montage, transport, essais de réception et démontage d'une grue à tour|420 000 MAD|MAD|250 000 à 700 000|2026|coût FIXE, indépendant de la durée de location — et c'est ce qui rend une deuxième grue chère même pour quelques semaines⟧
+et
+⟦V3|massif de fondation d'une grue à tour, ancrages et démolition en fin de chantier|180 000 MAD|MAD|110 000 à 320 000|2026|coût fixe lui aussi, et il se décide au moment des terrassements : un massif oublié se paie en reprise⟧
 par grue,
 ⟦V3|installation de la base-vie : plateforme, raccordements provisoires eau, électricité et assainissement, clôtures, amenée et repli|260 000 MAD|MAD|150 000 à 450 000|2026|coût fixe, engagé avant le premier levage⟧
 pour la base-vie, et
