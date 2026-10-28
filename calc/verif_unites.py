@@ -336,7 +336,7 @@ leve("dechets calcules sur une duree", lambda: (ratio * immo).to(u.tonne))
 print("\nreception.py — cout d'un jour, portage, DOE")
 _r = json.loads((SORTIES / "reception.json").read_text(encoding="utf-8"))
 _c = _r["cout_d_un_jour"]
-cout_jour = _c["cout_avant_le_plafond_MAD_par_jour_ouvre"] * u.MAD / u.day
+cout_jour = _c["cout_sous_penalites_MAD_par_jour_ouvre"] * u.MAD / u.day
 plafond = _c["plafond_des_penalites_MAD"] * u.MAD
 penal_jour = _c["penalites_MAD_par_jour_ouvre"] * u.MAD / u.day
 bascule = (plafond / penal_jour).to(u.day)
@@ -359,7 +359,7 @@ dit(abs(par_mois.magnitude - _p["cout_de_la_retenue_MAD_par_mois"]) < 1,
     "cout mensuel de portage = taux annuel x montant x un mois",
     f"{par_mois.magnitude:.0f} MAD")
 _d = _r["doe"]
-portage_doe = (taux_an * (_d["montant_bloque_MAD"] * u.MAD)
+portage_doe = (taux_an * (_d["solde_bloque_MAD"] * u.MAD)
                * (_d["retard_du_solde_j"] * u.day)).to(u.MAD)
 dit(abs(portage_doe.magnitude - _d["cout_de_portage_MAD"]) < 20,
     "portage du DOE = taux annuel x montant bloque x jours de retard",
@@ -370,6 +370,40 @@ dit(str((heures_doe * taux_cadre).to(u.MAD).units) == "MAD",
     "cout du DOE = heures x taux horaire de cadre est en MAD",
     f"{(heures_doe * taux_cadre).to(u.MAD).magnitude:.0f} MAD")
 
+# La levee des reserves : des heures-HOMME divisees par une capacite en heures-homme par
+# jour donnent des jours. L'unite compte, et la passe adversariale l'a relevee : six
+# heures a six compagnons ne font pas six heures de delai. pint ne distingue pas l'homme,
+# mais il verifie que le quotient est bien une duree et que le MAXIMUM des deux termes
+# est homogene — c'est la ou l'erreur serait.
+_s = _r["reserves"]
+h_homme = _s["heures_totales"] * u.hour
+capacite = _s["capacite_h_homme_par_jour"] * u.hour / u.day
+atelier = (h_homme / capacite).to(u.day)
+dit(str(atelier.units) == "day",
+    "heures-homme / capacite journaliere est une duree",
+    f"{atelier.magnitude:.2f} j")
+delai = _s["levee_de_toutes"]["delai_de_tiers_le_plus_long_j"] * u.day
+duree = max(atelier, delai)
+dit(abs(duree.magnitude - _s["levee_de_toutes"]["duree_j"]) < 0.02,
+    "et la duree publiee est le maximum des deux, toutes deux en jours",
+    f"max({atelier.magnitude:.2f} ; {delai.magnitude:.0f}) = {duree.magnitude:.2f} j")
+# Le solde bloque par le DOE est une part du MARCHE, pas la retenue : les deux sont en
+# MAD, donc pint ne peut pas les distinguer — le test de valeur, lui, le peut.
+_d2 = _r["doe"]
+dit(abs(_d2["solde_bloque_MAD"] - _r["portage"]["retenue_immobilisee_MAD"]) > 1,
+    "le solde bloque par le DOE n'est pas la retenue de garantie",
+    f"{_d2['solde_bloque_MAD']:.0f} contre "
+    f"{_r['portage']['retenue_immobilisee_MAD']:.0f} MAD")
+
+# LIMITE DECLAREE de cette verification : pint ne distingue pas l'heure-HOMME de
+# l'heure. Diviser 606 heures-homme par 6 compagnons donnerait « 101 heures » qui se
+# convertissent en jours sans que rien ne leve. Ce controle-la ne peut donc pas etre
+# automatique : il repose sur la note de data/, qui declare l'unite, et sur le fait que
+# la capacite est exprimee en heures-homme PAR JOUR. Le dire vaut mieux que de laisser
+# croire que la chaine le verifie.
+leve("duree de levee obtenue en divisant des heures-homme par un cout horaire",
+     lambda: (h_homme / (58 * u.MAD / u.hour)).to(u.day))
+leve("delai de tiers additionne a un cout", lambda: (delai + 1 * u.MAD).to(u.day))
 leve("jour de bascule obtenu en divisant un plafond par un MONTANT journalier",
      lambda: (plafond / (127850 * u.MAD)).to(u.day))
 leve("portage calcule en oubliant que le taux est ANNUEL",

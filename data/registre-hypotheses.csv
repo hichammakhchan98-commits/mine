@@ -186,11 +186,12 @@ H184;déchets de bois de coffrage;6,0;kg/m²;3,0 à 12,0;2026;C7;bois de calage,
 H185;déchets d'emballages et divers d'un chantier de gros œuvre;3,5;kg/m²;1,5 à 8,0;2026;C7;films, palettes, cartons et divers non triés à la source
 H186;déchets dangereux d'un chantier de gros œuvre;0,4;kg/m²;0,2 à 0,8;2026;C7;huiles de décoffrage, fonds d'adjuvants, aérosols, chiffons souillés, cartouches de mastic
 H187;heures travaillées par compagnon et par an;1 800 h;h/an;1 600 à 1 950;2026;C7;intempéries, congés et absences déduits : recoupé sur le calendrier de ce cours, qui donne environ 2 080 heures brutes avant retenues
-H188;temps moyen de levée d'une réserve, intervention et reconstat compris;6 h;h;2 à 16;2026;REC;l'étendue est large parce qu'une retouche de peinture et une reprise d'étanchéité n'ont rien de commun
+H188;heures-homme de levée d'une réserve, intervention et reconstat compris;6 h·homme;h·homme;2 à 16;2026;REC;l'unité compte : six heures-homme à six compagnons ne font pas six heures de délai, et la durée de levée se calcule sur la capacité de l'atelier
 H189;coût de l'argent pour l'entreprise, taux annuel;7,0 %;%/an;5,0 à 12,0;2026;REC;découvert, ligne de crédit, ou coût d'opportunité des fonds propres
 H190;commission annuelle d'une caution de substitution;1,2 %;%/an;0,6 à 2,5;2026;REC;varie avec la signature de l'entreprise et les garanties qu'elle donne à sa banque
 H191;heures de cadre pour tenir le DOE au fil de l'eau;80 h;h;40 à 160;2026;REC;classer les documents à mesure qu'ils arrivent, et exiger le plan de récolement d'un lot quand il part
 H192;heures de cadre pour reconstituer le même DOE après coup;320 h;h;160 à 600;2026;REC;retrouver les sous-traitants partis, refaire relever ce qui ne l'a pas été, redemander des fiches à des fournisseurs qui ont changé de référence
-H193;jours pendant lesquels le décompte définitif reste bloqué faute de DOE complet;60 j;j;20 à 180;2026;REC;ce n'est pas une pénalité : c'est de l'argent dû, non payé, que l'entreprise porte
-H194;pénalité de retard, pour mille du montant du marché par jour;1,0 ‰;‰/j;0,5 à 2,0;2026;REC;clause du CPS, à lire et non à supposer
-H195;plafond des pénalités de retard, en pour-cent du marché;10 %;%;5 à 10;2026;REC;clause du CPS, à lire et non à supposer
+H193;solde des travaux restant au décompte définitif, en pour-cent du marché;4,0 %;%;1,5 à 10,0;2026;REC;dernière situation, révisions de prix non encore réglées, travaux supplémentaires acceptés
+H194;jours pendant lesquels le décompte définitif reste bloqué faute de DOE complet;60 j;j;20 à 180;2026;REC;ce n'est pas une pénalité : c'est de l'argent dû, non payé, que l'entreprise porte
+H195;pénalité de retard, pour mille du montant du marché par jour;1,0 ‰;‰/j;0,5 à 2,0;2026;REC;clause du CPS, à lire et non à supposer
+H196;plafond des pénalités de retard, en pour-cent du marché;10 %;%;5 à 10;2026;REC;clause du CPS, à lire et non à supposer

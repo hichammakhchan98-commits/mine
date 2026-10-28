@@ -816,3 +816,60 @@ l'entreprise.
 le déduire de la marge ; un test vérifie que le décalage mesuré ne dépasse jamais l'allongement
 appliqué, et que la mise en service n'est pas comptée deux fois. L'écart est versé en dette : la
 date de fin publiée par D2 ne comprend pas une réception décomposée.
+
+---
+
+## D-056 — 28/10/2026 — Une grandeur empruntée porte une condition d'emploi, et elle est dans son nom
+
+**Décision.** Quand un module lit une grandeur publiée par un autre, il vérifie **sous quelle
+condition elle vaut**, et pas seulement son unité. La condition se cherche dans le NOM de la
+grandeur et dans ce qui l'indexe ; quand elle existe, le module qui emprunte la publie avec elle.
+
+**Raison.** Le module D1 publie `cout_du_retard`, indexé par un nombre de jours **de retard** : les
+pénalités n'y courent que parce que le terme contractuel est dépassé. Le module REC en a fait un
+« coût d'une journée de non-réception » et l'a appliqué à des journées qui ne sont pas en retard —
+les opérations préalables, l'hésitation sur une liste de réserves, le vendredi d'un exercice. Les
+cinq montants de sa fiche mémo étaient multipliés par **7,9**.
+
+Rien ne pouvait le détecter. L'arithmétique était juste au centime, les unités étaient homogènes,
+l'étalonnage passait, les seize contrôles de la chaîne étaient verts, et la passe adversariale
+elle-même a recalculé les six grandeurs du module et les a toutes retrouvées. Ce qui était faux
+n'était pas un nombre : c'était le DOMAINE d'emploi d'un nombre juste. C'est la même faute que
+D-037 nomme pour les ratios, portée cette fois d'un module à l'autre.
+
+**Et la correction a produit un meilleur résultat que la version fautive.** Il n'y a pas un prix
+mais deux, parce qu'il y a trois périodes dont la première et la dernière se ressemblent : avant le
+terme contractuel et après le plafond des pénalités, un jour coûte les frais de durée seuls ; entre
+les deux, huit fois plus. Le coût d'un jour n'est donc pas croissant dans le temps — c'est une
+**fenêtre de cherté**, et savoir si l'on est dedans change toutes les décisions de fin de chantier.
+
+**Impact.** REC publie trois périodes, deux régimes de coût et toutes ses conséquences chiffrées
+dans les deux ; un invariant d'étalonnage vérifie que les deux régimes extrêmes coûtent exactement
+la même chose. Et la première question de sa check-list de fin de chantier est devenue : *sommes-
+nous en retard ?*
+
+---
+
+## D-057 — 28/10/2026 — Une liste se hiérarchise par son délai le plus long, pas par son volume
+
+**Décision.** La durée de traitement d'un ensemble de tâches qui se recouvrent est le **maximum**
+de son temps de travail cumulé et du plus long délai de tiers qu'il contient — jamais leur somme,
+jamais le seul temps de travail.
+
+**Raison.** REC chiffrait la levée de sept réserves bloquantes à 0,88 jour, en divisant des
+heures-homme par une capacité d'atelier, alors que l'exercice du même module décrivait l'une
+d'elles comme un escalator « en attente d'une pièce annoncée sous dix jours ». Un plan fictif ne
+doit pas contredire ce que le module en dit (D-044), et ici c'est le texte qui avait raison contre
+le calcul. Avec le délai de tiers, la levée des bloquantes passe de 0,88 à **10 jours**, et le coût
+de les confondre avec les autres tombe d'un facteur 4,5.
+
+Le résultat qui en sort vaut mieux que celui qu'il remplace : **ce n'est pas le volume qui fait la
+durée, c'est l'attente**. Les sept réserves bloquantes représentent moins d'une journée de travail
+et dix jours de calendrier ; les quatre-vingt-quatorze autres représentent douze jours de travail et
+aucune attente. Mettre plus de monde ne sert à rien dans le premier cas et à tout dans le second —
+c'est le chemin critique d'un planning, appliqué à une liste de réserves, et c'est la même leçon que
+le module D2 enseigne sur un réseau.
+
+**Impact.** `_duree_de_levee` publie, pour chaque ensemble, son temps d'atelier, son plus long délai
+de tiers, la durée retenue et **ce qui la commande**. Deux invariants étalonnés : doubler la
+capacité ne change rien quand un tiers commande, et divise la durée par deux quand c'est l'atelier.

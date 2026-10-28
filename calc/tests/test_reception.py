@@ -53,11 +53,11 @@ verifie("et D1 le retrouve bien a 10 % du marche",
             - c["marche_MAD"] * C["penalite_plafond_pct"]["valeur"] / 100) < 1,
         f"{c['plafond_des_penalites_MAD']:.0f} MAD")
 verifie("cout avant le plafond = frais + penalite",
-        abs(c["cout_avant_le_plafond_MAD_par_jour_ouvre"]
+        abs(c["cout_sous_penalites_MAD_par_jour_ouvre"]
             - (d1["frais_de_duree_MAD"] + d1["penalites_MAD"])) < 0.01,
-        f"{c['cout_avant_le_plafond_MAD_par_jour_ouvre']:.0f} MAD")
+        f"{c['cout_sous_penalites_MAD_par_jour_ouvre']:.0f} MAD")
 verifie("cout apres le plafond = les frais de duree SEULS",
-        abs(c["cout_apres_le_plafond_MAD_par_jour_ouvre"]
+        abs(c["cout_hors_penalites_MAD_par_jour_ouvre"]
             - d1["frais_de_duree_MAD"]) < 0.01)
 verifie("le jour de bascule est le plafond divise par la penalite journaliere",
         abs(c["jour_de_bascule_ouvre"]
@@ -96,17 +96,17 @@ _apres = [j for j in js if j > c["jour_de_bascule_ouvre"] + 10]
 if len(_avant) >= 2:
     pente = (pts[_avant[-1]] - pts[_avant[-2]]) / (_avant[-1] - _avant[-2])
     verifie("la pente avant la bascule vaut frais + penalite",
-            abs(pente - c["cout_avant_le_plafond_MAD_par_jour_ouvre"])
-            < 0.01 * c["cout_avant_le_plafond_MAD_par_jour_ouvre"],
+            abs(pente - c["cout_sous_penalites_MAD_par_jour_ouvre"])
+            < 0.01 * c["cout_sous_penalites_MAD_par_jour_ouvre"],
             f"{pente:.0f} MAD/j contre "
-            f"{c['cout_avant_le_plafond_MAD_par_jour_ouvre']:.0f}")
+            f"{c['cout_sous_penalites_MAD_par_jour_ouvre']:.0f}")
 if len(_apres) >= 2:
     pente = (pts[_apres[-1]] - pts[_apres[-2]]) / (_apres[-1] - _apres[-2])
     verifie("et la pente apres ne vaut plus que les frais de duree",
-            abs(pente - c["cout_apres_le_plafond_MAD_par_jour_ouvre"])
-            < 0.01 * c["cout_apres_le_plafond_MAD_par_jour_ouvre"],
+            abs(pente - c["cout_hors_penalites_MAD_par_jour_ouvre"])
+            < 0.01 * c["cout_hors_penalites_MAD_par_jour_ouvre"],
             f"{pente:.0f} MAD/j contre "
-            f"{c['cout_apres_le_plafond_MAD_par_jour_ouvre']:.0f}")
+            f"{c['cout_hors_penalites_MAD_par_jour_ouvre']:.0f}")
 
 # ------------------------------------------------- 2. le portage
 print("\n--- retenue de garantie contre caution ---")
@@ -159,69 +159,68 @@ verifie("chaque famille porte son exemple, et il est concret",
 verifie("les heures sont le nombre de reserves fois le temps unitaire",
         abs(s["heures_totales"]
             - s["nb_total"] * R["reserves"]["heures_par_levee_h"]["valeur"]) < 0.5,
-        f"{s['heures_totales']:.0f} h")
+        f"{s['heures_totales']:.0f} h-homme")
 verifie("les bornes des heures encadrent la valeur",
         s["heures_bornes"][0] <= s["heures_totales"] <= s["heures_bornes"][1],
         f"{s['heures_bornes']}")
-verifie("la duree de levee est MESUREE sur les heures et l'effectif, pas posee",
-        abs(s["jours_de_levee_des_autres"]
-            - (s["heures_totales"] - sum(x["heures"] for x in s["lignes"]
-                                         if x["empeche_l_usage"]))
-            / (s["effectif_de_levee"]
-               * d["prix_unitaires_MAD"]["ressources"]["heures_par_jour"])) < 0.02,
-        f"{s['jours_de_levee_des_autres']} j a {s['effectif_de_levee']} compagnons")
-verifie("le cout de la confusion est cette duree fois le cout d'un jour de D1",
-        abs(s["cout_de_la_confusion_MAD"]
-            - s["jours_de_levee_des_autres"]
-            * c["cout_avant_le_plafond_MAD_par_jour_ouvre"]) < 1,
-        f"{s['cout_de_la_confusion_MAD']:.0f} MAD")
-verifie("ses bornes ne font varier QUE le temps de levee, pas le regime de penalite",
-        abs(s["cout_de_la_confusion_bornes_MAD"][0] / s["cout_de_la_confusion_MAD"]
-            - R["reserves"]["heures_par_levee_h"]["fourchette"][0]
-            / R["reserves"]["heures_par_levee_h"]["valeur"]) < 0.01,
+verifie("la capacite est l'effectif fois la journee de travail du cours",
+        abs(s["capacite_h_homme_par_jour"] - s["effectif_de_levee"]
+            * d["prix_unitaires_MAD"]["ressources"]["heures_par_jour"]) < 0.01,
+        f"{s['capacite_h_homme_par_jour']} h-homme par jour")
+# REGLE, et non conclusion : la duree d'un ensemble est le MAXIMUM des deux delais, pas
+# leur somme et pas le seul temps d'atelier. Le test la verifie sur les deux ensembles
+# publies, quels que soient les nombres.
+for cle in ("levee_des_bloquantes", "levee_de_toutes"):
+    x = s[cle]
+    verifie(f"{cle} : la duree est le maximum de l'atelier et du delai de tiers",
+            abs(x["duree_j"] - max(x["jours_d_atelier"],
+                                   x["delai_de_tiers_le_plus_long_j"])) < 0.02,
+            f"max({x['jours_d_atelier']} ; {x['delai_de_tiers_le_plus_long_j']}) = "
+            f"{x['duree_j']} j")
+    verifie(f"{cle} : le module nomme ce qui commande la duree",
+            (x["commande_par"] == "l'atelier") ==
+            (x["jours_d_atelier"] >= x["delai_de_tiers_le_plus_long_j"]),
+            x["commande_par"])
+verifie("lever TOUTES les reserves ne peut pas etre plus rapide que lever les bloquantes",
+        s["levee_de_toutes"]["duree_j"] >= s["levee_des_bloquantes"]["duree_j"] - 0.01,
+        f"{s['levee_de_toutes']['duree_j']} j contre "
+        f"{s['levee_des_bloquantes']['duree_j']} j")
+verifie("les jours en plus sont la difference des deux durees",
+        abs(s["jours_de_non_reception_en_plus"]
+            - (s["levee_de_toutes"]["duree_j"] - s["levee_des_bloquantes"]["duree_j"])) < 0.02,
+        f"{s['jours_de_non_reception_en_plus']} j")
+# canari qui CHERCHE : ignorer le delai de tiers — ce que faisait la premiere version —
+# donnerait un cout plusieurs fois superieur.
+_naif = (s["levee_de_toutes"]["jours_d_atelier"]
+         - s["levee_des_bloquantes"]["jours_d_atelier"]) \
+    * c["cout_sous_penalites_MAD_par_jour_ouvre"]
+verifie("canari : ignorer le delai des tiers gonflerait le cout de la confusion",
+        _naif > s["cout_de_la_confusion_sous_penalites_MAD"] * 1.5,
+        f"{_naif:.0f} MAD contre "
+        f"{s['cout_de_la_confusion_sous_penalites_MAD']:.0f} MAD mesures")
+for regime, cle in (("sous_penalites", "cout_de_la_confusion_sous_penalites_MAD"),
+                    ("hors_penalites", "cout_de_la_confusion_hors_penalites_MAD")):
+    verifie(f"le cout de la confusion {regime} est les jours en plus fois le cout du jour",
+            abs(s[cle] - s["jours_de_non_reception_en_plus"]
+                * c[f"cout_{regime}_MAD_par_jour_ouvre"]) < 1,
+            f"{s[cle]:.0f} MAD")
+verifie("et le module publie les DEUX regimes, jamais un seul",
+        s["cout_de_la_confusion_hors_penalites_MAD"]
+        < s["cout_de_la_confusion_sous_penalites_MAD"],
+        "un chantier dans son delai ne paie pas le prix fort")
+verifie("les bornes du cout de la confusion encadrent les deux regimes",
+        s["cout_de_la_confusion_bornes_MAD"][0]
+        <= s["cout_de_la_confusion_hors_penalites_MAD"]
+        and s["cout_de_la_confusion_sous_penalites_MAD"]
+        <= s["cout_de_la_confusion_bornes_MAD"][1],
         f"{s['cout_de_la_confusion_bornes_MAD']}")
-verifie("et le module publie aussi ce que la meme confusion coute APRES le plafond",
-        s["cout_de_la_confusion_apres_le_plafond_MAD"] < s["cout_de_la_confusion_MAD"],
-        f"{s['cout_de_la_confusion_apres_le_plafond_MAD']:.0f} MAD")
 verifie("la regle de classement ne compte pas les reserves, elle les qualifie",
         dit(s["la_regle"], "empeche", "securite") and "nombre" in sansaccent(s["la_regle"]))
+verifie("et elle dit QUI juge de l'usage",
+        dit(s["la_regle"], "exploitant", "jugement"),
+        "la securite ne se juge pas ; l'usage, si, et c'est l'exploitant")
 verifie("le module traite aussi l'erreur SYMETRIQUE, la plus dangereuse",
         dit(s["_et_dans_l_autre_sens"], "garde-corps", "comptage"))
-
-# ------------------------------------------------- 4. le DOE
-print("\n--- le DOE conditionne le solde ---")
-o = r["doe"]
-verifie("les heures des deux scenarios viennent de data/, avec leurs fourchettes",
-        o["heures_au_fil_de_l_eau"] == R["doe"]["heures_au_fil_de_l_eau"]["valeur"]
-        and "fourchette" in R["doe"]["heures_reconstitue"],
-        f"{o['heures_au_fil_de_l_eau']} h contre {o['heures_reconstitue']} h")
-verifie("elles sont payees au taux du CADRE, pas du compagnon",
-        abs(o["taux_horaire_de_cadre_MAD"]
-            - d["prix_unitaires_MAD"]["ressources"]["main_oeuvre_MAD_h"]["controleur"]["valeur"]) < 0.01
-        and o["taux_horaire_de_cadre_MAD"]
-        > d["prix_unitaires_MAD"]["ressources"]["main_oeuvre_MAD_h"]["compagnon"]["valeur"],
-        f"{o['taux_horaire_de_cadre_MAD']} MAD/h")
-verifie("le surcout en heures est la difference des deux scenarios",
-        abs(o["surcout_en_heures_MAD"]
-            - (o["heures_reconstitue"] - o["heures_au_fil_de_l_eau"])
-            * o["taux_horaire_de_cadre_MAD"]) < 1)
-verifie("le portage est montant x taux annuel x jours / 365",
-        abs(o["cout_de_portage_MAD"]
-            - o["montant_bloque_MAD"] * p["taux_de_portage_annuel_pct"] / 100
-            * o["retard_du_solde_j"] / 365) < 1,
-        f"{o['cout_de_portage_MAD']:.0f} MAD")
-verifie("le montant bloque est celui du portage, et le module le declare borne basse",
-        abs(o["montant_bloque_MAD"] - p["retenue_immobilisee_MAD"]) < 0.01
-        and dit(o["_le_montant_bloque_est_une_borne_basse"],
-                "solde des travaux", "superieur"))
-verifie("le total est la somme des deux postes",
-        abs(o["cout_total_du_retard_de_DOE_MAD"]
-            - (o["surcout_en_heures_MAD"] + o["cout_de_portage_MAD"])) < 1)
-verifie("les bornes du surcout encadrent sa valeur",
-        o["surcout_bornes_MAD"][0] <= o["surcout_en_heures_MAD"] <= o["surcout_bornes_MAD"][1],
-        f"{o['surcout_bornes_MAD']}")
-verifie("le critere pratique du DOE ne cite aucun texte",
-        "⏸" in o["_le_critere_pratique"] and dit(o["_le_critere_pratique"], "dix ans"))
 
 # ------------------------------------------------- 5. les operations prealables
 print("\n--- les operations prealables ---")
@@ -243,47 +242,81 @@ verifie("l'etape la plus longue est celle que l'entreprise ne maitrise pas",
 print("\n--- ce que le planning prevoit pour la reception ---")
 pl = json.loads((RACINE / "calc" / "sorties" / "planification.json").read_text(encoding="utf-8"))
 cf = r["confrontation_au_planning"]
-verifie("la duree prevue est celle que D2 publie pour la tache RECE",
-        abs(cf["duree_prevue_par_le_planning_j"] - pl["durees"]["RECE"]["duree_j"]) < 0.01,
-        f"{cf['duree_prevue_par_le_planning_j']} j")
-verifie("et celle des essais est celle de la tache ESSA",
-        abs(cf["duree_des_essais_au_planning_j"] - pl["durees"]["ESSA"]["duree_j"]) < 0.01)
-verifie("la mise en service n'est PAS comptee deux fois",
-        abs(cf["duree_demandee_par_la_sequence_j"]
-            - (op["duree_totale_j"]
-               - next(x["duree_j"] for x in op["etapes"]
-                      if "ise en service" in x["etape"]))) < 0.01,
-        f"{op['duree_totale_j']} j de sequence moins la mise en service = "
-        f"{cf['duree_demandee_par_la_sequence_j']} j")
-verifie("l'ecart est la difference des deux",
-        abs(cf["ecart_j"] - (cf["duree_demandee_par_la_sequence_j"]
-                             - cf["duree_prevue_par_le_planning_j"])) < 0.01)
-# Le decalage est MESURE : le test ne verifie pas qu'il vaut l'ecart — il verifie qu'il
-# vient du reseau et qu'il n'est jamais SUPERIEUR a l'ecart, ce qu'aucune marge ne
-# permettrait. Si une marge apparaissait un jour sur cette tache, le test resterait
-# vrai et le chiffre changerait : c'est le but.
-verifie("le decalage mesure ne depasse pas l'allongement applique",
-        cf["decalage_mesure_de_la_fin_j"] <= max(0.0, cf["ecart_j"]) + 0.01,
-        f"{cf['decalage_mesure_de_la_fin_j']} j pour {cf['ecart_j']} j d'allongement")
+# REGLE, et c'est la correction d'un bloquant : chaque etape declare UNE tache qui la
+# porte, et le besoin d'une tache est la somme des etapes qui la declarent. Le test ne
+# verifie plus « 41 moins 15 » — il verifie qu'aucune etape n'est oubliee ni comptee
+# deux fois, ce qui reste vrai si les durees changent.
+_portees = [e for x in cf["lignes"] for e in x["etapes_portees"]]
+verifie("aucune etape n'est portee par deux taches du planning",
+        len(_portees) == len(set(_portees)),
+        f"{len(_portees)} etapes reparties sur {len(cf['lignes'])} taches")
+verifie("et toutes les etapes de la sequence sont portees par une tache",
+        sorted(_portees) == sorted(x["etape"] for x in op["etapes"]),
+        "aucune etape orpheline, aucune en trop")
+for x in cf["lignes"]:
+    verifie(f"{x['tache']} : la duree prevue est celle que D2 publie",
+            abs(x["duree_prevue_j"] - pl["durees"][x["tache"]]["duree_j"]) < 0.01,
+            f"{x['duree_prevue_j']} j")
+    verifie(f"{x['tache']} : le besoin est la somme des etapes qu'elle porte",
+            abs(x["besoin_j"] - sum(e["duree_j"] for e in op["etapes"]
+                                    if e["porte_par"] == x["tache"])) < 0.01,
+            f"{x['besoin_j']} j pour {len(x['etapes_portees'])} etape(s)")
+    verifie(f"{x['tache']} : l'ecart est la difference des deux",
+            abs(x["ecart_j"] - (x["besoin_j"] - x["duree_prevue_j"])) < 0.02)
+    verifie(f"{x['tache']} : les bornes du besoin encadrent sa valeur",
+            x["besoin_bornes_j"][0] <= x["besoin_j"] <= x["besoin_bornes_j"][1],
+            f"{x['besoin_bornes_j']}")
+# canari qui CHERCHE : retirer la seule etape « mise en service » — ce que faisait la
+# premiere version — laisserait les essais de fonctionnement comptes comme absents d'une
+# tache qui les nomme, et donnerait un ecart different.
+_naif = op["duree_totale_j"] - next(x["duree_j"] for x in op["etapes"]
+                                    if "ise en service" in x["etape"]) \
+    - pl["durees"]["RECE"]["duree_j"]
+verifie("canari : l'ancienne lecture attribuait tout l'ecart a la mauvaise tache",
+        abs(_naif - next(x["ecart_j"] for x in cf["lignes"] if x["tache"] == "RECE")) > 1,
+        f"ancienne lecture {_naif:.0f} j sur RECE seule, contre "
+        + " et ".join(f"{x['ecart_j']:.0f} j sur {x['tache']}" for x in cf["lignes"]))
+verifie("l'ecart total est la somme des ecarts par tache",
+        abs(cf["ecart_total_j"] - sum(x["ecart_j"] for x in cf["lignes"])) < 0.02,
+        f"{cf['ecart_total_j']} j")
+# Le decalage est MESURE : le test verifie qu'il vient du reseau et qu'il ne depasse
+# jamais la somme des allongements, ce qu'aucune marge ne permettrait.
+verifie("le decalage mesure ne depasse pas la somme des allongements",
+        cf["decalage_mesure_de_la_fin_j"]
+        <= sum(max(0.0, x["ecart_j"]) for x in cf["lignes"]) + 0.01,
+        f"{cf['decalage_mesure_de_la_fin_j']} j")
+verifie("ses bornes sont mesurees elles aussi, et elles l'encadrent",
+        cf["decalage_bornes_j"][0] <= cf["decalage_mesure_de_la_fin_j"]
+        <= cf["decalage_bornes_j"][1],
+        f"{cf['decalage_bornes_j']}")
 verifie("la duree de reference est celle que D2 publie",
         abs(cf["duree_de_reference_j"] - pl["calendrier"]["duree_ouvree_j"]) < 0.5,
         f"{cf['duree_de_reference_j']} j")
-verifie("le cout de l'ecart est le decalage MESURE fois le cout d'un jour",
-        abs(cf["cout_de_l_ecart_MAD"] - cf["decalage_mesure_de_la_fin_j"]
-            * c["cout_avant_le_plafond_MAD_par_jour_ouvre"]) < 1,
-        f"{cf['cout_de_l_ecart_MAD']:.0f} MAD")
+for regime in ("hors_penalites", "sous_penalites"):
+    verifie(f"le cout {regime} est le decalage MESURE fois le cout d'un jour",
+            abs(cf[f"cout_{regime}_MAD"] - cf["decalage_mesure_de_la_fin_j"]
+                * c[f"cout_{regime}_MAD_par_jour_ouvre"]) < 1,
+            f"{cf[f'cout_{regime}_MAD']:.0f} MAD")
 verifie("le module declare que ce sont DEUX CHIFFRES DE CE COURS, pas une erreur reelle",
         dit(cf["_ce_que_cette_comparaison_est"], "deux chiffres de ce cours", "mecanisme"))
+verifie("et il raconte le double compte qu'il a corrige",
+        dit(cf["_le_double_compte_evite"], "essais et mise en service", "attribution"))
 
 # ------------------------------------------------- figures
 print("\n--- figures ---")
 f = r["figures"]
 verifie("la figure du cout porte exactement les points de la courbe",
         [x["v"] for x in f["cout_cumule"]] == [x["v"] for x in co["points"]])
-verifie("la figure des reserves porte toutes les familles, et dit lesquelles bloquent",
-        len(f["reserves"]) == len(s["lignes"])
-        and sum("BLOQUANTE" in x["libelle"] for x in f["reserves"])
-        == sum(1 for x in s["lignes"] if x["empeche_l_usage"]))
+verifie("la figure des reserves porte toutes les familles",
+        len(f["reserves"]) == len(s["lignes"]))
+# La qualification doit etre dans la FORME de la figure, pas dans son libelle : un mot
+# ajoute se lit apres la longueur de la barre, et la figure enseignait alors l'inverse
+# de sa legende.
+verifie("et les bloquantes y sont marquees par une ALERTE, pas par un mot",
+        [bool(x.get("alerte")) for x in f["reserves"]]
+        == [x["empeche_l_usage"] for x in s["lignes"]]
+        and not any("BLOQUANTE" in x["libelle"] for x in f["reserves"]),
+        f"{sum(1 for x in f['reserves'] if x.get('alerte'))} famille(s) en alerte")
 verifie("et les nombres de la figure sont ceux du tableau",
         [x["valeur"] for x in f["reserves"]] == [x["nombre"] for x in s["lignes"]])
 verifie("la cascade du DOE se termine sur un total, et il recolle a ses etapes",

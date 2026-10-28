@@ -12,7 +12,7 @@ le resultat — c'est la forme d'etalonnage la plus sure.
 Ce que l'etalonnage ne valide pas : les taux eux-memes, qui sont des hypotheses V3
 declarees, ni les clauses, qui se lisent dans le CPS. Il valide la facon de les composer.
 """
-import json, pathlib, sys
+import json, pathlib, sys, copy
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(RACINE / "calc"))
@@ -74,9 +74,9 @@ cas("une penalite deux fois plus forte : bascule deux fois plus tot",
 print("\n=== 4. Les deux regimes du cout d'un jour ===")
 d, pr = jeu(100e6, 10, 1.0, 20000.0)
 c = rc.cout_d_un_jour(d, pr)
-cas("avant le plafond : frais + penalite", c["cout_avant_le_plafond_MAD_par_jour_ouvre"],
+cas("avant le plafond : frais + penalite", c["cout_sous_penalites_MAD_par_jour_ouvre"],
     20000.0 + 100000.0, 1e-6, "MAD")
-cas("apres le plafond : les frais seuls", c["cout_apres_le_plafond_MAD_par_jour_ouvre"],
+cas("apres le plafond : les frais seuls", c["cout_hors_penalites_MAD_par_jour_ouvre"],
     20000.0, 1e-6, "MAD")
 cas("rapport des deux regimes", c["rapport_des_deux_regimes"], 6.0, 0.05)
 # La courbe cumulee doit recoller aux deux pentes, de part et d'autre de la bascule.
@@ -116,8 +116,8 @@ print("\n=== 6. Cas degeneres ===")
 # ou de diviser par zero.
 c0 = rc.cout_d_un_jour(*jeu(100e6, 10, 0.0, 20000.0))
 ok = (c0["sans_penalite"] and c0["jour_de_bascule_calendaire"] is None
-      and c0["cout_avant_le_plafond_MAD_par_jour_ouvre"]
-      == c0["cout_apres_le_plafond_MAD_par_jour_ouvre"] == 20000.0)
+      and c0["cout_sous_penalites_MAD_par_jour_ouvre"]
+      == c0["cout_hors_penalites_MAD_par_jour_ouvre"] == 20000.0)
 if not ok:
     echecs.append("penalite nulle mal traitee")
 print(f"  {'ok  ' if ok else 'ECHEC'} sans penalite : pas de bascule, et le cout d'un "
@@ -126,7 +126,99 @@ print(f"  {'ok  ' if ok else 'ECHEC'} sans penalite : pas de bascule, et le cout
 # un chantier sans frais de duree ne coute que sa penalite, pas rien.
 c1 = rc.cout_d_un_jour(*jeu(100e6, 10, 1.0, 0.0))
 cas("sans frais de duree, un jour coute la penalite seule",
-    c1["cout_avant_le_plafond_MAD_par_jour_ouvre"], 100000.0, 1e-6, "MAD")
+    c1["cout_sous_penalites_MAD_par_jour_ouvre"], 100000.0, 1e-6, "MAD")
+
+print("\n=== 6b. La duree de levee d'un ensemble de reserves ===")
+# Forme fermee : max(heures-homme / capacite, plus long delai de tiers). Les deux termes
+# se RECOUVRENT, ils ne s'additionnent pas — une famille qui attend une piece n'occupe
+# personne pendant ce temps.
+F = [{"nombre": 10, "_delai": 0.0}, {"nombre": 2, "_delai": 7.0}]
+r1 = rc._duree_de_levee(F, 6.0, 48.0)          # 72 h-h / 48 = 1,5 j ; delai 7 j
+cas("72 heures-homme a 48 par jour font 1,5 jour d'atelier", r1["jours_d_atelier"], 1.5, 1e-9, "j")
+cas("mais la duree est celle du delai le plus long", r1["duree_j"], 7.0, 1e-9, "j")
+ok = r1["commande_par"] == "le délai d'un tiers"
+if not ok:
+    echecs.append("commande_par")
+print(f"  {'ok  ' if ok else 'ECHEC'} et le module dit ce qui commande — {r1['commande_par']}")
+r2 = rc._duree_de_levee([{"nombre": 100, "_delai": 0.0}], 6.0, 48.0)
+cas("sans delai de tiers, la duree est celle de l'atelier", r2["duree_j"], 12.5, 1e-9, "j")
+# INVARIANT : doubler l'effectif ne change RIEN tant que le delai commande.
+a_ = rc._duree_de_levee(F, 6.0, 48.0)["duree_j"]
+b_ = rc._duree_de_levee(F, 6.0, 96.0)["duree_j"]
+cas("INVARIANT : doubler la capacite ne change rien quand un tiers commande", b_, a_, 1e-9, "j")
+# … mais elle change tout quand l'atelier commande.
+c_ = rc._duree_de_levee([{"nombre": 100, "_delai": 0.0}], 6.0, 96.0)["duree_j"]
+cas("… et la divise par deux quand l'atelier commande", c_, 6.25, 1e-9, "j")
+
+print("\n=== 6c. Les deux regimes du cout d'un jour, et leur rapport ===")
+d_, pr_ = jeu(100e6, 10, 1.0, 20000.0)
+c_ = rc.cout_d_un_jour(d_, pr_)
+cas("hors penalites : les frais de duree seuls",
+    c_["cout_hors_penalites_MAD_par_jour_ouvre"], 20000.0, 1e-9, "MAD")
+cas("sous penalites : frais + penalite",
+    c_["cout_sous_penalites_MAD_par_jour_ouvre"], 120000.0, 1e-9, "MAD")
+# INVARIANT : le cout APRES le plafond est le meme que celui d'AVANT le terme. Ce n'est
+# pas une coincidence, c'est la definition des deux regimes — et c'est tout l'interet du
+# resultat : le cout d'un jour n'est pas monotone dans le temps.
+p3 = c_["les_trois_periodes"]
+cas("INVARIANT : avant le terme et apres le plafond coutent la meme chose",
+    p3[0]["cout_MAD_par_jour_ouvre"], p3[2]["cout_MAD_par_jour_ouvre"], 1e-9, "MAD")
+ok = p3[1]["cout_MAD_par_jour_ouvre"] > p3[0]["cout_MAD_par_jour_ouvre"]
+if not ok:
+    echecs.append("fenetre de cherte")
+print(f"  {'ok  ' if ok else 'ECHEC'} et la periode du milieu coute strictement plus — "
+      f"{p3[1]['cout_MAD_par_jour_ouvre']:.0f} contre {p3[0]['cout_MAD_par_jour_ouvre']:.0f}")
+
+print("\n=== 6d. Le DOE : deux invariants ===")
+d_ = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"))
+pr_ = json.loads((RACINE / "calc" / "sorties" / "prix.json").read_text(encoding="utf-8"))
+po_ = rc.portage_de_la_retenue(d_, pr_)
+dd_ = copy.deepcopy(d_)
+# INVARIANT 1 : deux scenarios egaux donnent un surcout en HEURES nul — mais le portage
+# du solde, lui, ne s'annule pas : il court des que le dossier est en retard.
+dd_["reception"]["doe"]["heures_reconstitue"]["valeur"] = \
+    dd_["reception"]["doe"]["heures_au_fil_de_l_eau"]["valeur"]
+o1 = rc.doe(dd_, pr_, po_)
+cas("deux scenarios egaux : surcout en heures nul", o1["surcout_en_heures_MAD"], 0.0, 1e-9, "MAD")
+ok = o1["cout_de_portage_MAD"] > 0
+if not ok:
+    echecs.append("portage nul")
+print(f"  {'ok  ' if ok else 'ECHEC'} mais le portage du solde demeure — "
+      f"{o1['cout_de_portage_MAD']:.0f} MAD")
+# INVARIANT 2 : un retard nul annule le portage et lui seul.
+dd2 = copy.deepcopy(d_)
+dd2["reception"]["doe"]["retard_du_solde_j"]["valeur"] = 0
+o2 = rc.doe(dd2, pr_, po_)
+cas("un retard nul annule le portage", o2["cout_de_portage_MAD"], 0.0, 1e-9, "MAD")
+cas("et laisse le surcout en heures intact", o2["surcout_en_heures_MAD"],
+    rc.doe(d_, pr_, po_)["surcout_en_heures_MAD"], 1e-9, "MAD")
+# Le solde bloque est bien une part du MARCHE, pas la retenue de garantie.
+o3 = rc.doe(d_, pr_, po_)
+cas("le solde bloque est la part declaree du marche", o3["solde_bloque_MAD"],
+    pr_["bordereau"]["prix_de_vente_MAD"]
+    * d_["reception"]["doe"]["part_du_marche_au_decompte_definitif_pct"]["valeur"] / 100,
+    0.01, "MAD")
+ok = abs(o3["solde_bloque_MAD"] - po_["retenue_immobilisee_MAD"]) > 1
+if not ok:
+    echecs.append("solde confondu avec la retenue")
+print(f"  {'ok  ' if ok else 'ECHEC'} et il differe de la retenue de garantie — "
+      f"{o3['solde_bloque_MAD']:.0f} contre {po_['retenue_immobilisee_MAD']:.0f} MAD")
+
+print("\n=== 6e. Les operations prealables ===")
+op_ = rc.operations_prealables(d_)
+cas("la duree totale est la somme des etapes", op_["duree_totale_j"],
+    sum(x["duree_j"] for x in op_["etapes"]), 1e-9, "j")
+ok = (op_["duree_bornes_j"][0] <= op_["duree_totale_j"] <= op_["duree_bornes_j"][1])
+if not ok:
+    echecs.append("bornes OPR")
+print(f"  {'ok  ' if ok else 'ECHEC'} et ses bornes l'encadrent — {op_['duree_bornes_j']}")
+# Les etapes tenues par l'entreprise n'ont pas de fourchette : leurs bornes valent leur
+# valeur. Celles des tiers en ont une, et c'est d'elles que vient toute l'etendue.
+etendue_tiers = sum(x["duree_bornes_j"][1] - x["duree_bornes_j"][0]
+                    for x in op_["etapes"] if not x["tenue_par_l_entreprise"])
+etendue_tot = op_["duree_bornes_j"][1] - op_["duree_bornes_j"][0]
+cas("toute l'etendue vient des etapes tenues par des tiers", etendue_tiers, etendue_tot,
+    1e-9, "j")
 
 print("\n=== 7. Le jeu REEL du projet, recalcule a la main ===")
 d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"))

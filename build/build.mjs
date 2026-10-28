@@ -65,6 +65,15 @@ function substituerDans(texte, f) {
       else if (fmt === "n2") v = Number(v).toFixed(2);
       else if (fmt === "n0") v = Math.round(Number(v));
       else if (fmt === "n3s") v = Number(v).toPrecision(3);
+      // « ::k » : trois chiffres significatifs en notation decimale (§ 3.6). `toPrecision`
+      // bascule en exponentielle au-dela de six chiffres et rendait « 1.28e+5 » au
+      // milieu d'une phrase. Un montant publie au dirham pres alors que ses entrees sont
+      // des hypotheses a facteur deux est un faux niveau de precision.
+      else if (fmt === "k") {
+        const n = Number(v);
+        const p = n ? Math.pow(10, Math.floor(Math.log10(Math.abs(n))) - 2) : 1;
+        v = p > 1 ? Math.round(n / p) * p : Number(n.toPrecision(3));
+      }
       // Typographie francaise : virgule decimale, et milliers separes par une espace
       // fine insecable des 4 chiffres. Sans elle, un cout s'affiche « 2955556 MAD »
       // a cote d'un « 1 250 » de tableau : le lecteur ne peut plus comparer.

@@ -266,7 +266,7 @@
       if (!pts[i].v) continue;
       g += cercle(r.x(pts[i].x), r.y(pts[i].v), 3, { remplissage: o.couleur || "#1b4f72" });
       g += texte(r.x(pts[i].x), r.y(pts[i].v) + (pts[i].v >= 0 ? -8 : 15),
-        `${pts[i].v.toFixed(1)} ${o.unite || ""}`.trim(),
+        `${pts[i].v.toFixed(1).replace(".", ",")} ${o.unite || ""}`.trim(),
         { taille: 10.5, mono: 1, ancre: "middle", gras: 1, couleur: o.couleur || "#1b4f72" });
     }
     g += texte(r.x(xs[0]) - 6, y0, "0", { taille: 10, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
@@ -274,6 +274,17 @@
     // OU elle se casse — et c'est tout ce qu'elle avait a dire. Les diagrammes M et V
     // portent leur abscisse dans l'elevation situee au-dessus : ils n'en ont pas besoin,
     // d'ou l'option plutot que le defaut.
+    // `axeY` : sans graduation, le lecteur ne peut lire aucune valeur intermediaire —
+    // il voit la forme de la courbe et rien d'autre.
+    if (o.axeY) {
+      const pasY = Math.pow(10, Math.floor(Math.log10(vmax))) / 2;
+      for (let v = pasY; v <= vmax; v += pasY) {
+        g += ligne(r.x(Math.min(...xs)), r.y(v), r.x(Math.max(...xs)), r.y(v),
+          { couleur: "#eceee9", ep: 1 });
+        g += texte(r.x(Math.min(...xs)) - 6, r.y(v), String(v).replace(".", ","),
+          { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+      }
+    }
     if (o.axeX) {
       const x0 = Math.min(...xs), x1 = Math.max(...xs);
       const brut = (x1 - x0) / 6;
@@ -887,7 +898,14 @@
         else ligneTxt += " " + m;
       }
       lignes.push(ligneTxt.trim());
-      lignes.slice(0, 2).forEach((t, k) => {
+      // Trois lignes, et non deux : `slice(0, 2)` supprimait la troisieme EN SILENCE, et
+      // la troncature changeait le sens — « Heures de reconstitution en plus » devenait
+      // « Heures de reconstitution », au-dessus d'une barre qui ne valait pas cela. Une
+      // troncature muette est un defaut de rendu, pas une mise en page.
+      if (lignes.length > 3)
+        throw new Error(`cascade : libelle « ${e.libelle} » trop long pour trois lignes `
+          + `de 14 caracteres — le raccourcir plutot que de le tronquer`);
+      lignes.forEach((t, k) => {
         g += texte(x + l / 2, r.y(0) + 14 + k * 11, t,
           { taille: 9, ancre: "middle", couleur: total ? "#2b4256" : "#6b7682", gras: total ? 1 : 0 });
       });
@@ -932,7 +950,9 @@
     items.forEach((it, i) => {
       const y = 30 + i * lig;
       const v = Number(it.valeur);
-      const hors = o.bande && (v < o.bande[0] || v > o.bande[1]);
+      // `alerte` sur un item le colore comme une valeur hors bande : une figure dont le
+      // propos est qu'une categorie compte plus que sa longueur doit le MONTRER.
+      const hors = it.alerte || (o.bande && (v < o.bande[0] || v > o.bande[1]));
       const xv = X(v);
       const gauche = xv < xZero;
       g += texte(lab - 10, y + 9, String(it.libelle), { taille: 10.5, ancre: "end" });
@@ -951,6 +971,9 @@
       g += texte(xZero, H - 8, String(base).replace(".", ","),
         { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
     g += texte(L - 6, H - 8, o.unite || "", { taille: 9, ancre: "end", couleur: "#6b7682" });
+    if (o.legende_alerte && items.some((x) => x.alerte))
+      g += texte(lab, H - 8, o.legende_alerte,
+        { taille: 9, couleur: "#8c3b2e", gras: 1 });
     return { svg: g, largeur: L, hauteur: H };
   }
 
@@ -1008,7 +1031,7 @@
     coupeSection: ["cotes", "aciers", "enrobage"],
     elevationPoutre: ["appuis", "cotes", "aciers"],
     diagramme: ["couleur", "remplissage", "zero", "nom", "axeX", "uniteX", "marqueur",
-                "depuisZero"],
+                "depuisZero", "axeY"],
     gantt: ["labels", "jalons"],
     courbeS: ["paliers"],
     histogramme: ["serie2", "moyenne", "libelle_moyenne", "nom1", "nom2"],
@@ -1019,7 +1042,7 @@
     reseau: ["rangs"],
     ligneEquilibre: ["zones"],
     cascade: [],
-    barres: ["bande", "libelle_bande", "origine"],
+    barres: ["bande", "libelle_bande", "origine", "legende_alerte"],
     tresorerie: ["besoin_max", "j_max"],
   };
 

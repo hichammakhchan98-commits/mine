@@ -12,63 +12,88 @@ donnees: reception, prix, planification, gare
 
 C'est le dernier module du palier 1, et il ferme le déroulé imposé : programme, conception,
 géotechnique, exécution, suivi, qualité — et maintenant la fin. Il a une particularité : **il ne
-calcule presque rien lui-même.** Les frais de durée viennent de D1, la date vient de D2, la retenue
-de garantie vient de la trésorerie de D1. Ce module les lit et en tire ce qu'aucun d'eux ne pouvait
-voir seul.
+calcule presque rien lui-même.** Les frais de durée et les pénalités viennent de D1, la date et le
+réseau de D2, la retenue de garantie de la trésorerie de D1. Ce module les lit et en tire ce
+qu'aucun d'eux ne pouvait voir seul.
 
-Quatre résultats, tous **non normatifs**, c'est-à-dire qu'aucun ne dépend d'un texte :
+Cinq résultats, tous **non normatifs**, c'est-à-dire qu'aucun ne dépend d'un texte :
 
-1. **Un jour de non-réception a un prix, et ce prix change de régime.** Tant que les pénalités
-   courent, il vaut {{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD ;
-   une fois le plafond atteint, {{reception.cout_d_un_jour.cout_apres_le_plafond_MAD_par_jour_ouvre::n0}} —
-   **{{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}} fois moins**.
-2. **Le jour de bascule ne dépend pas du montant du marché.** C'est le plafond en pour-cent divisé
-   par la pénalité en pour-mille, et rien d'autre.
+1. **Un jour de non-réception n'a pas un prix, il en a deux.** Les pénalités ne courent qu'au-delà
+   du terme contractuel, et elles cessent de croître au plafond : un jour coûte
+   {{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} MAD avant le terme,
+   {{reception.cout_d_un_jour.cout_sous_penalites_MAD_par_jour_ouvre::k}} entre le terme et le
+   plafond, et de nouveau {{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}}
+   après. Ce n'est pas une courbe croissante, c'est une **fenêtre de cherté**.
+2. **Le jour de bascule ne dépend pas du montant du marché** : le plafond en pour-cent divisé par
+   la pénalité en pour-mille, et rien d'autre.
 3. **L'arbitrage entre retenue de garantie et caution bancaire ne dépend pas de la durée de la
-   garantie** — qui est pourtant la première chose qu'on cherche, et qui est ⏸ dans ce cours. La
-   durée se simplifie.
-4. **Le DOE se constitue pendant le chantier.** Reconstitué après coup, il coûte
-   {{reception.doe.rapport_des_heures::n1}} fois plus d'heures de cadre, et il immobilise le
-   décompte définitif pendant qu'on le reconstitue.
+   garantie** — qui est pourtant la première chose qu'on cherche, et qui est ⏸. La durée se
+   simplifie.
+4. **Une liste de réserves ne se hiérarchise pas par son volume mais par son délai le plus long.**
+   Les {{reception.reserves.nb_bloquantes}} réserves bloquantes de ce chantier représentent moins
+   d'une journée d'atelier et {{reception.reserves.levee_des_bloquantes.duree_j::n0}} jours de
+   calendrier, parce que l'une d'elles attend une pièce.
+5. **Le DOE se constitue pendant le chantier.** Reconstitué après coup, il coûte
+   {{reception.doe.rapport_des_heures::n1}} fois plus d'heures de cadre, et il bloque le décompte
+   définitif pendant qu'on le reconstitue.
 
 Ce qu'il ne fait pas : citer la durée d'une garantie, le délai de levée des réserves, les conditions
-d'une réception tacite, le contenu obligatoire du DOE, le délai de paiement du décompte définitif.
-Toutes ces valeurs sont réglementaires ou propres au marché, et elles restent **⏸**. Le module donne
-le **mécanisme** et sa **conséquence financière** ; jamais la durée.
+d'une réception tacite, le contenu obligatoire du DOE, le délai de paiement du décompte définitif —
+**ni les effets juridiques de la réception**. Toutes ces règles sont réglementaires ou propres au
+marché, et elles restent **⏸**. Le module donne le **mécanisme** et sa **conséquence financière**.
 
-:::encart {"genre":"attente","titre":"Ce que ce module n'est pas"}
-Ce n'est pas un cours de droit, et il ne peut pas en tenir lieu. Les mots « réception », « réserve »,
-« garantie », « décompte définitif » ont un sens juridique précis qui dépend du droit applicable et
-du marché — et ce sens, ici, n'est pas cité. Ce qui est décrit, c'est la **fonction** que chaque
-mécanisme remplit et ce qu'il coûte par jour. Un chef de projet suivi qui connaît le coût d'un jour
-de non-réception lit son CPS autrement : il sait quelles clauses chercher en premier.
+:::encart {"genre":"attente","titre":"Ce module n'est pas un cours de droit, et la nuance n'est pas une précaution de style"}
+Les mots « réception », « réserve », « garantie », « décompte définitif » ont un sens juridique
+précis qui dépend du droit applicable et du marché — et ce sens, ici, n'est pas cité. Quand ce
+module écrit que la réception « arrête les frais de durée » ou « transfère la garde de l'ouvrage »,
+il décrit **ce que le contrat organise d'ordinaire**, et chacune de ces affirmations est une
+question à poser au CPS : **⏸**.
+
+Ce qui est décrit sans réserve, en revanche, c'est la **fonction** que chaque mécanisme remplit et
+ce qu'il coûte par jour. Un chef de projet suivi qui connaît le coût d'un jour de non-réception lit
+son CPS autrement : il sait quelles clauses chercher en premier.
 :::
 
-## S2 · L'idée centrale : la réception transfère un risque, et il a un prix par jour
+## S2 · L'idée centrale : la réception transfère un risque, et il a deux prix
 
-Tant que la réception n'est pas prononcée, **l'entreprise porte tout** : les frais de durée de son
-installation de chantier, la garde de l'ouvrage, les pénalités de retard, et le risque que quelque
-chose arrive à un ouvrage terminé que personne n'habite encore. Le jour où la réception est
-prononcée, tout cela s'arrête d'un coup. C'est la seule date du chantier qui change la nature des
-obligations, et pas seulement leur montant.
+Tant que la réception n'est pas prononcée, l'entreprise porte les frais de durée de son
+installation, la garde de l'ouvrage, le risque qu'il arrive quelque chose à un ouvrage terminé que
+personne n'occupe encore — et, **si le terme contractuel est dépassé**, les pénalités de retard. Le
+jour où la réception est prononcée, ce que le contrat a prévu d'arrêter s'arrête (⏸). C'est la seule
+date du chantier qui change la nature des obligations, et pas seulement leur montant.
 
-D'où la question que ce module pose, et qui n'a rien d'une formalité : **combien coûte un jour de
-plus avant cette date ?**
+D'où la question que ce module pose : **combien coûte un jour de plus avant cette date ?** Et la
+réponse commence par une autre question, que presque personne ne pose : **sommes-nous en retard ?**
 
-| | |
-|---|---:|
-| Montant du marché | {{reception.cout_d_un_jour.marche_MAD::n0}} MAD |
-| Frais de durée, par jour ouvré | {{reception.cout_d_un_jour.frais_de_duree_MAD_par_jour_ouvre::n0}} MAD |
-| Pénalités, par jour ouvré | {{reception.cout_d_un_jour.penalites_MAD_par_jour_ouvre::n0}} MAD |
-| **Un jour de non-réception** | **{{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD** |
-| Plafond des pénalités | {{reception.cout_d_un_jour.plafond_des_penalites_MAD::n0}} MAD |
-| **Après le plafond, le même jour coûte** | **{{reception.cout_d_un_jour.cout_apres_le_plafond_MAD_par_jour_ouvre::n0}} MAD** |
+| Période | Régime | Coût d'un jour ouvré |
+|---|---|---:|
+| {{reception.cout_d_un_jour.les_trois_periodes.0.periode}} | {{reception.cout_d_un_jour.les_trois_periodes.0.regime}} | **{{reception.cout_d_un_jour.les_trois_periodes.0.cout_MAD_par_jour_ouvre::k}} MAD** |
+| {{reception.cout_d_un_jour.les_trois_periodes.1.periode}} | {{reception.cout_d_un_jour.les_trois_periodes.1.regime}} | **{{reception.cout_d_un_jour.les_trois_periodes.1.cout_MAD_par_jour_ouvre::k}} MAD** · bornes {{reception.cout_d_un_jour.cout_sous_penalites_bornes_MAD.0::k}} à {{reception.cout_d_un_jour.cout_sous_penalites_bornes_MAD.1::k}} |
+| {{reception.cout_d_un_jour.les_trois_periodes.2.periode}} | {{reception.cout_d_un_jour.les_trois_periodes.2.regime}} | **{{reception.cout_d_un_jour.les_trois_periodes.2.cout_MAD_par_jour_ouvre::k}} MAD** |
 
 {{reception.cout_d_un_jour.lecture}}
 
+:::encart {"genre":"piege","titre":"La condition que la première version de ce module ne posait pas"}
+{{reception.cout_d_un_jour._la_condition_qui_manquait}}
+
+Elle n'a été trouvée ni par les tests du module, ni par les seize contrôles de la chaîne : **tous
+étaient verts, et l'arithmétique était juste.** C'est la CONDITION d'emploi d'une grandeur héritée
+qui n'était pas écrite — le module D1 publie un coût de **retard**, indexé par un nombre de jours
+de retard, et ce module en avait fait un coût de non-réception. Il n'existe aucun test qui attrape
+cela ; il faut relire le nom de la grandeur qu'on emprunte.
+:::
+
+| | |
+|---|---:|
+| Montant du marché | {{reception.cout_d_un_jour.marche_MAD::k}} MAD |
+| Frais de durée, par jour ouvré | {{reception.cout_d_un_jour.frais_de_duree_MAD_par_jour_ouvre::k}} MAD |
+| Pénalités, par jour ouvré | {{reception.cout_d_un_jour.penalites_MAD_par_jour_ouvre::k}} MAD |
+| Plafond des pénalités | {{reception.cout_d_un_jour.plafond_des_penalites_MAD::k}} MAD |
+| **Rapport des deux régimes** | **×{{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}}** · bornes {{reception.cout_d_un_jour.rapport_bornes.0::n1}} à {{reception.cout_d_un_jour.rapport_bornes.1::n1}} |
+
 **Aucun de ces deux nombres n'est calculé ici.** Les frais de durée et la pénalité journalière sont
-lus dans la sortie du module D1, qui les publie pour trois retards donnés. Ce que D1 ne cherche pas,
-et que ce module trouve, c'est le **jour où le plafond est atteint** — et ce jour-là change tout.
+lus dans la sortie du module D1. Ce que D1 ne cherche pas, et que ce module trouve, c'est le **jour
+où le plafond est atteint** — et ce jour-là change tout.
 
 :::encart {"genre":"piege","titre":"Le piège de calendrier, hérité de D1 et conservé tel quel"}
 Les pénalités se comptent en jours **calendaires** et les frais de durée en jours **ouvrés**. Un
@@ -80,7 +105,8 @@ sert sans le refaire.
 C'est aussi pourquoi le jour de bascule se publie **dans les deux calendriers** :
 {{reception.cout_d_un_jour.jour_de_bascule_ouvre::n1}} jours ouvrés,
 {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}} jours calendaires. Annoncer l'un pour
-l'autre dans une réunion est une erreur de six semaines.
+l'autre dans une réunion est une erreur de
+**{{reception.cout_d_un_jour.ecart_des_deux_calendriers_j::n0}} jours**.
 :::
 
 ### Le jour de bascule ne contient pas le montant du marché
@@ -97,7 +123,7 @@ des bornes de {{reception.cout_d_un_jour.jour_de_bascule_bornes_calendaires.0::n
 retenues — **la date de bascule est plus incertaine que le coût lui-même**, et c'est elle qui décide
 de la stratégie.
 
-:::figure {"fn":"diagramme","args":"reception.figures.cout_cumule","titre":"Le coût cumulé d'un retard de réception — une droite qui se casse","num":1,"large":true,"options":{"unite":"MMAD","nom":"coût cumulé","depuisZero":true,"axeX":true,"uniteX":"jours ouvrés de retard","marqueur":{"$":"reception.figures.marqueur_bascule"}},"voir":["La courbe est une droite tant que les pénalités courent, puis une autre droite, bien plus plate. La cassure est au {{reception.cout_d_un_jour.jour_de_bascule_ouvre::n1}}ᵉ jour ouvré — {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}}ᵉ jour calendaire.","Avant la cassure, la pente est de {{reception.courbe_du_cout.pente_avant_MAD_par_jour::n0}} MAD par jour. Après, {{reception.courbe_du_cout.pente_apres_MAD_par_jour::n0}} MAD : les frais de durée seuls.","Ce n'est pas un adoucissement, c'est la fin d'un mécanisme. Il n'y a rien derrière, sauf la résiliation — qui n'est pas sur ce graphique et qui coûte aux deux parties."],"erreur":"Lire la partie plate comme une bonne nouvelle. Pour l'entreprise, elle signifie que la pression contractuelle a disparu et que le maître d'ouvrage n'a plus que des moyens brutaux ; pour le maître d'ouvrage, qu'il a laissé son seul levier s'épuiser sans agir."}
+:::figure {"fn":"diagramme","args":"reception.figures.cout_cumule","titre":"Le coût cumulé d'un retard, compté depuis le terme contractuel","num":1,"large":true,"options":{"unite":"MMAD","nom":"coût cumulé","depuisZero":true,"axeX":true,"axeY":true,"uniteX":"jours ouvrés APRÈS le terme contractuel","marqueur":{"$":"reception.figures.marqueur_bascule"}},"voir":["L'origine de l'axe n'est pas la fin des travaux : c'est le terme du marché. À gauche de l'origine, la courbe monterait de {{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} MAD par jour — le chantier coûte avant d'être en retard, mais huit fois moins.","La courbe est une droite tant que les pénalités courent, puis une autre droite, bien plus plate. La cassure est au {{reception.cout_d_un_jour.jour_de_bascule_ouvre::n1}}ᵉ jour ouvré — {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}}ᵉ jour calendaire.","Avant la cassure, la pente est de {{reception.courbe_du_cout.pente_avant_MAD_par_jour::k}} MAD par jour. Après, {{reception.courbe_du_cout.pente_apres_MAD_par_jour::k}} : les frais de durée seuls, c'est-à-dire la même pente qu'avant le terme."],"erreur":"Lire la partie plate comme une bonne nouvelle. Pour l'entreprise, elle signifie que la pression contractuelle a disparu et que le maître d'ouvrage n'a plus que des moyens brutaux ; pour le maître d'ouvrage, qu'il a laissé son seul levier s'épuiser sans agir."}
 :::
 
 {{reception.cout_d_un_jour._ce_que_le_changement_de_regime_veut_dire}}
@@ -106,26 +132,38 @@ de la stratégie.
 
 ## S3 · Principes
 
-### a. Les opérations préalables à la réception sont une tâche du planning
+### a. Les opérations préalables sont une tâche du planning, et la moitié ne vous appartient pas
 
 Entre « les travaux sont finis » et « la réception est prononcée », il se passe des choses, elles
-prennent du temps, et ce temps est au prix du paragraphe précédent.
+prennent du temps, et ce temps est au prix du paragraphe précédent. Les durées ci-dessous sont en
+**{{reception.operations_prealables.unite}}**, comme tout le planning de ce cours.
 
-| | Étape | Qui | Durée | Fin |
-|---:|---|---|---:|---:|
-| 1 | {{reception.operations_prealables.etapes.0.etape}} | {{reception.operations_prealables.etapes.0.qui}} | {{reception.operations_prealables.etapes.0.duree_j}} j | j+{{reception.operations_prealables.etapes.0.fin_j}} |
-| 2 | {{reception.operations_prealables.etapes.1.etape}} | {{reception.operations_prealables.etapes.1.qui}} | {{reception.operations_prealables.etapes.1.duree_j}} j | j+{{reception.operations_prealables.etapes.1.fin_j}} |
-| 3 | {{reception.operations_prealables.etapes.2.etape}} | {{reception.operations_prealables.etapes.2.qui}} | {{reception.operations_prealables.etapes.2.duree_j}} j | j+{{reception.operations_prealables.etapes.2.fin_j}} |
-| 4 | **{{reception.operations_prealables.etapes.3.etape}}** | {{reception.operations_prealables.etapes.3.qui}} | **{{reception.operations_prealables.etapes.3.duree_j}} j** | j+{{reception.operations_prealables.etapes.3.fin_j}} |
-| 5 | {{reception.operations_prealables.etapes.4.etape}} | {{reception.operations_prealables.etapes.4.qui}} | {{reception.operations_prealables.etapes.4.duree_j}} j | j+{{reception.operations_prealables.etapes.4.fin_j}} |
-| 6 | {{reception.operations_prealables.etapes.5.etape}} | {{reception.operations_prealables.etapes.5.qui}} | {{reception.operations_prealables.etapes.5.duree_j}} j | **j+{{reception.operations_prealables.etapes.5.fin_j}}** |
+| | Étape | Qui | Durée | Bornes | Portée par | Fin |
+|---:|---|---|---:|---:|:-:|---:|
+| 1 | {{reception.operations_prealables.etapes.0.etape}} | {{reception.operations_prealables.etapes.0.qui}} | {{reception.operations_prealables.etapes.0.duree_j::n0}} j | décision | {{reception.operations_prealables.etapes.0.porte_par}} | j+{{reception.operations_prealables.etapes.0.fin_j::n0}} |
+| 2 | {{reception.operations_prealables.etapes.1.etape}} | *{{reception.operations_prealables.etapes.1.qui}}* | {{reception.operations_prealables.etapes.1.duree_j::n0}} j | {{reception.operations_prealables.etapes.1.duree_bornes_j.0::n0}} à {{reception.operations_prealables.etapes.1.duree_bornes_j.1::n0}} | {{reception.operations_prealables.etapes.1.porte_par}} | j+{{reception.operations_prealables.etapes.1.fin_j::n0}} |
+| 3 | {{reception.operations_prealables.etapes.2.etape}} | {{reception.operations_prealables.etapes.2.qui}} | {{reception.operations_prealables.etapes.2.duree_j::n0}} j | décision | {{reception.operations_prealables.etapes.2.porte_par}} | j+{{reception.operations_prealables.etapes.2.fin_j::n0}} |
+| 4 | **{{reception.operations_prealables.etapes.3.etape}}** | *{{reception.operations_prealables.etapes.3.qui}}* | **{{reception.operations_prealables.etapes.3.duree_j::n0}} j** | {{reception.operations_prealables.etapes.3.duree_bornes_j.0::n0}} à {{reception.operations_prealables.etapes.3.duree_bornes_j.1::n0}} | {{reception.operations_prealables.etapes.3.porte_par}} | j+{{reception.operations_prealables.etapes.3.fin_j::n0}} |
+| 5 | {{reception.operations_prealables.etapes.4.etape}} | {{reception.operations_prealables.etapes.4.qui}} | {{reception.operations_prealables.etapes.4.duree_j::n0}} j | décision | {{reception.operations_prealables.etapes.4.porte_par}} | j+{{reception.operations_prealables.etapes.4.fin_j::n0}} |
+| 6 | {{reception.operations_prealables.etapes.5.etape}} | *{{reception.operations_prealables.etapes.5.qui}}* | {{reception.operations_prealables.etapes.5.duree_j::n0}} j | {{reception.operations_prealables.etapes.5.duree_bornes_j.0::n0}} à {{reception.operations_prealables.etapes.5.duree_bornes_j.1::n0}} | {{reception.operations_prealables.etapes.5.porte_par}} | **j+{{reception.operations_prealables.etapes.5.fin_j::n0}}** |
 
 {{reception.operations_prealables.note}}
+
+:::encart {"genre":"voir","titre":"Une durée qu'on ne tient pas n'est pas une décision"}
+{{reception.operations_prealables._a_qui_appartiennent_ces_jours}}
+
+C'est pourquoi la colonne « bornes » est vide sur trois lignes et pleine sur les trois autres. Les
+étapes en *italique* dans le tableau appartiennent à un tiers : on ne décide pas la durée de la
+visite de la maîtrise d'œuvre, ni celle des essais de l'exploitant, ni le temps que le maître
+d'ouvrage met à signer. **Toute l'étendue des bornes vient de ces trois lignes** — de
+{{reception.operations_prealables.duree_bornes_j.0::n0}} à
+{{reception.operations_prealables.duree_bornes_j.1::n0}} jours ouvrés pour la séquence entière.
+:::
 
 {{reception.operations_prealables._l_essai_qui_commande}}
 
 **Les six pièges, un par étape** — ce sont eux qui font la différence entre
-{{reception.operations_prealables.duree_totale_j}} jours et trois mois :
+{{reception.operations_prealables.duree_totale_j::n0}} jours et quatre mois :
 
 1. {{reception.operations_prealables.etapes.0.piege}} ;
 2. {{reception.operations_prealables.etapes.1.piege}} ;
@@ -134,28 +172,35 @@ prennent du temps, et ce temps est au prix du paragraphe précédent.
 5. {{reception.operations_prealables.etapes.4.piege}} ;
 6. {{reception.operations_prealables.etapes.5.piege}}.
 
-### b. Les réserves : deux familles, et une seule bloque
+### b. Les réserves : deux familles, une seule bloque — et un délai qui commande
 
 {{reception.reserves.la_regle}}
 
 Ce qui est **interdit**, et qui est la faute la plus répandue de la fin de chantier : compter les
 lignes. « Quatre-vingt-dix réserves, on ne peut pas réceptionner » n'est pas un raisonnement, c'est
-une impression — et elle coûte le prix d'une journée de non-réception par jour d'hésitation.
+une impression.
+
+Et une seconde règle, qui ne se voit qu'en calculant :
+
+{{reception.reserves.le_delai_de_tiers}}
 
 ### c. La retenue de garantie immobilise de l'argent, et cet argent a un prix
 
-La retenue de garantie est prélevée sur chaque situation et conservée jusqu'à la fin de la période
-de garantie. Elle n'est pas perdue : elle est **immobilisée**. Et de l'argent immobilisé coûte le
-taux auquel l'entreprise se finance.
+La retenue de garantie est prélevée sur chaque situation et conservée jusqu'à une date que le
+marché fixe (**⏸**). Elle n'est pas perdue : elle est **immobilisée**. Et de l'argent immobilisé
+coûte le taux auquel l'entreprise se finance.
 
 Une caution bancaire peut la remplacer. Elle coûte une commission. Comparer les deux semble demander
-la **durée de la garantie** — qui est ⏸. On va voir au § S4c que non.
+la **durée de l'immobilisation** — qui est ⏸. On va voir au § S4c que non.
 
 ### d. Le DOE n'est pas un dossier, c'est une condition de paiement
 
 Le dossier des ouvrages exécutés conditionne le décompte définitif : tant qu'il est incomplet, le
-solde ne se paie pas. Son contenu réglementaire est **⏸**. Son critère pratique, lui, ne dépend
-d'aucun texte :
+**solde des travaux** ne se paie pas. À ne pas confondre avec la retenue de garantie, qui est
+immobilisée par la clause de garantie, que le dossier soit remis ou non — deux montants cohabitent
+à la fin d'un chantier, et seul le premier dépend du DOE.
+
+Son contenu réglementaire est **⏸**. Son critère pratique, lui, ne dépend d'aucun texte :
 
 > {{gare.reception.doe._ce_qu_il_doit_contenir}}
 
@@ -167,21 +212,24 @@ Le § S2 a donné le prix d'un jour. Le reste de ce module consiste à compter l
 montrer qu'on les dépense presque toujours sur les mauvaises décisions. La première occasion se
 présente avant même la fin des travaux, dans le planning.
 
+| Tâche du planning | Prévu | Étapes qu'elle porte | Demandé | Bornes | Écart |
+|---|---:|---|---:|---:|---:|
+| {{reception.confrontation_au_planning.lignes.0.tache}} · {{reception.confrontation_au_planning.lignes.0.nom}} | {{reception.confrontation_au_planning.lignes.0.duree_prevue_j::n0}} j | essais de fonctionnement, mise en service | **{{reception.confrontation_au_planning.lignes.0.besoin_j::n0}} j** | {{reception.confrontation_au_planning.lignes.0.besoin_bornes_j.0::n0}} à {{reception.confrontation_au_planning.lignes.0.besoin_bornes_j.1::n0}} | {{reception.confrontation_au_planning.lignes.0.ecart_j::n0}} j |
+| {{reception.confrontation_au_planning.lignes.1.tache}} · {{reception.confrontation_au_planning.lignes.1.nom}} | {{reception.confrontation_au_planning.lignes.1.duree_prevue_j::n0}} j | avis, visite, remise du DOE, procès-verbal | **{{reception.confrontation_au_planning.lignes.1.besoin_j::n0}} j** | {{reception.confrontation_au_planning.lignes.1.besoin_bornes_j.0::n0}} à {{reception.confrontation_au_planning.lignes.1.besoin_bornes_j.1::n0}} | {{reception.confrontation_au_planning.lignes.1.ecart_j::n0}} j |
+| **Total** | | | | | **{{reception.confrontation_au_planning.ecart_total_j::n0}} j** |
+
 | | |
 |---|---:|
-| Durée prévue par le planning pour la réception | {{reception.confrontation_au_planning.duree_prevue_par_le_planning_j::n0}} j |
-| Durée prévue pour les essais et la mise en service | {{reception.confrontation_au_planning.duree_des_essais_au_planning_j::n0}} j |
-| Durée demandée par la séquence du § S3a | **{{reception.confrontation_au_planning.duree_demandee_par_la_sequence_j::n0}} j** |
-| Écart | {{reception.confrontation_au_planning.ecart_j::n0}} j |
 | **Décalage de la fin, mesuré en rejouant le réseau** | **{{reception.confrontation_au_planning.decalage_mesure_de_la_fin_j::n1}} j** |
-| Au prix du jour de non-réception | {{reception.confrontation_au_planning.cout_de_l_ecart_MAD::n0}} MAD |
+| Bornes, mesurées elles aussi | {{reception.confrontation_au_planning.decalage_bornes_j.0::n0}} à {{reception.confrontation_au_planning.decalage_bornes_j.1::n0}} j |
+| Au prix d'un jour, hors pénalités | {{reception.confrontation_au_planning.cout_hors_penalites_MAD::k}} MAD |
+| Au prix d'un jour, sous pénalités | {{reception.confrontation_au_planning.cout_sous_penalites_MAD::k}} MAD |
 
 {{reception.confrontation_au_planning.lecture}}
 
-L'étape « {{reception.confrontation_au_planning.etape_deja_portee_par_le_planning}} » n'est pas
-comptée deux fois : le planning la porte déjà sous le nom « essais et mise en service », et c'est
-elle qui explique l'essentiel de la durée. Ce qui déborde, ce sont les quatre étapes qui
-l'encadrent.
+:::encart {"genre":"piege","titre":"Le double compte que cette version a corrigé"}
+{{reception.confrontation_au_planning._le_double_compte_evite}}
+:::
 
 :::encart {"genre":"attente","titre":"Ce que cette comparaison est, et ce qu'elle n'est pas"}
 {{reception.confrontation_au_planning._ce_que_cette_comparaison_est}}
@@ -189,40 +237,49 @@ l'encadrent.
 
 {{reception.confrontation_au_planning._quoi_en_faire}}
 
-### b. Les réserves de la gare : combien bloquent, et combien coûte de se tromper
+### b. Les réserves de la gare : combien bloquent, et ce que coûte de se tromper
 
-La liste rendue à la visite compte {{reception.reserves.nb_total}} lignes. {{reception.reserves.nb_bloquantes}} d'entre elles empêchent l'usage ou mettent en cause la sécurité — soit {{reception.reserves.part_bloquante_pct::n1}} %.
+La liste rendue à la visite compte {{reception.reserves.nb_total}} lignes.
+{{reception.reserves.nb_bloquantes}} d'entre elles empêchent l'usage ou mettent en cause la
+sécurité — soit {{reception.reserves.part_bloquante_pct::n1}} %.
 
-| Famille | Exemple | Nombre | Empêche l'usage | Heures de levée |
-|---|---|---:|:-:|---:|
-| {{reception.reserves.lignes.0.famille}} | {{reception.reserves.lignes.0.exemple}} | {{reception.reserves.lignes.0.nombre}} | non | {{reception.reserves.lignes.0.heures::n0}} h |
-| {{reception.reserves.lignes.1.famille}} | {{reception.reserves.lignes.1.exemple}} | {{reception.reserves.lignes.1.nombre}} | non | {{reception.reserves.lignes.1.heures::n0}} h |
-| {{reception.reserves.lignes.2.famille}} | {{reception.reserves.lignes.2.exemple}} | {{reception.reserves.lignes.2.nombre}} | non | {{reception.reserves.lignes.2.heures::n0}} h |
-| **{{reception.reserves.lignes.3.famille}}** | {{reception.reserves.lignes.3.exemple}} | **{{reception.reserves.lignes.3.nombre}}** | **OUI** | {{reception.reserves.lignes.3.heures::n0}} h |
-| **{{reception.reserves.lignes.4.famille}}** | {{reception.reserves.lignes.4.exemple}} | **{{reception.reserves.lignes.4.nombre}}** | **OUI** | {{reception.reserves.lignes.4.heures::n0}} h |
-| **Total** | | **{{reception.reserves.nb_total}}** | **{{reception.reserves.nb_bloquantes}}** | **{{reception.reserves.heures_totales::n0}} h** |
+| Famille | Exemple | Nombre | Bloque | Atelier | Délai d'un tiers |
+|---|---|---:|:-:|---:|---:|
+| {{reception.reserves.lignes.0.famille}} | {{reception.reserves.lignes.0.exemple}} | {{reception.reserves.lignes.0.nombre}} | non | {{reception.reserves.lignes.0.jours_d_atelier::n1}} j | — |
+| {{reception.reserves.lignes.1.famille}} | {{reception.reserves.lignes.1.exemple}} | {{reception.reserves.lignes.1.nombre}} | non | {{reception.reserves.lignes.1.jours_d_atelier::n1}} j | {{reception.reserves.lignes.1.delai_de_tiers_j::n0}} j |
+| {{reception.reserves.lignes.2.famille}} | {{reception.reserves.lignes.2.exemple}} | {{reception.reserves.lignes.2.nombre}} | non | {{reception.reserves.lignes.2.jours_d_atelier::n1}} j | — |
+| **{{reception.reserves.lignes.3.famille}}** | {{reception.reserves.lignes.3.exemple}} | **{{reception.reserves.lignes.3.nombre}}** | **OUI** | {{reception.reserves.lignes.3.jours_d_atelier::n1}} j | {{reception.reserves.lignes.3.delai_de_tiers_j::n0}} j |
+| **{{reception.reserves.lignes.4.famille}}** | {{reception.reserves.lignes.4.exemple}} | **{{reception.reserves.lignes.4.nombre}}** | **OUI** | {{reception.reserves.lignes.4.jours_d_atelier::n1}} j | {{reception.reserves.lignes.4.delai_de_tiers_j::n0}} j |
+| **Total** | | **{{reception.reserves.nb_total}}** | **{{reception.reserves.nb_bloquantes}}** | **{{reception.reserves.levee_de_toutes.jours_d_atelier::n1}} j** | |
+
+Le temps d'atelier vient de ⟦V3|heures-homme de levée d'une réserve, intervention et reconstat compris|6 h·homme|h·homme|2 à 16|2026|l'unité compte : six heures-homme à six compagnons ne font pas six heures de délai, et la durée de levée se calcule sur la capacité de l'atelier⟧ par réserve et d'une
+capacité de {{reception.reserves.capacite_h_homme_par_jour::n0}} heures-homme par jour
+({{reception.reserves.effectif_de_levee}} compagnons). Le délai d'un tiers, lui, ne se raccourcit
+avec aucun effectif.
+
+| | Heures-homme | Atelier | Délai le plus long | **Durée** | Commandée par |
+|---|---:|---:|---:|---:|---|
+| Les {{reception.reserves.nb_bloquantes}} bloquantes seules | {{reception.reserves.levee_des_bloquantes.heures::n0}} | {{reception.reserves.levee_des_bloquantes.jours_d_atelier::n2}} j | {{reception.reserves.levee_des_bloquantes.delai_de_tiers_le_plus_long_j::n0}} j | **{{reception.reserves.levee_des_bloquantes.duree_j::n1}} j** | {{reception.reserves.levee_des_bloquantes.commande_par}} |
+| Toutes les réserves | {{reception.reserves.levee_de_toutes.heures::n0}} | {{reception.reserves.levee_de_toutes.jours_d_atelier::n2}} j | {{reception.reserves.levee_de_toutes.delai_de_tiers_le_plus_long_j::n0}} j | **{{reception.reserves.levee_de_toutes.duree_j::n1}} j** | {{reception.reserves.levee_de_toutes.commande_par}} |
 
 {{reception.reserves.lecture}}
 
-Le temps de levée est **mesuré**, pas posé : ⟦V3|temps moyen de levée d'une réserve, intervention et reconstat compris|6 h|h|2 à 16|2026|l'étendue est large parce qu'une retouche de peinture et une reprise d'étanchéité n'ont rien de commun⟧ par réserve,
-{{reception.reserves.effectif_de_levee}} compagnons, la journée de travail du cours. D'où
-{{reception.reserves.jours_de_levee_des_bloquantes::n2}} jour pour les bloquantes et
-{{reception.reserves.jours_de_levee_des_autres::n1}} jours pour les autres.
+{{reception.reserves._ce_qui_commande_la_duree}}
 
-:::figure {"fn":"barres","args":"reception.figures.reserves","titre":"Les réserves de la gare, par famille — et celles qui empêchent la réception","num":2,"large":true,"options":{"unite":"nombre de réserves"},"voir":["Les deux familles qui bloquent sont les deux plus courtes du graphique : {{reception.reserves.nb_bloquantes}} lignes sur {{reception.reserves.nb_total}}, soit {{reception.reserves.part_bloquante_pct::n1}} %.","La longueur des barres n'entre pas dans la décision de réceptionner. Elle entre dans l'organisation de la levée — ce n'est pas la même question, et c'est à un autre moment.","Une réserve de sécurité isolée dans une liste de quatre-vingt-dix lignes d'aspect reste une réserve de sécurité. Le classement se fait ligne à ligne."],"erreur":"Lire ce graphique comme une mesure de l'avancement de la fin de chantier. Soixante-deux retouches de peinture ne retardent pas la mise en service d'une gare ; un escalator à l'arrêt, si."}
+:::figure {"fn":"barres","args":"reception.figures.reserves","titre":"Les réserves de la gare, par famille — et celles qui empêchent la réception","num":2,"large":true,"options":{"unite":"nombre de réserves","legende_alerte":"empêche l'usage ou met en cause la sécurité"},"voir":["Les deux familles en rouge sont celles qui bloquent : {{reception.reserves.nb_bloquantes}} lignes sur {{reception.reserves.nb_total}}, soit {{reception.reserves.part_bloquante_pct::n1}} %. Ce sont aussi les deux plus courtes.","La longueur des barres n'entre pas dans la décision de réceptionner. Elle entre dans l'organisation de la levée, et même là elle ne décide pas : la famille de {{reception.reserves.lignes.4.nombre}} lignes attend {{reception.reserves.lignes.4.delai_de_tiers_j::n0}} jours une pièce que personne n'accélère.","Une réserve de sécurité isolée dans une liste de {{reception.reserves.lignes.0.nombre}} lignes d'aspect reste une réserve de sécurité. Le classement se fait ligne à ligne."],"erreur":"Lire ce graphique comme une mesure de l'avancement de la fin de chantier. {{reception.reserves.lignes.0.nombre}} retouches de peinture ne retardent pas la mise en service d'une gare ; un escalator à l'arrêt, si."}
 :::
 
 {{reception.reserves._le_prix_de_la_confusion}}
 
+| | |
+|---|---:|
+| Jours de non-réception en plus | **{{reception.reserves.jours_de_non_reception_en_plus::n1}} j** · bornes {{reception.reserves.jours_en_plus_bornes.0::n1}} à {{reception.reserves.jours_en_plus_bornes.1::n1}} |
+| Coût si le chantier est dans son délai | {{reception.reserves.cout_de_la_confusion_hors_penalites_MAD::k}} MAD |
+| Coût s'il est déjà sous pénalités | **{{reception.reserves.cout_de_la_confusion_sous_penalites_MAD::k}} MAD** |
+| Bornes, tous régimes et toutes hypothèses | {{reception.reserves.cout_de_la_confusion_bornes_MAD.0::k}} à {{reception.reserves.cout_de_la_confusion_bornes_MAD.1::k}} MAD |
+
 :::encart {"genre":"piege","titre":"L'erreur symétrique est pire, et elle ne se voit pas"}
 {{reception.reserves._et_dans_l_autre_sens}}
-
-**Et une précision qui a son importance** : repousser la réception coûte
-{{reception.reserves.cout_de_la_confusion_MAD::n0}} MAD *tant que les pénalités courent*. Au-delà du
-plafond, la même hésitation ne coûte plus que
-{{reception.reserves.cout_de_la_confusion_apres_le_plafond_MAD::n0}} MAD. Un chantier déjà très en
-retard est donc un chantier où la pression de réceptionner s'effondre — exactement au moment où
-l'exploitant, lui, l'attend le plus.
 :::
 
 ### c. Retenue de garantie ou caution : la durée se simplifie
@@ -264,20 +321,27 @@ deux chantiers.
 
 | | Tenu au fil de l'eau | Reconstitué après coup |
 |---|---:|---:|
-| Heures de cadre | ⟦V3|heures de cadre pour tenir le DOE au fil de l'eau|80 h|h|40 à 160|2026|classer les documents à mesure qu'ils arrivent, et exiger le plan de récolement d'un lot quand il part⟧ | ⟦V3|heures de cadre pour reconstituer le même DOE après coup|320 h|h|160 à 600|2026|retrouver les sous-traitants partis, refaire relever ce qui ne l'a pas été, redemander des fiches à des fournisseurs qui ont changé de référence⟧ |
-| Coût de ces heures | {{reception.doe.cout_au_fil_de_l_eau_MAD::n0}} MAD | {{reception.doe.cout_reconstitue_MAD::n0}} MAD |
-| Décompte définitif bloqué | — | {{reception.doe.montant_bloque_MAD::n0}} MAD pendant ⟦V3|jours pendant lesquels le décompte définitif reste bloqué faute de DOE complet|60 j|j|20 à 180|2026|ce n'est pas une pénalité : c'est de l'argent dû, non payé, que l'entreprise porte⟧ |
-| Coût de portage | — | {{reception.doe.cout_de_portage_MAD::n0}} MAD |
-| **Surcoût total** | — | **{{reception.doe.cout_total_du_retard_de_DOE_MAD::n0}} MAD** |
+| Heures de cadre | {{reception.doe.heures_au_fil_de_l_eau}} h | {{reception.doe.heures_reconstitue}} h |
+| Coût de ces heures | {{reception.doe.cout_au_fil_de_l_eau_MAD::k}} MAD | {{reception.doe.cout_reconstitue_MAD::k}} MAD |
+| Surcoût en heures | — | {{reception.doe.surcout_en_heures_MAD::k}} MAD · bornes {{reception.doe.surcout_en_heures_bornes_MAD.0::k}} à {{reception.doe.surcout_en_heures_bornes_MAD.1::k}} |
+| Solde des travaux bloqué | — | {{reception.doe.solde_bloque_MAD::k}} MAD pendant {{reception.doe.retard_du_solde_j}} j |
+| Coût de portage du solde | — | {{reception.doe.cout_de_portage_MAD::k}} MAD · bornes {{reception.doe.cout_de_portage_bornes_MAD.0::k}} à {{reception.doe.cout_de_portage_bornes_MAD.1::k}} |
+| **Surcoût total** | — | **{{reception.doe.cout_total_du_retard_de_DOE_MAD::k}} MAD** · bornes {{reception.doe.cout_total_bornes_MAD.0::k}} à {{reception.doe.cout_total_bornes_MAD.1::k}} |
+
+Les deux volumes d'heures sont ⟦V3|heures de cadre pour tenir le DOE au fil de l'eau|80 h|h|40 à 160|2026|classer les documents à mesure qu'ils arrivent, et exiger le plan de récolement d'un lot quand il part⟧ et ⟦V3|heures de cadre pour reconstituer le même DOE après coup|320 h|h|160 à 600|2026|retrouver les sous-traitants partis, refaire relever ce qui ne l'a pas été, redemander des fiches à des fournisseurs qui ont changé de référence⟧ ; le solde bloqué vaut ⟦V3|solde des travaux restant au décompte définitif, en pour-cent du marché|4,0 %|%|1,5 à 10,0|2026|dernière situation, révisions de prix non encore réglées, travaux supplémentaires acceptés⟧ du marché, pendant ⟦V3|jours pendant lesquels le décompte définitif reste bloqué faute de DOE complet|60 j|j|20 à 180|2026|ce n'est pas une pénalité : c'est de l'argent dû, non payé, que l'entreprise porte⟧.
 
 {{reception.doe.lecture}}
 
-:::figure {"fn":"cascade","args":"reception.figures.doe","titre":"Un DOE reconstitué : d'où vient le surcoût","num":3,"large":true,"options":{"unite":"milliers de MAD"},"voir":["La première barre est ce que le dossier aurait coûté s'il avait été tenu : c'est la seule qui soit du travail utile.","La deuxième est le surcoût en heures de cadre — retrouver, refaire relever, redemander.","La troisième est la plus grosse, et c'est la seule qui ne produise rien : de l'argent dû qui attend. Elle ne figure sur aucun devis et sur aucun budget de lot."],"erreur":"Juger le DOE sur son coût en heures. Les deux tiers du surcoût ne sont pas des heures : c'est le décompte définitif qui ne se paie pas, et il ne se voit nulle part dans les comptes du chantier."}
+:::encart {"genre":"piege","titre":"Le DOE bloque le solde, pas la retenue — et la première version de ce module les a confondus"}
+{{reception.doe._ce_que_le_solde_contient}}
+:::
+
+:::figure {"fn":"cascade","args":"reception.figures.doe","titre":"D'où vient le surcoût d'un DOE reconstitué","num":3,"large":true,"options":{"unite":"milliers de MAD"},"voir":["La première barre est le surcoût en heures de cadre : retrouver, refaire relever, redemander. C'est la seule partie qui ressemble à du travail.","La seconde est le solde des travaux qui attend, et c'est la plus grosse : {{reception.doe.part_du_portage_dans_le_surcout_pct::n0}} % du surcoût. Elle ne figure sur aucun devis et sur aucun budget de lot.","Le total de la cascade est exactement le « surcoût total » du tableau ci-dessus : {{reception.doe.cout_total_du_retard_de_DOE_MAD::k}} MAD. Le coût d'un DOE correctement tenu, lui, n'est pas sur cette figure — ce n'est pas un surcoût, c'est le prix normal du dossier."],"erreur":"Juger le DOE sur son coût en heures. La moitié du surcoût n'est pas une heure : c'est le solde des travaux qui ne se paie pas, et il ne se voit nulle part dans les comptes du chantier."}
 :::
 
 {{reception.doe._pourquoi_c_est_sous_estime}}
 
-{{reception.doe._le_montant_bloque_est_une_borne_basse}}
+**Et ce que les bornes disent.** {{reception.doe._bornes}}
 
 :::encart {"genre":"piege","titre":"La base de calcul des intérêts est une clause, pas une constante"}
 {{reception.doe._la_base_est_une_clause}}
@@ -290,37 +354,42 @@ prévention : les travaux sont finis, les équipes sont parties sur l'opération
 se démonte, et l'ouvrage — une gare, c'est-à-dire un bâtiment ouvert sur l'espace public et sur une
 voie exploitée — est terminé, accessible, et gardienné par personne en particulier.
 
-**Ce qui se passe réellement dans ces semaines-là**, et qui n'est pas une hypothèse d'école : les
-clôtures se relâchent parce que plus personne n'a de raison de les refermer ; les protections
-provisoires disparaissent avec les équipes qui les avaient posées ; les trappes et les regards
-restent ouverts après le dernier essai ; l'éclairage provisoire est déposé avant que le définitif ne
-soit réceptionné ; et des gens entrent — des curieux, des riverains, parfois des enfants.
+**Ce qui se passe réellement dans ces semaines-là** : les clôtures se relâchent parce que plus
+personne n'a de raison de les refermer ; les protections provisoires disparaissent avec les équipes
+qui les avaient posées ; les trappes et les regards restent ouverts après le dernier essai ;
+l'éclairage provisoire est déposé avant que le définitif ne soit réceptionné ; et des gens entrent.
 
-**Trois dispositions qui ne se négocient pas**, et aucune ne coûte cher au regard du prix d'un jour
-de non-réception :
+**Quatre dispositions**, dont aucune ne coûte cher au regard du prix d'un jour de non-réception :
 
 1. **Un responsable nommé de la garde de l'ouvrage**, et une date de transfert écrite. Pas « la
-   réception » en général : une date, un nom, un procès-verbal. Tant que cette date n'est pas
-   passée, c'est l'entreprise, et elle doit le savoir.
+   réception » en général : une date, un nom, un procès-verbal. **Qui porte cette garde, et
+   jusqu'à quand, se lit dans le marché et dans le droit applicable (⏸)** — ce qui ne se discute
+   pas, c'est qu'il faut l'avoir écrit avant d'en avoir besoin.
 2. **Les protections se déposent APRÈS la réception, pas après les travaux.** C'est l'inverse de ce
    que fait la pression de repli, et c'est le même mécanisme que le module C7 décrit pour les
    protections périphériques : la parade la plus efficace est celle qui s'installe avant et se
    dépose après.
 3. **Une visite de fermeture, avec une liste.** Trappes, regards, gaines techniques, accès en
    toiture, locaux électriques, quais. La même liste que celle des essais, relue dans l'autre sens.
+4. **Les installations de sécurité restent-elles en service ?** C'est le point qu'on oublie, et il
+   est particulier à cette période : la détection incendie, le désenfumage et l'éclairage de
+   sécurité viennent d'être essayés, ils fonctionnent, et **personne n'en a encore la charge** —
+   l'entreprise a replié, l'exploitant n'a pas pris l'ouvrage, et aucun contrat de maintenance n'a
+   commencé. Un défaut survenu pendant ces semaines-là n'est vu par personne. Il faut donc nommer
+   qui les surveille, et le faire avant de démobiliser.
 
 **Et le cas particulier d'une gare** : la voie reste exploitée pendant toute cette période. Un
-ouvrage accessible à moins de quelques mètres d'une voie circulée, sans gardiennage, n'est pas un
-problème de chantier — c'est un problème d'exploitation ferroviaire, et il se traite avec
-l'exploitant, pas entre soi.
+ouvrage accessible à quelques mètres d'une voie circulée, sans gardiennage, n'est pas un problème
+de chantier — c'est un problème d'exploitation ferroviaire, et il se traite avec l'exploitant.
 
 ## S4h · La double lecture : entreprise et maîtrise d'œuvre
 
 | | **Côté entreprise** | **Côté maîtrise d'œuvre** |
 |---|---|---|
-| **L'avis de fin de travaux** | il déclenche le compte à rebours : on ne l'envoie pas avant d'être prêt, et on ne l'envoie pas tard non plus — chaque jour coûte {{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD | il déclenche son obligation de convoquer la visite. Un avis reçu et non traité engage sa responsabilité, et la date qui compte est celle de la réception de l'avis, pas celle de la visite |
+| **L'avis de fin de travaux** | il déclenche le compte à rebours : on ne l'envoie pas avant d'être prêt, et on ne l'envoie pas tard non plus — chaque jour coûte de {{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} à {{reception.cout_d_un_jour.cout_sous_penalites_MAD_par_jour_ouvre::k}} MAD selon qu'on est ou non en retard | il déclenche son obligation de convoquer la visite. Un avis reçu et non traité engage sa responsabilité, et la date qui compte est celle de la réception de l'avis, pas celle de la visite |
 | **Les réserves** | une liste de travaux à faire, avec un coût et un délai — et une négociation sur ce qui relève du marché | un **constat**, écrit, daté, sur place. Elle ne se lève pas sur une photo. Et elle engage : une réserve oubliée est une réserve non opposable |
-| **La décision de réceptionner** | elle arrête les frais de durée et les pénalités, elle libère la caution, elle fait courir les garanties | elle n'est pas la sienne : elle **propose**, le maître d'ouvrage décide. Proposer une réception sur un ouvrage dangereux l'engage lourdement |
+| **La qualification d'une réserve** | elle décide de la date de réception, donc de la trésorerie | elle décide de ce qu'elle vise. Et sur l'usage, **ni l'une ni l'autre n'a le dernier mot** : c'est l'exploitant qui dit si une gare s'ouvre avec un escalator sur deux |
+| **La décision de réceptionner** | elle arrête ce que le contrat prévoit d'arrêter (⏸) et libère la suite | elle n'est pas la sienne : elle **propose**, le maître d'ouvrage décide. Proposer une réception sur un ouvrage dangereux l'engage lourdement |
 | **Le DOE** | une tâche sans cadence qu'on repousse, et qui bloque le solde | le document dont **lui** aura besoin pour la vie de l'ouvrage, et qu'il est le seul à pouvoir exiger au bon moment — quand le sous-traitant est encore là |
 | **Les essais de systèmes** | une prestation à organiser, souvent avec des tiers qu'il ne maîtrise pas | la **preuve** que l'ouvrage fonctionne, et la seule qui vaille devant l'exploitant. Un essai non constaté n'a pas eu lieu |
 | **La retenue de garantie** | de la trésorerie immobilisée, qu'une caution peut libérer | une **garantie** d'exécution, qu'il doit pouvoir mobiliser si l'entreprise disparaît. Accepter une caution n'est pas une formalité : c'est accepter un autre débiteur |
@@ -334,16 +403,19 @@ prend du temps, et le temps coûte. C'est pourquoi la seule façon de réception
 
 | Erreur | Comment elle se voit | Ce qu'elle coûte |
 |---|---|---|
-| Attendre une réception **sans réserve** | « on finit les détails et on réceptionne » | {{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD par jour d'attente, pour des retouches de peinture |
-| Compter les réserves au lieu de les **qualifier** | « quatre-vingt-dix, c'est trop » | {{reception.reserves.cout_de_la_confusion_MAD::n0}} MAD sur ce chantier |
+| Chiffrer un jour de fin de chantier **sans demander si l'on est en retard** | un seul prix circule dans toutes les réunions | un facteur {{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}} dans un sens ou dans l'autre — c'est l'erreur que la première version de ce module a commise |
+| Attendre une réception **sans réserve** | « on finit les détails et on réceptionne » | de {{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} à {{reception.cout_d_un_jour.cout_sous_penalites_MAD_par_jour_ouvre::k}} MAD par jour d'attente, pour des retouches de peinture |
+| Compter les réserves au lieu de les **qualifier** | « {{reception.reserves.lignes.0.nombre}} lignes, c'est trop » | jusqu'à {{reception.reserves.cout_de_la_confusion_sous_penalites_MAD::k}} MAD sur ce chantier |
+| Croire que **plus de monde** lève les réserves plus vite | l'effectif de levée est doublé | rien : {{reception.reserves.levee_des_bloquantes.duree_j::n0}} jours d'attente d'une pièce que personne n'accélère |
 | Classer une réserve de **sécurité** en finition | elle est seule de sa famille dans une longue liste | un ouvrage reçu avec un garde-corps non conforme, et la responsabilité qui a changé de mains |
-| Oublier les **opérations préalables** au planning | le planning finit au dernier coup de peinture | {{reception.operations_prealables.duree_totale_j}} jours de décalage, au prix du jour de non-réception |
-| Porter une tâche « Réception » **non décomposée** | une ligne de {{reception.confrontation_au_planning.duree_prevue_par_le_planning_j::n0}} jours en fin de Gantt | il en faut {{reception.confrontation_au_planning.duree_demandee_par_la_sequence_j::n0}} : {{reception.confrontation_au_planning.decalage_mesure_de_la_fin_j::n0}} jours de fin, {{reception.confrontation_au_planning.cout_de_l_ecart_MAD::n0}} MAD |
-| Lancer les **essais de systèmes** en dernier | ils révèlent des défauts d'interface entre lots | l'étape la plus longue ({{reception.operations_prealables.etapes.3.duree_j}} j) et celle qu'on ne maîtrise pas |
-| Reconstituer le **DOE** après coup | personne ne l'a réclamé pendant le chantier | {{reception.doe.cout_total_du_retard_de_DOE_MAD::n0}} MAD, dont les deux tiers en argent qui attend |
-| Ignorer le **plafond** des pénalités | on découvre au 90ᵉ jour que le levier a disparu | une stratégie construite sur un mécanisme qui s'arrête au {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}}ᵉ jour |
-| Confondre jours **ouvrés** et **calendaires** | la pénalité annoncée ne tombe pas juste | un tiers d'écart, et une date de bascule fausse de six semaines |
-| Laisser l'ouvrage **sans gardien** après les travaux | rien, jusqu'au jour où quelqu'un entre | la responsabilité est encore celle de l'entreprise, et l'ouvrage est accessible |
+| Oublier les **opérations préalables** au planning | le planning finit au dernier coup de peinture | {{reception.operations_prealables.duree_totale_j::n0}} jours ouvrés entre la fin des travaux et la décision |
+| Porter une tâche « Réception » **non décomposée** | une ligne de {{reception.confrontation_au_planning.lignes.1.duree_prevue_j::n0}} jours en fin de Gantt | il en faut {{reception.confrontation_au_planning.lignes.1.besoin_j::n0}} : avec les essais, **{{reception.confrontation_au_planning.decalage_mesure_de_la_fin_j::n0}} jours de fin** mesurés |
+| Lancer les **essais de systèmes** en dernier | ils révèlent des défauts d'interface entre lots | l'étape la plus longue ({{reception.operations_prealables.etapes.3.duree_j::n0}} j, borne haute {{reception.operations_prealables.etapes.3.duree_bornes_j.1::n0}}) et celle qu'on ne maîtrise pas |
+| Reconstituer le **DOE** après coup | personne ne l'a réclamé pendant le chantier | {{reception.doe.cout_total_du_retard_de_DOE_MAD::k}} MAD, dont {{reception.doe.part_du_portage_dans_le_surcout_pct::n0}} % en argent dû qui attend |
+| Imputer au DOE le portage de la **retenue** | le chiffre paraît plus gros, donc plus convaincant | une grandeur à la place d'une autre : la retenue est immobilisée que le dossier soit remis ou non |
+| Ignorer le **plafond** des pénalités | on découvre tard que le levier a disparu | une stratégie construite sur un mécanisme qui s'arrête au {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}}ᵉ jour calendaire |
+| Confondre jours **ouvrés** et **calendaires** | la pénalité annoncée ne tombe pas juste | un tiers d'écart, et une date de bascule fausse de {{reception.cout_d_un_jour.ecart_des_deux_calendriers_j::n0}} jours |
+| Laisser l'ouvrage **sans gardien** après les travaux | rien, jusqu'au jour où quelqu'un entre | les installations de sécurité ne sont surveillées par personne, et la garde n'a pas été transférée par écrit |
 | Accepter une **caution** sans regarder la ligne de crédit | le calcul montre une économie | la ligne qui garantit ce chantier ne garantira pas la soumission du mois prochain |
 | Prendre la **base 365** pour une constante | les intérêts tombent presque juste | 1,4 % d'écart, et une clause qu'on n'a pas lue |
 
@@ -356,24 +428,32 @@ plafonne-t-elle ? Et si le marché valait 24 millions ?
 
 **Corrigé.** Le montant du marché ne sert à rien.
 
-$$ j_{\text{bascule}} = \frac{5 \times 10}{2} = 25 \text{ jours calendaires} $$
+$$ j_{\text{bascule}} = \frac{5 \times 10}{2} = 25 \text{ jours} $$
 
 **Dans les deux cas.** Le montant figure au numérateur du plafond (5 % de M) et au dénominateur de
 la pénalité (2 ‰ de M par jour) : il se simplifie. Vingt-cinq jours, que le marché vaille 24 ou 240
 millions.
 
-*Ce que l'exercice enseigne, et qui vaut plus que la formule : ces deux lignes d'un CPS ne se lisent
-jamais séparément. « 2 ‰ par jour » paraît sévère et « plafond 5 % » paraît protecteur ; ensemble,
-ils disent que la pénalité cesse de croître au bout de vingt-cinq jours. Sur le marché de ce cours
-— ⟦V3|pénalité de retard, pour mille du montant du marché par jour|1,0 ‰|‰/j|0,5 à 2,0|2026|clause du CPS, à lire et non à supposer⟧ et
+**Et la question qui manque dans l'énoncé** : vingt-cinq jours de quel calendrier ? L'énoncé dit
+« 2 ‰ par jour » sans préciser, et c'est exactement ce qu'un CPS fait. Si ce sont des jours
+calendaires, cela fait environ
+{{prix.bordereau.frais_de_duree.conversion.ouvres_par_jour_calendaire::n2}} × 25 ≈ 18 jours
+ouvrés de chantier ; si ce sont des jours ouvrés, 25 jours ouvrés, soit plus d'un mois de
+calendrier. **C'est la première question à poser**, avant même de calculer, et elle vaut un tiers
+du résultat.
+
+*Ce que l'exercice enseigne : ces deux lignes d'un CPS ne se lisent jamais séparément. « 2 ‰ par
+jour » paraît sévère et « plafond 5 % » paraît protecteur ; ensemble, ils disent que la pénalité
+cesse de croître au bout de vingt-cinq jours. Sur le marché de ce cours —
+⟦V3|pénalité de retard, pour mille du montant du marché par jour|1,0 ‰|‰/j|0,5 à 2,0|2026|clause du CPS, à lire et non à supposer⟧ et
 ⟦V3|plafond des pénalités de retard, en pour-cent du marché|10 %|%|5 à 10|2026|clause du CPS, à lire et non à supposer⟧ — la bascule tombe au
-{{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}}ᵉ jour. Quatre fois plus tard.*
+{{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}}ᵉ jour calendaire. Quatre fois plus tard.*
 :::
 
 :::exercice {"titre":"2 · Réceptionner ou pas — cas ouvert","niveau":"cas_ouvert"}
 Vendredi. La visite des opérations préalables est faite. Vous êtes chef de projet suivi côté
-entreprise. L'exploitant veut ouvrir la gare dans trois semaines. La liste des réserves compte
-{{reception.reserves.nb_total}} lignes, dont :
+entreprise, **et le chantier est dans son délai contractuel**. L'exploitant veut ouvrir la gare dans
+trois semaines. La liste des réserves compte {{reception.reserves.nb_total}} lignes, dont :
 
 - un **escalator à l'arrêt**, en attente d'une pièce annoncée sous dix jours ;
 - un **désenfumage non essayé** dans le hall, faute de créneau avec le lot technique ;
@@ -385,28 +465,38 @@ traitez-vous ces quatre points ?
 
 **Corrigé — il n'y a pas une réponse, il y a une méthode.**
 
+**0. D'abord, le prix du temps.** Le chantier est dans son délai : un jour de retard à
+réceptionner coûte {{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} MAD de
+frais de durée, et non {{reception.cout_d_un_jour.cout_sous_penalites_MAD_par_jour_ouvre::k}}. La
+différence change le ton de la discussion, et c'est la première chose à vérifier avant de mettre un
+chiffre sur la table. Si le chantier avait déjà dépassé son terme, tout ce qui suit coûterait
+{{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}} fois plus.
+
 **1. Qualifier, pas compter.** Deux de ces quatre points empêchent l'usage ou mettent en cause la
-sécurité : l'escalator (fonctionnement d'un ouvrage) et le désenfumage (sécurité des personnes). Les
-deux autres non. La question n'est donc pas « peut-on réceptionner avec
-{{reception.reserves.nb_total}} réserves ? » mais « peut-on réceptionner avec un désenfumage non
-essayé ? » — et la réponse à celle-là est non, sans discussion.
+sécurité : l'escalator et le désenfumage. Les deux autres non. La question n'est donc pas
+« peut-on réceptionner avec {{reception.reserves.nb_total}} réserves ? » mais « peut-on
+réceptionner avec un désenfumage non essayé ? ».
 
-**2. Le désenfumage d'abord, et il n'est pas négociable.** Ce n'est pas une réserve, c'est un
-essai manquant. Un ouvrage recevant du public dont le désenfumage n'a pas été essayé ne se
-réceptionne pas, et aucun calcul de coût n'entre dans cette décision. On cherche le créneau dans la
-semaine, quitte à payer une intervention de nuit : c'est moins cher qu'un jour de non-réception, et
-ce n'est pas la raison pour laquelle on le fait.
+**2. Le désenfumage d'abord, et il n'est pas négociable.** Ce n'est pas une réserve, c'est un essai
+manquant sur une installation de sécurité dans un bâtiment qui recevra du public. On cherche le
+créneau dans la semaine, quitte à payer une intervention de nuit. Aucun calcul de coût n'entre dans
+cette décision, et c'est le seul point du corrigé où le chiffre ne sert à rien.
 
-**3. L'escalator ensuite, et c'est une négociation.** Dix jours annoncés pour une pièce, c'est le
-genre de délai qui en fait vingt. Deux options honnêtes : réceptionner avec réserve et une date
-ferme de levée, si l'exploitant accepte d'ouvrir avec un escalator sur deux — c'est à **lui** de le
-dire, pas à vous ; ou attendre, et payer
-{{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD par jour. Le chiffre
-se pose sur la table, il ne se cache pas.
+**3. L'escalator : la règle dit non, et c'est l'exploitant qui peut dire oui.** La règle du § S3b
+est binaire — une réserve qui empêche l'usage empêche la réception. Mais **la qualification est un
+jugement**, et sur l'usage, c'est l'exploitant qui en est juge : lui seul peut dire qu'une gare
+s'ouvre avec un escalator sur deux, avec une signalétique et un cheminement accessible maintenus.
+S'il le dit **par écrit**, la réserve cesse d'empêcher l'usage et la réception se prononce avec
+elle ; s'il ne le dit pas, on attend la pièce, et cela coûte
+{{reception.reserves.levee_des_bloquantes.duree_j::n0}} jours. Ce qui serait faux, c'est de le
+décider à sa place parce que le calendrier nous arrange. Noter au passage que la sécurité, elle, ne
+se négocie avec personne : le point 2 n'est pas de même nature que celui-ci.
 
 **4. Les retouches : réserves, et on réceptionne.** Elles n'empêchent rien. Les traiter comme
-bloquantes coûterait {{reception.reserves.cout_de_la_confusion_MAD::n0}} MAD sur l'ensemble de ce
-chantier — plus de quarante fois le prix de les lever toutes.
+bloquantes ajouterait {{reception.reserves.jours_de_non_reception_en_plus::n1}} jours — pas les
+{{reception.reserves.levee_de_toutes.duree_j::n1}} jours de la levée complète, car les bloquantes
+prennent déjà {{reception.reserves.levee_des_bloquantes.duree_j::n0}} jours qu'on aurait attendus
+de toute façon.
 
 **5. Les plans de récolement : le vrai problème est ailleurs.** Ils ne bloquent pas la réception,
 mais ils bloqueront le **décompte définitif**, et le sous-traitant est parti. C'est la seule des
@@ -414,7 +504,7 @@ quatre lignes qui coûte plus cher chaque semaine qui passe, et c'est celle dont
 vendredi. À traiter lundi matin, pendant qu'on retrouve encore quelqu'un au téléphone.
 
 *Ce que le cas enseigne : la liste des réserves hiérarchise mal. Elle mélange une obligation de
-sécurité, une négociation commerciale, un travail de finition et un problème de paiement — quatre
+sécurité, un jugement d'exploitation, un travail de finition et un problème de paiement — quatre
 natures différentes, quatre interlocuteurs différents, et une seule colonne.*
 :::
 
@@ -467,27 +557,31 @@ constitue pendant le chantier.*
 
 **Check-list : avant d'envoyer l'avis de fin de travaux**
 
-1. Les **essais de systèmes** sont-ils faits, constatés et signés — ou seulement programmés ?
-2. Le **DOE** est-il remis, et son sommaire permet-il de trouver un ouvrage en deux minutes ?
-3. La liste des réserves est-elle **qualifiée** (empêche l'usage : oui / non) et non seulement comptée ?
-4. Les réserves bloquantes ont-elles une **date de levée** et un responsable nommé ?
-5. Les **opérations préalables** sont-elles au planning, avec leur durée ?
-6. La **garde de l'ouvrage** a-t-elle un responsable nommé et une date de transfert écrite ?
-7. A-t-on lu, dans le CPS, la **pénalité** et son **plafond** — et calculé le jour de bascule ?
-8. La **retenue de garantie** peut-elle être remplacée par une caution, et la banque suivra-t-elle ?
+1. Le chantier est-il **dans son délai** ? La réponse change le prix de chaque jour qui suit d'un
+   facteur {{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}}.
+2. Les **essais de systèmes** sont-ils faits, constatés et signés — ou seulement programmés ?
+3. Le **DOE** est-il remis, et son sommaire permet-il de trouver un ouvrage en deux minutes ?
+4. La liste des réserves est-elle **qualifiée** (empêche l'usage : oui / non) et non seulement comptée ?
+5. Pour chaque réserve bloquante : **qu'attend-elle**, et de qui ? C'est le délai le plus long qui
+   fixe la date, pas le volume de travail.
+6. Les **opérations préalables** sont-elles au planning, avec leur durée et leurs responsables ?
+7. La **garde de l'ouvrage** a-t-elle un responsable nommé et une date de transfert écrite — et qui
+   surveille les installations de sécurité d'ici là ?
+8. A-t-on lu, dans le CPS, la **pénalité**, son **plafond** et leur **calendrier** ?
+9. La **retenue de garantie** peut-elle être remplacée par une caution, et la banque suivra-t-elle ?
 
 **Glossaire**
 
 | Terme | Ce que c'est |
 |---|---|
-| **Opérations préalables** | les constats et essais qui précèdent la décision de réceptionner. Une tâche du planning, avec une durée |
+| **Opérations préalables** | les constats et essais qui précèdent la décision de réceptionner. Une tâche du planning, avec une durée, dont {{reception.operations_prealables.part_tenue_par_des_tiers_pct::n0}} % n'appartient pas à l'entreprise |
 | **Réserve** | un écart constaté au moment de la réception. Deux familles seulement : elle empêche l'usage, ou non |
-| **Réception** | la décision qui transfère la garde de l'ouvrage et arrête les frais de durée et les pénalités. Ses conditions et ses effets juridiques : **⏸** |
-| **Retenue de garantie** | part de chaque situation conservée par le maître d'ouvrage jusqu'à la fin de la garantie. Immobilisée, pas perdue |
+| **Réception** | la décision qui clôt les travaux. Ses conditions, ses effets juridiques et ce qu'elle transfère : **⏸** — ils se lisent dans le marché et dans le droit applicable |
+| **Retenue de garantie** | part de chaque situation conservée par le maître d'ouvrage jusqu'à une date que le marché fixe (**⏸**). Immobilisée, pas perdue |
 | **Caution de substitution** | garantie bancaire qui remplace la retenue. Coûte une commission, consomme une ligne de crédit |
 | **DOE** | dossier des ouvrages exécutés. Son contenu réglementaire est **⏸** ; son critère pratique est qu'on y retrouve un ouvrage dix ans plus tard |
 | **Plan de récolement** | ce qui a été **posé**, là où ça a été posé — et non ce qui avait été prévu |
-| **Décompte définitif** | le dernier compte du marché. Conditionné par le DOE, et c'est par là que le DOE coûte cher |
+| **Décompte définitif** | le dernier compte du marché. Il porte le **solde des travaux**, que le DOE bloque — à ne pas confondre avec la retenue de garantie |
 | **Base de calcul des intérêts** | 365 ou 360 jours selon la convention de crédit. Une clause, pas une constante |
 
 **Quiz**
@@ -501,32 +595,36 @@ constitue pendant le chantier.*
 **Non.** Le montant est au numérateur du plafond et au dénominateur de la pénalité : il se simplifie.
 Seules les deux clauses comptent.
 
-**3. Un jour de retard coûte-t-il toujours la même chose ?**
-**Non**, et le rapport est de {{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}}. Avant le
-plafond, {{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD ; après,
-{{reception.cout_d_un_jour.cout_apres_le_plafond_MAD_par_jour_ouvre::n0}} — les frais de durée seuls.
+**3. Un jour de non-réception coûte-t-il toujours la même chose ?**
+**Non, et il y a deux prix, pas trois.** Avant le terme contractuel et après le plafond :
+{{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} MAD, les frais de durée
+seuls. Entre les deux : {{reception.cout_d_un_jour.cout_sous_penalites_MAD_par_jour_ouvre::k}} MAD.
+La première question à poser est donc : **sommes-nous en retard ?**
 
-**4. Pour comparer retenue et caution, de quelle donnée a-t-on besoin ?**
-**De deux taux, et c'est tout.** La durée de la garantie et le montant immobilisé figurent des deux
-côtés et se simplifient. C'est utile, parce que la durée est ⏸.
+**4. Doubler l'effectif de levée divise-t-il par deux le délai des réserves ?**
+**Non**, pas tant qu'un tiers commande. Les {{reception.reserves.nb_bloquantes}} bloquantes de ce
+chantier représentent {{reception.reserves.levee_des_bloquantes.jours_d_atelier::n2}} jour
+d'atelier et {{reception.reserves.levee_des_bloquantes.duree_j::n0}} jours d'attente. C'est le
+chemin critique d'un planning, appliqué à une liste de réserves.
 
-**5. Le DOE est-il un sujet de fin de chantier ?**
+**5. Pour comparer retenue et caution, de quelle donnée a-t-on besoin ?**
+**De deux taux, et c'est tout.** La durée de l'immobilisation et le montant figurent des deux côtés
+et se simplifient. C'est utile, parce que la durée est ⏸.
+
+**6. Le DOE est-il un sujet de fin de chantier ?**
 **Non**, c'est un sujet de chantier. Reconstitué après coup il coûte
-{{reception.doe.rapport_des_heures::n1}} fois plus d'heures, et les deux tiers de son surcoût ne
-sont pas des heures : c'est le décompte définitif qui attend.
-
-**6. Qui garde l'ouvrage entre la fin des travaux et la réception ?**
-**L'entreprise**, jusqu'à la date écrite du transfert. C'est la période où les protections
-disparaissent et où personne ne se sent responsable — et c'est pour cela qu'elle se prépare comme
-une phase de travaux, avec un nom et une date.
+{{reception.doe.rapport_des_heures::n1}} fois plus d'heures, et
+{{reception.doe.part_du_portage_dans_le_surcout_pct::n0}} % de son surcoût ne sont pas des heures :
+c'est le solde des travaux qui attend.
 
 :::memo
 ## Fiche mémo — réception, DOE, garanties
 
-**Les deux phrases du module**
+**Les trois phrases du module**
 
-> La réception transfère un risque, et chaque jour qui la retarde a un prix.
+> Avant de chiffrer un jour de fin de chantier : sommes-nous en retard ?
 > Le nombre de réserves n'entre jamais dans la décision de réceptionner.
+> Une liste se hiérarchise par son délai le plus long, pas par son volume.
 
 **La formule qui se lit dans un CPS**
 
@@ -536,26 +634,26 @@ $$ j_{\text{bascule}} = \frac{\text{plafond en \%} \times 10}{\text{pénalité e
 
 | | |
 |---|---:|
-| Un jour de non-réception | **{{reception.cout_d_un_jour.cout_avant_le_plafond_MAD_par_jour_ouvre::n0}} MAD** |
-| Après le plafond | {{reception.cout_d_un_jour.cout_apres_le_plafond_MAD_par_jour_ouvre::n0}} MAD — ×{{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}} moins |
-| Jour de bascule | {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}} j calendaires ({{reception.cout_d_un_jour.jour_de_bascule_bornes_calendaires.0::n0}} à {{reception.cout_d_un_jour.jour_de_bascule_bornes_calendaires.1::n0}}) |
-| Opérations préalables | {{reception.operations_prealables.duree_totale_j}} j, dont {{reception.operations_prealables.etapes.3.duree_j}} j d'essais de systèmes |
-| Ce que le planning en prévoit | {{reception.confrontation_au_planning.duree_prevue_par_le_planning_j::n0}} j pour {{reception.confrontation_au_planning.duree_demandee_par_la_sequence_j::n0}} demandés — **{{reception.confrontation_au_planning.decalage_mesure_de_la_fin_j::n0}} j de fin** |
-| Réserves | {{reception.reserves.nb_total}} dont **{{reception.reserves.nb_bloquantes}} bloquantes** · les confondre coûte {{reception.reserves.cout_de_la_confusion_MAD::n0}} MAD |
-| Retenue immobilisée | {{reception.portage.retenue_immobilisee_MAD::n0}} MAD · {{reception.portage.cout_de_la_retenue_MAD_par_mois::n0}} MAD/mois contre {{reception.portage.cout_de_la_caution_MAD_par_mois::n0}} en caution |
-| DOE reconstitué | {{reception.doe.cout_total_du_retard_de_DOE_MAD::n0}} MAD, dont {{reception.doe.cout_de_portage_MAD::n0}} d'argent qui attend |
+| Un jour, hors pénalités | **{{reception.cout_d_un_jour.cout_hors_penalites_MAD_par_jour_ouvre::k}} MAD** |
+| Un jour, sous pénalités | **{{reception.cout_d_un_jour.cout_sous_penalites_MAD_par_jour_ouvre::k}} MAD** · ×{{reception.cout_d_un_jour.rapport_des_deux_regimes::n1}} ({{reception.cout_d_un_jour.rapport_bornes.0::n1}} à {{reception.cout_d_un_jour.rapport_bornes.1::n1}}) |
+| Fenêtre de cherté | {{reception.cout_d_un_jour.jour_de_bascule_calendaire::n0}} j calendaires ({{reception.cout_d_un_jour.jour_de_bascule_bornes_calendaires.0::n0}} à {{reception.cout_d_un_jour.jour_de_bascule_bornes_calendaires.1::n0}}) |
+| Opérations préalables | {{reception.operations_prealables.duree_totale_j::n0}} j ouvrés ({{reception.operations_prealables.duree_bornes_j.0::n0}} à {{reception.operations_prealables.duree_bornes_j.1::n0}}), dont {{reception.operations_prealables.part_tenue_par_des_tiers_pct::n0}} % tenus par des tiers |
+| Ce que le planning en prévoit | {{reception.confrontation_au_planning.ecart_total_j::n0}} j de trop, **{{reception.confrontation_au_planning.decalage_mesure_de_la_fin_j::n0}} j de fin** mesurés ({{reception.confrontation_au_planning.decalage_bornes_j.0::n0}} à {{reception.confrontation_au_planning.decalage_bornes_j.1::n0}}) |
+| Réserves | {{reception.reserves.nb_total}} dont **{{reception.reserves.nb_bloquantes}} bloquantes** · les confondre ajoute {{reception.reserves.jours_de_non_reception_en_plus::n1}} j |
+| Retenue immobilisée | {{reception.portage.retenue_immobilisee_MAD::k}} MAD · {{reception.portage.cout_de_la_retenue_MAD_par_mois::k}} MAD/mois contre {{reception.portage.cout_de_la_caution_MAD_par_mois::k}} en caution |
+| DOE reconstitué | {{reception.doe.cout_total_du_retard_de_DOE_MAD::k}} MAD, dont {{reception.doe.part_du_portage_dans_le_surcout_pct::n0}} % d'argent dû qui attend |
 
-**Les cinq réflexes**
+**Les six réflexes**
 
-1. Qualifier les réserves, ne jamais les compter.
-2. Lire la pénalité ET son plafond, et calculer le jour de bascule avant de signer.
-3. Mettre les opérations préalables au planning, avec leur durée.
-4. Exiger les documents du DOE **quand le sous-traitant est encore là**.
-5. Nommer un responsable de la garde de l'ouvrage, avec une date de transfert écrite.
-6. Décomposer la ligne « Réception » du planning : la moitié de sa durée n'appartient pas à l'entreprise.
+1. Demander si le chantier est dans son délai **avant** de chiffrer un jour.
+2. Qualifier les réserves, ne jamais les compter — et chercher ce que chacune attend.
+3. Lire la pénalité, son plafond ET leur calendrier, et calculer le jour de bascule avant de signer.
+4. Mettre les opérations préalables au planning, avec leurs responsables.
+5. Exiger les documents du DOE **quand le sous-traitant est encore là**.
+6. Nommer un responsable de la garde de l'ouvrage, et de ses installations de sécurité.
 
-**⏸ Ce qui reste fermé sans les documents** — durées des garanties (parfait achèvement, bon
-fonctionnement, décennale), délai de levée des réserves, conditions d'une réception tacite, contenu
-obligatoire du DOE, délai de paiement du décompte définitif. Le module donne le mécanisme et sa
-conséquence financière, jamais la durée.
+**⏸ Ce qui reste fermé sans les documents** — durées des garanties, délai de levée des réserves,
+conditions d'une réception tacite, contenu obligatoire du DOE, délai de paiement du décompte
+définitif, et **les effets juridiques de la réception**. Le module donne le mécanisme et sa
+conséquence financière, jamais la durée ni la règle de droit.
 :::

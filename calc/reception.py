@@ -2,29 +2,31 @@
 
 Dernier module du palier 1. Il ferme le déroulé du § 10.2, et il a un cœur calculable que
 les modules précédents ont préparé sans le savoir : D1 publie les frais de durée et les
-pénalités, D2 publie la date, C7 publie le coût d'une non-conformité. REC n'en recalcule
-aucun — il les lit, et il en tire ce qu'aucun d'eux ne pouvait voir.
+pénalités, D2 publie la date et le réseau, C7 publie le coût d'une non-conformité. REC
+n'en recalcule aucun — il les lit, et il en tire ce qu'aucun d'eux ne pouvait voir.
 
-Quatre résultats, tous non normatifs :
+Cinq résultats, tous non normatifs :
 
-1. **Un jour de non-réception a un prix, et ce prix CHANGE DE RÉGIME.** Tant que les
-   pénalités courent, il vaut les frais de durée plus la pénalité ; une fois le plafond
-   atteint, il ne vaut plus que les frais de durée. Le rapport est de huit. Le jour de
-   bascule ne dépend pas du montant du marché : c'est le plafond en pour-cent divisé par
-   la pénalité en pour-mille, et rien d'autre.
-2. **L'arbitrage entre retenue de garantie et caution bancaire ne dépend pas de la durée
-   de la garantie** — qui est pourtant la première chose qu'on cherche, et qui est ⏸.
-   Les deux coûts sont proportionnels à la même durée : elle se simplifie, et la décision
-   se réduit à comparer deux taux annuels.
-3. **Les réserves se classent en deux familles, et une seule bloque.** Confondre les deux
-   coûte un jour de non-réception par jour d'attente — et ce jour-là, on le connaît.
-4. **Le DOE se constitue pendant le chantier.** Reconstitué après coup, il coûte quatre
-   fois plus d'heures de cadre, et il immobilise le décompte définitif pendant qu'on le
-   reconstitue.
+1. **Un jour de non-réception n'a pas un prix, il en a DEUX**, et c'est la correction la
+   plus lourde apportée à ce module. Les pénalités ne courent qu'au-delà du terme
+   contractuel, et elles cessent de croître au plafond. Le coût d'un jour est donc le
+   même AVANT le terme et APRÈS le plafond — les frais de durée seuls — et huit fois
+   plus élevé entre les deux. Ce n'est pas une courbe croissante : c'est une fenêtre de
+   cherté, et savoir où l'on est dedans change toutes les décisions de fin de chantier.
+2. **Le jour de bascule ne dépend pas du montant du marché** : c'est le plafond en
+   pour-cent divisé par la pénalité en pour-mille, et rien d'autre.
+3. **L'arbitrage entre retenue de garantie et caution bancaire ne dépend pas de la durée
+   de la garantie** — qui est ⏸. La durée se simplifie (D-054).
+4. **Une liste de réserves ne se hiérarchise pas par son volume mais par son délai le
+   plus long.** Ce qui coûte n'est pas le nombre de lignes : c'est la pièce qu'on
+   attend.
+5. **Le DOE se constitue pendant le chantier.** Reconstitué après coup, il coûte quatre
+   fois plus d'heures de cadre, et il bloque le décompte définitif pendant ce temps.
 
 Ce que le module ne dit pas, et ne dira pas tant que les documents manquent : les durées
 des garanties, le délai de levée des réserves, les conditions d'une réception tacite, le
-contenu obligatoire du DOE. Il donne le mécanisme et sa conséquence financière.
+contenu obligatoire du DOE, et les EFFETS JURIDIQUES de la réception. Il donne le
+mécanisme et sa conséquence financière.
 """
 from __future__ import annotations
 import json, pathlib, sys
@@ -44,18 +46,34 @@ def _b(o: dict) -> tuple[float, float]:
     return (float(f[0]), float(f[1])) if f else (float(o["valeur"]), float(o["valeur"]))
 
 
-# ------------------------------------------------- 1. le prix d'un jour de non-réception
+# ------------------------------------------------- 1. le prix d'un jour
 def cout_d_un_jour(d: dict, pr: dict) -> dict:
-    """Ce que coûte une journée de plus avant la réception — et le jour où ça change.
+    """Ce que coûte une journée de plus avant la réception — et il y a DEUX prix.
 
-    Aucun des deux termes n'est recalculé ici : les frais de durée et la pénalité
-    journalière sont LUS dans la sortie du module D1 (D-039, une grandeur, un seul
-    endroit). D1 les publie pour trois retards donnés ; ce qu'il ne cherche pas, et que
-    ce module trouve, c'est le jour où le plafond est atteint.
+    La correction la plus lourde de ce module, et elle est venue d'une passe adversariale.
+    La première version publiait un seul « coût d'un jour de non-réception » :
+    127 850 MAD, frais de durée plus pénalité, appliqué à toutes les journées de la fin
+    de chantier — les opérations préalables, l'hésitation sur les réserves, le vendredi
+    d'un exercice. Or ce que le module D1 publie est le coût d'un jour de RETARD, et les
+    pénalités ne courent qu'au-delà du terme contractuel. Avant ce terme, une journée
+    perdue ne coûte que les frais de durée. Tout l'argent du module était multiplié par
+    huit, et aucun test ne pouvait le voir : l'arithmétique était juste, c'est la
+    CONDITION qui n'était pas écrite.
 
-    Le piège de calendrier vient de D1 et il est conservé tel quel : les pénalités se
-    comptent en jours CALENDAIRES et les frais de durée en jours OUVRÉS. Un jour ouvré de
-    retard porte donc 1,4 jour de pénalité.
+    Il y a donc trois périodes et deux prix seulement, parce que le premier et le
+    troisième sont le même :
+
+        avant le terme contractuel ........ frais de durée seuls
+        du terme au plafond ............... frais de durée + pénalité
+        après le plafond .................. frais de durée seuls
+
+    Ce n'est pas une courbe croissante, c'est une FENÊTRE de cherté. Savoir si l'on est
+    dedans est la première question à poser avant de chiffrer un jour de fin de chantier,
+    et personne ne la pose.
+
+    Les deux termes sont LUS dans la sortie de D1 (D-039), jamais recalculés. Le piège de
+    calendrier vient de lui et il est conservé : les pénalités se comptent en jours
+    calendaires et les frais de durée en jours ouvrés.
     """
     c = d["prix_unitaires_MAD"]["contrat"]
     r1 = pr["cout_du_retard"]["1"]
@@ -65,51 +83,68 @@ def cout_d_un_jour(d: dict, pr: dict) -> dict:
     plafond = r1["penalites_plafond_MAD"]
     marche = pr["bordereau"]["prix_de_vente_MAD"]
 
-    # Un marche SANS penalite de retard existe — rare, et il faut le lire dans le CPS
-    # plutot que le supposer. Il n'y a alors pas de bascule : le cout d'un jour est
-    # constant. Publier « 0 » serait faux, et diviser par zero serait pire : l'index
-    # n'est pas defini, et c'est ce qui se publie (D-042).
     sans_penalite = penal <= 0
     bascule_ouvres = None if sans_penalite else plafond / penal
     bascule_calendaires = None if sans_penalite else bascule_ouvres * conv
-    avant, apres = frais + penal, frais
-    # Forme fermée : le jour de bascule en jours CALENDAIRES ne dépend que de deux
-    # clauses du marché, et pas du tout de son montant. C'est ce qui en fait une règle
-    # de lecture d'un CPS plutôt qu'un résultat de ce chantier-ci.
+    hors, sous = frais, frais + penal
+
     plafond_pct = c["penalite_plafond_pct"]["valeur"]
     pour_mille = c["penalite_retard_pour_mille_par_j"]["valeur"]
+    pm_b = _b(c["penalite_retard_pour_mille_par_j"])
+    pf_b = _b(c["penalite_plafond_pct"])
     forme_fermee = None if sans_penalite else plafond_pct * 10.0 / pour_mille
-    bornes = []
-    if not sans_penalite:
-        for pf, pm in ((_b(c["penalite_plafond_pct"])[0],
-                        _b(c["penalite_retard_pour_mille_par_j"])[1]),
-                       (_b(c["penalite_plafond_pct"])[1],
-                        _b(c["penalite_retard_pour_mille_par_j"])[0])):
-            bornes.append(round(pf * 10.0 / pm, 1))
+    bornes_j = [] if sans_penalite else [round(pf_b[0] * 10.0 / pm_b[1], 1),
+                                         round(pf_b[1] * 10.0 / pm_b[0], 1)]
+    # Bornes du coût d'un jour SOUS pénalités : seule la clause de pénalité est une
+    # hypothèse ici. Les frais de durée viennent de D1, qui les publie sans bornes — le
+    # dire est plus honnête que de les inventer, et c'est la borne qui manque.
+    sous_b = [round(frais + marche * pm_b[0] / 1000 * conv, 2),
+              round(frais + marche * pm_b[1] / 1000 * conv, 2)]
     return {
         "marche_MAD": marche,
         "frais_de_duree_MAD_par_jour_ouvre": frais,
         "penalites_MAD_par_jour_ouvre": penal,
         "_source": "calc/sorties/prix.json — cout_du_retard (module D1), jamais recalculé ici",
         "plafond_des_penalites_MAD": plafond,
-        "cout_avant_le_plafond_MAD_par_jour_ouvre": round(avant, 2),
-        "cout_apres_le_plafond_MAD_par_jour_ouvre": round(apres, 2),
-        # Sans frais de duree, le cout d'un jour tombe a zero une fois le plafond
-        # atteint : le RAPPORT des deux regimes n'est alors pas defini, et c'est ce qui
-        # se publie. Ce cas a ete trouve par un cas degenere de l'etalonnage, pas par
-        # une relecture.
-        "rapport_des_deux_regimes": round(avant / apres, 1) if apres else None,
+        "cout_hors_penalites_MAD_par_jour_ouvre": round(hors, 2),
+        "cout_sous_penalites_MAD_par_jour_ouvre": round(sous, 2),
+        "cout_sous_penalites_bornes_MAD": sous_b,
+        "rapport_des_deux_regimes": round(sous / hors, 1) if hors else None,
+        "rapport_bornes": ([round(sous_b[0] / hors, 1), round(sous_b[1] / hors, 1)]
+                           if hors else None),
         "sans_penalite": sans_penalite,
         "jour_de_bascule_ouvre": None if sans_penalite else round(bascule_ouvres, 1),
         "jour_de_bascule_calendaire": (None if sans_penalite
                                        else round(bascule_calendaires, 1)),
-        "jour_de_bascule_bornes_calendaires": bornes or None,
+        "jour_de_bascule_bornes_calendaires": bornes_j or None,
+        "largeur_de_la_fenetre_ouvres": None if sans_penalite else round(bascule_ouvres, 1),
+        "ecart_des_deux_calendriers_j": (None if sans_penalite
+                                         else round(bascule_calendaires - bascule_ouvres, 1)),
         "forme_fermee_calendaire": None if sans_penalite else round(forme_fermee, 1),
+        "les_trois_periodes": [
+            {"periode": "avant le terme contractuel", "regime": "hors pénalités",
+             "cout_MAD_par_jour_ouvre": round(hors, 2)},
+            {"periode": "du terme contractuel au plafond", "regime": "sous pénalités",
+             "cout_MAD_par_jour_ouvre": round(sous, 2)},
+            {"periode": "après le plafond", "regime": "hors pénalités",
+             "cout_MAD_par_jour_ouvre": round(hors, 2)},
+        ],
+        "_la_condition_qui_manquait": (
+            "Un jour de fin de chantier ne coûte la pénalité QUE si le chantier est déjà "
+            "au-delà de son terme contractuel. Avant, il coûte les frais de durée seuls "
+            f"— {_f(hors)} MAD. Entre le terme et le plafond, il en coûte {_f(sous)}. "
+            f"Après le plafond, il retombe à {_f(hors)}."
+            + (f" Les deux prix sont dans un rapport de {_f(sous / hors, 1)}." if hors
+               else " Sans frais de durée, le prix hors pénalités serait nul et leur "
+                    "rapport ne serait pas défini (D-042).")
+            + " Et la première question avant de chiffrer une journée de fin de "
+            "chantier est donc : **sommes-nous en retard ?** La première version de ce "
+            "module ne la posait pas et facturait partout le prix fort."),
         "_la_forme_fermee": (
-            "Ce marche ne porte aucune penalite de retard : il n'y a pas de plafond a "
-            "atteindre, donc pas de jour de bascule. Le cout d'un jour est constant, et "
-            "egal aux frais de duree. L'index n'est pas publie comme valant zero — il "
-            "n'est pas defini (D-042)." if sans_penalite else
+            "Ce marché ne porte aucune pénalité de retard : il n'y a pas de plafond à "
+            "atteindre, donc pas de jour de bascule. Le coût d'un jour est constant, et "
+            "égal aux frais de durée. L'index n'est pas publié comme valant zéro — il "
+            "n'est pas défini (D-042)." if sans_penalite else
             f"Le jour de bascule en jours calendaires vaut le plafond en pour-cent divisé "
             f"par la pénalité en pour-mille, soit {_f(plafond_pct)} ÷ "
             f"{_f(pour_mille, 1)} ‰ = {_f(forme_fermee)} jours. **Le montant du marché "
@@ -122,24 +157,24 @@ def cout_d_un_jour(d: dict, pr: dict) -> dict:
             f"Ce marché ne porte aucune pénalité de retard : un jour coûte "
             f"{_f(frais)} MAD de frais de durée, le premier comme le centième."
             if sans_penalite else
-            f"Avant le plafond, un jour ouvré de retard coûte {_f(avant)} MAD : "
-            f"{_f(frais)} de frais de durée et {_f(penal)} de pénalités. Après, il ne "
-            f"coûte plus que les {_f(frais)} MAD de frais de durée"
-            + (f" — {_f(avant / apres, 1)} fois moins" if apres else
-               ", et sans frais de durée il ne coûterait plus rien du tout")
-            + f". La bascule tombe au "
-            f"{_f(bascule_calendaires)}ᵉ jour calendaire de retard, soit le "
-            f"{_f(bascule_ouvres, 1)}ᵉ jour ouvré."),
+            f"Hors pénalités — avant le terme contractuel, ou une fois le plafond "
+            f"atteint — un jour de non-réception coûte {_f(hors)} MAD. Sous pénalités, "
+            f"c'est-à-dire du terme au plafond, il en coûte {_f(sous)} : "
+            f"{_f(frais)} de frais de durée et {_f(penal)} de pénalités, soit "
+            + (f"{_f(sous / hors, 1)} fois plus" if hors else "tout le coût")
+            + ". La fenêtre de cherté dure "
+            f"{_f(bascule_calendaires)} jours calendaires, soit "
+            f"{_f(bascule_ouvres, 1)} jours ouvrés."),
         "_ce_que_le_changement_de_regime_veut_dire": (
             "Trois conséquences, et aucune n'est confortable. **Pour le maître "
-            "d'ouvrage** : son levier s'épuise. Passé le plafond, la pénalité ne monte "
-            "plus et il ne lui reste que la résiliation, qui le coûte aussi — un maître "
-            "d'ouvrage averti n'attend pas le plafond pour agir. **Pour l'entreprise** : "
-            "le calcul change de sens. Avant le plafond, accélérer à presque n'importe "
-            "quel prix est rationnel ; après, non. Ce n'est pas un conseil, c'est ce que "
-            "le contrat dit, et il faut le savoir pour ne pas être surpris par la "
-            "logique d'en face. **Pour les deux** : cette clause se lit avant de signer, "
-            "pas au quatre-vingt-dixième jour."),
+            "d'ouvrage** : son levier a une durée de vie. Passé le plafond, la pénalité "
+            "ne monte plus et il ne lui reste que la résiliation, qui le coûte aussi — "
+            "un maître d'ouvrage averti n'attend pas le plafond pour agir. **Pour "
+            "l'entreprise** : le calcul change de sens deux fois. Avant le terme, une "
+            "journée coûte peu et rien ne pousse à se presser ; dans la fenêtre, "
+            "accélérer à presque n'importe quel prix est rationnel ; après, plus rien ne "
+            "pousse de nouveau. **Pour les deux** : ces deux clauses se lisent avant de "
+            "signer, et elles se lisent ensemble."),
         "_ce_qui_n_est_pas_chiffre": (
             "Ni la résiliation, ni la mise en régie, ni la mobilisation d'une autre "
             "entreprise aux frais de la première, ni le préjudice d'exploitation d'une "
@@ -150,7 +185,12 @@ def cout_d_un_jour(d: dict, pr: dict) -> dict:
 
 
 def courbe_du_cout(d: dict, pr: dict, cj: dict, pas: int = 10, n: int = 16) -> dict:
-    """Le coût CUMULÉ du retard, jour après jour : une droite qui se casse."""
+    """Le coût CUMULÉ d'un retard, jour après jour, À PARTIR DU TERME CONTRACTUEL.
+
+    L'origine de l'axe n'est pas la fin des travaux : c'est le terme du marché. Avant
+    lui, la courbe serait une droite de pente « frais de durée », et aucune pénalité n'y
+    figurerait.
+    """
     frais = cj["frais_de_duree_MAD_par_jour_ouvre"]
     penal = cj["penalites_MAD_par_jour_ouvre"]
     plafond = cj["plafond_des_penalites_MAD"]
@@ -158,24 +198,26 @@ def courbe_du_cout(d: dict, pr: dict, cj: dict, pas: int = 10, n: int = 16) -> d
     for i in range(n + 1):
         j = i * pas
         cum = frais * j + min(penal * j, plafond)
-        # Trois decimales de MMAD, soit le millier de MAD : la figure n'en montre que
+        # Trois décimales de MMAD, soit le millier de MAD : la figure n'en montre que
         # deux, mais un test qui verifie une PENTE sur dix jours a besoin que l'arrondi
-        # soit petit devant la pente. Publier au centieme de MMAD rendait la pente
-        # incertaine de mille dirhams par jour.
+        # soit petit devant la pente.
         pts.append({"x": j, "v": round(cum / 1e6, 3)})
     return {
         "points": pts,
-        "unite": "MMAD, cumulé",
+        "unite": "MMAD, cumulé depuis le terme contractuel",
         "pente_avant_MAD_par_jour": round(frais + penal, 2),
         "pente_apres_MAD_par_jour": round(frais, 2),
         "note": (
             "Sans pénalité au marché, la courbe est une droite : le coût du retard "
             "monte des seuls frais de durée, sans cassure." if cj["sans_penalite"] else
             f"La courbe est une droite qui se casse au "
-            f"{_f(cj['jour_de_bascule_ouvre'], 1)}ᵉ jour ouvré. Avant, elle monte de "
-            f"{_f(frais + penal)} MAD par jour ; après, de {_f(frais)}. Ce n'est pas un "
-            "adoucissement : c'est la fin d'un mécanisme, et il n'y en a pas d'autre "
-            "derrière — sauf la résiliation, qui n'est pas sur ce graphique."),
+            f"{_f(cj['jour_de_bascule_ouvre'], 1)}ᵉ jour ouvré APRÈS LE TERME "
+            f"CONTRACTUEL. Avant, elle monte de {_f(frais + penal)} MAD par jour ; "
+            f"après, de {_f(frais)}. Ce n'est pas un adoucissement : c'est la fin d'un "
+            "mécanisme, et il n'y en a pas d'autre derrière — sauf la résiliation, qui "
+            "n'est pas sur ce graphique. Et à gauche de l'origine, la même courbe "
+            f"monterait de {_f(frais)} MAD par jour : le chantier coûte avant d'être en "
+            "retard."),
     }
 
 
@@ -246,6 +288,30 @@ def portage_de_la_retenue(d: dict, pr: dict) -> dict:
 
 
 # ------------------------------------------------- 3. les réserves
+def _duree_de_levee(familles: list, h: float, capacite: float) -> dict:
+    """La durée de levée d'un ensemble de réserves : le PLUS GRAND des deux délais.
+
+    Le temps d'atelier et le délai des tiers ne s'additionnent pas et ne se remplacent
+    pas : ils se recouvrent. Une famille qui attend une pièce pendant dix jours n'occupe
+    personne pendant ce temps, et l'atelier travaille sur les autres. La durée d'un
+    ensemble est donc le maximum de son temps d'atelier cumulé et du plus long délai de
+    tiers qu'il contient — le même raisonnement qu'un chemin critique, appliqué à une
+    liste de réserves.
+
+    La première version ne connaissait que le temps d'atelier et trouvait 0,88 jour pour
+    lever sept réserves bloquantes, dont un escalator en attente de pièce que l'exercice
+    du même module annonçait à dix jours. Un plan fictif ne doit pas contredire ce que le
+    module en dit (D-044).
+    """
+    heures = sum(x["nombre"] for x in familles) * h
+    atelier = heures / capacite if capacite else 0.0
+    delai = max([x["_delai"] for x in familles], default=0.0)
+    return {"heures": round(heures, 1), "jours_d_atelier": round(atelier, 2),
+            "delai_de_tiers_le_plus_long_j": delai,
+            "duree_j": round(max(atelier, delai), 2),
+            "commande_par": "le délai d'un tiers" if delai > atelier else "l'atelier"}
+
+
 def reserves(d: dict, pr: dict, cj: dict) -> dict:
     """Deux familles, une seule bloque — et le prix de les confondre.
 
@@ -253,6 +319,11 @@ def reserves(d: dict, pr: dict, cj: dict) -> dict:
     faute la plus répandue de la fin de chantier : on compte les lignes, on trouve que
     « ça fait beaucoup », et on reporte. Trois réserves de sécurité bloquent ; quatre-
     vingt-dix réserves d'aspect ne bloquent pas.
+
+    Et ce que le calcul ajoute à la règle : ce n'est pas le VOLUME qui fait la durée,
+    c'est le DÉLAI LE PLUS LONG. Les sept réserves bloquantes de ce chantier
+    représentent moins d'une journée d'atelier et dix jours de calendrier, parce que l'une
+    d'elles attend une pièce.
     """
     r = d["reception"]["reserves"]
     h = r["heures_par_levee_h"]["valeur"]
@@ -260,23 +331,40 @@ def reserves(d: dict, pr: dict, cj: dict) -> dict:
     eff = r["effectif_de_levee"]
     taux = d["prix_unitaires_MAD"]["ressources"]["main_oeuvre_MAD_h"]["compagnon_qualifie"]["valeur"]
     heures_jour = d["prix_unitaires_MAD"]["ressources"]["heures_par_jour"]
+    capacite = eff * heures_jour                    # heures-homme par jour ouvré
 
     lignes = []
     for f in r["familles"]:
-        lignes.append({**f,
+        dt = f["delai_de_tiers_j"]
+        v = dt["valeur"] if isinstance(dt, dict) else dt
+        bdt = _b(dt) if isinstance(dt, dict) else (v, v)
+        lignes.append({**f, "_delai": v,
+                       "delai_de_tiers_j": v,
+                       "delai_de_tiers_bornes_j": list(bdt),
                        "heures": round(f["nombre"] * h, 1),
+                       "jours_d_atelier": round(f["nombre"] * h / capacite, 2),
                        "cout_MAD": round(f["nombre"] * h * taux, 2)})
     bloq = [x for x in lignes if x["empeche_l_usage"]]
-    non_bloq = [x for x in lignes if not x["empeche_l_usage"]]
     n_tot = sum(x["nombre"] for x in lignes)
     n_bloq = sum(x["nombre"] for x in bloq)
     h_tot = sum(x["heures"] for x in lignes)
-    h_non_bloq = sum(x["heures"] for x in non_bloq)
-    # Durée de levée : mesurée sur les heures, l'effectif et la journée de travail du
-    # cours — pas posée. C'est elle qui donne le prix de la confusion.
-    jours_non_bloq = h_non_bloq / (eff * heures_jour)
-    jours_bloq = sum(x["heures"] for x in bloq) / (eff * heures_jour)
-    cout_confusion = jours_non_bloq * cj["cout_avant_le_plafond_MAD_par_jour_ouvre"]
+
+    d_bloq = _duree_de_levee(bloq, h, capacite)
+    d_tout = _duree_de_levee(lignes, h, capacite)
+    jours_en_plus = max(0.0, d_tout["duree_j"] - d_bloq["duree_j"])
+    sous = jours_en_plus * cj["cout_sous_penalites_MAD_par_jour_ouvre"]
+    hors = jours_en_plus * cj["cout_hors_penalites_MAD_par_jour_ouvre"]
+    # Bornes : les heures par levée et les délais de tiers bougent ensemble, et le
+    # maximum des deux n'est pas monotone terme à terme — on recalcule donc la durée
+    # ENTIÈRE à chaque borne au lieu de borner le résultat.
+    bornes = []
+    for i in (0, 1):
+        li = [{**x, "_delai": x["delai_de_tiers_bornes_j"][i]} for x in lignes]
+        bi = [x for x in li if x["empeche_l_usage"]]
+        bornes.append(max(0.0, _duree_de_levee(li, hb[i], capacite)["duree_j"]
+                          - _duree_de_levee(bi, hb[i], capacite)["duree_j"]))
+    for x in lignes:
+        x.pop("_delai", None)
     return {
         "lignes": lignes,
         "nb_total": n_tot,
@@ -284,48 +372,57 @@ def reserves(d: dict, pr: dict, cj: dict) -> dict:
         "part_bloquante_pct": round(n_bloq / n_tot * 100, 1),
         "heures_totales": round(h_tot, 1),
         "heures_bornes": [round(n_tot * hb[0], 1), round(n_tot * hb[1], 1)],
+        "capacite_h_homme_par_jour": capacite,
         "cout_de_levee_MAD": round(h_tot * taux, 2),
         "taux_horaire_MAD": taux,
         "effectif_de_levee": eff,
-        "jours_de_levee_des_bloquantes": round(jours_bloq, 2),
-        "jours_de_levee_des_autres": round(jours_non_bloq, 2),
-        "cout_de_la_confusion_MAD": round(cout_confusion, 2),
-        # Bornes sur la seule grandeur incertaine, le temps de levee : le cout du jour
-        # vient de D1 et il est le meme dans les deux colonnes. Melanger les deux
-        # sources de variation — les heures ET le regime de penalite — donnerait une
-        # etendue plus large et moins lisible, et surtout elle ne dirait plus ce qu'elle
-        # mesure.
+        "levee_des_bloquantes": d_bloq,
+        "levee_de_toutes": d_tout,
+        "jours_de_non_reception_en_plus": round(jours_en_plus, 2),
+        "jours_en_plus_bornes": [round(min(bornes), 2), round(max(bornes), 2)],
+        "cout_de_la_confusion_sous_penalites_MAD": round(sous, 2),
+        "cout_de_la_confusion_hors_penalites_MAD": round(hors, 2),
         "cout_de_la_confusion_bornes_MAD": [
-            round((n_tot - n_bloq) * hb[0] / (eff * heures_jour)
-                  * cj["cout_avant_le_plafond_MAD_par_jour_ouvre"], 2),
-            round((n_tot - n_bloq) * hb[1] / (eff * heures_jour)
-                  * cj["cout_avant_le_plafond_MAD_par_jour_ouvre"], 2)],
-        "cout_de_la_confusion_apres_le_plafond_MAD": round(
-            jours_non_bloq * cj["cout_apres_le_plafond_MAD_par_jour_ouvre"], 2),
+            round(min(bornes) * cj["cout_hors_penalites_MAD_par_jour_ouvre"], 2),
+            round(max(bornes) * cj["cout_sous_penalites_MAD_par_jour_ouvre"], 2)],
         "la_regle": r["_la_regle"],
+        "le_delai_de_tiers": r["_delai_de_tiers"],
         "lecture": (
             f"{n_tot} réserves, dont {n_bloq} seulement empêchent l'usage ou mettent en "
-            f"cause la sécurité — {_f(n_bloq / n_tot * 100, 1)} %. Les lever toutes "
-            f"demande {_f(h_tot)} heures, soit {_f(h_tot / (eff * heures_jour), 1)} "
-            f"jours à {eff} compagnons, pour {_f(h_tot * taux)} MAD. Mais seules les "
-            f"{n_bloq} bloquantes sont à lever AVANT la réception : "
-            f"{_f(jours_bloq, 1)} jours. Les autres se lèvent après, sous délai, et le "
-            "chantier est réceptionné pendant ce temps."),
+            f"cause la sécurité — {_f(n_bloq / n_tot * 100, 1)} %. Lever les "
+            f"{n_bloq} bloquantes demande {_f(d_bloq['heures'])} heures-homme, soit "
+            f"{_f(d_bloq['jours_d_atelier'], 2)} jour d'atelier — mais "
+            f"{_f(d_bloq['duree_j'], 1)} jours de calendrier, parce que l'une d'elles "
+            f"attend une pièce. Les lever TOUTES demande {_f(d_tout['duree_j'], 1)} "
+            f"jours : {_f(jours_en_plus, 1)} de plus, et c'est l'atelier qui commande "
+            "cette fois."),
+        "_ce_qui_commande_la_duree": (
+            f"La levée des bloquantes est commandée par {d_bloq['commande_par']} "
+            f"({_f(d_bloq['delai_de_tiers_le_plus_long_j'])} jours d'attente contre "
+            f"{_f(d_bloq['jours_d_atelier'], 2)} jour de travail) ; celle de toutes les "
+            f"réserves par {d_tout['commande_par']} "
+            f"({_f(d_tout['jours_d_atelier'], 1)} jours de travail contre "
+            f"{_f(d_tout['delai_de_tiers_le_plus_long_j'])} jours d'attente). Le "
+            "basculement entre les deux régimes est le seul enseignement robuste de ce "
+            "tableau : mettre plus de monde ne sert à rien tant qu'on attend une pièce, "
+            "et ne sert qu'à cela une fois la pièce arrivée."),
         "_le_prix_de_la_confusion": (
-            f"Traiter les {n_tot - n_bloq} réserves non bloquantes comme bloquantes "
-            f"repousse la réception de {_f(jours_non_bloq, 1)} jours ouvrés. À "
-            f"{_f(cj['cout_avant_le_plafond_MAD_par_jour_ouvre'])} MAD le jour de "
-            f"non-réception, cela coûte {_f(cout_confusion)} MAD — plus de "
-            f"{_f(cout_confusion / (h_tot * taux), 0)} fois le prix de lever TOUTES les "
-            "réserves, bloquantes comprises. La question n'est donc jamais « y a-t-il "
-            "des réserves ? » mais « laquelle empêche l'usage ? »."),
+            f"Exiger la levée des {n_tot - n_bloq} réserves non bloquantes avant de "
+            f"réceptionner repousse la réception de {_f(jours_en_plus, 1)} jours "
+            f"ouvrés — et non de {_f(d_tout['duree_j'], 1)}, parce que les bloquantes "
+            f"prennent déjà {_f(d_bloq['duree_j'], 1)} jours qu'on aurait attendus de "
+            f"toute façon. Ces {_f(jours_en_plus, 1)} jours coûtent {_f(hors)} MAD si "
+            f"le chantier est dans son délai, et {_f(sous)} MAD s'il est en retard et "
+            "sous pénalités. La question n'est donc jamais « y a-t-il des réserves ? » "
+            "mais « laquelle empêche l'usage ? » — et, juste après, « laquelle attend "
+            "quelque chose ? »."),
         "_et_dans_l_autre_sens": (
             "Le symétrique est pire, et il est moins visible : réceptionner avec une "
             "réserve de sécurité classée « aspect » parce qu'elle était seule de sa "
-            "famille dans une liste de quatre-vingt-dix lignes. Un garde-corps non "
-            "conforme ne devient pas une finition parce qu'il est noyé dans une liste. "
-            "C'est pourquoi le classement se fait ligne à ligne, par la seule question "
-            "qui décide, et non par un comptage."),
+            "famille dans une longue liste. Un garde-corps non conforme ne devient pas "
+            "une finition parce qu'il est noyé dans une liste. C'est pourquoi le "
+            "classement se fait ligne à ligne, par la seule question qui décide, et non "
+            "par un comptage."),
     }
 
 
@@ -333,58 +430,71 @@ def reserves(d: dict, pr: dict, cj: dict) -> dict:
 def doe(d: dict, pr: dict, po: dict) -> dict:
     """Le DOE se constitue pendant le chantier. Reconstitué, il coûte quatre fois plus.
 
-    Et il ne coûte pas que des heures : il bloque le décompte définitif, c'est-à-dire de
-    l'argent dû, non payé, que l'entreprise porte au taux de son découvert.
+    Et il ne coûte pas que des heures : il bloque le DÉCOMPTE DÉFINITIF, c'est-à-dire le
+    solde des travaux — pas la retenue de garantie. La distinction a coûté un bloquant à
+    la première version de ce module, qui portait le retard du DOE sur la retenue : la
+    retenue est immobilisée par la clause de garantie, que le dossier soit remis ou non,
+    et son portage n'est donc pas imputable au DOE. Ce que le DOE retarde, c'est le
+    paiement du solde.
     """
     o = d["reception"]["doe"]
     taux_cadre = d["prix_unitaires_MAD"]["ressources"]["main_oeuvre_MAD_h"]["controleur"]["valeur"]
     fil, rec = o["heures_au_fil_de_l_eau"]["valeur"], o["heures_reconstitue"]["valeur"]
     fb, rb = _b(o["heures_au_fil_de_l_eau"]), _b(o["heures_reconstitue"])
     jours, jb = o["retard_du_solde_j"]["valeur"], _b(o["retard_du_solde_j"])
-    bloque = po["retenue_immobilisee_MAD"]
+    part, pb = o["part_du_marche_au_decompte_definitif_pct"]["valeur"], _b(
+        o["part_du_marche_au_decompte_definitif_pct"])
+    marche = pr["bordereau"]["prix_de_vente_MAD"]
+    solde = marche * part / 100
     taux_portage = po["taux_de_portage_annuel_pct"]
-    # La base de l'annee est une CLAUSE de la convention de credit, pas une constante :
-    # 365 et 360 sont tous deux courants et different de 1,4 % sur le meme calcul. La
-    # verification dimensionnelle a trouve ce point en comparant le resultat a une annee
-    # de 365,25 jours — un chiffre qui n'a de sens qu'en astronomie.
+    tb = _b(d["prix_unitaires_MAD"]["contrat"]["cout_de_portage_annuel_pct"])
     base = d["prix_unitaires_MAD"]["contrat"]["base_de_calcul_des_interets_j"]
-    portage = bloque * taux_portage / 100 * jours / base
+    portage = solde * taux_portage / 100 * jours / base
+    sur_h = (rec - fil) * taux_cadre
+    total = sur_h + portage
+    bornes = [round(max(0.0, (rb[0] - fb[1]) * taux_cadre)
+                    + marche * pb[0] / 100 * tb[0] / 100 * jb[0] / base, 2),
+              round((rb[1] - fb[0]) * taux_cadre
+                    + marche * pb[1] / 100 * tb[1] / 100 * jb[1] / base, 2)]
     return {
         "heures_au_fil_de_l_eau": fil,
         "heures_reconstitue": rec,
         "rapport_des_heures": round(rec / fil, 1),
+        "rapport_bornes": [round(rb[0] / fb[1], 1), round(rb[1] / fb[0], 1)],
         "taux_horaire_de_cadre_MAD": taux_cadre,
         "cout_au_fil_de_l_eau_MAD": round(fil * taux_cadre, 2),
         "cout_reconstitue_MAD": round(rec * taux_cadre, 2),
-        "surcout_en_heures_MAD": round((rec - fil) * taux_cadre, 2),
-        "surcout_bornes_MAD": [round((rb[0] - fb[1]) * taux_cadre, 2),
-                               round((rb[1] - fb[0]) * taux_cadre, 2)],
-        "montant_bloque_MAD": bloque,
+        "surcout_en_heures_MAD": round(sur_h, 2),
+        "surcout_en_heures_bornes_MAD": [round(max(0.0, (rb[0] - fb[1]) * taux_cadre), 2),
+                                         round((rb[1] - fb[0]) * taux_cadre, 2)],
+        "part_du_marche_au_decompte_definitif_pct": part,
+        "solde_bloque_MAD": round(solde, 2),
         "retard_du_solde_j": jours,
-        "cout_de_portage_MAD": round(portage, 2),
         "base_de_calcul_des_interets_j": base,
-        "cout_de_portage_bornes_MAD": [round(bloque * taux_portage / 100 * jb[0] / base, 2),
-                                       round(bloque * taux_portage / 100 * jb[1] / base, 2)],
-        "_la_base_est_une_clause": (
-            f"Les intérêts sont calculés sur une année de {base} jours. Ce n'est pas une "
-            "constante : la base 360, dite bancaire, est tout aussi courante, et elle "
-            f"donne {_f(bloque * taux_portage / 100 * jours / 360)} MAD au lieu de "
-            f"{_f(bloque * taux_portage / 100 * jours / base)} — 1,4 % d'écart sur le "
-            "même calcul. Cela se lit dans la convention de crédit, cela ne se suppose "
-            "pas, et cela ne se découvre pas en relisant une formule : ici, c'est la "
-            "vérification dimensionnelle qui l'a signalé, en comparant le résultat à "
-            "une année de 365,25 jours."),
-        "cout_total_du_retard_de_DOE_MAD": round((rec - fil) * taux_cadre + portage, 2),
+        "cout_de_portage_MAD": round(portage, 2),
+        "cout_de_portage_bornes_MAD": [
+            round(marche * pb[0] / 100 * tb[0] / 100 * jb[0] / base, 2),
+            round(marche * pb[1] / 100 * tb[1] / 100 * jb[1] / base, 2)],
+        "cout_total_du_retard_de_DOE_MAD": round(total, 2),
+        "cout_total_bornes_MAD": bornes,
+        "part_du_portage_dans_le_surcout_pct": round(portage / total * 100, 1),
         "lecture": (
             f"Tenu au fil de l'eau, le dossier demande {_f(fil)} heures de cadre, soit "
             f"{_f(fil * taux_cadre)} MAD. Reconstitué après coup, il en demande "
             f"{_f(rec)} — {_f(rec / fil, 1)} fois plus — et pendant qu'on le "
-            f"reconstitue, il bloque le décompte définitif. Porter {_f(bloque)} MAD "
-            f"pendant {_f(jours)} jours au taux de {_f(taux_portage, 1)} % l'an coûte "
-            f"{_f(portage)} MAD de plus. Le retard de DOE coûte donc "
-            f"{_f((rec - fil) * taux_cadre + portage)} MAD, dont "
-            f"{_f(portage / ((rec - fil) * taux_cadre + portage) * 100)} % qui ne sont "
-            "ni du travail ni une pénalité : seulement de l'argent qui attend."),
+            f"reconstitue, il bloque le décompte définitif. Porter le solde, "
+            f"{_f(solde)} MAD, pendant {_f(jours)} jours au taux de "
+            f"{_f(taux_portage, 1)} % l'an coûte {_f(portage)} MAD de plus. Le retard "
+            f"de DOE coûte donc {_f(total)} MAD, dont "
+            f"{_f(portage / total * 100)} % qui ne sont ni du travail ni une pénalité : "
+            "seulement de l'argent dû qui attend."),
+        "_bornes": (
+            f"Entre {_f(bornes[0])} et {_f(bornes[1])} MAD selon les bornes des quatre "
+            "hypothèses. La borne basse du surcoût en HEURES est nulle, et il faut le "
+            "dire : rien n'interdit qu'un dossier tenu négligemment coûte autant qu'un "
+            "dossier reconstitué soigneusement. Ce qui ne s'annule pas, c'est le "
+            "portage du solde — il court dès que le dossier est en retard, quel que "
+            "soit le soin qu'on y a mis avant."),
         "_pourquoi_c_est_sous_estime": (
             "Parce que le DOE ne coûte rien tant qu'on ne le fait pas. C'est une tâche "
             "sans cadence, sans point d'arrêt, dont personne ne constate l'absence avant "
@@ -393,78 +503,134 @@ def doe(d: dict, pr: dict, po: dict) -> dict:
             "des moments où il ne coûtait rien de demander le document : quand le "
             "sous-traitant est encore là, quand la paroi est encore ouverte, quand "
             "celui qui a posé se souvient de ce qu'il a posé."),
-        "_le_montant_bloque_est_une_borne_basse": (
-            "Ce calcul ne bloque que la retenue de garantie, parce que c'est le seul "
-            "montant que ce cours publie. Un décompte définitif porte aussi le solde des "
-            "travaux, les révisions de prix non encore réglées et les travaux "
-            "supplémentaires acceptés. Le portage réel est donc supérieur, et dans des "
-            "proportions qui dépendent du marché."),
+        "_ce_que_le_solde_contient": (
+            f"Le solde bloqué est posé à {_f(part, 1)} % du montant du marché : dernière "
+            "situation, révisions de prix non encore réglées, travaux supplémentaires "
+            "acceptés. Ce n'est PAS la retenue de garantie, que la clause de garantie "
+            "immobilise de toute façon — une première version de ce module imputait au "
+            "DOE le portage de la retenue, c'est-à-dire le coût d'une clause qui n'a "
+            "rien à voir avec lui. Les deux montants cohabitent à la fin d'un chantier, "
+            "et ils ne se confondent pas."),
+        "_la_base_est_une_clause": (
+            f"Les intérêts sont calculés sur une année de {base} jours. Ce n'est pas une "
+            "constante : la base 360, dite bancaire, est tout aussi courante, et elle "
+            f"donne {_f(solde * taux_portage / 100 * jours / 360)} MAD au lieu de "
+            f"{_f(portage)} — 1,4 % d'écart sur le même calcul. Cela se lit dans la "
+            "convention de crédit, cela ne se suppose pas, et cela ne se découvre pas en "
+            "relisant une formule : ici, c'est la vérification dimensionnelle qui l'a "
+            "signalé, en comparant le résultat à une année de 365,25 jours."),
         "_le_critere_pratique": o["_ce_qu_il_doit_contenir"],
     }
 
 
 # ------------------------------------------------- 5. les opérations préalables
+def _duree(e: dict) -> tuple:
+    """La durée d'une étape : décision (un nombre) ou hypothèse ({valeur, fourchette})."""
+    v = e["duree_j"]
+    if isinstance(v, dict):
+        return float(v["valeur"]), _b(v)
+    return float(v), (float(v), float(v))
+
+
 def operations_prealables(d: dict) -> dict:
-    """La séquence, et sa durée — qui est du délai, pas une formalité."""
+    """La séquence, sa durée — et à qui chacune de ses durées appartient.
+
+    Deux natures de durée cohabitent, et les confondre était une faute : ce que
+    l'entreprise tient est une DÉCISION d'organisation, sans fourchette ; ce qui
+    appartient à un tiers — la maîtrise d'œuvre qui visite, l'exploitant qui essaie, le
+    maître d'ouvrage qui décide — est une HYPOTHÈSE, et elle porte sa fourchette. On ne
+    décide pas une durée qui appartient à quelqu'un d'autre.
+    """
     o = d["reception"]["operations_prealables"]
-    etapes = o["etapes"]
-    cumul, lignes = 0, []
-    for e in etapes:
-        cumul += e["duree_j"]
-        lignes.append({**e, "fin_j": cumul})
+    cumul, lignes, bas, haut = 0.0, [], 0.0, 0.0
+    for e in o["etapes"]:
+        v, b = _duree(e)
+        cumul += v
+        bas += b[0]
+        haut += b[1]
+        lignes.append({**e, "duree_j": v, "duree_bornes_j": list(b),
+                       "fin_j": round(cumul, 1)})
+    tiers = [x for x in lignes if not x["tenue_par_l_entreprise"]]
+    part_tiers = sum(x["duree_j"] for x in tiers) / cumul * 100
     return {
         "etapes": lignes,
-        "nb_etapes": len(etapes),
-        "duree_totale_j": cumul,
+        "nb_etapes": len(lignes),
+        "unite": o["unite"],
+        "duree_totale_j": round(cumul, 1),
+        "duree_bornes_j": [round(bas, 1), round(haut, 1)],
+        "duree_tenue_par_des_tiers_j": round(sum(x["duree_j"] for x in tiers), 1),
+        "part_tenue_par_des_tiers_pct": round(part_tiers, 1),
         "note": (
-            f"{len(etapes)} étapes, {cumul} jours entre l'avis de fin de travaux et la "
-            "décision du maître d'ouvrage — si tout va bien, et si personne n'est "
-            "absent. Ce n'est pas une formalité administrative : c'est une tâche du "
-            "planning, avec une durée, qui doit y figurer. Un planning qui finit au "
-            "dernier coup de peinture ment d'un mois et demi."),
+            f"{len(lignes)} étapes, {_f(cumul)} {o['unite']} entre l'avis de fin de "
+            f"travaux et la décision du maître d'ouvrage — si tout va bien, et si "
+            f"personne n'est absent. Les bornes vont de {_f(bas)} à {_f(haut)} "
+            f"{o['unite']}, et l'étendue vient presque entièrement des étapes que "
+            "l'entreprise ne tient pas. Ce n'est pas une formalité administrative : "
+            "c'est une tâche du planning, avec une durée, qui doit y figurer. Un "
+            "planning qui finit au dernier coup de peinture ment de deux mois ouvrés."),
+        "_a_qui_appartiennent_ces_jours": (
+            f"{_f(sum(x['duree_j'] for x in tiers))} des {_f(cumul)} {o['unite']} — "
+            f"{_f(part_tiers)} % — sont tenus par des tiers : la maîtrise d'œuvre qui "
+            "visite, l'exploitant qui met en service, le maître d'ouvrage qui décide. "
+            "L'entreprise ne les raccourcit pas en mettant plus de monde ; elle ne les "
+            "raccourcit qu'en les préparant plus tôt. C'est pour cela que leurs durées "
+            "portent une fourchette et que les siennes n'en portent pas."),
         "_l_essai_qui_commande": (
             "La mise en service des systèmes est la plus longue des étapes, et c'est "
-            "aussi la seule que l'entreprise ne maîtrise pas : c'est l'exploitant "
-            "ferroviaire qui la conduit. Elle se prépare donc comme une consignation — "
-            "demandée longtemps à l'avance, avec ses prérequis vérifiés un par un. Un "
-            "essai de système reporté ne se rattrape pas en y mettant plus de monde."),
+            "aussi la seule que l'entreprise ne maîtrise pas du tout : c'est "
+            "l'exploitant ferroviaire qui la conduit. Elle se prépare donc comme une "
+            "consignation — demandée longtemps à l'avance, avec ses prérequis vérifiés "
+            "un par un. Un essai de système reporté ne se rattrape pas en y mettant plus "
+            "de monde, et sa borne haute est près du triple de sa valeur retenue."),
     }
 
 
-# ------------------------------------------------- 6. ce que le planning en prevoit
+# ------------------------------------------------- 6. ce que le planning en prévoit
 def confrontation_au_planning(d: dict, pr: dict, cj: dict, op: dict) -> dict:
-    """Le planning prevoit-il la reception qu'il annonce ? Mesure, pas supposition.
+    """Le planning prévoit-il la réception qu'il annonce ? Tâche par tâche, et mesuré.
 
-    Le module D2 porte deux taches de fin : « Essais et mise en service » et
-    « Reception ». La seconde dure dix jours. La sequence du § S3a en demande davantage,
-    une fois la mise en service mise de cote puisqu'elle est deja la premiere.
+    La première version retirait du besoin la seule étape « mise en service », alors que
+    la tâche du planning qui la porte s'appelle « ESSAIS ET mise en service » : les dix
+    jours d'essais de fonctionnement étaient comptés comme absents d'une tâche qui les
+    nomme. Le module affirmait pourtant, test à l'appui, qu'il n'y avait pas de double
+    compte. La correction ne consiste pas à changer un nombre : elle consiste à ÉCRIRE
+    dans `data/`, étape par étape, quelle tâche du planning la porte — et à comparer
+    ensuite tâche par tâche.
 
-    Attention a ce que ce calcul EST et n'est pas. Les durees des deux cotes sont des
-    decisions de ce cours, posees a deux moments differents : D2 a pose « reception =
-    dix jours » avant que ce module n'existe et sans la decomposer, et ce module a pose
-    une sequence en six etapes. Ce n'est donc pas la decouverte d'une erreur dans un
-    planning reel — c'est la confrontation de deux chiffres de ce cours, et elle vaut
-    par son MECANISME : une tache « Reception » qui n'a pas ete decomposee est presque
-    toujours trop courte, parce qu'on y pense comme a une signature et qu'elle est une
-    sequence.
-
-    L'ecart sur la date de fin est MESURE en rejouant le reseau (D-040), pas deduit de
-    la marge : la tache est la derniere du chemin critique, mais le verifier coute un
-    appel et evite d'affirmer.
+    Ce que cette comparaison est, et n'est pas : les durées des deux côtés sont des
+    décisions de ce cours, posées à deux moments différents. D2 a posé « réception =
+    dix jours » avant que ce module n'existe et sans la décomposer. Ce n'est donc pas la
+    découverte d'une erreur dans un planning réel — c'est la confrontation de deux
+    chiffres du cours (D-055), et elle vaut par son mécanisme.
     """
     import copy
     sys.path.insert(0, str(RACINE / "calc"))
     import planification as pln                                          # noqa: E402
     pl = json.loads((RACINE / "calc" / "sorties" / "planification.json")
                     .read_text(encoding="utf-8"))
-    prevu = pl["durees"]["RECE"]["duree_j"]
-    essais = pl["durees"]["ESSA"]["duree_j"]
-    # L'etape « mise en service » de la sequence est deja portee par la tache ESSA du
-    # planning : la compter deux fois serait exactement la faute que ce cours reproche
-    # ailleurs. On retire donc du besoin ce que le planning porte deja.
-    deja = next((x for x in op["etapes"] if "ise en service" in x["etape"]), None)
-    besoin = op["duree_totale_j"] - (deja["duree_j"] if deja else 0)
-    ecart = besoin - prevu
+
+    par_tache: dict = {}
+    for e in op["etapes"]:
+        par_tache.setdefault(e["porte_par"], []).append(e)
+    lignes, allongements = [], {}
+    for tache, etapes in sorted(par_tache.items()):
+        if tache is None:
+            continue
+        prevu = pl["durees"][tache]["duree_j"]
+        besoin = sum(x["duree_j"] for x in etapes)
+        b_bas = sum(x["duree_bornes_j"][0] for x in etapes)
+        b_haut = sum(x["duree_bornes_j"][1] for x in etapes)
+        ecart = besoin - prevu
+        allongements[tache] = max(0.0, ecart)
+        lignes.append({
+            "tache": tache, "nom": pl["durees"][tache]["nom"],
+            "duree_prevue_j": prevu,
+            "etapes_portees": [x["etape"] for x in etapes],
+            "besoin_j": round(besoin, 1),
+            "besoin_bornes_j": [round(b_bas, 1), round(b_haut, 1)],
+            "ecart_j": round(ecart, 1),
+            "ecart_bornes_j": [round(b_bas - prevu, 1), round(b_haut - prevu, 1)],
+        })
 
     tv = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json")
                     .read_text(encoding="utf-8"))
@@ -472,29 +638,53 @@ def confrontation_au_planning(d: dict, pr: dict, cj: dict, op: dict) -> dict:
     t0 = pln.durees_chantier(d, d["planning"], q,
                              tv["planning_plancher"]["duree_totale_j"])
     ref = pln.voie_A_parcours(pln.planning_avec_fenetres(d, t0)["taches"])["duree"]
-    t1 = copy.deepcopy(t0)
-    t1["RECE"]["duree_j"] = prevu + max(0.0, ecart)
-    fin = pln.voie_A_parcours(pln.planning_avec_fenetres(d, t1)["taches"])["duree"]
-    decalage = round(fin - ref, 2)
+
+    def mesure(allonge: dict) -> float:
+        t1 = copy.deepcopy(t0)
+        for k, v in allonge.items():
+            t1[k]["duree_j"] = t1[k]["duree_j"] + v
+        fin_ = pln.voie_A_parcours(pln.planning_avec_fenetres(d, t1)["taches"])["duree"]
+        return round(fin_ - ref, 2)
+
+    decalage = mesure(allongements)
+    # Bornes MESURÉES, pas déduites : le réseau est rejoué aux deux bornes du besoin.
+    bas = mesure({x["tache"]: max(0.0, x["ecart_bornes_j"][0]) for x in lignes})
+    haut = mesure({x["tache"]: max(0.0, x["ecart_bornes_j"][1]) for x in lignes})
+    ecart_total = sum(x["ecart_j"] for x in lignes)
     return {
-        "duree_prevue_par_le_planning_j": prevu,
-        "duree_des_essais_au_planning_j": essais,
-        "etape_deja_portee_par_le_planning": deja["etape"] if deja else None,
-        "duree_demandee_par_la_sequence_j": round(besoin, 2),
-        "ecart_j": round(ecart, 2),
+        "lignes": lignes,
+        "ecart_total_j": round(ecart_total, 1),
         "decalage_mesure_de_la_fin_j": decalage,
+        "decalage_bornes_j": [min(bas, haut), max(bas, haut)],
         "duree_de_reference_j": round(ref, 2),
-        "cout_de_l_ecart_MAD": round(decalage
-                                     * cj["cout_avant_le_plafond_MAD_par_jour_ouvre"], 2),
+        "cout_hors_penalites_MAD": round(
+            decalage * cj["cout_hors_penalites_MAD_par_jour_ouvre"], 2),
+        "cout_sous_penalites_MAD": round(
+            decalage * cj["cout_sous_penalites_MAD_par_jour_ouvre"], 2),
         "lecture": (
-            f"Le planning prévoit {_f(prevu)} jours pour la réception, et "
-            f"{_f(essais)} pour les essais et la mise en service. La séquence du § S3a "
-            f"en demande {_f(besoin)} une fois la mise en service mise de côté, "
-            f"puisqu'elle est déjà la tâche précédente. L'écart est de "
-            f"{_f(ecart)} jours ouvrés, et le réseau rejoué décale la fin de "
-            f"{_f(decalage)} jours — la tâche est la dernière du chemin critique, rien "
-            f"ne l'absorbe. Au prix du jour de non-réception, cela vaut "
-            f"{_f(decalage * cj['cout_avant_le_plafond_MAD_par_jour_ouvre'])} MAD."),
+            "Le planning porte deux tâches de fin, et la séquence du § S3a dit ce que "
+            "chacune doit contenir. "
+            + " ".join(
+                f"« {x['nom']} » prévoit {_f(x['duree_prevue_j'])} jours pour "
+                f"{len(x['etapes_portees'])} étape(s) qui en demandent "
+                f"{_f(x['besoin_j'])}, soit {_f(x['ecart_j'])} de trop."
+                for x in lignes)
+            + f" Le réseau rejoué avec les deux allongements décale la fin de "
+              f"{_f(decalage, 1)} jours ouvrés — les deux tâches sont sur le chemin "
+              f"critique, rien ne les absorbe. Au prix d'un jour de non-réception, cela "
+              f"vaut {_f(decalage * cj['cout_hors_penalites_MAD_par_jour_ouvre'])} MAD "
+              f"si le chantier est dans son délai, et "
+              f"{_f(decalage * cj['cout_sous_penalites_MAD_par_jour_ouvre'])} s'il est "
+              "déjà sous pénalités."),
+        "_le_double_compte_evite": (
+            "Chaque étape déclare dans `data/` la tâche du planning qui la porte, et "
+            "aucune n'en déclare deux. C'est la correction d'un bloquant : la première "
+            "version ne retirait du besoin que l'étape « mise en service », alors que la "
+            "tâche qui la porte s'appelle « essais ET mise en service » — les dix jours "
+            "d'essais de fonctionnement étaient comptés comme absents d'une tâche qui "
+            "les nomme. L'erreur ne se voyait pas dans le total, qui était le même ; "
+            "elle se voyait dans l'ATTRIBUTION, et c'est l'attribution qui dit quoi "
+            "corriger."),
         "_ce_que_cette_comparaison_est": (
             "Deux chiffres de ce cours, posés à deux moments différents, et non la "
             "découverte d'une erreur dans un planning réel : le module D2 a posé "
@@ -502,16 +692,14 @@ def confrontation_au_planning(d: dict, pr: dict, cj: dict, op: dict) -> dict:
             "décomposer. Ce qui se généralise n'est donc pas l'écart — il dépend "
             "entièrement des durées posées ici — mais le MÉCANISME : une tâche "
             "« Réception » non décomposée est presque toujours trop courte, parce qu'on "
-            "y pense comme à une signature alors que c'est une séquence, et parce que "
-            "les deux étapes qui la font déborder — les essais de fonctionnement et le "
-            "procès-verbal du maître d'ouvrage — ne dépendent pas de l'entreprise."),
+            "y pense comme à une signature alors que c'est une séquence."),
         "_quoi_en_faire": (
-            "Décomposer la ligne « Réception » du planning en ses étapes, chacune avec "
-            "son responsable, comme on décompose un cycle de gros œuvre. C'est la seule "
-            "façon de voir que la moitié de sa durée n'appartient pas à l'entreprise — "
-            "et donc de la préparer au lieu de la subir. Un planning qui finit sur une "
-            "tâche « Réception » de dix jours sans détail annonce une date qu'il n'a pas "
-            "vérifiée."),
+            f"Décomposer les lignes de fin du planning en leurs étapes, chacune avec son "
+            f"responsable, comme on décompose un cycle de gros œuvre. C'est la seule "
+            f"façon de voir que {_f(op['part_tenue_par_des_tiers_pct'])} % de leur durée "
+            "n'appartient pas à l'entreprise — et donc de la préparer au lieu de la "
+            "subir. Un planning qui finit sur une tâche « Réception » de dix jours sans "
+            "détail annonce une date qu'il n'a pas vérifiée."),
     }
 
 
@@ -525,15 +713,21 @@ def figures(cj: dict, co: dict, rs: dict, dd: dict) -> dict:
             {"x": cj["jour_de_bascule_ouvre"], "libelle": "plafond atteint"}
             if cj["jour_de_bascule_ouvre"] is not None
             else {"x": 0, "libelle": ""}),
-        "reserves": [{"libelle": f"{x['famille']}"
-                                 f"{' · BLOQUANTE' if x['empeche_l_usage'] else ''}",
-                      "valeur": x["nombre"]} for x in rs["lignes"]],
+        # `bloque` : la figure doit porter la qualification dans sa FORME, pas seulement
+        # dans son libelle. Une figure dont le propos est « la longueur n'entre pas dans
+        # la decision » et qui ne distingue les bloquantes que par un mot ajoute met la
+        # longueur au premier plan et la qualification en note.
+        "reserves": [{"libelle": x["famille"], "valeur": x["nombre"],
+                      "alerte": bool(x["empeche_l_usage"])} for x in rs["lignes"]],
+        # La cascade part du SURCOUT, pas du cout de reference : son titre dit « d'ou
+        # vient le surcout », et son total doit donc etre le surcout publie par le
+        # tableau de la meme section. La version precedente y ajoutait la barre de
+        # reference et affichait un total que le tableau contredisait.
         "doe": [
-            {"libelle": "DOE tenu au fil de l'eau", "montant": round(dd["cout_au_fil_de_l_eau_MAD"] / 1000)},
-            {"libelle": "Heures de reconstitution en plus", "montant": round(dd["surcout_en_heures_MAD"] / 1000)},
-            {"libelle": "Portage du décompte bloqué", "montant": round(dd["cout_de_portage_MAD"] / 1000)},
-            {"libelle": "Total d'un DOE reconstitué", "montant": round(
-                (dd["cout_reconstitue_MAD"] + dd["cout_de_portage_MAD"]) / 1000), "type": "total"},
+            {"libelle": "Heures en plus", "montant": round(dd["surcout_en_heures_MAD"] / 1000)},
+            {"libelle": "Solde bloqué", "montant": round(dd["cout_de_portage_MAD"] / 1000)},
+            {"libelle": "Surcoût total", "montant": round(
+                dd["cout_total_du_retard_de_DOE_MAD"] / 1000), "type": "total"},
         ],
     }
 
@@ -549,13 +743,13 @@ def tout_calculer(d: dict) -> dict:
     op = operations_prealables(d)
     cf = confrontation_au_planning(d, pr, cj, op)
     return {
-        "confrontation_au_planning": cf,
         "cout_d_un_jour": cj,
         "courbe_du_cout": co,
         "portage": po,
         "reserves": rs,
         "doe": dd,
         "operations_prealables": op,
+        "confrontation_au_planning": cf,
         "figures": figures(cj, co, rs, dd),
     }
 
@@ -568,21 +762,31 @@ if __name__ == "__main__":
     (sortie / "reception.json").write_text(
         json.dumps(r, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     c, p, s, o = r["cout_d_un_jour"], r["portage"], r["reserves"], r["doe"]
-    print(f"jour de non-reception : {c['cout_avant_le_plafond_MAD_par_jour_ouvre']:.0f} MAD "
-          f"puis {c['cout_apres_le_plafond_MAD_par_jour_ouvre']:.0f} "
-          f"(x{c['rapport_des_deux_regimes']}), bascule au "
-          f"{c['jour_de_bascule_calendaire']}e jour calendaire "
+    print(f"un jour : {c['cout_hors_penalites_MAD_par_jour_ouvre']:.0f} MAD hors "
+          f"penalites, {c['cout_sous_penalites_MAD_par_jour_ouvre']:.0f} sous "
+          f"{c['cout_sous_penalites_bornes_MAD']} (x{c['rapport_des_deux_regimes']}), "
+          f"fenetre de {c['jour_de_bascule_calendaire']} j calendaires "
           f"{c['jour_de_bascule_bornes_calendaires']}")
     print(f"portage : retenue {p['retenue_immobilisee_MAD']:.0f} MAD, "
           f"{p['cout_de_la_retenue_MAD_par_mois']:.0f} MAD/mois contre "
           f"{p['cout_de_la_caution_MAD_par_mois']:.0f} — rapport {p['rapport_des_deux_couts']}")
     print(f"reserves : {s['nb_total']} dont {s['nb_bloquantes']} bloquantes ; "
-          f"la confusion coute {s['cout_de_la_confusion_MAD']:.0f} MAD")
-    print(f"DOE : {o['cout_total_du_retard_de_DOE_MAD']:.0f} MAD dont "
-          f"{o['cout_de_portage_MAD']:.0f} de portage")
+          f"bloquantes {s['levee_des_bloquantes']['duree_j']} j "
+          f"({s['levee_des_bloquantes']['commande_par']}), toutes "
+          f"{s['levee_de_toutes']['duree_j']} j ; la confusion coute "
+          f"{s['cout_de_la_confusion_hors_penalites_MAD']:.0f} a "
+          f"{s['cout_de_la_confusion_sous_penalites_MAD']:.0f} MAD")
+    print(f"DOE : solde bloque {o['solde_bloque_MAD']:.0f}, surcout "
+          f"{o['cout_total_du_retard_de_DOE_MAD']:.0f} MAD {o['cout_total_bornes_MAD']} "
+          f"dont {o['part_du_portage_dans_le_surcout_pct']} % de portage")
     cf = r["confrontation_au_planning"]
-    print(f"OPR : {r['operations_prealables']['duree_totale_j']} j ; le planning en "
-          f"prevoit {cf['duree_prevue_par_le_planning_j']:.0f} pour "
-          f"{cf['duree_demandee_par_la_sequence_j']:.0f} demandes — "
-          f"fin decalee de {cf['decalage_mesure_de_la_fin_j']:.1f} j, "
-          f"{cf['cout_de_l_ecart_MAD']:.0f} MAD")
+    op = r["operations_prealables"]
+    print(f"OPR : {op['duree_totale_j']} j {op['duree_bornes_j']} dont "
+          f"{op['part_tenue_par_des_tiers_pct']} % tenus par des tiers")
+    for x in cf["lignes"]:
+        print(f"  {x['tache']} : {x['duree_prevue_j']:.0f} j prevus pour "
+              f"{x['besoin_j']:.0f} demandes — ecart {x['ecart_j']:.0f} j "
+              f"{x['ecart_bornes_j']}")
+    print(f"  fin decalee de {cf['decalage_mesure_de_la_fin_j']} j "
+          f"{cf['decalage_bornes_j']}, {cf['cout_hors_penalites_MAD']:.0f} a "
+          f"{cf['cout_sous_penalites_MAD']:.0f} MAD")

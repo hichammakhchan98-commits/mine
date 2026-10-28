@@ -2557,105 +2557,168 @@
     }
   },
   "reception": {
-    "_role": "La reception est un TRANSFERT DE RISQUE, et il a un prix par jour. Rien ici n'est reglementaire : les durees de garantie, le delai de levee des reserves, les conditions d'une reception tacite et le contenu obligatoire du DOE se lisent dans le code et dans le CPS, et restent ⏸. Ce bloc porte ce qui se calcule sans eux.",
+    "_role": "La réception est un TRANSFERT DE RISQUE, et il a un prix par jour. Rien ici n'est réglementaire : les durées de garantie, le délai de levée des réserves, les conditions d'une réception tacite et le contenu obligatoire du DOE se lisent dans le code et dans le CPS, et restent ⏸. Ce bloc porte ce qui se calcule sans eux.",
     "niveau_preuve": "V3",
     "annee_ref": 2026,
     "operations_prealables": {
-      "_role": "Sequence des operations prealables a la reception. Les durees sont des DECISIONS d'organisation, comme les effectifs : on prevoit, on annonce, on s'y tient. Elles n'ont donc pas de fourchette.",
+      "_role": "Séquence des opérations préalables à la réception. Deux natures de durée cohabitent, et les confondre était une faute de la première version : ce que l'ENTREPRISE tient est une décision d'organisation, sans fourchette ; ce qui appartient à un TIERS — la maîtrise d'œuvre, l'exploitant, le maître d'ouvrage — est une hypothèse, et elle porte sa fourchette. On ne décide pas une durée qui appartient à quelqu'un d'autre.",
+      "unite": "jours ouvrés",
+      "_unite": "Jours OUVRÉS, comme toutes les durées du planning de ce cours. Le dire évite la confusion que ce module reproche par ailleurs à tout le monde : en calendaire, la même séquence est 1,4 fois plus longue.",
+      "_porte_par": "Tâche du planning du module D2 qui porte déjà cette étape, ou null si aucune. Sans cette colonne, le module comptait deux fois les essais de fonctionnement : la tâche D2 s'appelle « Essais ET mise en service » et il n'en retirait que la mise en service.",
       "etapes": [
         {
           "etape": "Avis de fin de travaux de l'entreprise",
           "qui": "entreprise",
+          "tenue_par_l_entreprise": true,
           "duree_j": 1,
-          "piege": "l'envoyer avant d'etre pret : la visite constate alors des travaux inacheves, et ce ne sont plus des reserves mais un refus"
+          "porte_par": "RECE",
+          "piege": "l'envoyer avant d'être prêt : la visite constate alors des travaux inachevés, et ce ne sont plus des réserves mais un refus"
         },
         {
-          "etape": "Visite des operations prealables, contradictoire",
+          "etape": "Visite des opérations préalables, contradictoire",
           "qui": "maîtrise d'œuvre et entreprise",
-          "duree_j": 3,
+          "tenue_par_l_entreprise": false,
+          "duree_j": {
+            "valeur": 3,
+            "fourchette": [
+              1,
+              8
+            ],
+            "note": "dépend de la disponibilité de la maîtrise d'œuvre et du nombre de visites qu'il faut refaire. L'entreprise ne la décide pas"
+          },
+          "porte_par": "RECE",
           "piege": "visiter sans la liste des documents ni les essais : on reconvoque tout le monde"
         },
         {
           "etape": "Essais de fonctionnement des installations",
-          "qui": "entreprise, en presence de la maîtrise d'œuvre",
+          "qui": "entreprise, en présence de la maîtrise d'œuvre",
+          "tenue_par_l_entreprise": true,
           "duree_j": 10,
-          "piege": "des essais lances trop tard : ils revelent des defauts d'interface entre lots, et chaque correction en rejoue un autre"
+          "porte_par": "ESSA",
+          "piege": "des essais lancés trop tard : ils révèlent des défauts d'interface entre lots, et chaque correction en rejoue un autre"
         },
         {
-          "etape": "Mise en service des systemes et essais d'exploitation",
+          "etape": "Mise en service des systèmes et essais d'exploitation",
           "qui": "exploitant ferroviaire, entreprise en assistance",
-          "duree_j": 15,
-          "piege": "l'exploitant n'est pas le maitre d'ouvrage : il peut refuser de prendre un ouvrage que le maitre d'ouvrage accepte"
+          "tenue_par_l_entreprise": false,
+          "duree_j": {
+            "valeur": 15,
+            "fourchette": [
+              8,
+              40
+            ],
+            "note": "conduite par l'exploitant ferroviaire : ni la durée ni la date ne se décident côté chantier. La borne haute n'est pas théorique — un essai de système qui échoue se rejoue au créneau suivant"
+          },
+          "porte_par": "ESSA",
+          "piege": "l'exploitant n'est pas le maître d'ouvrage : il peut refuser de prendre un ouvrage que le maître d'ouvrage accepte"
         },
         {
-          "etape": "Remise du dossier des ouvrages executes",
+          "etape": "Remise du dossier des ouvrages exécutés",
           "qui": "entreprise",
+          "tenue_par_l_entreprise": true,
           "duree_j": 5,
-          "piege": "le reconstituer apres coup au lieu de l'avoir tenu : c'est le poste le plus sous-estime de la fin de chantier"
+          "porte_par": "RECE",
+          "piege": "le reconstituer après coup au lieu de l'avoir tenu : c'est le poste le plus sous-estimé de la fin de chantier"
         },
         {
-          "etape": "Proces-verbal et decision du maitre d'ouvrage",
+          "etape": "Procès-verbal et décision du maître d'ouvrage",
           "qui": "maître d'ouvrage, sur proposition de la maîtrise d'œuvre",
-          "duree_j": 7,
-          "piege": "attendre une reception sans reserve : elle n'arrive presque jamais, et l'attendre coute le prix d'une journee de non-reception par jour"
+          "tenue_par_l_entreprise": false,
+          "duree_j": {
+            "valeur": 7,
+            "fourchette": [
+              2,
+              30
+            ],
+            "note": "décision du maître d'ouvrage : elle lui appartient entièrement, et sa borne haute dépend de son organisation interne, pas du chantier"
+          },
+          "porte_par": "RECE",
+          "piege": "attendre une réception sans réserve : elle n'arrive presque jamais, et l'attendre coûte un jour de non-réception par jour"
         }
       ]
     },
     "reserves": {
-      "_role": "Composition des reserves du cas d'etude. Les nombres par famille decrivent CE chantier-ci : c'est une composition posee, pas une statistique. Ce qui se generalise est la REGLE de classement, pas la repartition.",
+      "_role": "Composition des réserves du cas d'étude. Les nombres par famille décrivent CE chantier-ci : c'est une composition posée, pas une statistique. Ce qui se généralise est la RÈGLE de classement, pas la répartition.",
       "effectif_de_levee": 6,
-      "_effectif_de_levee": "Compagnons affectes a la levee des reserves. C'est une DECISION d'organisation, pas une hypothese : elle n'a pas de fourchette. En mettre plus ne divise pas le delai d'autant — les reserves sont dispersees dans le batiment et beaucoup attendent un fournisseur.",
+      "_effectif_de_levee": "Compagnons affectés à la levée des réserves. C'est une DÉCISION d'organisation, pas une hypothèse : elle n'a pas de fourchette. En mettre plus ne divise pas le délai d'autant — les réserves sont dispersées dans le bâtiment et beaucoup attendent un tiers.",
       "heures_par_levee_h": {
         "valeur": 6.0,
         "fourchette": [
           2.0,
           16.0
         ],
-        "note": "temps moyen de levee d'une reserve, intervention et reconstat compris. L'etendue est large parce qu'une retouche de peinture et une reprise d'etancheite n'ont rien de commun"
+        "note": "heures-HOMME de levée d'une réserve, intervention et reconstat compris. L'unité compte : six heures-homme à six compagnons ne font pas six heures de délai, et la durée de levée se calcule sur la capacité de l'atelier. L'étendue est large parce qu'une retouche de peinture et une reprise d'étanchéité n'ont rien de commun"
       },
+      "_delai_de_tiers": "Une réserve ne se lève pas toujours au rythme de l'atelier : certaines attendent une pièce, un fournisseur ou un créneau. La durée de levée d'une famille est donc le PLUS GRAND des deux — le temps d'atelier et le délai du tiers — et non leur somme ni le seul temps d'atelier. C'est le même raisonnement que le chemin critique d'un planning, appliqué à une liste de réserves.",
       "familles": [
         {
           "famille": "Aspect et finitions",
           "exemple": "retouches de peinture, calfeutrements, nettoyage de parement",
           "nombre": 62,
-          "empeche_l_usage": false
+          "empeche_l_usage": false,
+          "delai_de_tiers_j": 0
         },
         {
           "famille": "Documents manquants",
           "exemple": "fiches techniques, procès-verbaux d'essais, plans de récolement d'un lot",
           "nombre": 18,
-          "empeche_l_usage": false
+          "empeche_l_usage": false,
+          "delai_de_tiers_j": {
+            "valeur": 10,
+            "fourchette": [
+              3,
+              45
+            ],
+            "note": "délai pour obtenir un document d'un sous-traitant qui a quitté le chantier. Ce n'est pas du travail d'atelier : aucun compagnon ne le raccourcit"
+          }
         },
         {
           "famille": "Finitions d'interface",
           "exemple": "habillages en attente, seuils, reprises autour des réservations",
           "nombre": 14,
-          "empeche_l_usage": false
+          "empeche_l_usage": false,
+          "delai_de_tiers_j": 0
         },
         {
           "famille": "Sécurité des personnes",
           "exemple": "garde-corps non conforme au plan visé, désenfumage non essayé, issue condamnée",
           "nombre": 3,
-          "empeche_l_usage": true
+          "empeche_l_usage": true,
+          "delai_de_tiers_j": {
+            "valeur": 5,
+            "fourchette": [
+              1,
+              20
+            ],
+            "note": "créneau d'essai avec le lot technique, ou fabrication d'une pièce de serrurerie conforme"
+          }
         },
         {
           "famille": "Fonctionnement d'un ouvrage",
           "exemple": "escalator à l'arrêt, porte automatique hors service, fuite en toiture",
           "nombre": 4,
-          "empeche_l_usage": true
+          "empeche_l_usage": true,
+          "delai_de_tiers_j": {
+            "valeur": 10,
+            "fourchette": [
+              3,
+              40
+            ],
+            "note": "approvisionnement d'une pièce d'un équipement installé : c'est ce délai qui commande, et il ne se négocie pas avec l'atelier"
+          }
         }
       ],
-      "_la_regle": "Une seule question decide : la reserve EMPECHE-T-ELLE l'usage ou met-elle en cause la securite des personnes ? Si oui, la reception ne se prononce pas. Si non, elle se prononce AVEC reserves, et celles-ci se levent sous delai. Il n'y a pas de troisieme famille, et le nombre de reserves n'entre pas dans la decision : trois reserves bloquantes bloquent, quatre-vingt-dix reserves d'aspect ne bloquent pas."
+      "_la_regle": "Une seule question décide : la réserve EMPÊCHE-T-ELLE l'usage ou met-elle en cause la sécurité des personnes ? Si oui, la réception ne se prononce pas en l'état. Si non, elle se prononce AVEC réserves, et celles-ci se lèvent sous délai. Le nombre de réserves n'entre pas dans la décision : trois réserves bloquantes bloquent, quatre-vingt-dix réserves d'aspect ne bloquent pas. La qualification, elle, est un JUGEMENT, et sur l'usage c'est l'exploitant qui en est juge : lui seul peut dire qu'une gare s'ouvre avec un escalator sur deux. Ce qui ne se juge pas, c'est la sécurité des personnes."
     },
     "doe": {
-      "_role": "Le dossier des ouvrages executes conditionne le decompte definitif. Ce bloc chiffre les deux facons de le produire — au fil de l'eau, ou reconstitue a la fin — et ce que la seconde coute en argent immobilise.",
+      "_role": "Le dossier des ouvrages exécutés conditionne le décompte définitif. Ce bloc chiffre les deux façons de le produire — au fil de l'eau, ou reconstitué à la fin — et ce que la seconde coûte en argent immobilisé.",
       "heures_au_fil_de_l_eau": {
         "valeur": 80,
         "fourchette": [
           40,
           160
         ],
-        "note": "heures de cadre consacrees au DOE pendant le chantier : classer les documents a mesure qu'ils arrivent, exiger le plan de recolement d'un lot quand il part, et non six mois apres"
+        "note": "heures de cadre consacrées au DOE pendant le chantier : classer les documents à mesure qu'ils arrivent, et exiger le plan de récolement d'un lot quand il part, et non six mois après"
       },
       "heures_reconstitue": {
         "valeur": 320,
@@ -2663,7 +2726,7 @@
           160,
           600
         ],
-        "note": "heures de cadre pour reconstituer le meme dossier apres coup : retrouver les sous-traitants partis, refaire relever ce qui n'a pas ete releve, redemander des fiches a des fournisseurs qui ont change de reference"
+        "note": "heures de cadre pour reconstituer le même dossier après coup : retrouver les sous-traitants partis, refaire relever ce qui n'a pas été relevé, redemander des fiches à des fournisseurs qui ont changé de référence"
       },
       "retard_du_solde_j": {
         "valeur": 60,
@@ -2671,11 +2734,19 @@
           20,
           180
         ],
-        "note": "jours calendaires pendant lesquels le decompte definitif reste bloque faute de DOE complet. Ce n'est pas une penalite : c'est de l'argent du, non paye, que l'entreprise porte"
+        "note": "jours calendaires pendant lesquels le décompte définitif reste bloqué faute de DOE complet. Ce n'est pas une pénalité : c'est de l'argent dû, non payé, que l'entreprise porte"
       },
-      "_ce_qu_il_doit_contenir": "Le contenu reglementaire est ⏸. Le critere pratique, lui, ne depend d'aucun texte : un DOE est utilisable si, dix ans plus tard, quelqu'un qui n'a pas fait le chantier peut y trouver OU passe un reseau, DE QUOI est faite une paroi, QUI a pose quoi et COMMENT on le remplace. Un dossier qui ne repond pas a ces quatre questions est un volume d'archives, pas un DOE."
+      "part_du_marche_au_decompte_definitif_pct": {
+        "valeur": 4.0,
+        "fourchette": [
+          1.5,
+          10.0
+        ],
+        "note": "solde des travaux restant à régler au décompte définitif, en pour-cent du montant du marché : dernière situation, révisions de prix non encore réglées, travaux supplémentaires acceptés. C'est CE montant que le DOE bloque — et non la retenue de garantie, qui est immobilisée par la clause de garantie, que le DOE soit remis ou non"
+      },
+      "_ce_qu_il_doit_contenir": "Le contenu réglementaire est ⏸. Le critère pratique, lui, ne dépend d'aucun texte : un DOE est utilisable si, dix ans plus tard, quelqu'un qui n'a pas fait le chantier peut y trouver OÙ passe un réseau, DE QUOI est faite une paroi, QUI a posé quoi et COMMENT on le remplace. Un dossier qui ne répond pas à ces quatre questions est un volume d'archives, pas un DOE."
     },
-    "_pause": "Restent ⏸ jusqu'aux documents : les durees des garanties (parfait achevement, bon fonctionnement, decennale), le delai de levee des reserves, les conditions d'une reception tacite, le contenu obligatoire du DOE, et le delai de paiement du decompte definitif. Le module donne le MECANISME et sa consequence financiere, jamais la duree."
+    "_pause": "Restent ⏸ jusqu'aux documents : les durées des garanties (parfait achèvement, bon fonctionnement, décennale), le délai de levée des réserves, les conditions d'une réception tacite, le contenu obligatoire du DOE, le délai de paiement du décompte définitif, et les EFFETS JURIDIQUES de la réception — ce qu'elle arrête, ce qu'elle transfère, ce qu'elle fait courir. Le module donne le MÉCANISME et sa conséquence financière, jamais la durée ni la règle de droit."
   },
   "qualite_hse": {
     "_role": "Ce qui rend la securite et la qualite PILOTABLES : des heures exposees, un cout de non-qualite, et des criticites. Aucune valeur normative ici — ni frequence de prelevement, ni critere de resistance, ni distance de securite : toutes sont reglementaires et restent ⏸. Ce que ce bloc porte, ce sont des ordres de grandeur declares et les parametres d'un cas d'etude.",
