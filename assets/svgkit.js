@@ -245,8 +245,13 @@
     const L = o.largeur || 640, H = o.hauteur || 200;
     const xs = pts.map((p) => p.x), vs = pts.map((p) => p.v);
     const vmax = Math.max(...vs.map(Math.abs)) || 1;
+    // `depuisZero` : une grandeur qui ne change pas de signe — un cumul, un cout — n'a
+    // pas besoin de la moitie basse du cadre. Un diagramme de moment, si : son axe reste
+    // symetrique par defaut. Sans cette option, une courbe de cumul occupait la moitie
+    // haute et laissait l'autre vide, ce qui ecrase la lecture de la pente.
     const r = repere({ largeur: L, hauteur: H, marge: 44, libre: true,
-      xmin: Math.min(...xs), xmax: Math.max(...xs), ymin: -vmax, ymax: vmax });
+      xmin: Math.min(...xs), xmax: Math.max(...xs),
+      ymin: o.depuisZero ? 0 : -vmax, ymax: vmax });
     const y0 = r.y(0);
     let g = ligne(r.x(Math.min(...xs)), y0, r.x(Math.max(...xs)), y0, { couleur: "#a8aca4", ep: 1 });
     const d = pts.map((p, i) => `${i ? "L" : "M"}${r.x(p.x)} ${r.y(p.v)}`).join(" ");
@@ -254,13 +259,47 @@
       { remplissage: o.remplissage || "rgba(27,79,114,.13)", couleur: "none", ep: 0 });
     g += chemin(d, { couleur: o.couleur || "#1b4f72", ep: 1.8, jointure: "round" });
     const iMax = vs.indexOf(Math.max(...vs)), iMin = vs.indexOf(Math.min(...vs));
+    // Un extremum NUL ne s'annote pas : son etiquette se superpose au « 0 » de l'axe,
+    // et elle n'apprend rien — une courbe de cumul qui part de zero part de zero. Le
+    // controle de chevauchement l'a trouve sur la figure 1 du module REC.
     for (const i of new Set([iMax, iMin])) {
+      if (!pts[i].v) continue;
       g += cercle(r.x(pts[i].x), r.y(pts[i].v), 3, { remplissage: o.couleur || "#1b4f72" });
       g += texte(r.x(pts[i].x), r.y(pts[i].v) + (pts[i].v >= 0 ? -8 : 15),
         `${pts[i].v.toFixed(1)} ${o.unite || ""}`.trim(),
         { taille: 10.5, mono: 1, ancre: "middle", gras: 1, couleur: o.couleur || "#1b4f72" });
     }
     g += texte(r.x(xs[0]) - 6, y0, "0", { taille: 10, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
+    // `axeX` : graduations de l'abscisse. Sans elles, une courbe qui se casse ne dit pas
+    // OU elle se casse — et c'est tout ce qu'elle avait a dire. Les diagrammes M et V
+    // portent leur abscisse dans l'elevation situee au-dessus : ils n'en ont pas besoin,
+    // d'ou l'option plutot que le defaut.
+    if (o.axeX) {
+      const x0 = Math.min(...xs), x1 = Math.max(...xs);
+      const brut = (x1 - x0) / 6;
+      const pas = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000]
+        .find((v) => v >= brut) || Math.ceil(brut);
+      for (let v = Math.ceil(x0 / pas) * pas; v <= x1 + 1e-9; v += pas) {
+        // le zero de l'axe des abscisses est deja ecrit a gauche, sur l'axe des
+        // ordonnees : le repeter met deux « 0 » cote a cote
+        if (Math.abs(v - x0) < 1e-9) continue;
+        g += ligne(r.x(v), y0, r.x(v), y0 + 4, { couleur: "#a8aca4", ep: 1 });
+        g += texte(r.x(v), y0 + 16, String(v), { taille: 9, mono: 1, ancre: "middle",
+          couleur: "#6b7682" });
+      }
+      if (o.uniteX) g += texte(r.x(x1), y0 + 29, o.uniteX,
+        { taille: 9, ancre: "end", couleur: "#6b7682" });
+    }
+    // `marqueur` : {x, libelle} — une abscisse remarquable, tracee et nommee. Ecrire
+    // dans la legende « la cassure est au 71e jour » sans la montrer laisse le lecteur
+    // la chercher a l'oeil.
+    if (o.marqueur) {
+      const xm = r.x(o.marqueur.x);
+      g += chemin(`M${xm} ${r.y(vmax)} L${xm} ${y0}`,
+        { couleur: "#8c3b2e", ep: 1.2, tirets: "4 3" });
+      g += texte(xm + 5, r.y(vmax) + 11, o.marqueur.libelle || "",
+        { taille: 9.5, mono: 1, couleur: "#8c3b2e", gras: 1 });
+    }
     if (o.titre) g += texte(L / 2, 20, o.titre, { taille: 12, gras: 1, ancre: "middle" });
     return { svg: g, largeur: L, hauteur: H };
   }
@@ -968,7 +1007,8 @@
   const OPTIONS = {
     coupeSection: ["cotes", "aciers", "enrobage"],
     elevationPoutre: ["appuis", "cotes", "aciers"],
-    diagramme: ["couleur", "remplissage", "zero", "nom"],
+    diagramme: ["couleur", "remplissage", "zero", "nom", "axeX", "uniteX", "marqueur",
+                "depuisZero"],
     gantt: ["labels", "jalons"],
     courbeS: ["paliers"],
     histogramme: ["serie2", "moyenne", "libelle_moyenne", "nom1", "nom2"],

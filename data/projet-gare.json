@@ -1416,6 +1416,24 @@
           10
         ]
       },
+      "cout_de_portage_annuel_pct": {
+        "valeur": 7.0,
+        "fourchette": [
+          5.0,
+          12.0
+        ],
+        "note": "cout de l'argent pour l'entreprise : taux auquel elle finance ce qu'elle avance — decouvert, ligne de credit, ou cout d'opportunite de ses fonds propres. Sert a chiffrer ce que coute une somme IMMOBILISEE, ce que le module D1 publie en volume sans le convertir en argent."
+      },
+      "base_de_calcul_des_interets_j": 365,
+      "_base_de_calcul_des_interets": "Nombre de jours de l'annee retenu pour convertir un taux ANNUEL en interets sur quelques jours. Ce n'est pas une constante mais une CLAUSE : 365 (exact/365) et 360 (exact/360, dite base bancaire) sont les deux conventions courantes, et elles different de 1,4 % sur le meme calcul. A lire dans la convention de credit, pas a supposer. C'est une decision de lecture du contrat, pas une hypothese a borner — d'ou l'absence de fourchette.",
+      "commission_de_caution_annuelle_pct": {
+        "valeur": 1.2,
+        "fourchette": [
+          0.6,
+          2.5
+        ],
+        "note": "commission bancaire annuelle d'une caution qui remplace la retenue de garantie. A comparer au cout de portage ci-dessus : c'est toute la decision. Varie avec la signature de l'entreprise et les garanties qu'elle donne a sa banque."
+      },
       "revision_des_prix": {
         "formule": "P = P0 x (a + b x I/I0 + c x J/J0)",
         "part_fixe_a": {
@@ -2537,6 +2555,127 @@
         "note": "delai entre la demande d'une plage de consignation et son obtention. C'est le parametre qui rend une plage perdue IRRATTRAPABLE : on ne la redemande pas pour la semaine suivante"
       }
     }
+  },
+  "reception": {
+    "_role": "La reception est un TRANSFERT DE RISQUE, et il a un prix par jour. Rien ici n'est reglementaire : les durees de garantie, le delai de levee des reserves, les conditions d'une reception tacite et le contenu obligatoire du DOE se lisent dans le code et dans le CPS, et restent ⏸. Ce bloc porte ce qui se calcule sans eux.",
+    "niveau_preuve": "V3",
+    "annee_ref": 2026,
+    "operations_prealables": {
+      "_role": "Sequence des operations prealables a la reception. Les durees sont des DECISIONS d'organisation, comme les effectifs : on prevoit, on annonce, on s'y tient. Elles n'ont donc pas de fourchette.",
+      "etapes": [
+        {
+          "etape": "Avis de fin de travaux de l'entreprise",
+          "qui": "entreprise",
+          "duree_j": 1,
+          "piege": "l'envoyer avant d'etre pret : la visite constate alors des travaux inacheves, et ce ne sont plus des reserves mais un refus"
+        },
+        {
+          "etape": "Visite des operations prealables, contradictoire",
+          "qui": "maîtrise d'œuvre et entreprise",
+          "duree_j": 3,
+          "piege": "visiter sans la liste des documents ni les essais : on reconvoque tout le monde"
+        },
+        {
+          "etape": "Essais de fonctionnement des installations",
+          "qui": "entreprise, en presence de la maîtrise d'œuvre",
+          "duree_j": 10,
+          "piege": "des essais lances trop tard : ils revelent des defauts d'interface entre lots, et chaque correction en rejoue un autre"
+        },
+        {
+          "etape": "Mise en service des systemes et essais d'exploitation",
+          "qui": "exploitant ferroviaire, entreprise en assistance",
+          "duree_j": 15,
+          "piege": "l'exploitant n'est pas le maitre d'ouvrage : il peut refuser de prendre un ouvrage que le maitre d'ouvrage accepte"
+        },
+        {
+          "etape": "Remise du dossier des ouvrages executes",
+          "qui": "entreprise",
+          "duree_j": 5,
+          "piege": "le reconstituer apres coup au lieu de l'avoir tenu : c'est le poste le plus sous-estime de la fin de chantier"
+        },
+        {
+          "etape": "Proces-verbal et decision du maitre d'ouvrage",
+          "qui": "maître d'ouvrage, sur proposition de la maîtrise d'œuvre",
+          "duree_j": 7,
+          "piege": "attendre une reception sans reserve : elle n'arrive presque jamais, et l'attendre coute le prix d'une journee de non-reception par jour"
+        }
+      ]
+    },
+    "reserves": {
+      "_role": "Composition des reserves du cas d'etude. Les nombres par famille decrivent CE chantier-ci : c'est une composition posee, pas une statistique. Ce qui se generalise est la REGLE de classement, pas la repartition.",
+      "effectif_de_levee": 6,
+      "_effectif_de_levee": "Compagnons affectes a la levee des reserves. C'est une DECISION d'organisation, pas une hypothese : elle n'a pas de fourchette. En mettre plus ne divise pas le delai d'autant — les reserves sont dispersees dans le batiment et beaucoup attendent un fournisseur.",
+      "heures_par_levee_h": {
+        "valeur": 6.0,
+        "fourchette": [
+          2.0,
+          16.0
+        ],
+        "note": "temps moyen de levee d'une reserve, intervention et reconstat compris. L'etendue est large parce qu'une retouche de peinture et une reprise d'etancheite n'ont rien de commun"
+      },
+      "familles": [
+        {
+          "famille": "Aspect et finitions",
+          "exemple": "retouches de peinture, calfeutrements, nettoyage de parement",
+          "nombre": 62,
+          "empeche_l_usage": false
+        },
+        {
+          "famille": "Documents manquants",
+          "exemple": "fiches techniques, procès-verbaux d'essais, plans de récolement d'un lot",
+          "nombre": 18,
+          "empeche_l_usage": false
+        },
+        {
+          "famille": "Finitions d'interface",
+          "exemple": "habillages en attente, seuils, reprises autour des réservations",
+          "nombre": 14,
+          "empeche_l_usage": false
+        },
+        {
+          "famille": "Sécurité des personnes",
+          "exemple": "garde-corps non conforme au plan visé, désenfumage non essayé, issue condamnée",
+          "nombre": 3,
+          "empeche_l_usage": true
+        },
+        {
+          "famille": "Fonctionnement d'un ouvrage",
+          "exemple": "escalator à l'arrêt, porte automatique hors service, fuite en toiture",
+          "nombre": 4,
+          "empeche_l_usage": true
+        }
+      ],
+      "_la_regle": "Une seule question decide : la reserve EMPECHE-T-ELLE l'usage ou met-elle en cause la securite des personnes ? Si oui, la reception ne se prononce pas. Si non, elle se prononce AVEC reserves, et celles-ci se levent sous delai. Il n'y a pas de troisieme famille, et le nombre de reserves n'entre pas dans la decision : trois reserves bloquantes bloquent, quatre-vingt-dix reserves d'aspect ne bloquent pas."
+    },
+    "doe": {
+      "_role": "Le dossier des ouvrages executes conditionne le decompte definitif. Ce bloc chiffre les deux facons de le produire — au fil de l'eau, ou reconstitue a la fin — et ce que la seconde coute en argent immobilise.",
+      "heures_au_fil_de_l_eau": {
+        "valeur": 80,
+        "fourchette": [
+          40,
+          160
+        ],
+        "note": "heures de cadre consacrees au DOE pendant le chantier : classer les documents a mesure qu'ils arrivent, exiger le plan de recolement d'un lot quand il part, et non six mois apres"
+      },
+      "heures_reconstitue": {
+        "valeur": 320,
+        "fourchette": [
+          160,
+          600
+        ],
+        "note": "heures de cadre pour reconstituer le meme dossier apres coup : retrouver les sous-traitants partis, refaire relever ce qui n'a pas ete releve, redemander des fiches a des fournisseurs qui ont change de reference"
+      },
+      "retard_du_solde_j": {
+        "valeur": 60,
+        "fourchette": [
+          20,
+          180
+        ],
+        "note": "jours calendaires pendant lesquels le decompte definitif reste bloque faute de DOE complet. Ce n'est pas une penalite : c'est de l'argent du, non paye, que l'entreprise porte"
+      },
+      "_ce_qu_il_doit_contenir": "Le contenu reglementaire est ⏸. Le critere pratique, lui, ne depend d'aucun texte : un DOE est utilisable si, dix ans plus tard, quelqu'un qui n'a pas fait le chantier peut y trouver OU passe un reseau, DE QUOI est faite une paroi, QUI a pose quoi et COMMENT on le remplace. Un dossier qui ne repond pas a ces quatre questions est un volume d'archives, pas un DOE."
+    },
+    "_pause": "Restent ⏸ jusqu'aux documents : les durees des garanties (parfait achevement, bon fonctionnement, decennale), le delai de levee des reserves, les conditions d'une reception tacite, le contenu obligatoire du DOE, et le delai de paiement du decompte definitif. Le module donne le MECANISME et sa consequence financiere, jamais la duree."
   },
   "qualite_hse": {
     "_role": "Ce qui rend la securite et la qualite PILOTABLES : des heures exposees, un cout de non-qualite, et des criticites. Aucune valeur normative ici — ni frequence de prelevement, ni critere de resistance, ni distance de securite : toutes sont reglementaires et restent ⏸. Ce que ce bloc porte, ce sont des ordres de grandeur declares et les parametres d'un cas d'etude.",

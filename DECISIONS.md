@@ -766,3 +766,53 @@ heures les plus exposées.
 l'atelier : il faut le demander au fabricant) et la règle des trois questions à poser devant tout
 taux présenté. Même raisonnement que D4 sur les avancements : un pourcentage sans dénominateur
 n'est pas un indicateur.
+
+---
+
+## D-054 — 28/10/2026 — Avant de chercher une donnée qui manque, regarder si la question porte sur un rapport
+
+**Décision.** Quand une décision bute sur une donnée indisponible, on écrit d'abord la comparaison
+en entier : si la donnée manquante figure des deux côtés, elle se simplifie et la décision se prend
+sans elle.
+
+**Raison.** Le module REC devait comparer le coût de porter la retenue de garantie à celui d'une
+caution qui la remplace. Les deux coûtent « taux × montant × durée », et la durée est celle de la
+garantie — une valeur réglementaire, donc **⏸** dans ce cours. Le réflexe était de déclarer le
+calcul impossible. Or le montant et la durée sont les mêmes des deux côtés : leur rapport vaut
+7,0 ÷ 1,2 = 5,83, et il ne contient ni l'un ni l'autre. La donnée manquante était inutile.
+
+Le même réflexe sert ailleurs : dans l'exercice 1 du module C7, les heures annuelles d'un compagnon
+sont une hypothèse à ±10 % qui porte tout le calcul — et le **rapport** des deux taux de fréquence
+n'en dépend pas du tout. Et dans l'exercice 1 de REC, le montant du marché disparaît du jour de
+bascule des pénalités pour la même raison : il est au numérateur et au dénominateur.
+
+**Impact.** Deux invariants étalonnés sur cas fermes (`calc/etalonnage/reception_cas_ferme.py`) :
+le jour de bascule ne dépend pas du montant du marché, vérifié sur trois marchés d'un facteur mille ;
+l'arbitrage retenue/caution ne dépend ni de la durée ni du montant, vérifié sur trois montants. Ce
+sont des invariants, pas des valeurs : ils restent vrais quand les hypothèses changent.
+
+---
+
+## D-055 — 28/10/2026 — Un module qui arrive après confronte ses chiffres à ceux dont il hérite
+
+**Décision.** Quand un module tardif pose une grandeur qu'un module antérieur avait déjà posée
+autrement, il **publie l'écart** plutôt que de choisir en silence — et il dit explicitement que
+l'écart oppose deux chiffres de ce cours, non qu'il révèle une erreur du monde réel.
+
+**Raison.** Le module D2 porte une tâche « Réception » de dix jours ouvrés, posée sans la
+décomposer. Le module REC décompose la séquence et en demande vingt-six, une fois retirée la mise
+en service que le planning porte déjà sous un autre nom. Le réseau rejoué décale la fin de
+**16 jours ouvrés**, soit 2 045 592 MAD au prix du jour de non-réception.
+
+Deux pièges étaient à éviter, et ils tirent en sens contraire. Taire l'écart aurait laissé deux
+nombres incompatibles dans le même cours. Le présenter comme une découverte aurait été malhonnête :
+les deux durées sont des décisions de ce cours, et l'écart mesure surtout l'ordre dans lequel les
+modules ont été écrits. Ce qui se généralise n'est donc pas le chiffre, c'est le **mécanisme** —
+une tâche « Réception » non décomposée est presque toujours trop courte, parce qu'on y pense comme
+à une signature alors que c'est une séquence, et parce que la moitié de sa durée n'appartient pas à
+l'entreprise.
+
+**Impact.** `confrontation_au_planning` mesure le décalage en rejouant le réseau (D-040) au lieu de
+le déduire de la marge ; un test vérifie que le décalage mesuré ne dépasse jamais l'allongement
+appliqué, et que la mise en service n'est pas comptée deux fois. L'écart est versé en dette : la
+date de fin publiée par D2 ne comprend pas une réception décomposée.

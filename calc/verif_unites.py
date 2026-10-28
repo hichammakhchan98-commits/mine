@@ -332,5 +332,50 @@ leve("journees perdues additionnees a un cout", lambda: (jours + 1 * u.MAD).to(u
 leve("retard de chantier additionne a un cout", lambda: (retard + 1 * u.MAD).to(u.day))
 leve("dechets calcules sur une duree", lambda: (ratio * immo).to(u.tonne))
 
+# ---------------------------------------------------------------- reception.py (REC)
+print("\nreception.py — cout d'un jour, portage, DOE")
+_r = json.loads((SORTIES / "reception.json").read_text(encoding="utf-8"))
+_c = _r["cout_d_un_jour"]
+cout_jour = _c["cout_avant_le_plafond_MAD_par_jour_ouvre"] * u.MAD / u.day
+plafond = _c["plafond_des_penalites_MAD"] * u.MAD
+penal_jour = _c["penalites_MAD_par_jour_ouvre"] * u.MAD / u.day
+bascule = (plafond / penal_jour).to(u.day)
+dit(str(bascule.units) == "day",
+    "jour de bascule = plafond / penalite journaliere est une DUREE",
+    f"{bascule.magnitude:.1f} j")
+# Le portage est un taux ANNUEL : taux x montant x duree donne des MAD, et la duree doit
+# etre homogene a l'annee. Une duree en jours divisee par 365 est sans unite si on
+# oublie le /an — c'est l'erreur classique, et le contre-controle la cherche.
+_p = _r["portage"]
+# L'annee de pint vaut 365,25 jours — l'annee julienne. Une convention de credit n'en
+# sait rien : elle compte 365 ou 360 jours, et c'est une CLAUSE. Le controle utilise donc
+# la base declaree dans data/, et c'est en comparant les deux que l'ecart de 1,4 % est
+# apparu.
+_base = _r["doe"]["base_de_calcul_des_interets_j"] * u.day
+taux_an = _p["taux_de_portage_annuel_pct"] / 100 / _base
+montant = _p["retenue_immobilisee_MAD"] * u.MAD
+par_mois = (taux_an * montant * (_base / 12)).to(u.MAD)
+dit(abs(par_mois.magnitude - _p["cout_de_la_retenue_MAD_par_mois"]) < 1,
+    "cout mensuel de portage = taux annuel x montant x un mois",
+    f"{par_mois.magnitude:.0f} MAD")
+_d = _r["doe"]
+portage_doe = (taux_an * (_d["montant_bloque_MAD"] * u.MAD)
+               * (_d["retard_du_solde_j"] * u.day)).to(u.MAD)
+dit(abs(portage_doe.magnitude - _d["cout_de_portage_MAD"]) < 20,
+    "portage du DOE = taux annuel x montant bloque x jours de retard",
+    f"{portage_doe.magnitude:.0f} MAD")
+heures_doe = _d["heures_reconstitue"] * u.hour
+taux_cadre = _d["taux_horaire_de_cadre_MAD"] * u.MAD / u.hour
+dit(str((heures_doe * taux_cadre).to(u.MAD).units) == "MAD",
+    "cout du DOE = heures x taux horaire de cadre est en MAD",
+    f"{(heures_doe * taux_cadre).to(u.MAD).magnitude:.0f} MAD")
+
+leve("jour de bascule obtenu en divisant un plafond par un MONTANT journalier",
+     lambda: (plafond / (127850 * u.MAD)).to(u.day))
+leve("portage calcule en oubliant que le taux est ANNUEL",
+     lambda: (0.07 * montant * (60 * u.day)).to(u.MAD))
+leve("cout d'un jour additionne a un nombre de jours",
+     lambda: (cout_jour + 1 * u.day).to(u.MAD / u.day))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

@@ -555,8 +555,16 @@ Tests : un seul renderer partage, IntersectionObserver, repli lisible si WebGL2 
 ```text
 ID : REC              Titre : Reception, DOE, garanties
 Palier : P1           Type : gestion     Niveau : [C]     Etat : ▶ actif
-Socle : S1 a S8        Options : O1 – · O2 ✓ (n = 3) · O3 – · O4 ✓ · O5 ✓ · O6 ✓ · O7 –
-Sans objet : O1/O3 — module de gestion. O7 — aucun calcul normatif.
+Socle : S1 a S8        Options : O1 – · O2 ✓ (n = 3 : cout cumule du retard, reserves par famille,
+          cascade du DOE) · O3 – · O4 ✓ PARTIEL · O5 ✓ · O6 ✓ · O7 ✓ (etalonnage sur cas fermes)
+Sans objet : O1/O3 — module de gestion.
+O4 partiel : la sequence des operations prealables, ses responsables et ses pieges sont livres, avec
+          la double lecture ; il n'y a ni materiel ni cadence a cette etape, et les effectifs de
+          levee des reserves sont une decision posee, pas une organisation de chantier.
+O7 : pas de contre-calcul normatif — rien a dimensionner — mais deux INVARIANTS etalonnes sur cas
+          fermes (calc/etalonnage/reception_cas_ferme.py) : le jour de bascule des penalites ne
+          depend pas du montant du marche, et l'arbitrage retenue/caution ne depend ni de la duree
+          ni du montant. Plus la confrontation au planning de D2, mesuree en rejouant le reseau.
 Contenu propre : operations prealables a la reception ; reserves et leur levee ; reception avec ou sans
           reserves et ses effets ; DOE : ce qu'il doit contenir pour etre utilisable 10 ans apres ;
           garanties (parfait achevement, bon fonctionnement, decennale) — mecanique, valeurs et delais

@@ -30,6 +30,9 @@ ETAPES = [
     ("Etalonnage qualite",   [sys.executable, str(RACINE / "etalonnage" / "qualite_cas_ferme.py")]),
     ("Qualite HSE (C7)",     [sys.executable, str(RACINE / "qualite.py")]),
     ("Tests qualite",        [sys.executable, str(RACINE / "tests" / "test_qualite.py")]),
+    ("Etalonnage reception", [sys.executable, str(RACINE / "etalonnage" / "reception_cas_ferme.py")]),
+    ("Reception (REC)",      [sys.executable, str(RACINE / "reception.py")]),
+    ("Tests reception",      [sys.executable, str(RACINE / "tests" / "test_reception.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:
