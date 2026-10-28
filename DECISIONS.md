@@ -873,3 +873,31 @@ le module D2 enseigne sur un réseau.
 **Impact.** `_duree_de_levee` publie, pour chaque ensemble, son temps d'atelier, son plus long délai
 de tiers, la durée retenue et **ce qui la commande**. Deux invariants étalonnés : doubler la
 capacité ne change rien quand un tiers commande, et divise la durée par deux quand c'est l'atelier.
+
+---
+
+## D-058 — 28/10/2026 — Un dossier à corriger se plante avec les erreurs qu'on a vraiment commises
+
+**Décision.** Les erreurs de la revue critique de palier (§ 5.5) ne sont pas inventées : elles sont
+choisies parmi celles que le cours a **réellement commises**, une par famille, et chacune porte le
+module où elle s'est produite, le rapport de la passe qui l'a trouvée et la décision qui en est née.
+
+**Raison.** Une erreur inventée se repère à son air d'erreur. Celles-ci ont deux propriétés qu'on
+ne fabrique pas. Elles sont **réalistes**, puisqu'elles ont été commises par quelqu'un qui
+connaissait la règle et l'écrivait trois paragraphes plus loin — le module C7 imputait des frais de
+durée à un ouvrage dont il publiait la marge deux sections après. Et elles sont **invisibles aux
+contrôles** : les dix passes du palier ont trouvé 309 défauts dont 79 bloquants sur un dépôt dont
+les seize contrôles automatiques étaient verts à chaque fois.
+
+Elles ont aussi une propriété commune qui fait toute la valeur de l'exercice : **leur arithmétique
+est juste**. Aucune ne se trouve en refaisant une addition. Elles se trouvent en posant sept
+questions sur une grandeur — de quel calendrier, sous quelle condition, quelle unité, quel domaine,
+quel dénominateur, mesuré ou déduit, quelle marge. C'est cela qu'un chef de projet suivi doit
+savoir faire, et aucun tableau de bord ne le fait à sa place.
+
+**Impact.** `calc/revue.py` construit le dossier depuis les sorties réelles des neuf modules du
+palier, puis mute sept lignes par une fonction déclarée : le corrigé est la comparaison, il ne peut
+pas dériver. Un test exige la bijection entre lignes fausses et corrigé, et qu'une erreur
+**déplace réellement son nombre** — avec une exception nommée, E4, qui est une erreur de lecture et
+ne déplace rien. Quatre lignes justes servent d'appâts : un relecteur qui ne sait pas dire « RAS »
+avec sa preuve n'est pas un relecteur, et l'Annexe 4 l'exige déjà de ses propres passes.

@@ -961,9 +961,11 @@
       const txt = it.part != null
         ? `${String(it.valeur).replace(".", ",")} · ${String(it.part).replace(".", ",")} %`
         : String(it.valeur).replace(".", ",");
-      g += texte(gauche ? Math.min(xZero, xv) - 6 : xv + 6, y + 9, txt,
-        { taille: 9.5, mono: 1, base: "middle", ancre: gauche ? "end" : "start",
-          couleur: "#6b7682" });
+      // Pour une barre NEGATIVE, l'etiquette de valeur se pose a DROITE de l'axe —
+      // cote vide — et non a gauche de la barre, ou elle entrait dans la colonne des
+      // libelles et s'y superposait. Le controle de chevauchement l'a trouve.
+      g += texte(gauche ? xZero + 6 : xv + 6, y + 9, txt,
+        { taille: 9.5, mono: 1, base: "middle", ancre: "start", couleur: "#6b7682" });
     });
     // l'axe est trace au ZERO, qui n'est pas toujours a gauche
     g += ligne(xZero, 26, xZero, H - 20, { couleur: "#14181d", ep: 1 });
@@ -971,8 +973,10 @@
       g += texte(xZero, H - 8, String(base).replace(".", ","),
         { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
     g += texte(L - 6, H - 8, o.unite || "", { taille: 9, ancre: "end", couleur: "#6b7682" });
+    // La legende d'alerte se pose EN HAUT, a gauche : en bas, elle rencontrait
+    // l'etiquette d'origine de l'axe et l'unite.
     if (o.legende_alerte && items.some((x) => x.alerte))
-      g += texte(lab, H - 8, o.legende_alerte,
+      g += texte(lab, 16, o.legende_alerte,
         { taille: 9, couleur: "#8c3b2e", gras: 1 });
     return { svg: g, largeur: L, hauteur: H };
   }

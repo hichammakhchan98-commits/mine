@@ -585,7 +585,17 @@ Contenu : un dossier extrait du cas phare (planning, situation, metré, plan de 
           en conflit, cout de l'installation sous-estime.
 Le lecteur les cherche ; le corrige detaille est depliable (<details>). C'est l'entrainement direct de la
 casquette « controle » (casquette 6).
-Tests : chaque erreur plantee est tracee dans QA/RC1.md avec sa rubrique d'origine
+Options : O2 ✓ (n = 1 : ecart relatif des sept erreurs, signe) · O6 ✓ (construire le sien sur une note
+          reelle) · O1/O3/O5 – · O4 – sauf le § S4g, qui dit ce qu'une erreur de relecture fait a la
+          securite d'une operation de levage sous consignation
+PARTI PRIS : les sept erreurs ne sont pas inventees. Ce sont celles que ce cours a REELLEMENT commises,
+          une par famille, chacune tracee a sa passe adversariale et a la decision qui en est nee.
+          Le dossier est donc celui qu'aurait rendu ce cours s'il n'avait pas ete relu.
+          Quatre lignes justes servent d'appats : savoir dire RAS est la moitie du metier.
+Tests : chaque erreur plantee est tracee dans QA/RC1.md avec sa rubrique d'origine. calc/tests/
+          test_revue.py verifie la BIJECTION ligne <-> corrige, que chaque erreur deplace reellement
+          son nombre (avec une exception nommee), et que les lignes justes valent ce que publie leur
+          module au centieme.
 ```
 
 ---

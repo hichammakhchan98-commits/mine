@@ -33,6 +33,8 @@ ETAPES = [
     ("Etalonnage reception", [sys.executable, str(RACINE / "etalonnage" / "reception_cas_ferme.py")]),
     ("Reception (REC)",      [sys.executable, str(RACINE / "reception.py")]),
     ("Tests reception",      [sys.executable, str(RACINE / "tests" / "test_reception.py")]),
+    ("Revue de palier (RC1)", [sys.executable, str(RACINE / "revue.py")]),
+    ("Tests revue",          [sys.executable, str(RACINE / "tests" / "test_revue.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:

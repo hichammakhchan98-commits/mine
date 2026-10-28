@@ -6,13 +6,13 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `REC` — réception, DOE, garanties. Zip : `cours-genie-civil-P1-REC.zip`
+- **Dernier livrable** : `RC1` — revue critique du palier 1. Zip : `cours-genie-civil-P1-RC1.zip`
 - **Toutes les passes /devil sont faites**, tous les bloquants corrigés. C7 : **45 défauts,
   13 bloquants, 22 majeurs — livraison refusée en première passe**, tous traités (D-049 à D-052).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
 - **EN ATTENTE DE VALIDATION** : la TV (forme, profondeur, utilité de la 3D). Les cinq relecteurs
   ont tous jugé l'absence de 3D justifiée.
-- **Prochain module** : `RC1` — revue critique du palier 1 (§ 5.5), puis **go/no-go** sur la suite.
+- **PALIER 1 TERMINÉ.** En attente du **go/no-go du lecteur** (§ 5.5) avant toute suite.
 - **Programme recentré au 31/10/2026** : `cadrage/07-programme-31-10.md` (décisions D-033, D-034).
 - **Règle absolue** : aucun chiffre repris de mémoire. Seul le zip (ou la branche git) fait foi.
 
@@ -37,9 +37,9 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   physique**) · `B7c` (bâtiments ferroviaires, 39 défauts, 11 bloquants dont le **changement
   d'unité silencieux** — D-045 à D-048) · `C7` (qualité et HSE, 45 défauts, 13 bloquants —
   D-049 à D-052) · `REC` (réception, DOE, garanties, 28 défauts dont 8 bloquants — D-054 à
-  D-057). Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
-- ▶ **actifs, non écrits (14)** : A1, A2a, A5a, B5a-exec, B7b, C1, C2, C4, C6, D3, D6, D7,
-  M3D, RC1
+  D-057) · `RC1` (revue critique du palier, § 5.5). Toutes les passes sont faites, tous les
+  bloquants et majeurs corrigés.
+- ▶ **actifs, non écrits (13)** : A1, A2a, A5a, B5a-exec, B7b, C1, C2, C4, C6, D3, D6, D7, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
 Fiches-module : `cadrage/05-sommaire.md` (périmètre d'origine, conservé pour mémoire).
@@ -144,5 +144,5 @@ registrées**, 189 sur 189 couvertes. Ajouts de C7 : l'heure de contrôle d'un c
 
 ## Effort consommé (§ 13.2)
 
-**18 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
-**Avancement sur le programme du 31/10** : **10 livraisons sur 18**. L'ordre annoncé est épuisé ; au-delà, le budget sera dépassé. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les premiers coupés. C'est dit au lecteur, pas découvert le 31.
+**19 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC, RC1 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
+**Avancement sur le programme du 31/10** : **11 livraisons sur 18**, palier 1 clos par sa revue critique. L'ordre annoncé est épuisé ; au-delà, le budget sera dépassé. **Ordre de priorité retenu** : B3e, B7c, C7, REC ; C1 et C4+B7b sont les premiers coupés. C'est dit au lecteur, pas découvert le 31.
