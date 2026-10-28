@@ -889,3 +889,59 @@ Tests : calc/tests/test_qualite.py (56 controles, 4 canaris) + verif_unites + re
 EFFET SUR LE COURS : premier module a consommer les heures par tache que la correction de B7c a
           rendues fiables. Sans le controle croise D1/D2, son indicateur central etait faux.
 ```
+
+### C1 — Installation de chantier (écrit le 28/10/2026)
+```text
+ID : C1               Titre : Installation de chantier — couvrir n'est pas lever
+Palier : P1           Type : execution     Niveau : [M] fiche d'expert     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Options : O1 — sans objet · O2 ✓ (n = 5 : courbe de charge, plan masse, couvrir/servir, survol du
+          gabarit, cascade du cout) · O3 ○ NON RETENU — ECART ASSUME par rapport a la fiche
+          d'origine, qui portait « O3 ✓ (modele 2 : installation + grue a tour) ». Ce que la 3D
+          apporterait ici est la giration et l'interference de deux fleches ; ce que le module
+          enseigne est la COURBE DE CHARGE et la part servie, qui se lisent mieux sur un
+          diagramme et un plan masse cotes. Ajouter la maquette serait cocher une case (§ 6.2).
+          Le modele reste au catalogue P1 (§ 9.3) et se decidera avec la maquette globale.
+          · O4 ✓ · O5 ✓ · O6 ○ non retenu · O7 ✓ — RELEVE : la fiche d'origine le disait « non
+          retenu, abaque fournisseur ». L'abaque est bien une donnee, mais tout ce qu'on en tire
+          est calculable et non normatif : part servie par echantillonnage, debit, aire couverte
+          hors batiment, survol du gabarit.
+Partie ⏸ : distances de securite, regles de survol d'une voie exploitee et d'un tiers, obligations
+          de cloture et de signalisation, surfaces reglementaires des locaux sociaux, conditions
+          d'implantation vis-a-vis des reseaux, verifications de mise en service des appareils de
+          levage. GEOMETRIE, debits et couts seulement ; la reglementation donne les contraintes.
+Contenu propre : COUVRIR N'EST PAS LEVER — la part servie d'une piece vaut toujours moins que la
+          couverture, et l'ecart croit avec la masse (98,2 % contre 36,8 % pour la piece de 8 t) ;
+          la courbe de charge et ses deux regimes, lue dans les deux sens (charge a une portee,
+          rayon limite d'une masse) ; trois voies independantes vers le nombre de grues, dont une
+          QUI NE TRANCHE PAS parce que ses bornes enjambent le seuil ; le troisieme axe, propre au
+          ferroviaire : le cercle de la fleche en girouette atteint le gabarit dans les TROIS
+          variantes, et cet axe va en SENS INVERSE de la couverture ; la base-vie sur la pointe du
+          planning execute, ni sur la moyenne ni sur la pointe d'avant lissage ; les aires et le
+          majorant sous grue hors batiment ; le cout coupe en fixe (17,9 %) et loyer.
+Donnees lues : data/projet-gare.json -> installation.* (grue, variantes_de_calage, pieces_a_lever,
+          levages, base_vie, aires, voisinage), geometrie.emprise_m, ferroviaire.sous_interception
+          (masse d'une piece — LUE, jamais redeclaree, D-039) ; calc/sorties/planification.json
+          (effectifs apres lissage, conflit de grue), prix.json (frais de duree), gros-oeuvre.json
+          (parc de coffrage et cadence retenus)
+Donnees ecrites : calc/sorties/installation.json
+Contre-calcul : etalonnage sur cas fermes (calc/etalonnage/installation_cas_ferme.py) — disque
+          clippe par un carre, aire couverte hors batiment contre pi.R2 moins le disque clippe,
+          et DEUX INVARIANTS : deux grues au meme endroit couvrent ce que couvre une seule ; deux
+          grues disjointes couvrent le double MOINS le batiment compte une fois de trop. Ce second
+          invariant, d'abord ecrit « le double », a echoue de 100 m2 : l'erreur etait dans
+          l'invariant, pas dans la fonction, et le cas conserve distingue les deux.
+Double lecture entreprise / MOE : ✓ (l'exercice 4 est un plan d'installation a viser, 2 observations
+          bloquantes dont une d'OMISSION DE PIECE)     Fiche memo S8 : ✓ (3 phrases, 7 controles)
+Schemas : courbe de charge avec marqueur · plan masse et point defavorable · couvrir contre servir
+          (6 barres) · survol du gabarit par variante · cascade du cout
+Exercices : 1 application + 2 problemes (dont « le releve qui vaut plus que le calcul ») + 1 revue
+          critique   Quiz : 7 questions
+Tests : calc/tests/test_installation.py (69 controles, 1 canari de portee infinie) + etalonnage
+          + verif_unites (section C1, dont 2 LIMITES DECLAREES dimensionnellement invisibles) + rendu
+EFFET SUR LE COURS : publie un ecart avec D1, qui budgete le loyer d'UNE grue quand C1 en retient
+          deux — 2 821 500 MAD de frais de duree. L'ecart est verse en dette (D-055), pas corrige
+          en silence. Deplace aussi la verification dimensionnelle en DERNIERE etape de
+          calc/run_all.py : placee avant les calculs, elle controlait les sorties de l'execution
+          precedente, et laissait un module entier non verifie.
+```

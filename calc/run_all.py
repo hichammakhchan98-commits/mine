@@ -12,7 +12,6 @@ ETAPES = [
     ("Calculs plancher",     [sys.executable, str(RACINE / "cycle_plancher.py")]),
     ("Calculs valeur acquise", [sys.executable, str(RACINE / "valeur_acquise.py")]),
     ("Calculs planification",  [sys.executable, str(RACINE / "planification.py")]),
-    ("Verification dimensionnelle", [sys.executable, str(RACINE / "verif_unites.py")]),
     ("Tests cage",           [sys.executable, str(RACINE / "tests" / "test_cage.py")]),
     ("Tests plancher",       [sys.executable, str(RACINE / "tests" / "test_plancher.py")]),
     ("Tests planification",  [sys.executable, str(RACINE / "tests" / "test_planification.py")]),
@@ -35,6 +34,14 @@ ETAPES = [
     ("Tests reception",      [sys.executable, str(RACINE / "tests" / "test_reception.py")]),
     ("Revue de palier (RC1)", [sys.executable, str(RACINE / "revue.py")]),
     ("Tests revue",          [sys.executable, str(RACINE / "tests" / "test_revue.py")]),
+    ("Etalonnage installation", [sys.executable,
+                                 str(RACINE / "etalonnage" / "installation_cas_ferme.py")]),
+    ("Installation (C1)",    [sys.executable, str(RACINE / "installation.py")]),
+    ("Tests installation",   [sys.executable, str(RACINE / "tests" / "test_installation.py")]),
+    # En DERNIER : la verification dimensionnelle lit les sorties de calc/sorties/. Placee
+    # plus haut, elle controlerait les sorties de l'execution precedente — ce qu'elle a
+    # fait jusqu'ici, et qui laissait un module non verifie pendant une execution entiere.
+    ("Verification dimensionnelle", [sys.executable, str(RACINE / "verif_unites.py")]),
 ]
 code = 0
 for nom, cmd in ETAPES:

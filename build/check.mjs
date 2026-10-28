@@ -15,7 +15,12 @@ const E = (n, d) => ec.push(d ? `${n} : ${d}` : n);
 
 function etape(nom, cmd, args) {
   try {
-    const out = execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    // maxBuffer : la sortie de Playwright croit avec le nombre de modules (108 tests au
+    // dernier etat). La valeur par defaut de Node est 1 Mo, et un depassement fait
+    // echouer l'etape pour une raison qui n'a rien a voir avec le cours — un faux rouge
+    // est aussi nuisible qu'un faux vert.
+    const out = execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+                                          stdio: ["ignore", "pipe", "pipe"] });
     V(nom, out.trim().split("\n").pop());
     return out;
   } catch (e) {

@@ -19,7 +19,8 @@ const ZIP = ARG || (() => {
   return m[0];
 })();
 const sh = (cmd, args, cwd) =>
-  execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(cmd, args, { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+                            stdio: ["ignore", "pipe", "pipe"] });
 
 if (!ARG) {
   rmSync(ZIP, { force: true });

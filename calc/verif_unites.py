@@ -411,5 +411,149 @@ leve("portage calcule en oubliant que le taux est ANNUEL",
 leve("cout d'un jour additionne a un nombre de jours",
      lambda: (cout_jour + 1 * u.day).to(u.MAD / u.day))
 
+# ---------------------------------------------------------------- installation.py (C1)
+print("\ninstallation.py — courbe de charge, couverture, debit, base-vie, cout")
+u.define("levage = [manutention]")   # un levage est une grandeur comptee, pas un nombre nu
+_i = json.loads((SORTIES / "installation.json").read_text(encoding="utf-8"))
+_g = json.loads((RACINE / "data" / "projet-gare.json").read_text(
+    encoding="utf-8"))["installation"]["grue"]
+
+# La courbe de charge. Le moment de service est en tonnes-metres : divise par un RAYON il
+# donne une charge, divise par une MASSE il donne un rayon. C'est la meme formule lue
+# dans les deux sens, et c'est tout le module — d'ou deux controles et deux contre-
+# controles qui echangent le diviseur.
+moment = _g["moment_max_tm"]["valeur"] * u.tonne * u.m
+charge_max = _g["charge_max_t"]["valeur"] * u.tonne
+_c = next(c for c in _i["couverture"] if c["charge_au_point_le_plus_defavorable_t"])
+rayon = _c["distance_la_plus_defavorable_m"] * u.m
+charge = (moment / rayon).to(u.tonne)
+dit(str(charge.units) == "metric_ton",
+    "charge disponible = moment / rayon est une MASSE",
+    f"{charge.magnitude:.2f} t a {rayon.magnitude:.1f} m")
+_pc = max(_i["pieces"], key=lambda x: x["masse_t"])
+masse = _pc["masse_t"] * u.tonne
+rayon_limite = (moment / masse).to(u.m)
+dit(abs(rayon_limite.magnitude - _pc["rayon_limite_m"]) < 0.05,
+    "rayon limite = moment / masse est une LONGUEUR",
+    f"{masse.magnitude:.1f} t -> {rayon_limite.magnitude:.1f} m")
+
+# La couverture est un rapport d'AIRES. L'erreur serait de la calculer sur un rayon et
+# une longueur : le contre-controle la cherche.
+L, l = _g2 = json.loads((RACINE / "data" / "projet-gare.json").read_text(
+    encoding="utf-8"))["geometrie"]["emprise_m"]
+emprise = (L * u.m) * (l * u.m)
+servie = (_c["couverture_pct"] / 100) * emprise
+dit(str((servie / emprise).to(u.dimensionless).units) == "dimensionless",
+    "couverture = aire servie / aire de l'emprise est SANS DIMENSION",
+    f"{_c['couverture_pct']:.1f} % de {emprise.magnitude:.0f} m²")
+
+# Le survol du gabarit est une difference de LONGUEURS : une position plus une portee
+# moins une distance. Rien d'autre n'a le droit d'y entrer, et c'est le contre-controle
+# qui le verifie — une aire ajoutee a un rayon ne leverait pas si tout etait en metres.
+_vo = _i["voisinage"]
+_l0 = _vo["lignes"][0]
+_cv = next(c for c in _i["couverture"] if c["variante"] == _l0["variante"])
+_gr = max(_cv["grues"], key=lambda g: g["y_m"] + g["portee_m"])
+survol = ((_gr["y_m"] * u.m + _gr["portee_m"] * u.m) - _vo["y_du_gabarit_m"] * u.m).to(u.m)
+dit(abs(survol.magnitude - _l0["survol_du_gabarit_m"]) < 0.05,
+    "survol = position + portee - distance au gabarit est une LONGUEUR",
+    f"{survol.magnitude:.1f} m")
+
+# Les aires : une somme de surfaces, et un rapport de surfaces.
+_ai = _i["aires"]
+besoin = _ai["surface_a_mettre_sous_la_grue_m2"] * u.m**2
+majorant = _ai["majorant_sous_grue_hors_batiment_m2"] * u.m**2
+dit(str((besoin / majorant).to(u.dimensionless).units) == "dimensionless",
+    "besoin sous grue / majorant couvert est SANS DIMENSION",
+    f"{_ai['rapport_besoin_sur_majorant_pct']:.1f} %")
+
+# Le debit. Une capacite est un nombre de levages PAR JOUR, obtenue en multipliant des
+# levages par heure par des heures par jour. Le taux d'utilisation est sans dimension :
+# s'il etait traite comme une duree, le resultat ne serait plus un debit.
+_de = _i["debit"]
+cycles = _de["cycles_par_heure"] * u.levage / u.hour
+heures = _de["heures_par_jour"] * u.hour / u.day
+capacite = (cycles * heures * _de["taux_d_utilisation_fraction"]).to(u.levage / u.day)
+dit(abs(capacite.magnitude - _de["capacite_levages_par_jour"]) < 0.05,
+    "capacite = levages/h x h/j x taux est un DEBIT (levages/j)",
+    f"{capacite.magnitude:.1f} levages/j")
+surface_jour = _de["surface_manutentionnee_par_jour_m2"] * u.m**2 / u.day
+par_levage = (json.loads((RACINE / "data" / "projet-gare.json").read_text(
+    encoding="utf-8"))["installation"]["levages"]["surface_par_levage_m2"]["valeur"]
+    * u.m**2 / u.levage)
+demande = (surface_jour * 2 / par_levage).to(u.levage / u.day)
+dit(abs(demande.magnitude - _de["levages_de_coffrage_par_jour"]) < 0.1,
+    "demande de coffrage = (m²/j x 2 levages) / (m² par levage) est un DEBIT",
+    f"{demande.magnitude:.1f} levages/j")
+dit(str((demande / capacite).to(u.dimensionless).units) == "dimensionless",
+    "taux de charge = demande / capacite est SANS DIMENSION",
+    f"{_de['taux_de_charge_pct']:.1f} %")
+
+# La base-vie. Une surface par personne multipliee par un effectif donne une surface :
+# l'effectif est une grandeur (compagnon), pas un nombre nu, sinon n'importe quel
+# produit passerait.
+_bv = _i["base_vie"]
+_rub = json.loads((RACINE / "data" / "projet-gare.json").read_text(
+    encoding="utf-8"))["installation"]["base_vie"]
+pointe = _bv["effectif_de_pointe"] * u.compagnon
+# L'encadrement occupe des bureaux, pas des vestiaires : deux surfaces unitaires, donc,
+# ponderees par la part d'encadrement — qui est un POURCENTAGE, sans dimension.
+part = _rub["part_encadrement_pct"]["valeur"] / 100
+compagnons = _rub["m2_par_personne"]["valeur"] * u.m**2 / u.compagnon
+bureaux = _rub["m2_par_personne_encadrement"]["valeur"] * u.m**2 / u.compagnon
+surface = (pointe * (1 - part) * compagnons + pointe * part * bureaux).to(u.m**2)
+dit(abs(surface.magnitude - _bv["surface_necessaire_m2"]) < 0.5,
+    "surface de base-vie = effectif x surface par personne est une AIRE",
+    f"{pointe.magnitude:.0f} compagnons -> {surface.magnitude:.1f} m²")
+module = _rub["module_m2"] * u.m**2
+dit(str((surface / module).to(u.dimensionless).units) == "dimensionless",
+    "nombre de modules = surface / surface d'un module est SANS DIMENSION",
+    f"{_bv['modules']} modules")
+
+# Le cout. Un loyer est un MAD PAR MOIS : multiplie par une duree il donne des MAD, et
+# c'est la seule facon de l'additionner au cout fixe. Le contre-controle additionne les
+# deux sans multiplier — exactement l'erreur qui ferait passer un loyer pour un forfait.
+_co = _i["cout"]
+loyer = _co["loyer_MAD_par_mois"] * u.MAD / u.month
+duree = _co["duree_mois_calendaires"] * u.month
+fixe = _co["cout_fixe_MAD"] * u.MAD
+total = (fixe + (loyer * duree).to(u.MAD)).to(u.MAD)
+dit(abs(total.magnitude - _co["total_MAD"]) < 1,
+    "total = cout fixe + loyer x duree, les deux termes en MAD",
+    f"{total.magnitude:.0f} MAD")
+dit(str((fixe / total).to(u.dimensionless).units) == "dimensionless",
+    "part fixe = cout fixe / total est SANS DIMENSION",
+    f"{_co['part_fixe_pct']:.1f} %")
+
+leve("charge disponible obtenue en divisant le moment par la charge maximale",
+     lambda: (moment / charge_max).to(u.tonne))
+leve("rayon limite obtenu en MULTIPLIANT le moment par la masse",
+     lambda: (moment * masse).to(u.m))
+leve("couverture calculee en divisant une aire par une longueur",
+     lambda: (servie / (L * u.m)).to(u.dimensionless))
+# LIMITE DECLAREE. Deux erreurs de C1 sont dimensionnellement INVISIBLES, et il vaut
+# mieux l'ecrire que de les laisser croire controlees. (1) Diviser les levages par heure
+# par les heures par jour au lieu de les multiplier donne encore des levages par unite de
+# temps : pint convertit et ne leve pas. (2) Une part d'encadrement est un pourcentage,
+# donc sans dimension : la mettre au mauvais endroit du produit ne change aucune unite.
+# Ces deux-la sont attrapees par les tests de VALEUR de calc/tests/test_installation.py,
+# qui recalculent la capacite et la surface terme a terme — pas ici.
+leve("survol calcule en ajoutant une surface d'aire a une portee",
+     lambda: ((_gr["portee_m"] * u.m + besoin) - _vo["y_du_gabarit_m"] * u.m).to(u.m))
+leve("besoin sous grue rapporte a une portee au lieu d'une surface",
+     lambda: (besoin / (_gr["portee_m"] * u.m)).to(u.dimensionless))
+leve("taux d'utilisation traite comme une duree",
+     lambda: (cycles * heures * (_de["taux_d_utilisation_fraction"] * u.day)).to(u.levage / u.day))
+leve("demande calculee en oubliant la surface par levage",
+     lambda: (surface_jour * 2).to(u.levage / u.day))
+leve("surface de base-vie obtenue en multipliant l'effectif par le nombre de modules",
+     lambda: (pointe * _bv["modules"]).to(u.m**2))
+leve("surface par personne prise pour une surface totale",
+     lambda: (pointe * (4.5 * u.m**2)).to(u.m**2))
+leve("loyer ADDITIONNE au cout fixe sans etre multiplie par la duree",
+     lambda: (fixe + loyer).to(u.MAD))
+leve("duree de location additionnee a une surface de base-vie",
+     lambda: (duree + surface).to(u.month))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

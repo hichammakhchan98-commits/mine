@@ -914,3 +914,83 @@ Quatre lignes justes servent d'appâts : un relecteur qui ne sait pas dire « RA
 n'est pas un relecteur, et l'Annexe 4 l'exige déjà de ses propres passes. Et une règle en est
 sortie pour les appâts eux-mêmes : **un appât doit être défendable**, c'est-à-dire que le lecteur
 qui le signale doit avoir tort — s'il a raison, ce n'est pas un appât, c'est un défaut.
+
+---
+
+## D-059 — 28/10/2026 — Une voie de raisonnement dont les bornes enjambent le seuil ne tranche pas
+
+**Décision.** Quand un calcul sert à décider — franchir un seuil, choisir un nombre d'unités,
+déclencher une dépense — et que ses **deux bornes tombent de part et d'autre du seuil**, sa valeur
+nominale n'est pas publiée comme un argument. La voie est publiée avec son résultat, son incertitude
+et la mention explicite qu'**elle ne tranche pas** ; la décision se prend sur les voies restantes.
+Un champ `tranche` accompagne chaque voie dans la sortie de `calc/`, et un test vérifie que le
+résultat retenu est le maximum des seules voies qui tranchent.
+
+**Pourquoi.** C1 calcule le taux de charge d'une grue : **62,3 %**, donc une grue suffit. Ses bornes
+vont de **14,6 à 334,4 %** : à la borne haute il en faudrait trois. Publier « 62 %, donc une grue »
+aurait donné à la décision l'apparence d'un calcul, alors que le calcul ne dit rien — il dit « entre
+une et trois » sur une question qui n'admet que des entiers. Deux autres voies, indépendantes et sans
+terme commun, donnent toutes deux deux grues ; c'est elles qui décident, et le module le dit.
+
+Le piège est subtil parce que la valeur nominale **tombe du bon côté**. Elle paraît confirmer la voie
+géométrique, et un lecteur pressé y verra trois voies d'accord au lieu de deux. Un faux accord est
+pire qu'un désaccord : il augmente la confiance sans augmenter l'information. Compter les voies qui
+s'accordent n'a de sens que si chacune avait le droit de voter.
+
+**Ce que ça ne veut pas dire.** Une voie qui ne tranche pas n'est pas une voie inutile : elle reste au
+dossier comme ordre de grandeur, et surtout elle **désigne la mesure à aller chercher**. C1 en fait
+un exercice : des trois hypothèses qui portent la largeur de la fourchette, laquelle se relève le
+plus vite sur le chantier, et dans quel ordre. Le travail du chef de projet suivi n'est pas de
+calculer mieux avec les mêmes hypothèses ; c'est de savoir quelle mesure rapporte le plus.
+
+**Impact.** Rétroactif sur toute voie de décision du cours : `pourquoi_ce_parc` de C1 le porte, et la
+règle s'appliquera à chaque module qui compare plusieurs chemins vers une même décision.
+
+---
+
+## D-060 — 28/10/2026 — La vérification dimensionnelle passe en dernier, parce qu'elle lit des sorties
+
+**Décision.** `calc/verif_unites.py` est la **dernière** étape de `calc/run_all.py`, après tous les
+calculs et tous les tests.
+
+**Pourquoi.** Cette vérification ne relit pas le code source des bibliothèques : elle réécrit chaque
+formule avec ses unités et la confronte aux **sorties publiées** dans `calc/sorties/`. Placée au
+milieu de la chaîne, comme elle l'était depuis la tranche verticale, elle contrôlait donc les sorties
+de l'exécution **précédente** pour tous les modules calculés après elle — c'est-à-dire, au dernier
+état, pour sept modules sur onze. Une modification de `reception.py` n'était vérifiée
+dimensionnellement qu'au build suivant, et une exécution entière pouvait passer au vert sur un
+module dont les unités n'avaient jamais été contrôlées dans leur version courante.
+
+Le défaut n'a produit aucune erreur connue, et c'est précisément ce qui le rendait durable : rien ne
+le signalait. Il a été vu en ajoutant la section C1, dont la vérification lisait un fichier qui
+n'existait pas encore au moment où elle s'exécutait.
+
+**Impact.** Ordre de `ETAPES` modifié ; un commentaire en place explique pourquoi cette étape ne peut
+pas remonter. La limite déjà déclarée en tête du fichier — une formule qui change dans la
+bibliothèque sans changer ici n'est pas vue — reste entière : c'est une vérification de **cohérence
+entre une écriture annotée et un résultat**, pas une analyse du code.
+
+---
+
+## D-061 — 28/10/2026 — Une fiche livrée écrit ses écarts avec la fiche d'origine, et leur raison
+
+**Décision.** La fiche-module rédigée à la livraison (celles marquées « écrit le … » dans
+`cadrage/05-sommaire.md`) **nomme chaque option qu'elle relève ou qu'elle abandonne** par rapport à la
+fiche de l'Étape 0, avec la raison en une ou deux lignes. La fiche d'origine n'est pas réécrite : les
+deux coexistent, et l'écart est lisible.
+
+**Pourquoi.** Deux modules ont déjà dévié de leur fiche. C7 a **relevé** son O7 (contre-calcul), que
+la fiche d'origine disait sans objet faute de calcul normatif : il y avait un noyau calculable, et
+entièrement non normatif. C1 **abandonne** son O3 (modèle 3D), que la fiche d'origine portait comme
+obligatoire : ce que la 3D y apporterait est la giration et l'interférence des flèches, alors que ce
+que le module enseigne est la courbe de charge et la part servie, qui se lisent mieux sur un
+diagramme et un plan masse cotés. Ajouter la maquette aurait été cocher une case, ce que le § 6.2
+interdit explicitement.
+
+Les deux écarts sont défendables ; aucun des deux n'était tracé. Sans trace, une fiche d'Étape 0
+devient un document faux que personne ne relit, et le lecteur qui compare le sommaire au cours livré
+y trouve des promesses non tenues sans savoir si elles ont été instruites ou oubliées. La différence
+entre les deux est tout ce qui compte.
+
+**Impact.** Les fiches livrées de B7c, C7 et C1 portent leurs écarts. Les fiches livrées de REC et de
+RC1 ne sont pas encore écrites : versé en dette.

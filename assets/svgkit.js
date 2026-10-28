@@ -277,11 +277,21 @@
     // `axeY` : sans graduation, le lecteur ne peut lire aucune valeur intermediaire —
     // il voit la forme de la courbe et rien d'autre.
     if (o.axeY) {
-      const pasY = Math.pow(10, Math.floor(Math.log10(vmax))) / 2;
-      for (let v = pasY; v <= vmax; v += pasY) {
+      // Un pas fixe a une demi-decade donnait seize graduations pour un maximum de 8 et
+      // quatre pour un maximum de 800 : les etiquettes se chevauchaient dans le premier
+      // cas. Le pas vise quatre a cinq divisions, sur l'echelle usuelle 1 / 2 / 2,5 / 5.
+      const brut = vmax / 4.5;
+      const dec = Math.pow(10, Math.floor(Math.log10(brut)));
+      const pasY = ([1, 2, 2.5, 5, 10].find((m) => m * dec >= brut) || 10) * dec;
+      for (let v = pasY; v <= vmax + 1e-9; v += pasY) {
         g += ligne(r.x(Math.min(...xs)), r.y(v), r.x(Math.max(...xs)), r.y(v),
           { couleur: "#eceee9", ep: 1 });
-        g += texte(r.x(Math.min(...xs)) - 6, r.y(v), String(v).replace(".", ","),
+        // Un extremum deja annote sur la courbe ne se repete pas sur l'axe : les deux
+        // etiquettes portent le meme nombre et se superposent.
+        if (vs.some((x) => Math.abs(x - v) < pasY * 1e-6
+                           && (x === Math.max(...vs) || x === Math.min(...vs)))) continue;
+        g += texte(r.x(Math.min(...xs)) - 6, r.y(v),
+          String(Number(v.toFixed(6))).replace(".", ","),
           { taille: 9, mono: 1, ancre: "end", base: "middle", couleur: "#6b7682" });
       }
     }
@@ -311,6 +321,11 @@
       g += texte(xm + 5, r.y(vmax) + 11, o.marqueur.libelle || "",
         { taille: 9.5, mono: 1, couleur: "#8c3b2e", gras: 1 });
     }
+    // `nom` : le nom de la serie, en haut a gauche du cadre. Il figurait dans la liste
+    // des options acceptees sans que le generateur ne le dessine : une figure de REC le
+    // passait depuis sa livraison, et il etait ignore en silence.
+    if (o.nom) g += texte(r.x(Math.min(...xs)), 30, o.nom,
+      { taille: 10.5, mono: 1, couleur: o.couleur || "#1b4f72", gras: 1 });
     if (o.titre) g += texte(L / 2, 20, o.titre, { taille: 12, gras: 1, ancre: "middle" });
     return { svg: g, largeur: L, hauteur: H };
   }
@@ -874,7 +889,12 @@
     const r = repere({ largeur: L, hauteur: H, marge: 52, margeBas: 58, libre: true,
       xmin: 0, xmax: etapes.length, ymin: 0, ymax });
     let g = "";
-    const pasY = Math.pow(10, Math.floor(Math.log10(ymax))) / 2;
+    // Meme regle de graduation que `diagramme` : viser quatre a cinq divisions sur
+    // l'echelle 1 / 2 / 2,5 / 5. Un pas fixe a une demi-decade donnait dix-sept lignes
+    // pour un maximum de 8 142 — lisible, mais une grille au lieu d'un axe.
+    const brutY = ymax / 4.5;
+    const decY = Math.pow(10, Math.floor(Math.log10(brutY)));
+    const pasY = ([1, 2, 2.5, 5, 10].find((m) => m * decY >= brutY) || 10) * decY;
     for (let v = 0; v <= ymax; v += pasY) {
       g += ligne(r.x(0), r.y(v), r.x(etapes.length), r.y(v), { couleur: v ? "#eceee9" : "#14181d", ep: 1 });
       g += texte(r.x(0) - 8, r.y(v), String(Math.round(v)),
@@ -982,8 +1002,15 @@
         const v = Number(items[i].valeur);
         const xv = X(v);
         const x = Math.max(xZero, xv) + 10 + String(items[i].valeur).length * 5.5;
-        g += texte(x, 30 + i * lig + 9, o.legende_alerte,
-          { taille: 9, base: "middle", couleur: "#8c3b2e", gras: 1 });
+        // Si la barre expliquee est la plus longue, la legende sortait du cadre et se
+        // coupait en plein mot. Elle se replie alors du cote plein de la barre, ou la
+        // place est libre par construction.
+        const large = o.legende_alerte.length * 5.0;
+        const deborde = x + large > L - 8;
+        g += texte(deborde ? Math.max(xZero, xv) - 8 : x, 30 + i * lig + 9,
+          o.legende_alerte,
+          { taille: 9, base: "middle", couleur: deborde ? "#f6f1e9" : "#8c3b2e",
+            gras: 1, ancre: deborde ? "end" : "start" });
       }
     }
     return { svg: g, largeur: L, hauteur: H };
@@ -1034,6 +1061,70 @@
     return { svg: g, largeur: L, hauteur: H };
   }
 
+  /** Plan masse d'installation : emprise, grues et leur rayon, point le plus
+      defavorable. Les coordonnees sont en metres dans le repere du batiment. */
+  function planMasse(cfg, o = {}) {
+    const L = o.largeur || 760, H = o.hauteur || 300;
+    const [Le, le] = cfg.emprise_m;
+    const gr = cfg.grues || [];
+    // Le cadre doit contenir l'emprise ET les cercles : une grue decalee hors emprise
+    // sortait du dessin, et le cercle etait coupe sans que rien ne le dise.
+    const xmin = Math.min(0, ...gr.map((g) => g.x_m - g.portee_m));
+    const xmax = Math.max(Le, ...gr.map((g) => g.x_m + g.portee_m));
+    const ymin = Math.min(0, ...gr.map((g) => g.y_m - g.portee_m));
+    const ymax = Math.max(le, ...gr.map((g) => g.y_m + g.portee_m));
+    const r = repere({ largeur: L, hauteur: H, marge: 34, xmin, xmax, ymin, ymax });
+    let g = "";
+    // les cercles d'abord : ils passent sous le batiment
+    gr.forEach((x) => {
+      g += `<circle cx="${r.x(x.x_m)}" cy="${r.y(x.y_m)}" r="${r.l(x.portee_m)}" `
+        + `fill="rgba(65,96,125,.07)" stroke="#41607d" stroke-width="1.2" `
+        + `stroke-dasharray="6 4"/>`;
+    });
+    g += rect(r.x(0), r.y(le), r.l(Le), r.l(le),
+      { remplissage: "url(#m-beton)", couleur: "#14181d", ep: 1.6 });
+    // L'etiquette de l'emprise se place au BAS du rectangle, et celles des grues au bout
+    // de leur fleche : au centre, l'etiquette d'emprise recouvrait celle d'une grue des
+    // que deux grues etaient calees symetriquement, et le controle de chevauchement l'a
+    // vu avant qu'une figure fausse ne soit publiee.
+    g += texte(r.x(Le / 2), r.y(0) - 14, `emprise ${Le} × ${le} m`,
+      { taille: 10.5, ancre: "middle", couleur: "#3f4852" });
+    // Le gabarit d'une voie exploitee : une ligne que les cercles traversent ou non. Sans
+    // elle, le plan masse ne montre pas la grandeur dont le module dit qu'elle decide.
+    if (o.gabarit) {
+      const yg = r.y(o.gabarit.y_m);
+      g += ligne(r.x(xmin) + 6, yg, r.x(xmax) - 6, yg,
+        { couleur: "#8a1c1c", ep: 1.6, tirets: "10 4" });
+      g += texte(r.x(xmax) - 8, yg - 6, o.gabarit.libelle || "gabarit",
+        { taille: 9.5, mono: 1, ancre: "end", couleur: "#8a1c1c", gras: 1 });
+    }
+    gr.forEach((x) => {
+      const cx = r.x(x.x_m), cy = r.y(x.y_m);
+      g += rect(cx - 5, cy - 5, 10, 10,
+        { remplissage: "#8c3b2e", couleur: "#5c2419", ep: 1 });
+      g += ligne(cx, cy, r.x(x.x_m + x.portee_m), cy,
+        { couleur: "#8c3b2e", ep: 1, tirets: "3 3" });
+      g += texte(r.x(x.x_m + x.portee_m) - 4, cy - 7, `${x.nom} · ${x.portee_m} m`,
+        { taille: 9.5, mono: 1, ancre: "end", couleur: "#8c3b2e", gras: 1 });
+    });
+    if (o.point_defavorable) {
+      const pd = o.point_defavorable;
+      g += cercle(r.x(pd.x), r.y(pd.y), 4, { remplissage: "#b4532f" });
+      g += texte(r.x(pd.x) + 8, r.y(pd.y) - 6, pd.libelle || "",
+        { taille: 9.5, mono: 1, couleur: "#b4532f", gras: 1 });
+    }
+    // echelle : un plan sans echelle n'est pas un plan
+    const pas = [5, 10, 20, 25, 50, 100].find((v) => r.l(v) > 60) || 100;
+    const x0 = r.x(xmin) + 10, y0 = r.y(ymin) - 12;
+    g += ligne(x0, y0, x0 + r.l(pas), y0, { couleur: "#14181d", ep: 1.4 });
+    g += ligne(x0, y0 - 3, x0, y0 + 3, { couleur: "#14181d", ep: 1.4 });
+    g += ligne(x0 + r.l(pas), y0 - 3, x0 + r.l(pas), y0 + 3, { couleur: "#14181d", ep: 1.4 });
+    g += texte(x0 + r.l(pas) / 2, y0 - 9, `${pas} m`,
+      { taille: 9, mono: 1, ancre: "middle", couleur: "#6b7682" });
+    if (o.titre) g += texte(L / 2, 16, o.titre, { taille: 11.5, gras: 1, ancre: "middle" });
+    return { svg: g, largeur: L, hauteur: H, motifs: ["beton"] };
+  }
+
   /* Options acceptees par chaque generateur. Le build ECHOUE sur une option inconnue :
      la legende d'une figure de D2 annoncait une serie que le generateur ne connaissait
      pas, l'option etait ignoree en silence, et la figure ne montrait pas ce que la
@@ -1056,11 +1147,13 @@
     cascade: [],
     barres: ["bande", "libelle_bande", "origine", "legende_alerte"],
     tresorerie: ["besoin_max", "j_max"],
+    planMasse: ["point_defavorable", "gabarit"],
   };
 
   const API = { repere, svg, texte, ligne, rect, cercle, chemin, cote, legende, puce,
     coupeSection, elevationPoutre, diagramme, gantt, courbeS, histogramme, sequence,
     planZones, rotation, wbs, reseau, ligneEquilibre, cascade, barres, tresorerie,
+    planMasse,
     MOTIFS, ech,
     OPTIONS, OPTIONS_COMMUNES };
 
