@@ -187,15 +187,34 @@ verifie("la capacite est cycles x heures x taux d'utilisation",
             - de["cycles_par_heure"] * de["heures_par_jour"]
             * de["taux_d_utilisation_fraction"]) < 0.05,
         f"{de['capacite_levages_par_jour']} levages/j")
-_ligne = next(x for x in go["parc"]["lignes"] if x.get("optimum_de_cout"))
-verifie("le parc de coffrage est celui que C3 publie, pas un autre",
-        de["parc_de_coffrage_m2"] == _ligne["parc_m2"]
-        and abs(de["cadence_j"] - _ligne["cadence_tenue_j"]) < 0.01,
-        f"{de['parc_de_coffrage_m2']} m² a {de['cadence_j']} j")
+# LA regle : ce qui se leve est le coffrage d'UNE ZONE, a la cadence que le planning
+# tient. Ni le parc (qui est un stock), ni la cadence d'une ligne de tableau que C3
+# publie comme un optimum de cout sans en faire une decision.
+_tv = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json")
+                 .read_text(encoding="utf-8"))
+verifie("ce qui se leve est le coffrage d'une zone, pas le parc",
+        de["coffrage_d_une_zone_m2"] == _tv["quantites"]["coffrage_m2"]
+        and de["coffrage_d_une_zone_m2"] < de["parc_declare_m2"],
+        f"{de['coffrage_d_une_zone_m2']} m² sur un parc de {de['parc_declare_m2']} m²")
+verifie("la cadence est celle du cycle que C3 publie",
+        abs(de["cadence_j"] - go["cycle"]["cadence_j"]) < 0.01,
+        f"{de['cadence_j']} j")
+# canari : prendre le parc au lieu de la zone doit CHANGER le nombre publie, sinon le
+# test ne verifie rien.
+verifie("canari : prendre le parc au lieu de la zone change la demande",
+        abs(de["parc_declare_m2"] / de["cadence_j"] * 2
+            / I["levages"]["surface_par_levage_m2"]["valeur"]
+            - de["levages_de_coffrage_par_jour"]) > 1.0,
+        f"{de['parc_declare_m2'] / de['cadence_j'] * 2 / 10:.1f} contre "
+        f"{de['levages_de_coffrage_par_jour']} levages/j")
 verifie("un coffrage compte DEUX levages par rotation : pose et depose",
         abs(de["levages_de_coffrage_par_jour"]
             - de["surface_manutentionnee_par_jour_m2"] * 2
             / I["levages"]["surface_par_levage_m2"]["valeur"]) < 0.1)
+verifie("la surface manutentionnee par jour est la zone divisee par la cadence",
+        abs(de["surface_manutentionnee_par_jour_m2"]
+            - de["coffrage_d_une_zone_m2"] / de["cadence_j"]) < 0.1,
+        f"{de['surface_manutentionnee_par_jour_m2']} m²/j")
 verifie("la demande est le coffrage plus les divers",
         abs(de["demande_levages_par_jour"]
             - (de["levages_de_coffrage_par_jour"] + de["levages_divers_par_jour"])) < 0.1)
@@ -203,6 +222,31 @@ verifie("les bornes encadrent le taux de charge",
         de["taux_de_charge_bornes_pct"][0] <= de["taux_de_charge_pct"]
         <= de["taux_de_charge_bornes_pct"][1],
         f"{de['taux_de_charge_bornes_pct']}")
+# LA regle de D-059 : la voie ne tranche pas, et il faut que ce soit vrai hypothese par
+# hypothese — sinon le verdict ne tiendrait qu'a l'accumulation des extremes.
+for x in de["sensibilite_une_a_une"]:
+    verifie(f"sensibilite « {x['hypothese'][:24]} » : les bornes encadrent le nominal",
+            x["taux_min_pct"] <= de["taux_de_charge_pct"] <= x["taux_max_pct"],
+            f"{x['taux_min_pct']} - {x['taux_max_pct']} %")
+verifie("chaque hypothese prise SEULE enjambe deja le seuil de 100 %",
+        all(x["taux_min_pct"] < 100 < x["taux_max_pct"]
+            for x in de["sensibilite_une_a_une"]),
+        f"{len(de['sensibilite_une_a_une'])} hypotheses sur "
+        f"{len(de['sensibilite_une_a_une'])}")
+verifie("et l'enveloppe combinee est plus large que chacune",
+        de["taux_de_charge_bornes_pct"][0] <= min(x["taux_min_pct"]
+                                                  for x in de["sensibilite_une_a_une"])
+        and de["taux_de_charge_bornes_pct"][1] >= max(x["taux_max_pct"]
+                                                      for x in de["sensibilite_une_a_une"]))
+verifie("la pointe double la part coffrage, et seulement elle",
+        abs(de["demande_de_pointe_levages_par_jour"]
+            - (de["levages_de_coffrage_par_jour"] * 2
+               + de["levages_divers_par_jour"])) < 0.1
+        and de["demande_de_pointe_levages_par_jour"] > de["demande_levages_par_jour"],
+        f"{de['demande_de_pointe_levages_par_jour']} levages/j")
+verifie("et meme deux grues ne sont pas de trop ce jour-la",
+        de["taux_de_charge_de_pointe_pct"] > 100,
+        f"{de['taux_de_charge_de_pointe_pct']} % d'UNE grue")
 verifie("le module dit pourquoi une moyenne ne remplace pas un profil",
         dit(de["_ce_que_le_taux_de_charge_cache"], "pointe", "profil"))
 
@@ -229,6 +273,22 @@ verifie("et il est strictement plus petit que leur somme",
         pa["parc_retenu"] < sum(v["parc"] for v in pa["voies"] if v["parc"]),
         "les additionner donnerait "
         f"{sum(v['parc'] for v in pa['voies'] if v['parc'])} grues")
+verifie("le seuil de la voie geometrie est declare, et il est strict",
+        pa["seuil_de_couverture_pct"] >= 99.0
+        and all(c["couverture_pct"] >= pa["seuil_de_couverture_pct"]
+                for c in r["couverture"]
+                if c["nb_grues"] == next(v["parc"] for v in pa["voies"]
+                                         if v["voie"] == "la géométrie")),
+        f"{pa['seuil_de_couverture_pct']} %")
+verifie("et aucune variante sous le seuil n'est retenue par cette voie",
+        all(c["couverture_pct"] < pa["seuil_de_couverture_pct"]
+            or c["nb_grues"] >= next(v["parc"] for v in pa["voies"]
+                                     if v["voie"] == "la géométrie")
+            for c in r["couverture"]))
+verifie("chaque voie dit sa duree, et elles ne sont pas toutes egales",
+        all(v.get("duree") for v in pa["voies"])
+        and len({v["duree"] for v in pa["voies"]}) > 1,
+        " · ".join(v["duree"][:28] for v in pa["voies"]))
 verifie("chaque voie dit d'ou elle vient",
         all(len(v["source"]) > 30 and len(v["pourquoi"]) > 30 for v in pa["voies"]))
 
@@ -255,25 +315,66 @@ verifie("les bornes encadrent la surface",
         <= bv["surface_bornes_m2"][1], f"{bv['surface_bornes_m2']}")
 
 # ------------------------------------------------- 6. le cout
-print("\n--- le cout : un fixe et un loyer, qui n'obeissent pas a la meme chose ---")
+print("\n--- la fenetre de grue : une ressource n'est pas un frais de duree ---")
+fe = r["fenetre_de_grue"]
+_seg = pl["segments_de_travail"]
+verifie("la fenetre encadre toutes les taches servies par la grue",
+        all(fe["debut_j"] - 0.05 <= _seg[t][0][0] and _seg[t][-1][1] <= fe["fin_j"] + 0.05
+            for t in fe["taches_servies"]),
+        f"{fe['debut_j']} -> {fe['fin_j']} j")
+verifie("et ses bornes SONT celles d'une tache servie, pas une marge",
+        any(abs(_seg[t][0][0] - fe["debut_j"]) < 0.05 for t in fe["taches_servies"])
+        and any(abs(_seg[t][-1][1] - fe["fin_j"]) < 0.05 for t in fe["taches_servies"]))
+verifie("les taches servies sont celles que D2 declare",
+        fe["taches_servies"] == [t for t in pl["grue"]["taches_servies"] if t in _seg])
+verifie("la fenetre est strictement plus courte que le chantier",
+        fe["duree_ouvree_j"] < fe["duree_du_chantier_ouvree_j"],
+        f"{fe['part_du_chantier_pct']} % du chantier")
+verifie("la conversion en mois calendaires utilise le ratio de D1",
+        abs(fe["duree_mois_calendaires"]
+            - fe["duree_ouvree_j"] / fe["jours_ouvres_par_mois_calendaire"]) < 0.02)
+
+print("\n--- le cout : un fixe et DEUX loyers, sur deux durees ---")
 co = r["cout"]
 _fd = pr["bordereau"]["frais_de_duree"]
-verifie("la duree est celle que D1 publie",
-        abs(co["duree_mois_calendaires"] - _fd["duree_mois_calendaires"]) < 0.01,
-        f"{co['duree_mois_calendaires']} mois")
-verifie("le loyer mensuel est celui des lignes de frais de duree de D1",
-        co["loyer_MAD_par_mois"]
-        == _fd["lignes"]["grue_tour_location"]["MAD_mois"] * co["nb_grues"]
-        + _fd["lignes"]["base_vie_et_fonctionnement"]["MAD_mois"],
-        f"{co['loyer_MAD_par_mois']} MAD/mois")
-verifie("le total est le fixe plus le loyer",
-        abs(co["total_MAD"] - (co["cout_fixe_MAD"] + co["loyer_total_MAD"])) < 1)
-verifie("et le loyer pese plus que le fixe",
-        co["part_fixe_pct"] < 50,
-        f"{co['part_fixe_pct']} % de fixe")
-verifie("le module dit que les deux morceaux n'obeissent pas a la meme chose",
+verifie("la duree du chantier est celle que D1 publie",
+        abs(co["duree_du_chantier_mois"] - _fd["duree_mois_calendaires"]) < 0.01,
+        f"{co['duree_du_chantier_mois']} mois")
+verifie("la duree de location des grues est celle de la fenetre, pas du chantier",
+        abs(co["duree_de_location_des_grues_mois"] - fe["duree_mois_calendaires"]) < 0.02
+        and co["duree_de_location_des_grues_mois"] < co["duree_du_chantier_mois"],
+        f"{co['duree_de_location_des_grues_mois']} mois contre "
+        f"{co['duree_du_chantier_mois']}")
+verifie("le loyer des grues court sur LEUR duree",
+        abs(co["loyer_des_grues_MAD"]
+            - _fd["lignes"]["grue_tour_location"]["MAD_mois"] * co["nb_grues"]
+            * co["duree_de_location_des_grues_mois"]) < 500,
+        f"{co['loyer_des_grues_MAD']:.0f} MAD")
+verifie("le loyer de la base-vie court sur celle du chantier",
+        abs(co["loyer_de_la_base_vie_MAD"]
+            - _fd["lignes"]["base_vie_et_fonctionnement"]["MAD_mois"]
+            * co["duree_du_chantier_mois"]) < 1)
+verifie("le total est le fixe plus les deux loyers",
+        abs(co["total_MAD"] - (co["cout_fixe_MAD"] + co["loyer_des_grues_MAD"]
+                               + co["loyer_de_la_base_vie_MAD"])) < 1)
+# canari : louer les grues sur toute la duree du chantier doit CHANGER le total.
+verifie("canari : louer les grues sur toute la duree change le total",
+        abs(_fd["lignes"]["grue_tour_location"]["MAD_mois"] * co["nb_grues"]
+            * co["duree_du_chantier_mois"] - co["loyer_des_grues_MAD"]) > 1e6,
+        f"{_fd['lignes']['grue_tour_location']['MAD_mois'] * co['nb_grues'] * co['duree_du_chantier_mois']:.0f} "
+        f"contre {co['loyer_des_grues_MAD']:.0f} MAD")
+verifie("un mois gagne sur le gros oeuvre vaut plus qu'un mois gagne a la fin",
+        co["un_mois_gagne_sur_le_gros_oeuvre_MAD"] > co["un_mois_gagne_a_la_fin_MAD"],
+        f"{co['un_mois_gagne_sur_le_gros_oeuvre_MAD']} contre "
+        f"{co['un_mois_gagne_a_la_fin_MAD']} MAD")
+verifie("le trou se tranche en comparant deux montants, et la decision suit",
+        (co["trou_decision"] == "garder")
+        == (co["trou_garder_les_grues_MAD"] < co["trou_les_demonter_et_remonter_MAD"]),
+        f"{co['trou_decision']} : {co['trou_garder_les_grues_MAD']:.0f} contre "
+        f"{co['trou_les_demonter_et_remonter_MAD']:.0f} MAD")
+verifie("le module dit que les morceaux n'obeissent pas a la meme chose",
         dit(co["_les_deux_morceaux_n_obeissent_pas_a_la_meme_chose"],
-            "decision", "duree du chantier"))
+            "decision", "gros \u0153uvre", "chantier entier"))
 # L'ecart avec D1 est PUBLIE, pas tu : D1 budgete une grue, C1 en retient deux.
 verifie("le parc « somme des voies » est bien la somme, pas le maximum",
         co["parc_si_somme_des_voies"]
@@ -284,22 +385,67 @@ verifie("et il coute strictement plus cher, en part du marche",
         co["part_du_marche_si_somme_des_voies_pct"] > co["part_du_marche_pct"],
         f"{co['part_du_marche_si_somme_des_voies_pct']} % contre "
         f"{co['part_du_marche_pct']} %")
-verifie("le parc « somme des voies » est bien la somme, pas le maximum",
-        co["parc_si_somme_des_voies"]
-        == sum(v["parc"] for v in pa["voies"] if v["parc"])
-        and co["parc_si_somme_des_voies"] > co["nb_grues"],
-        f"{co['parc_si_somme_des_voies']} contre {co['nb_grues']} retenues")
-verifie("et il coute strictement plus cher, en part du marche",
-        co["part_du_marche_si_somme_des_voies_pct"] > co["part_du_marche_pct"],
-        f"{co['part_du_marche_si_somme_des_voies_pct']} % contre "
-        f"{co['part_du_marche_pct']} %")
-verifie("l'ecart avec le bordereau de D1 est publie",
-        co["ecart_avec_D1_MAD"] == round(
-            _fd["lignes"]["grue_tour_location"]["MAD_mois"] * (co["nb_grues"] - 1)
-            * co["duree_mois_calendaires"], 2),
-        f"{co['ecart_avec_D1_MAD']:.0f} MAD")
+# DEUX bases de prix : D1 en publie deux et dit laquelle on signe. Le module doit citer
+# la bonne, et publier l'autre — pas choisir en silence.
+verifie("la part du marche est publiee sur les DEUX bases de D1",
+        abs(co["part_du_marche_pct"] - co["total_MAD"] / co["marche_de_reference_MAD"] * 100) < 0.01
+        and abs(co["part_du_marche_signe_pct"]
+                - co["total_MAD"] / co["marche_signe_MAD"] * 100) < 0.01
+        and co["part_du_marche_signe_pct"] < co["part_du_marche_pct"],
+        f"{co['part_du_marche_signe_pct']} % du prix signe contre "
+        f"{co['part_du_marche_pct']} % de la reference")
+verifie("le prix signe est celui que D1 declare signer",
+        co["marche_signe_MAD"]
+        == pr["bordereau_avec_divers"]["prix_de_vente_MAD"])
+# SECONDE VOIE sur la base-vie : deux chemins independants, un ecart publie.
+verifie("la base-vie a une seconde voie, et son ecart est publie",
+        abs(co["loyer_base_vie_par_les_modules_MAD_par_mois"]
+            - bv["modules"] * I["base_vie"]["cout_module_MAD_par_mois"]["valeur"]) < 1
+        and abs(co["ecart_des_deux_voies_base_vie_pct"]) < 50,
+        f"{co['loyer_base_vie_par_les_modules_MAD_par_mois']} MAD/mois contre "
+        f"{co['loyer_base_vie_MAD_par_mois']} — {co['ecart_des_deux_voies_base_vie_pct']} %")
+verifie("et c'est la ligne de D1 qui entre dans le total, pas la seconde voie",
+        abs(co["loyer_de_la_base_vie_MAD"]
+            - co["loyer_base_vie_MAD_par_mois"] * co["duree_du_chantier_mois"]) < 1)
+verifie("l'ecart avec le bordereau de D1 est publie, et il est NEGATIF",
+        abs(co["ecart_avec_D1_MAD"]
+            - (co["loyer_des_grues_MAD"] - co["D1_loyer_de_grue_MAD"])) < 1
+        and co["ecart_avec_D1_MAD"] < 0,
+        f"{co['ecart_avec_D1_MAD']:.0f} MAD — D1 surestime")
 
 # ------------------------------------------------- figures
+print("\n--- l'interference des deux fleches ---")
+inf = r["interference"]
+verifie("l'interference porte sur la variante retenue",
+        inf["variante"] == r["figures"]["plan_masse"]["variante"])
+for pr_ in inf["paires"]:
+    _g = {x["nom"]: x for x in next(c for c in r["couverture"]
+                                    if c["variante"] == inf["variante"])["grues"]}
+    a_, b_ = _g[pr_["grues"][0]], _g[pr_["grues"][1]]
+    dd = math.hypot(a_["x_m"] - b_["x_m"], a_["y_m"] - b_["y_m"])
+    verifie(f"{'-'.join(pr_['grues'])} : l'entraxe est la distance des deux mats",
+            abs(pr_["entraxe_m"] - dd) < 0.05, f"{pr_['entraxe_m']} m")
+    verifie(f"{'-'.join(pr_['grues'])} : secantes si et seulement si l'entraxe est "
+            "plus petit que la somme des portees",
+            pr_["secantes"] == (dd < a_["portee_m"] + b_["portee_m"]))
+    if pr_["secantes"]:
+        # forme fermee de la lentille, recalculee ici par une autre ecriture
+        r1, r2 = a_["portee_m"], b_["portee_m"]
+        x = (dd ** 2 + r1 ** 2 - r2 ** 2) / (2 * dd)
+        aire = (r1 ** 2 * math.acos(x / r1) - x * math.sqrt(r1 ** 2 - x ** 2)
+                + r2 ** 2 * math.acos((dd - x) / r2)
+                - (dd - x) * math.sqrt(r2 ** 2 - (dd - x) ** 2))
+        verifie(f"{'-'.join(pr_['grues'])} : l'aire commune recolle a la forme fermee",
+                abs(pr_["aire_commune_m2"] - aire) < 0.5,
+                f"{pr_['aire_commune_m2']} contre {aire:.1f} m²")
+        verifie(f"{'-'.join(pr_['grues'])} : elle est plus petite que le plus petit disque",
+                pr_["aire_commune_m2"] < math.pi * min(r1, r2) ** 2)
+verifie("le module dit que deux grues secantes ne font pas deux fois une grue",
+        dit(inf["_ce_que_la_geometrie_impose"], "pas le double", "attend")
+        or dit(inf["_ce_que_la_geometrie_impose"], "n'est pas le double"))
+verifie("et il met les regles en attente plutot que de les inventer",
+        "⏸" in inf["_ce_qui_reste_en_attente"])
+
 print("\n--- figures ---")
 f = r["figures"]
 verifie("la courbe de charge commence a la charge maximale et decroit",
@@ -336,6 +482,9 @@ verifie("la cascade du cout recolle a ses etapes",
         f["cout"][-1].get("type") == "total"
         and abs(f["cout"][-1]["montant"]
                 - sum(x["montant"] for x in f["cout"][:-1])) <= 1)
+verifie("et elle porte TROIS marches : un fixe et deux loyers",
+        len(f["cout"]) == 4,
+        " + ".join(x["libelle"] for x in f["cout"][:-1]))
 
 print()
 if echecs:

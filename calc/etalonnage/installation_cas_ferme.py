@@ -162,6 +162,32 @@ cas("deplacer la grue de 6 m vers la ville reduit le survol de 6 m",
 cas("une portee plus courte que la distance au gabarit ne l'atteint jamais",
     max(y + 20.0 - y_gab for y in (0.0, 20.0, 40.0)), 8.0, 1e-9, "m")
 
+print("\n=== 5quater. La lentille de deux fleches, forme fermee ===")
+# Deux disques de meme rayon R dont les centres sont distants de R : l'aire commune vaut
+# exactement 2.R2.(pi/3 - racine(3)/4). C'est un cas d'ecole, et il suffit a etalonner la
+# formule generale employee par le module.
+R3 = 40.0
+attendu = 2 * R3 ** 2 * (math.pi / 3 - math.sqrt(3) / 4)
+d3 = {"geometrie": {"emprise_m": [120, 40]}, "installation": {"grue": {
+    "hauteur_sous_crochet_m": 45}}}
+v3 = {"nom": "etalon", "grues": [{"nom": "A", "x_m": 0.0, "y_m": 0.0, "portee_m": R3},
+                                 {"nom": "B", "x_m": R3, "y_m": 0.0, "portee_m": R3}]}
+cas("l'aire commune de deux disques distants de R vaut 2.R2.(pi/3 - V3/4)",
+    ins.interference(d3, v3)["paires"][0]["aire_commune_m2"], attendu, 0.5, "m2")
+# INVARIANTS : deux cercles tangents ne se recouvrent pas ; deux cercles confondus se
+# recouvrent entierement.
+v4 = {"nom": "tangents", "grues": [{"nom": "A", "x_m": 0.0, "y_m": 0.0, "portee_m": R3},
+                                   {"nom": "B", "x_m": 2 * R3, "y_m": 0.0,
+                                    "portee_m": R3}]}
+cas("deux fleches tangentes ne partagent aucune aire",
+    ins.interference(d3, v4)["paires"][0]["aire_commune_m2"], 0.0, 1e-9, "m2")
+v5 = {"nom": "confondus", "grues": [{"nom": "A", "x_m": 0.0, "y_m": 0.0, "portee_m": R3},
+                                    {"nom": "B", "x_m": 0.0, "y_m": 0.0,
+                                     "portee_m": R3}]}
+cas("deux fleches confondues partagent tout le disque",
+    ins.interference(d3, v5)["paires"][0]["aire_commune_m2"], math.pi * R3 ** 2,
+    0.5, "m2")
+
 print("\n=== 6. Le jeu REEL du projet ===")
 d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"))
 r = ins.tout_calculer(d)

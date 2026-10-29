@@ -994,3 +994,46 @@ entre les deux est tout ce qui compte.
 
 **Impact.** Les fiches livrées de B7c, C7 et C1 portent leurs écarts. Les fiches livrées de REC et de
 RC1 ne sont pas encore écrites : versé en dette.
+
+---
+
+## D-062 — 29/10/2026 — Le maximum des voies donne un NOMBRE, jamais une durée
+
+**Décision.** Quand plusieurs raisonnements indépendants mènent à la même décision de ressource, on
+retient le **maximum** de ce qu'ils demandent — c'était déjà la règle — mais **chaque voie porte en
+plus sa propre durée**, et la durée ne se prend pas au maximum. Elle se lit voie par voie, et celle
+qui est retenue est celle de la voie qui **impose** le nombre retenu. Toute sortie de `calc/` qui
+publie un besoin de ressource publie donc aussi sa fenêtre d'emploi, et le module nomme la voie qui
+la paie.
+
+**Pourquoi.** C1 conclut à deux grues à tour par deux voies indépendantes. La première — un conflit
+de calendrier chez D2 — demande deux grues pendant **trois jours**. La seconde — un bâtiment de
+120 m sous des flèches de 40 — en demande deux pendant toute la fenêtre du gros œuvre. Le module a
+d'abord pris le nombre de l'une et la durée du chantier entier : **deux grues pendant 29,7 mois,
+pour 117 jours ouvrés de besoin**. Le loyer publié valait cinq fois le besoin, la part fixe du coût
+d'installation tombait à 17,9 % au lieu de 40,6 %, et la phrase « les quatre cinquièmes se jouent
+sur la date de fin » était fausse : les grues sont démontées vingt mois avant la fin.
+
+Le défaut est passé entre seize contrôles verts, cent vingt-huit tests, l'étalonnage et la
+vérification dimensionnelle. Aucun ne pouvait le voir : les deux nombres sont des durées en mois,
+ils sont homogènes, et ils vivent dans deux sections distantes du même module. Ce qui l'a trouvé est
+une relecture qui a rapproché le profil de grue (jour 20 à jour 137) de la durée de location
+(29,7 mois).
+
+**La règle générale.** Un **frais de durée** se paie tant que le chantier dure : encadrement,
+base-vie, gardiennage. Une **ressource** s'amène, sert, et s'en va. Un modèle de prix qui ne connaît
+que des mois facture la seconde comme la première, parce que c'est l'hypothèse prudente — prudente
+pour l'offre, chère pour la compétitivité. Trois conséquences que ce cours applique désormais :
+
+1. « Gagner un mois » n'est pas une grandeur tant qu'on n'a pas dit **lequel** : sur ce chantier,
+   225 000 MAD sur le gros œuvre et 35 000 MAD à la fin, un rapport de 6,4.
+2. Un **trou** dans l'emploi d'une ressource est une décision chiffrable : garder les grues pendant
+   les 2,2 mois qui précèdent la marquise coûte 421 800 MAD, les démonter et les remonter 840 000.
+3. Une voie qui demande une ressource **trois jours** ne justifie pas de la louer à l'année : elle
+   appelle un autre moyen, et c'est ce que le module D2 écrivait déjà sans que personne le lise.
+
+**Impact.** `calc/installation.py` publie `fenetre_de_grue`, chaque voie porte sa `duree`, et le coût
+se calcule avec deux horloges. L'écart avec le bordereau de D1 **change de signe** : D1 surestime de
+1 723 300 MAD au lieu de sous-estimer de 2 821 500. Il reste publié et en dette (D-055), non corrigé
+en silence. Le contrôle qui attraperait la même faute ailleurs — « toute grandeur multipliée par une
+durée de chantier nomme la fenêtre d'emploi de ce qu'elle loue » — n'est pas outillé : dette 32.

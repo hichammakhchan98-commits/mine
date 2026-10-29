@@ -931,17 +931,27 @@ Contre-calcul : etalonnage sur cas fermes (calc/etalonnage/installation_cas_ferm
           grues disjointes couvrent le double MOINS le batiment compte une fois de trop. Ce second
           invariant, d'abord ecrit « le double », a echoue de 100 m2 : l'erreur etait dans
           l'invariant, pas dans la fonction, et le cas conserve distingue les deux.
-Double lecture entreprise / MOE : ✓ (l'exercice 4 est un plan d'installation a viser, 2 observations
-          bloquantes dont une d'OMISSION DE PIECE)     Fiche memo S8 : ✓ (3 phrases, 7 controles)
+ECARTS DE CONTENU avec la fiche d'origine, nommes (D-061) : la fiche promettait aussi la
+          centrale a beton sur site OU le BPE, les circulations et le lavage de roues, et les
+          reseaux provisoires. Aucun des trois n'est traite ici. Raison : les deux premiers se
+          chiffrent avec le betonnage (C3, qui publie deja la fenetre de coulage et les rotations)
+          et avec le materiel (C6) ; les reseaux provisoires n'ont dans ce cours aucune donnee a
+          lire et auraient produit un paragraphe de generalites, ce que le § 2.2 interdit. Ils
+          sont renvoyes a C3 et C6, et le module le dit dans son S1 au lieu de le taire.
+Double lecture entreprise / MOE : ✓ (l'exercice 4 est un plan d'installation a viser, 5 observations
+          dont 2 bloquantes et 3 d'OMISSION DE PIECE)   Fiche memo S8 : ✓ (3 phrases, 9 controles)
 Schemas : courbe de charge avec marqueur · plan masse et point defavorable · couvrir contre servir
           (6 barres) · survol du gabarit par variante · cascade du cout
 Exercices : 1 application + 2 problemes (dont « le releve qui vaut plus que le calcul ») + 1 revue
           critique   Quiz : 7 questions
-Tests : calc/tests/test_installation.py (69 controles, 1 canari de portee infinie) + etalonnage
-          + verif_unites (section C1, dont 2 LIMITES DECLAREES dimensionnellement invisibles) + rendu
-EFFET SUR LE COURS : publie un ecart avec D1, qui budgete le loyer d'UNE grue quand C1 en retient
-          deux — 2 821 500 MAD de frais de duree. L'ecart est verse en dette (D-055), pas corrige
-          en silence. Deplace aussi la verification dimensionnelle en DERNIERE etape de
+Tests : calc/tests/test_installation.py (128 controles, 3 canaris) + etalonnage (disque clippe,
+          lentille de deux disques, quatre invariants) + verif_unites (section C1, dont 3 LIMITES
+          DECLAREES dimensionnellement invisibles) + rendu
+EFFET SUR LE COURS : publie un ecart avec D1 — qui facture UNE grue au mois sur toute la duree du
+          chantier quand C1 en retient DEUX sur la seule fenetre du gros oeuvre, 5,8 mois sur 29,7.
+          Les deux ecarts vont en sens inverse et celui de la DUREE l'emporte : D1 surestime de
+          1 723 300 MAD. Verse en dette (D-055), pas corrige en silence. La passe adversariale a
+          trouve cette erreur dans ce module meme : il louait deux grues pendant 29,7 mois. Deplace aussi la verification dimensionnelle en DERNIERE etape de
           calc/run_all.py : placee avant les calculs, elle controlait les sorties de l'execution
           precedente, et laissait un module entier non verifie.
 ```

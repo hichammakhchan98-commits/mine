@@ -127,6 +127,80 @@ def couverture(d: dict, variante: dict, masses: list, pas: float = 1.0) -> dict:
     }
 
 
+# ------------------------------------------------- 2bis-a. deux flèches qui se croisent
+def interference(d: dict, variante: dict) -> dict:
+    """Deux grues dont les cercles se recoupent ne sont pas deux grues indépendantes.
+
+    Rien ici n'est réglementaire — les règles d'anti-collision, de décalage de hauteur
+    et de priorité relèvent du marché et de la réglementation, et restent ⏸. Ce qui se
+    calcule, c'est la GÉOMÉTRIE : l'aire commune aux deux cercles, et le fait que les
+    deux crochets travaillent à la même hauteur parce que data/ n'en déclare qu'une.
+    """
+    g = d["installation"]["grue"]
+    L, l = d["geometrie"]["emprise_m"]
+    gr = variante["grues"]
+    paires = []
+    for i in range(len(gr)):
+        for j in range(i + 1, len(gr)):
+            a, b = gr[i], gr[j]
+            dd = math.hypot(a["x_m"] - b["x_m"], a["y_m"] - b["y_m"])
+            r1, r2 = a["portee_m"], b["portee_m"]
+            if dd >= r1 + r2:                      # cercles disjoints
+                aire = 0.0
+            elif dd <= abs(r1 - r2):               # l'un dans l'autre
+                aire = math.pi * min(r1, r2) ** 2
+            else:
+                # aire de la lentille de deux disques secants, forme fermee
+                a1 = r1 ** 2 * math.acos((dd ** 2 + r1 ** 2 - r2 ** 2) / (2 * dd * r1))
+                a2 = r2 ** 2 * math.acos((dd ** 2 + r2 ** 2 - r1 ** 2) / (2 * dd * r2))
+                tri = 0.5 * math.sqrt(max(0.0, (-dd + r1 + r2) * (dd + r1 - r2)
+                                          * (dd - r1 + r2) * (dd + r1 + r2)))
+                aire = a1 + a2 - tri
+            paires.append({
+                "grues": [a["nom"], b["nom"]],
+                "entraxe_m": round(dd, 1),
+                "aire_commune_m2": round(aire, 1),
+                "part_de_l_emprise_pct": round(aire / (L * l) * 100, 1),
+                "secantes": aire > 0,
+            })
+    secantes = [x for x in paires if x["secantes"]]
+    h = g["hauteur_sous_crochet_m"]
+    return {
+        "variante": variante["nom"],
+        "nb_grues": len(gr),
+        "paires": paires,
+        "nb_paires_secantes": len(secantes),
+        "aire_commune_totale_m2": round(sum(x["aire_commune_m2"] for x in secantes), 1),
+        "hauteur_sous_crochet_m": h,
+        "hauteurs_distinctes_declarees": False,
+        "lecture": (
+            f"Dans cette variante, {len(secantes)} paire(s) de flèches se recoupent sur "
+            f"{_f(sum(x['aire_commune_m2'] for x in secantes), 0)} m², soit "
+            f"{_f(sum(x['aire_commune_m2'] for x in secantes) / (L * l) * 100, 0)} % de "
+            f"l'emprise. Les deux crochets travaillent à {_f(h)} m : data/ ne déclare "
+            "qu'une hauteur sous crochet, donc le cours décrit deux grues au même "
+            "niveau."
+            if secantes else
+            "Aucune paire de flèches ne se recoupe dans cette variante."),
+        "_ce_que_la_geometrie_impose": (
+            "Deux flèches qui se recoupent à la même hauteur ne peuvent pas travailler "
+            "en même temps dans la zone commune : l'une attend, ou les deux travaillent "
+            "sous un dispositif qui garantit qu'elles ne s'y rencontrent pas. La "
+            "conséquence de planning est immédiate et elle ne figure dans aucun "
+            "calcul de ce module : la capacité de deux grues sécantes n'est pas le "
+            "double de celle d'une seule. Le taux de charge du § S3b compare la demande "
+            "à UNE grue ; le comparer à deux supposerait une indépendance que cette "
+            "géométrie n'a pas."),
+        "_ce_qui_reste_en_attente": (
+            "⏸ : les règles d'implantation de deux grues à tour, les dispositifs "
+            "d'anti-collision, les décalages de hauteur sous crochet et de hauteur de "
+            "flèche, les règles de priorité et les consignes aux grutiers. Elles sont "
+            "réglementaires et contractuelles, et le cours ne les possède pas. Ce "
+            "module dit seulement, et c'est déjà une obligation du plan d'installation, "
+            "QUE la question se pose dans la variante retenue, et sur quelle surface."),
+    }
+
+
 # ------------------------------------------------- 2bis. le voisinage : la voie
 def voisinage(d: dict, couv: list) -> dict:
     """Le cercle de la flèche atteint-il le gabarit de la voie ?
@@ -293,7 +367,7 @@ def aires(d: dict, variante: dict, bv: dict, pas: float = 1.0) -> dict:
 
 
 # ------------------------------------------------- 3. le débit
-def debit(d: dict, go: dict, pl: dict) -> dict:
+def debit(d: dict, go: dict, pl: dict, tv: dict) -> dict:
     """Combien de levages par jour la grue peut faire, et combien le chantier en demande.
 
     C'est une SECONDE VOIE vers la question « combien de grues ? », que le module D2 a
@@ -315,12 +389,15 @@ def debit(d: dict, go: dict, pl: dict) -> dict:
 
     capacite = cyc * heures * tau
     cap_b = [cyc_b[0] * heures * tau_b[0], cyc_b[1] * heures * tau_b[1]]
-    # La demande vient du PARC de coffrage et de sa cadence, tous deux publiés par C3 :
-    # le parc est posé puis reposé à chaque rotation, soit deux levages par unité.
-    ligne = next(x for x in go["parc"]["lignes"] if x.get("optimum_de_cout"))
-    parc = ligne["parc_m2"]
-    cadence = ligne["cadence_tenue_j"]
-    surface_par_jour = parc / cadence
+    # Ce qui se LÈVE chaque jour, c'est le coffrage d'UNE ZONE, posé puis déposé, à la
+    # cadence des zones. Ce n'est ni le parc ni la cadence du parc : le reste du parc est
+    # immobilisé sur les zones en cure, et une table en cure ne passe pas au crochet.
+    # Une première version lisait la ligne « optimum de coût » du tableau de parc de C3 —
+    # un parc que le cours ne construit pas, et dont C3 écrit lui-même que ce n'est PAS
+    # une décision. Elle sous-estimait la demande de 63 % et inversait le verdict.
+    zone = tv["quantites"]["coffrage_m2"]
+    cadence = go["cycle"]["cadence_j"]
+    surface_par_jour = zone / cadence
     lev_coffrage = surface_par_jour * 2 / spl
     demande = lev_coffrage + div
     dem_b = [surface_par_jour * 2 / spl_b[1] + div_b[0],
@@ -331,10 +408,23 @@ def debit(d: dict, go: dict, pl: dict) -> dict:
         "cycles_par_heure": cyc,
         "taux_d_utilisation_fraction": tau,
         "heures_par_jour": heures,
-        "parc_de_coffrage_m2": parc,
+        "coffrage_d_une_zone_m2": zone,
         "cadence_j": cadence,
-        "_source_du_parc": "calc/sorties/gros-oeuvre.json — parc (module C3), ligne "
-                           "retenue comme optimum de coût",
+        "parc_declare_m2": go["parc"]["parc_declare_m2"],
+        "_source_du_coffrage": "calc/sorties/tranche-plancher.json — quantites.coffrage_m2 "
+                               "(coffrage d'une zone, tranche verticale) et "
+                               "calc/sorties/gros-oeuvre.json — cycle.cadence_j (C3) : "
+                               "la cadence que le planning tient, pas celle d'un parc "
+                               "hypothetique",
+        "_ce_qui_se_leve_n_est_pas_le_parc": (
+            "Le parc déclaré est de "
+            f"{_f(go['parc']['parc_declare_m2'])} m², soit "
+            f"{_f(go['parc']['parc_declare_m2'] / zone, 1)} fois le coffrage d'une zone : "
+            "c'est ce qu'il faut POSSÉDER pour tenir la cadence, parce que plusieurs "
+            "zones sont immobilisées en même temps, dont une en cure. Ce qui se LÈVE "
+            "chaque cycle est le coffrage d'une seule zone. Confondre les deux "
+            "multiplie la demande de levage par le nombre de zones simultanées — ou la "
+            "divise, si l'on prend un parc plus petit que le vrai."),
         "surface_manutentionnee_par_jour_m2": round(surface_par_jour, 1),
         "levages_de_coffrage_par_jour": round(lev_coffrage, 1),
         "levages_divers_par_jour": div,
@@ -343,6 +433,48 @@ def debit(d: dict, go: dict, pl: dict) -> dict:
         "taux_de_charge_pct": round(demande / capacite * 100, 1),
         "taux_de_charge_bornes_pct": [round(dem_b[0] / cap_b[1] * 100, 1),
                                       round(dem_b[1] / cap_b[0] * 100, 1)],
+        # Les bornes ci-dessus combinent QUATRE extremes dans le meme sens : c'est une
+        # enveloppe, pas un intervalle de confiance. Le controle qui compte est donc
+        # celui-ci : en ne faisant varier qu'UNE hypothese a la fois, le seuil de 100 %
+        # est-il encore enjambe ? S'il ne l'etait pas, la voie trancherait.
+        "sensibilite_une_a_une": [
+            {"hypothese": "surface par levage",
+             "taux_min_pct": round((surface_par_jour * 2 / spl_b[1] + div) / capacite * 100, 1),
+             "taux_max_pct": round((surface_par_jour * 2 / spl_b[0] + div) / capacite * 100, 1)},
+            {"hypothese": "levages divers",
+             "taux_min_pct": round((lev_coffrage + div_b[0]) / capacite * 100, 1),
+             "taux_max_pct": round((lev_coffrage + div_b[1]) / capacite * 100, 1)},
+            {"hypothese": "cycles par heure",
+             "taux_min_pct": round(demande / (cyc_b[1] * heures * tau) * 100, 1),
+             "taux_max_pct": round(demande / (cyc_b[0] * heures * tau) * 100, 1)},
+            {"hypothese": "taux d'utilisation",
+             "taux_min_pct": round(demande / (cyc * heures * tau_b[1]) * 100, 1),
+             "taux_max_pct": round(demande / (cyc * heures * tau_b[0]) * 100, 1)},
+        ],
+        "_ce_que_valent_les_bornes": (
+            "Les bornes larges combinent les quatre hypothèses à leur extrême dans le "
+            "même sens : c'est une enveloppe, pas un intervalle de confiance, et une "
+            "enveloppe enjambe presque toujours le seuil. Le contrôle qui décide est "
+            "donc la sensibilité UNE À UNE, ci-dessus : si une seule hypothèse, prise "
+            "seule dans sa fourchette, fait passer le taux de charge de part et d'autre "
+            "de 100 %, alors la voie ne tranche pas pour une raison de fond et non par "
+            "accumulation de prudences."),
+        # La POINTE : le jour ou l'on depose une zone et ou l'on coffre la suivante, le
+        # coffrage compte deux fois. Ce n'est pas une statistique, c'est le cycle.
+        # Calculee sur les levages de coffrage PUBLIES : un lecteur qui double le nombre
+        # imprime doit retrouver celui-ci.
+        "demande_de_pointe_levages_par_jour": round(round(lev_coffrage, 1) * 2 + div, 1),
+        "taux_de_charge_de_pointe_pct": round(
+            (round(lev_coffrage, 1) * 2 + div) / capacite * 100, 1),
+        "_la_pointe_se_calcule": (
+            "Le jour où l'on dépose le coffrage d'une zone ET où l'on pose celui de la "
+            f"suivante, la part coffrage double : {_f(lev_coffrage * 2 + div, 0)} levages "
+            f"au lieu de {_f(demande, 0)}, soit "
+            f"{_f((round(lev_coffrage, 1) * 2 + div) / capacite * 100, 0)} % d'une grue. Ce n'est "
+            "pas une statistique, c'est le cycle : il y a dans un cycle un jour de "
+            "dépose et un jour de pose, et rien n'interdit qu'ils tombent le même. "
+            "Dimensionner sur la moyenne revient à accepter que ce jour-là, la grue "
+            "soit le goulot."),
         "grues_necessaires_par_le_debit": math.ceil(demande / capacite - 1e-9),
         "lecture": (
             f"Une grue fait {_f(cyc, 1)} levages par heure et travaille "
@@ -350,18 +482,26 @@ def debit(d: dict, go: dict, pl: dict) -> dict:
             f"{_f(capacite, 0)} levages par jour. Le gros œuvre en demande "
             f"{_f(demande, 0)} — {_f(surface_par_jour, 0)} m² de coffrage posés puis "
             f"déposés chaque jour, plus {_f(div)} levages divers. Le taux de charge est "
-            f"de {_f(demande / capacite * 100)} %."),
+            f"de {_f(demande / capacite * 100)} %, et il dépasse 100 % : une grue n'y "
+            "suffit pas."),
         "_ce_que_le_taux_de_charge_cache": (
             "Un taux de charge moyen ne dit rien des pointes. Le jour où l'on décoffre "
             "une zone et où l'on coffre la suivante, la demande double ; le jour du "
-            "bétonnage, elle s'effondre. Une grue chargée à 80 % en moyenne est saturée "
-            "un jour sur trois, et c'est ce jour-là qui fixe la cadence — c'est "
-            "exactement ce que le module D2 montre sur le profil journalier, et c'est "
-            "pourquoi une moyenne ne remplace pas un profil."),
+            "bétonnage, elle s'effondre. Ce module publie la pointe du cycle plutôt "
+            "qu'un ordre de grandeur sur la fréquence des jours chargés : la seconde se "
+            "dirait bien, et ne se calcule pas avec ce que le cours possède. C'est "
+            "exactement ce que le module D2 montre sur le profil journalier de la grue, "
+            "et c'est pourquoi une moyenne ne remplace pas un profil."),
         "_pourquoi_deux_levages_par_unite": (
             "Un coffrage se pose ET se dépose : chaque mètre carré de parc compte deux "
             "levages par rotation. L'oublier divise la demande par deux, et c'est "
             "l'erreur qui fait conclure qu'une grue suffit."),
+        "_la_zone_et_le_parc": (
+            "Deux grandeurs portent le mot « coffrage » et ne se remplacent pas : le "
+            "PARC, qu'on possède, et la zone, qu'on manutentionne. Le parc dimensionne "
+            "un loyer ; la zone dimensionne un nombre de levages. Les échanger est la "
+            "même faute que confondre un stock et un flux, et elle se voit d'autant "
+            "moins ici que les deux s'expriment en mètres carrés."),
     }
 
 
@@ -428,8 +568,69 @@ def base_vie(d: dict, pl: dict) -> dict:
     }
 
 
+def fenetre_de_grue(pl: dict, pr: dict) -> dict:
+    """De quand a quand la grue a tour est REELLEMENT necessaire.
+
+    Une grue a tour n'est pas un frais de duree : c'est une ressource qui arrive, sert
+    les taches de gros oeuvre, et s'en va. Le module D1 la facture au mois sur toute la
+    duree du chantier, parce que son modele de frais de duree ne connait que des mois.
+    Ici on lit le planning : les taches que D2 declare servies par la grue, et leur
+    premiere et derniere journee. L'ecart entre les deux lectures est ce que ce module
+    publie — il ne reecrit pas le bordereau de D1 (D-055).
+    """
+    seg = pl["segments_de_travail"]
+    servies = [t for t in pl["grue"]["taches_servies"] if t in seg]
+    debut = min(seg[t][0][0] for t in servies)
+    fin = max(seg[t][-1][1] for t in servies)
+    fd = pr["bordereau"]["frais_de_duree"]
+    duree_ouvree = pl["calendrier"]["duree_ouvree_j"]
+    duree_mois = fd["duree_mois_calendaires"]
+    j_par_mois = duree_ouvree / duree_mois
+    # Le TROU : la derniere tache servie (la marquise) arrive longtemps apres les autres.
+    fins = sorted(((seg[t][-1][1], t) for t in servies), reverse=True)
+    derniere, t_derniere = fins[0]
+    avant_derniere = max((seg[t][-1][1] for t in servies if t != t_derniere),
+                         default=derniere)
+    debut_derniere = min(seg[t_derniere][0][0] for _ in [0])
+    trou = max(0.0, debut_derniere - avant_derniere)
+    profil = pl["grue"]["profil"]
+    jours_actifs = len([x for x in profil if x["demande"] > 0])
+    return {
+        "taches_servies": servies,
+        "debut_j": round(debut, 1),
+        "fin_j": round(fin, 1),
+        "duree_ouvree_j": round(fin - debut, 1),
+        "duree_mois_calendaires": round((fin - debut) / j_par_mois, 2),
+        "duree_du_chantier_ouvree_j": round(duree_ouvree, 1),
+        "duree_du_chantier_mois": duree_mois,
+        "part_du_chantier_pct": round((fin - debut) / duree_ouvree * 100, 1),
+        "jours_ouvres_par_mois_calendaire": round(j_par_mois, 2),
+        "jours_ou_la_grue_sert": jours_actifs,
+        "part_de_la_fenetre_reellement_servie_pct": round(
+            jours_actifs / (fin - debut) * 100, 1),
+        "derniere_tache": t_derniere,
+        "trou_avant_la_derniere_tache_j": round(trou, 1),
+        "trou_mois": round(trou / j_par_mois, 2),
+        "_source": "calc/sorties/planification.json — segments_de_travail et "
+                   "grue.taches_servies (module D2)",
+        "lecture": (
+            f"Les {len(servies)} tâches servies par la grue à tour vont du jour "
+            f"{_f(debut, 0)} au jour {_f(fin, 0)} : {_f(fin - debut, 0)} jours ouvrés, "
+            f"soit {_f((fin - debut) / j_par_mois, 1)} mois calendaires sur les "
+            f"{_f(duree_mois, 1)} du chantier — "
+            f"{_f((fin - debut) / duree_ouvree * 100, 0)} %. Dans cette fenêtre, la grue "
+            f"sert {jours_actifs} jours : le reste, elle attend."),
+        "_une_grue_n_est_pas_un_frais_de_duree": (
+            "Un frais de durée se paie tant que le chantier dure : encadrement, "
+            "base-vie, gardiennage. Une grue à tour, non — elle se monte quand le gros "
+            "œuvre commence et se démonte quand il finit. La facturer au mois sur toute "
+            "la durée est commode et faux dans un rapport qui n'a rien de petit : ici "
+            f"{_f(duree_mois / ((fin - debut) / j_par_mois), 1)}."),
+    }
+
+
 # ------------------------------------------------- 5. le coût de l'installation
-def cout(d: dict, pr: dict, bv: dict, nb_grues: int,
+def cout(d: dict, pr: dict, bv: dict, fen: dict, nb_grues: int,
          nb_grues_somme: int | None = None) -> dict:
     """Deux morceaux qui n'obéissent pas à la même chose : un fixe, un loyer."""
     g = d["installation"]["grue"]
@@ -445,75 +646,163 @@ def cout(d: dict, pr: dict, bv: dict, nb_grues: int,
               * nb_grues + _b(b["installation_MAD"])[0],
               (_b(g["montage_demontage_MAD"])[1] + _b(g["massif_de_fondation_MAD"])[1])
               * nb_grues + _b(b["installation_MAD"])[1]]
-    loyer = (loyer_grue_mois * nb_grues + loyer_bv_mois) * duree_mois
+    # CHAQUE ressource sur SA durée. La base-vie dure autant que le chantier ; les grues
+    # durent le gros œuvre. Une première version louait deux grues pendant les 29,7 mois
+    # du chantier, soit cinq fois leur besoin : 5,6 MMAD de loyer pour 117 jours ouvrés
+    # de service. C'est la faute que ce module dénonce ailleurs — confondre une ressource
+    # et un frais de durée — et il la commettait dans son propre calcul de coût.
+    mois_grue = fen["duree_mois_calendaires"]
+    loyer_grues = loyer_grue_mois * nb_grues * mois_grue
+    loyer_bv = loyer_bv_mois * duree_mois
+    loyer = loyer_grues + loyer_bv
     total = fixe + loyer
+    # Garder les grues pendant le trou, ou les démonter et les remonter pour la dernière
+    # tâche : les deux se chiffrent, et l'écart n'est pas celui qu'on croit.
+    garder = loyer_grue_mois * nb_grues * fen["trou_mois"]
+    remonter = g["montage_demontage_MAD"]["valeur"] * nb_grues
     marche = pr["bordereau"]["prix_de_vente_MAD"]
     return {
         "nb_grues": nb_grues,
-        "duree_mois_calendaires": duree_mois,
-        "_source_de_la_duree": "calc/sorties/prix.json — frais de duree (module D1), "
-                               "elle-meme issue du reseau de D2",
+        "duree_du_chantier_mois": duree_mois,
+        "duree_de_location_des_grues_mois": round(mois_grue, 2),
+        "rapport_des_deux_durees": round(duree_mois / mois_grue, 1) if mois_grue else None,
+        "_source_de_la_duree": "chantier : calc/sorties/prix.json — frais de duree (D1) ; "
+                               "grues : fenêtre des tâches servies, calc/sorties/"
+                               "planification.json (D2)",
         "cout_fixe_MAD": round(fixe, 2),
         "cout_fixe_bornes_MAD": [round(fixe_b[0], 2), round(fixe_b[1], 2)],
-        "loyer_MAD_par_mois": loyer_grue_mois * nb_grues + loyer_bv_mois,
+        "loyer_des_grues_MAD": round(loyer_grues, 2),
+        "loyer_de_la_base_vie_MAD": round(loyer_bv, 2),
+        # SECONDE VOIE sur le loyer de la base-vie : les modules comptes un a un, au
+        # prix unitaire declare, contre la ligne forfaitaire de D1. Les deux doivent se
+        # ressembler ; l'ecart est publie, et c'est lui qui valide l'ordre de grandeur.
+        "loyer_base_vie_par_les_modules_MAD_par_mois": round(
+            bv["modules"] * b["cout_module_MAD_par_mois"]["valeur"], 2),
+        "ecart_des_deux_voies_base_vie_pct": round(
+            (bv["modules"] * b["cout_module_MAD_par_mois"]["valeur"] / loyer_bv_mois - 1)
+            * 100, 1),
+        "_deux_voies_sur_la_base_vie": (
+            f"Le module D1 porte la base-vie et son fonctionnement à "
+            f"{_f(loyer_bv_mois)} MAD par mois, en forfait. Compté module par module — "
+            f"{bv['modules']} modules à "
+            f"{_f(b['cout_module_MAD_par_mois']['valeur'])} MAD — on trouve "
+            f"{_f(bv['modules'] * b['cout_module_MAD_par_mois']['valeur'])} MAD par "
+            f"mois, soit "
+            f"{_f((bv['modules'] * b['cout_module_MAD_par_mois']['valeur'] / loyer_bv_mois - 1) * 100, 0)} % "
+            "de plus. Deux voies indépendantes à moins d'un quart l'une de l'autre, sur "
+            "une grandeur entièrement V3 : c'est un recoupement utile, pas une "
+            "contradiction. Le total de ce module garde la ligne de D1, pour que les "
+            "deux documents restent comparables ; la seconde voie dit simplement que "
+            "le forfait de D1 est plutôt un peu bas."),
+        "loyer_grue_MAD_par_mois": loyer_grue_mois * nb_grues,
+        "loyer_base_vie_MAD_par_mois": loyer_bv_mois,
         "loyer_total_MAD": round(loyer, 2),
         "total_MAD": round(total, 2),
         "part_fixe_pct": round(fixe / total * 100, 1),
-        # Un mois gagne, rapporte au cout fixe : c'est la seule facon honnete de comparer
-        # un loyer a une remise. « Plus que 18 % de remise » etait faux — 18 % de
-        # 1 460 000 MAD font plus qu'un mois de loyer.
+        "part_du_marche_pct": round(total / marche * 100, 2),
+        # D1 publie DEUX prix : le bordereau de reference, qui montre d'ou vient chaque
+        # dirham, et celui qu'on SIGNE, qui porte en plus la ligne de divers calibree.
+        # Rapporter un poste au premier le fait paraitre plus lourd qu'il ne l'est dans
+        # l'offre reellement remise.
+        "marche_de_reference_MAD": marche,
+        "marche_signe_MAD": pr["bordereau_avec_divers"]["prix_de_vente_MAD"],
+        "part_du_marche_signe_pct": round(
+            total / pr["bordereau_avec_divers"]["prix_de_vente_MAD"] * 100, 2),
+        "_deux_bases_de_prix": (
+            "Le module D1 publie deux prix et dit lequel on signe : le bordereau de "
+            f"référence ({_f(marche / 1e6, 1)} MMAD), outil d'analyse, et celui qui "
+            f"porte la ligne de divers calibrée "
+            f"({_f(pr['bordereau_avec_divers']['prix_de_vente_MAD'] / 1e6, 1)} MMAD), "
+            "qui est l'offre. L'installation pèse "
+            f"{_f(total / marche * 100, 2)} % du premier et "
+            f"{_f(total / pr['bordereau_avec_divers']['prix_de_vente_MAD'] * 100, 2)} % "
+            "du second. Les deux sont justes ; un seul répond à « quelle part de mon "
+            "offre est-ce que j'immobilise en installation ? », et c'est le second."),
         # Ce que couterait le parc obtenu en ADDITIONNANT les voies, au lieu d'en
         # prendre le maximum. Ecrire « quinze pour cent du marche » a la main donnait un
         # ordre de grandeur invente la ou le calcul etait a portee.
+        "parc_si_somme_des_voies": nb_grues_somme,
         "part_du_marche_si_somme_des_voies_pct": round(
             ((g["montage_demontage_MAD"]["valeur"]
               + g["massif_de_fondation_MAD"]["valeur"]) * nb_grues_somme
              + b["installation_MAD"]["valeur"]
-             + (loyer_grue_mois * nb_grues_somme + loyer_bv_mois) * duree_mois)
+             + loyer_grue_mois * nb_grues_somme * mois_grue + loyer_bv)
             / marche * 100, 2) if nb_grues_somme else None,
-        "parc_si_somme_des_voies": nb_grues_somme,
-        "un_mois_en_part_du_fixe_pct": round(
-            (loyer_grue_mois * nb_grues + loyer_bv_mois) / fixe * 100, 1) if fixe else None,
-        "part_du_marche_pct": round(total / marche * 100, 2),
+        # Un mois gagne ne vaut pas la meme chose selon OU on le gagne : sur le gros
+        # oeuvre, il economise les grues ET la base-vie ; a la fin du chantier, la
+        # base-vie seule, parce que les grues sont parties depuis longtemps.
+        "un_mois_gagne_sur_le_gros_oeuvre_MAD": loyer_grue_mois * nb_grues + loyer_bv_mois,
+        "un_mois_gagne_a_la_fin_MAD": loyer_bv_mois,
+        "rapport_des_deux_mois": round(
+            (loyer_grue_mois * nb_grues + loyer_bv_mois) / loyer_bv_mois, 1),
         "cout_d_une_grue_de_plus_MAD": round(
             g["montage_demontage_MAD"]["valeur"] + g["massif_de_fondation_MAD"]["valeur"]
-            + loyer_grue_mois * duree_mois, 2),
+            + loyer_grue_mois * mois_grue, 2),
+        "trou_garder_les_grues_MAD": round(garder, 2),
+        "trou_les_demonter_et_remonter_MAD": round(remonter, 2),
+        "trou_decision": ("garder" if garder < remonter else "démonter"),
+        "trou_ecart_MAD": round(abs(remonter - garder), 2),
         "lecture": (
-            f"L'installation coûte {_f(total)} MAD sur ce chantier, soit "
-            f"{_f(total / marche * 100, 2)} % du marché : {_f(fixe)} MAD de coût fixe — "
-            f"montage, massif, raccordements — et {_f(loyer)} MAD de loyer sur "
-            f"{_f(duree_mois, 1)} mois. La part fixe ne pèse que "
+            f"L'installation coûte {_f(total, 0)} MAD sur ce chantier, soit "
+            f"{_f(total / marche * 100, 2)} % du marché : {_f(fixe, 0)} MAD de coût fixe "
+            "— montage, massif, raccordements — et un loyer en deux morceaux, "
+            f"{_f(loyer_grues, 0)} MAD pour {nb_grues} grues pendant "
+            f"{_f(mois_grue, 1)} mois et {_f(loyer_bv, 0)} MAD de base-vie pendant les "
+            f"{_f(duree_mois, 1)} mois du chantier. La part fixe pèse "
             f"{_f(fixe / total * 100, 1)} % du total."),
+        "_la_grue_n_est_pas_un_frais_de_duree": (
+            f"Les grues à tour servent {_f(mois_grue, 1)} mois sur "
+            f"{_f(duree_mois, 1)} — un rapport de {_f(duree_mois / mois_grue, 1)}. Les "
+            "louer sur toute la durée du chantier, comme le fait un modèle de frais de "
+            f"durée, coûterait {_f(loyer_grue_mois * nb_grues * duree_mois, 0)} MAD au "
+            f"lieu de {_f(loyer_grues, 0)} : l'erreur ne porte pas sur un prix unitaire, "
+            "elle porte sur une DURÉE, et c'est la famille d'erreur la plus chère d'un "
+            "budget d'installation."),
+        "_ou_se_gagne_un_mois": (
+            f"Un mois gagné sur le gros œuvre vaut "
+            f"{_f(loyer_grue_mois * nb_grues + loyer_bv_mois, 0)} MAD : les grues et la "
+            f"base-vie. Un mois gagné à la fin du chantier vaut {_f(loyer_bv_mois, 0)} "
+            f"MAD — {_f((loyer_grue_mois * nb_grues + loyer_bv_mois) / loyer_bv_mois, 1)} "
+            "fois moins, parce que les grues sont démontées depuis longtemps. « Gagner "
+            "un mois » n'est donc pas une grandeur : il faut dire LEQUEL."),
+        "_le_trou": (
+            f"La dernière tâche servie par la grue ({fen['derniere_tache']}) arrive "
+            f"{_f(fen['trou_avant_la_derniere_tache_j'], 0)} jours ouvrés après les "
+            f"autres, soit {_f(fen['trou_mois'], 1)} mois pendant lesquels les grues ne "
+            f"servent à rien. Les garder coûte {_f(garder, 0)} MAD ; les démonter et les "
+            f"remonter, {_f(remonter, 0)} MAD. On "
+            f"{'garde' if garder < remonter else 'démonte'}, et l'écart est de "
+            f"{_f(abs(remonter - garder), 0)} MAD — une décision qui se calcule en deux "
+            "lignes et qu'on prend d'habitude au sentiment."),
         "_les_deux_morceaux_n_obeissent_pas_a_la_meme_chose": (
             "Le coût fixe dépend d'une DÉCISION : combien de grues, quelle base-vie. Le "
-            "loyer dépend de la DURÉE DU CHANTIER, c'est-à-dire d'un planning que "
-            "l'installation ne décide pas. Les additionner dans un même poste « coût "
-            "d'installation » fait croire qu'on peut l'optimiser en choisissant mieux "
-            "son matériel — alors que les quatre cinquièmes se jouent sur la date de "
-            "fin. Réduire l'installation de 10 % rapporte moins qu'un mois de chantier "
-            "gagné."),
+            "loyer dépend de DURÉES — et il y en a deux, pas une. Celle du gros œuvre "
+            "porte les grues, celle du chantier entier porte la base-vie. Les écrire "
+            "sur une seule ligne « coût d'installation » fait croire que ce poste "
+            "s'optimise en choisissant mieux son matériel, et interdit de voir laquelle "
+            "des deux durées on est en train de payer."),
         "_ce_que_D1_a_budgete": (
             f"Le module D1 porte dans ses frais de durée le loyer d'**une** grue à "
-            f"{_f(loyer_grue_mois)} MAD par mois. Le parc retenu ici en demande "
-            f"{nb_grues} : à ce compte, les frais de durée du chantier augmentent de "
-            f"{_f(loyer_grue_mois * (nb_grues - 1))} MAD par mois, soit "
-            f"{_f(loyer_grue_mois * (nb_grues - 1) * duree_mois)} MAD sur la durée. Ce "
-            "n'est pas reporté dans D1 : les deux chiffres sont posés à deux moments "
-            "différents du cours, l'écart est publié comme tel et versé en dette "
-            "(D-055), et ce qui se généralise est le mécanisme — **un plan "
-            "d'installation qui conclut à une grue de plus modifie le bordereau, et "
-            "personne ne le voit si les deux documents ne se parlent pas**."
-            if nb_grues > 1 else
-            "Le parc retenu est d'une grue, et c'est ce que le module D1 a budgété."),
-        "ecart_avec_D1_MAD": round(loyer_grue_mois * (nb_grues - 1) * duree_mois, 2),
+            f"{_f(loyer_grue_mois)} MAD par mois, **sur les {_f(duree_mois, 1)} mois du "
+            f"chantier** : {_f(loyer_grue_mois * duree_mois)} MAD. Ce module conclut à "
+            f"{nb_grues} grues, mais pendant {_f(mois_grue, 1)} mois seulement : "
+            f"{_f(loyer_grues)} MAD. Les deux écarts vont en sens inverse, et celui de "
+            f"la DURÉE l'emporte — D1 surestime de {_f(abs(loyer_grue_mois * duree_mois - loyer_grues))} MAD. "
+            "Ce n'est pas reporté dans D1 : les deux chiffres sont posés à deux moments "
+            "du cours, l'écart est publié et versé en dette (D-055). Ce qui se "
+            "généralise est le mécanisme — **un modèle de frais de durée facture au "
+            "mois tout ce qu'il ne sait pas dater, et une grue à tour se date**."),
+        "ecart_avec_D1_MAD": round(loyer_grues - loyer_grue_mois * duree_mois, 2),
+        "D1_loyer_de_grue_MAD": round(loyer_grue_mois * duree_mois, 2),
         "_le_prix_d_une_grue_de_plus": (
             f"Une grue de plus coûte {_f(g['montage_demontage_MAD']['valeur'] + g['massif_de_fondation_MAD']['valeur'])} MAD "
             f"de fixe avant même d'avoir levé quoi que ce soit, puis "
-            f"{_f(loyer_grue_mois)} MAD par mois. Sur ce chantier, "
-            f"{_f(g['montage_demontage_MAD']['valeur'] + g['massif_de_fondation_MAD']['valeur'] + loyer_grue_mois * duree_mois)} MAD. "
-            "C'est pourquoi la question « faut-il une deuxième grue ? » ne se tranche "
-            "pas sur un ressenti de saturation : elle se tranche en comparant ce "
-            "montant au coût des jours que la grue unique fait perdre."),
+            f"{_f(loyer_grue_mois)} MAD par mois pendant {_f(mois_grue, 1)} mois : "
+            f"{_f(g['montage_demontage_MAD']['valeur'] + g['massif_de_fondation_MAD']['valeur'] + loyer_grue_mois * mois_grue)} MAD. "
+            "Le fixe en fait "
+            f"{_f((g['montage_demontage_MAD']['valeur'] + g['massif_de_fondation_MAD']['valeur']) / (g['montage_demontage_MAD']['valeur'] + g['massif_de_fondation_MAD']['valeur'] + loyer_grue_mois * mois_grue) * 100, 0)} %, "
+            "et c'est ce qui rend une deuxième grue chère même pour quelques semaines : "
+            "on paie surtout de l'avoir montée."),
     }
 
 
@@ -526,28 +815,48 @@ def pourquoi_ce_parc(d: dict, pl: dict, deb: dict, couv: list) -> dict:
     parc de coffrage, la troisième un plan. Elles ne s'additionnent pas — on retient le
     MAXIMUM, parce qu'une grue de plus répond souvent aux trois à la fois.
 
-    Et une voie peut ne pas trancher. C'est le cas du débit ici : son taux de charge est
-    de 62 %, mais ses bornes vont de 15 à 334 %. Une voie dont les bornes ENJAMBENT le
-    seuil ne décide de rien, et le dire vaut mieux que de la compter comme un vote —
-    c'est D-049 appliqué à un verdict plutôt qu'à un montant.
+    Et une voie peut ne pas trancher : celle du débit, dont les bornes enjambent le
+    seuil de 100 %. Elle donne pourtant le même nombre que les deux autres — ce qui la
+    rend plus instructive encore, parce qu'une voie qui tombe du bon côté n'a pas plus
+    le droit de voter qu'une autre (D-059).
+
+    Enfin, chaque voie porte sa propre DURÉE, et c'est elle qu'on oublie : le maximum
+    des voies donne un NOMBRE de grues, jamais une durée de location. Les additionner
+    double un budget ; les confondre dans le temps le quintuple.
     """
-    par_temps = pl["grue_resolution"]["parc_necessaire_si_non_resolu"]
+    res = pl["grue_resolution"]
+    par_temps = res["parc_necessaire_si_non_resolu"]
+    jours_de_conflit = res["resultat"]["nb_jours_en_conflit"]
     par_debit = deb["grues_necessaires_par_le_debit"]
     bornes = deb["taux_de_charge_bornes_pct"]
     debit_tranche = not (bornes[0] < 100 < bornes[1])
-    par_geometrie = min((c["nb_grues"] for c in couv if c["couverture_pct"] >= 99.9),
-                        default=None)
+    # Le seuil est DECLARE, et il est strict : une variante qui couvre 98 % laisse des
+    # angles hors d'atteinte, et un angle hors d'atteinte est une zone qu'il faudra
+    # servir autrement. « Presque tout » n'est pas un critere de plan d'installation.
+    SEUIL_COUVERTURE = 99.9
+    par_geometrie = min((c["nb_grues"] for c in couv
+                         if c["couverture_pct"] >= SEUIL_COUVERTURE), default=None)
+    manquant = [(c["variante"], round((100 - c["couverture_pct"]) / 100
+                                      * couv[0]["points_echantillonnes"]))
+                for c in couv if c["couverture_pct"] < SEUIL_COUVERTURE]
     voies = [
         {"voie": "le temps", "parc": par_temps, "tranche": True,
+         "duree": f"{jours_de_conflit} jour(s) de conflit, après lissage",
+         "duree_j": jours_de_conflit,
          "source": "module D2 — deux tâches servies par la grue se chevauchent, et le "
                    "conflit ne se résorbe pas dans les marges",
          "pourquoi": "un conflit de calendrier mesuré sur le réseau rejoué"},
         {"voie": "le débit", "parc": par_debit, "tranche": debit_tranche,
+         "duree": "toute la durée du gros œuvre en cycle",
+         "duree_j": None,
          "source": "ce module — levages demandés par jour contre capacité d'une grue",
          "pourquoi": (f"taux de charge de {_f(deb['taux_de_charge_pct'])} %, mais des "
                       f"bornes de {_f(bornes[0])} à {_f(bornes[1])} % : elles enjambent "
                       "le seuil, donc cette voie NE TRANCHE PAS")},
-        {"voie": "la géométrie", "parc": par_geometrie, "tranche": par_geometrie is not None,
+        {"voie": "la géométrie", "parc": par_geometrie,
+         "tranche": par_geometrie is not None,
+         "duree": "toute la fenêtre de la grue",
+         "duree_j": None,
          "source": "ce module — première variante qui couvre toute l'emprise",
          "pourquoi": "un bâtiment de 120 m ne tient pas dans un disque de 60 m de rayon "
                      "si la grue est en son centre"},
@@ -556,6 +865,15 @@ def pourquoi_ce_parc(d: dict, pl: dict, deb: dict, couv: list) -> dict:
     retenu = max(decisives) if decisives else None
     return {
         "voies": voies,
+        "seuil_de_couverture_pct": SEUIL_COUVERTURE,
+        "_pourquoi_ce_seuil": (
+            "La voie de la géométrie retient la première variante qui couvre "
+            f"{_f(SEUIL_COUVERTURE, 1)} % de l'emprise, et non 95 ou 98 : un mètre carré "
+            "non couvert est un mètre carré qu'il faudra servir autrement, et les "
+            "variantes à une grue en laissent "
+            + " · ".join(f"{v} : environ {n} m²" for v, n in manquant)
+            + ". Ce ne sont pas des arrondis : ce sont les angles du bâtiment, et "
+              "c'est là que se posent les banches de rive."),
         "parc_retenu": retenu,
         "nb_voies_qui_tranchent": len(decisives),
         "les_voies_qui_tranchent_s_accordent": len(set(decisives)) == 1,
@@ -590,6 +908,25 @@ def pourquoi_ce_parc(d: dict, pl: dict, deb: dict, couv: list) -> dict:
             + f". On retient la plus contraignante, {retenu}, et le désaccord est la "
               "vraie information : il dit que le parc est dimensionné par une seule "
               "contrainte, donc fragile si cette contrainte bouge."),
+        "_le_maximum_donne_un_nombre_pas_une_duree": (
+            "Les trois voies ne disent pas seulement COMBIEN de grues : chacune dit "
+            f"aussi PENDANT COMBIEN DE TEMPS, et ce n'est pas la même chose. Le temps "
+            f"en demande {par_temps} pendant {jours_de_conflit} jour(s) — la durée du "
+            "conflit, pas celle du chantier. La géométrie en demande "
+            f"{par_geometrie} pendant toute la fenêtre de la grue. Prendre le maximum "
+            "des nombres est juste ; prendre en même temps la plus longue des durées ne "
+            "l'est pas, et c'est ainsi qu'un budget d'installation se met à porter deux "
+            "grues sur toute la durée d'un chantier qui n'en a besoin que sur un "
+            "cinquième. **Le maximum des voies donne un nombre. La durée, elle, se lit "
+            "voie par voie.**"),
+        "_ce_que_trois_jours_de_conflit_veulent_dire": (
+            f"Le conflit de calendrier ne dure que {jours_de_conflit} jour(s) après "
+            "lissage. Une deuxième grue à tour ne se loue pas pour trois jours : son "
+            "montage seul en prend plusieurs semaines. Le module D2 le dit lui-même — "
+            "trois issues, et une seule est honnête : une seconde grue, une grue "
+            "mobile, ou déplacer une tâche hors de sa marge. C'est la voie de la "
+            "GÉOMÉTRIE, et elle seule, qui justifie de louer la seconde grue sur toute "
+            "la fenêtre du gros œuvre."),
     }
 
 
@@ -631,16 +968,21 @@ def figures(d: dict, couv: list, deb: dict, cout_: dict) -> dict:
         # annonce une comparaison deux a deux.
         "couverture": [x for c in couv for x in (
             {"libelle": c["variante"].split(" — ")[0] + " · couverture",
-             "valeur": c["couverture_pct"]},
+             "valeur": round(c["couverture_pct"], 1)},
             {"libelle": c["variante"].split(" — ")[0] + " · pièce de charpente",
              "valeur": list(c["part_servie_pct"].values())[-1], "alerte": True})],
         "survol": [{"libelle": c["variante"].split(" — ")[0],
                     "valeur": round(max(gr["y_m"] + gr["portee_m"] - _y_gab
                                         for gr in c["grues"]), 1),
                     "alerte": True} for c in couv],
+        # Trois marches, pas deux : le loyer se coupe en ce qui dure le gros oeuvre et
+        # ce qui dure le chantier. Les reunir cachait la grandeur qui decide.
         "cout": [
             {"libelle": "Coût fixe", "montant": round(cout_["cout_fixe_MAD"] / 1000)},
-            {"libelle": "Loyer", "montant": round(cout_["loyer_total_MAD"] / 1000)},
+            {"libelle": "Grues (gros œuvre)",
+             "montant": round(cout_["loyer_des_grues_MAD"] / 1000)},
+            {"libelle": "Base-vie (chantier)",
+             "montant": round(cout_["loyer_de_la_base_vie_MAD"] / 1000)},
             {"libelle": "Installation", "montant": round(cout_["total_MAD"] / 1000),
              "type": "total"},
         ],
@@ -666,10 +1008,13 @@ def tout_calculer(d: dict) -> dict:
                                                  ["masse_d_une_piece_t"]))),
                        "source": p.get("_lu_dans", "data/ — installation.pieces_a_lever")})
     couv = [couverture(d, v, masses) for v in d["installation"]["variantes_de_calage"]]
-    deb = debit(d, go, pl)
+    tv = json.loads((RACINE / "calc" / "sorties" / "tranche-plancher.json")
+                    .read_text(encoding="utf-8"))
+    deb = debit(d, go, pl, tv)
     bv = base_vie(d, pl)
     parc = pourquoi_ce_parc(d, pl, deb, couv)
-    co = cout(d, pr, bv, parc["parc_retenu"] or 1,
+    fen = fenetre_de_grue(pl, pr)
+    co = cout(d, pr, bv, fen, parc["parc_retenu"] or 1,
               sum(v["parc"] for v in parc["voies"] if v["parc"]))
     vois = voisinage(d, couv)
     # La variante retenue est celle que figures() dessine : une seule definition, lue au
@@ -678,6 +1023,7 @@ def tout_calculer(d: dict) -> dict:
     retenue = next(v for v in d["installation"]["variantes_de_calage"]
                    if v["nom"] == fig["plan_masse"]["variante"])
     air = aires(d, retenue, bv)
+    inter = interference(d, retenue)
     g = d["installation"]["grue"]
     rayons = {m["piece"]: rayon_pour_lever(g["charge_max_t"]["valeur"],
                                            g["moment_max_tm"]["valeur"], m["masse_t"])
@@ -690,6 +1036,8 @@ def tout_calculer(d: dict) -> dict:
         "debit": deb,
         "base_vie": bv,
         "parc_de_grues": parc,
+        "fenetre_de_grue": fen,
+        "interference": inter,
         "voisinage": vois,
         "aires": air,
         "cout": co,

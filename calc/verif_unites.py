@@ -514,13 +514,34 @@ dit(str((surface / module).to(u.dimensionless).units) == "dimensionless",
 # c'est la seule facon de l'additionner au cout fixe. Le contre-controle additionne les
 # deux sans multiplier — exactement l'erreur qui ferait passer un loyer pour un forfait.
 _co = _i["cout"]
-loyer = _co["loyer_MAD_par_mois"] * u.MAD / u.month
-duree = _co["duree_mois_calendaires"] * u.month
+# DEUX loyers et DEUX durees : les grues sur la fenetre du gros oeuvre, la base-vie sur
+# la duree du chantier. pint ne peut pas distinguer deux durees — ce sont des mois des
+# deux cotes — mais il verifie que chaque produit est bien un MONTANT, et le
+# contre-controle ci-dessous cherche l'erreur qui consiste a additionner un loyer
+# mensuel au cout fixe sans le multiplier par quoi que ce soit.
+loyer_grues = _co["loyer_grue_MAD_par_mois"] * u.MAD / u.month
+loyer_bv = _co["loyer_base_vie_MAD_par_mois"] * u.MAD / u.month
+duree_grues = _co["duree_de_location_des_grues_mois"] * u.month
+duree = _co["duree_du_chantier_mois"] * u.month
 fixe = _co["cout_fixe_MAD"] * u.MAD
-total = (fixe + (loyer * duree).to(u.MAD)).to(u.MAD)
+total = (fixe + (loyer_grues * duree_grues).to(u.MAD)
+         + (loyer_bv * duree).to(u.MAD)).to(u.MAD)
 dit(abs(total.magnitude - _co["total_MAD"]) < 1,
-    "total = cout fixe + loyer x duree, les deux termes en MAD",
+    "total = fixe + loyer des grues x leur fenetre + loyer base-vie x duree du chantier",
     f"{total.magnitude:.0f} MAD")
+dit(str((duree_grues / duree).to(u.dimensionless).units) == "dimensionless"
+    and abs((duree / duree_grues).magnitude - _co["rapport_des_deux_durees"]) < 0.06,
+    "le rapport des deux durees est SANS DIMENSION",
+    f"x{(duree / duree_grues).magnitude:.1f}")
+# La fenetre de grue est une duree lue en JOURS OUVRES et convertie en MOIS par un ratio
+# declare. pint ne connait pas le jour ouvre : il verifie le type du quotient, et la
+# LIMITE est declaree — un jour ouvre et un jour calendaire ont la meme unite.
+_fe = _i["fenetre_de_grue"]
+j_ouvres = _fe["duree_ouvree_j"] * u.day
+par_mois = _fe["jours_ouvres_par_mois_calendaire"] * u.day / u.month
+dit(abs((j_ouvres / par_mois).to(u.month).magnitude - _fe["duree_mois_calendaires"]) < 0.02,
+    "jours ouvres / (jours ouvres par mois) est une duree en MOIS",
+    f"{_fe['duree_mois_calendaires']} mois")
 dit(str((fixe / total).to(u.dimensionless).units) == "dimensionless",
     "part fixe = cout fixe / total est SANS DIMENSION",
     f"{_co['part_fixe_pct']:.1f} %")
@@ -531,13 +552,25 @@ leve("rayon limite obtenu en MULTIPLIANT le moment par la masse",
      lambda: (moment * masse).to(u.m))
 leve("couverture calculee en divisant une aire par une longueur",
      lambda: (servie / (L * u.m)).to(u.dimensionless))
-# LIMITE DECLAREE. Deux erreurs de C1 sont dimensionnellement INVISIBLES, et il vaut
+# L'aire commune a deux fleches est une AIRE, et sa part de l'emprise est sans dimension.
+_inf = _i["interference"]
+if _inf["paires"]:
+    lentille = _inf["paires"][0]["aire_commune_m2"] * u.m**2
+    dit(str((lentille / emprise).to(u.dimensionless).units) == "dimensionless",
+        "aire commune des deux fleches / emprise est SANS DIMENSION",
+        f"{_inf['paires'][0]['part_de_l_emprise_pct']:.1f} %")
+    leve("aire commune rapportee a un entraxe au lieu d'une aire",
+         lambda: (lentille / (_inf["paires"][0]["entraxe_m"] * u.m)).to(u.dimensionless))
+
+# LIMITE DECLAREE. TROIS erreurs de C1 sont dimensionnellement INVISIBLES, et il vaut
 # mieux l'ecrire que de les laisser croire controlees. (1) Diviser les levages par heure
 # par les heures par jour au lieu de les multiplier donne encore des levages par unite de
 # temps : pint convertit et ne leve pas. (2) Une part d'encadrement est un pourcentage,
 # donc sans dimension : la mettre au mauvais endroit du produit ne change aucune unite.
-# Ces deux-la sont attrapees par les tests de VALEUR de calc/tests/test_installation.py,
-# qui recalculent la capacite et la surface terme a terme — pas ici.
+# (3) Multiplier une duree en jours par un ratio jours-par-mois au lieu de diviser
+# redonne une duree : pint convertit et ne leve pas, alors que le resultat est faux d'un
+# facteur 400. Ces trois-la sont attrapees par les tests de VALEUR de
+# calc/tests/test_installation.py, qui recalculent terme a terme — pas ici.
 leve("survol calcule en ajoutant une surface d'aire a une portee",
      lambda: ((_gr["portee_m"] * u.m + besoin) - _vo["y_du_gabarit_m"] * u.m).to(u.m))
 leve("besoin sous grue rapporte a une portee au lieu d'une surface",
@@ -551,9 +584,15 @@ leve("surface de base-vie obtenue en multipliant l'effectif par le nombre de mod
 leve("surface par personne prise pour une surface totale",
      lambda: (pointe * (4.5 * u.m**2)).to(u.m**2))
 leve("loyer ADDITIONNE au cout fixe sans etre multiplie par la duree",
-     lambda: (fixe + loyer).to(u.MAD))
+     lambda: (fixe + loyer_grues).to(u.MAD))
+# Le ratio « jours ouvres par mois » porte une unite : jours PAR MOIS. Le prendre pour
+# un nombre nu donne un quotient sans dimension, qui n'est plus une duree — c'est
+# l'erreur que ce contre-controle cherche. (Multiplier au lieu de diviser, en revanche,
+# redonne une duree et ne leve pas : limite declaree avec les deux autres plus bas.)
+leve("ratio jours-par-mois pris pour un nombre nu",
+     lambda: (j_ouvres / (par_mois * (1 * u.month))).to(u.month))
 leve("duree de location additionnee a une surface de base-vie",
-     lambda: (duree + surface).to(u.month))
+     lambda: (duree_grues + surface).to(u.month))
 
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

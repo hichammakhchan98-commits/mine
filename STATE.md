@@ -1,6 +1,6 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **28/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
+Dernière mise à jour : **29/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
@@ -39,8 +39,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   d'unité silencieux** — D-045 à D-048) · `C7` (qualité et HSE, 45 défauts, 13 bloquants —
   D-049 à D-052) · `REC` (réception, DOE, garanties, 28 défauts dont 8 bloquants — D-054 à
   D-057) · `RC1` (revue critique du palier, § 5.5, 23 défauts dont 6 bloquants — D-058) ·
-  `C1` (installation de chantier, D-059 à D-061 — **passe adversariale à faire**).
-  Toutes les passes sont faites sauf celle de C1 ; tous leurs bloquants et majeurs corrigés.
+  `C1` (installation de chantier, 23 défauts dont **3 bloquants** — D-059 à D-062).
+  Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
 - ▶ **actifs, non écrits (12)** : A1, A2a, A5a, B5a-exec, B7b, C2, C4, C6, D3, D6, D7, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
@@ -62,10 +62,10 @@ E1, TV, D2, D1 : **minimum 2 partout** après correction des bloquants. Détail 
 ## Défauts et passe adversariale /devil (§ 12.2)
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
-valeurs clés depuis `data/` seul. **16 rapports, 411 défauts, 93 bloquants** au dernier comptage de
+valeurs clés depuis `data/` seul. **17 rapports, 434 défauts, 96 bloquants** au dernier comptage de
 `calc/revue.py` (borne basse, dette 27) — E1 : 50 en 3 passes, TV : 117 en 5, une passe pour chacun
-des autres (D-034). **Tous les bloquants corrigés**, sauf C1 dont la passe reste à faire. Détail de
-chaque défaut, de sa preuve et de la suite donnée : `QA/`.
+des autres (D-034). **Tous les bloquants corrigés.** Détail de chaque défaut, de sa preuve et de la
+suite donnée : `QA/`.
 
 **La huitième famille, trouvée par B7c, est la plus insidieuse : le CHANGEMENT D'UNITÉ SILENCIEUX.**
 Une grandeur garde son nom (« jours ») et change de contenu (des plages de 6 h). Aucune vérification
@@ -87,8 +87,8 @@ conclusion **déduite** d'une définition piégeuse au lieu d'être mesurée (D-
 **Ce qui les trouve** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie, et
 des captures regardées. **Jamais un test** — les contrôles étaient verts avant chaque passe.
 
-**Deux fautes de méthode à ne pas reproduire.** D4 a modifié les fichiers de D1 pendant sa passe : un
-livrable en relecture est figé. Et deux fois — C3 puis B3e — un test épinglait la **conclusion
+**Trois fautes de méthode à ne pas reproduire.** D4 a modifié les fichiers de D1 pendant sa passe, et
+**C1 a modifié les siens pendant la sienne** : un livrable en relecture est figé, sans exception. Et deux fois — C3 puis B3e — un test épinglait la **conclusion
 narrative** au lieu de la règle : un test vérifie une règle, jamais un résultat raconté (D-041, D-043).
 
 **La règle qui en sort** : toute grandeur d'état est **dérivée**, un test refait la dérivation ; tout
@@ -97,8 +97,7 @@ paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verd
 même tâche **trouvent les mêmes heures** ; chaque verdict porte son canari. **74 canaris, tous
 rouges**, et deux ont trouvé seuls une erreur que la passe n'avait pas vue : un canari cherche.
 
-**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle ·
-glossaire S7 absent. **V2 en attente** : aucune (le build échoue sur toute balise V2, § 5.0.6).
+**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle. **V2 en attente** : aucune (le build échoue sur toute balise V2, § 5.0.6).
 
 ## Simplifications déclarées (§ R6)
 
@@ -125,7 +124,8 @@ Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une s
 | 27 | **Le comptage des défauts des passes est une borne basse.** `calc/revue.py` compte les cellules de gravité des tableaux de `QA/` — 16 rapports, 411 défauts, 93 bloquants au dernier build. Un rapport qui présenterait ses défauts hors tableau serait sous-compté ; la limite est publiée avec le chiffre | à outiller si besoin |
 | 26 | **D1 et REC divergent sur la date de restitution de la retenue de garantie.** D1 écrit qu'elle « ne revient qu'après la réception » et bâtit sa courbe de trésorerie là-dessus ; REC dit qu'elle est immobilisée jusqu'à une date que le marché fixe (⏸), postérieure. REC ne contredit plus D1 frontalement, mais le besoin de trésorerie publié par D1 est optimiste de la durée de la garantie | revue de palier |
 | 25 | **La date de fin publiée par D2 ne comprend pas une réception décomposée.** REC mesure, en rejouant le réseau, que les deux tâches de fin du planning demandent 16 jours ouvrés de plus que ce qu'elles portent : ESSA 15 j prévus pour 25 demandés, RECE 10 pour 16. Soit **16 jours de fin**, de 260 000 à 2 046 000 MAD selon que le chantier est ou non sous pénalités. Les deux durées sont des décisions de ce cours, posées à deux moments (D-055) ; l'écart n'est pas reporté dans `data/` tant que le lecteur n'a pas tranché | revue de palier |
-| 28 | **D1 budgète une grue, C1 en retient deux.** Les frais de durée de D1 portent le loyer d'**une** grue à tour (95 000 MAD/mois) ; C1 conclut à 2 grues par deux voies indépendantes. Écart : **2 821 500 MAD** sur la durée du chantier. C1 publie l'écart et ne corrige pas le bordereau (D-055) : la correction demande une révision explicite du prix de revient, donc une décision du lecteur | revue de palier |
+| 32 | **Deux contrôles que la passe de C1 propose et que personne n'a outillés** : (1) « la cadence du débit est celle qui produit la durée de la tâche » ; (2) **« toute grandeur multipliée par une durée de chantier nomme la fenêtre d'emploi de la ressource qu'elle loue »**. Le second attraperait la ligne de frais de durée de D1, qui porte le même défaut depuis trois modules | à outiller, et c'est la plus rentable |
+| 28 | **D1 budgète une grue sur 29,7 mois, C1 en retient deux sur 5,8.** D1 facture la grue en frais de durée sur toute la durée du chantier ; C1 lit dans le planning que les tâches servies par la grue tiennent dans une fenêtre de 117 j ouvrés. Les deux écarts vont en sens inverse et celui de la durée l'emporte : **D1 surestime de 1 723 300 MAD**. C1 publie l'écart et ne corrige pas le bordereau (D-055, D-062) : la correction demande une révision explicite du prix de revient, donc une décision du lecteur | revue de palier |
 | 29, 30 | **Deux dettes d'échafaudage.** Les fiches livrées de REC et de RC1 ne sont pas écrites (D-061) ; B7c, C7 et C1 ont la leur. Et `npm run check` a échoué 4 fois sur 16 pour une raison étrangère au cours — `maxBuffer` de 1 Mo dépassé par la sortie de Playwright (108 tests), corrigé à 64 Mo : l'échafaudage grandit avec le cours, et un faux rouge coûte autant qu'un faux vert | prochaine revue |
 | 31 | **Le contrôle « chaque V3 de data/ est registrée » compare des NOMBRES, pas des chemins.** Le massif de grue (180 000 MAD) passait parce que D1 déclare un encadrement à 180 000 MAD/mois — une grandeur sans rapport. Il est désormais déclaré en propre, mais le contrôle reste satisfiable par coïncidence : il faudrait une colonne de chemin dans le registre | à outiller |
 | 17, 24 | **C3 et C7, non corrigés.** C3 : le `floor` du parc ne mord sur aucune ligne du tableau (m5) · cure de 2 j insensible sur sa fourchette (m6) · loyer et montage sans bornes dans le tableau (m7) · loyer sans battement ni repli, donc **borne basse** (m8) · deux durées du plancher coexistent dans `data/` (m10). C7 : la pondération de nuit (1,8) et l'abattement de cadence de nuit de B7c (30 %) restent deux coefficients pour une même cause, leurs notes se croisent sans qu'aucun soit dérivé de l'autre · 4 mineurs de forme (`QA/C7-passe1.md`) | avant la prochaine revue |
@@ -142,9 +142,9 @@ Jeux figés en 1.0, valeurs de conception inchangées. Ajouts : le bloc `armatur
 ferraillage fictif calibré, B3e) et le bloc `ferroviaire` (plages de consignation, interfaces,
 B7c). Corrigé par les passes : parc de tables, étais, `suivi.quantites_relevees`, `materiel`,
 `cycle_zone`, portées des nappes, segments de cadres, base des ratios d'acier. **207 hypothèses V3
-registrées**, toutes couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Ajouts de C1 : le bloc `installation` (grue, trois variantes de calage, pièces à lever — dont celle de charpente **lue** chez B7c et non redéclarée —, levages, base-vie, aires) et `installation.voisinage` (distance de la façade côté voies au gabarit de la voie). Détail dans git et dans `QA/`.
+registrées**, toutes couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Ajouts de C1 : le bloc `installation` (grue, trois variantes de calage, pièces à lever — dont celle de charpente **lue** chez B7c et non redéclarée —, levages, base-vie, aires) et `installation.voisinage`. Le taux d'utilisation de la grue porte désormais son unité dans son nom (`taux_d_utilisation_pct`, D-056). Détail dans git et dans `QA/`.
 
 ## Effort consommé (§ 13.2)
 
-**20 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC, RC1, C1 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
+**21 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC, RC1, C1 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
 **Avancement sur le programme du 31/10** : **12 livraisons sur 18**. C1, premier module de l'ordre de coupe, a été livré sur go du lecteur. Restent : C4+B7b, C2, C6, D3, D6, D7, A1, A2a, A5a, B5a-exec, M3D — plus que le budget ne permet d'ici le 31/10. L'arbitrage est au lecteur, et il est posé maintenant, pas découvert le 31.
