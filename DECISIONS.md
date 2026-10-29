@@ -1049,9 +1049,18 @@ calculé comme une moyenne de ratios, et la moyenne, quand elle est montrée, es
 fausse**.
 
 **Pourquoi.** Le CPI d'une opération est ΣVA / ΣCR : une moyenne des CPI pondérée par les coûts
-réels. La moyenne arithmétique des CPI donne ici 0,822 contre 0,877 — 5,5 points, et toujours dans
-le sens du plus gros site, c'est-à-dire dans le sens qui rassure. Les deux nombres s'appellent « CPI
-de l'opération » et un seul veut dire quelque chose.
+réels. La moyenne arithmétique des CPI donne ici 0,822 contre 0,877 — 5,5 points. Les deux nombres
+s'appellent « CPI de l'opération » et un seul veut dire quelque chose.
+
+**Le sens de l'écart n'est pas une loi**, et une première version de cette décision l'écrivait comme
+telle. Ce qui est vrai, et seul : le consolidé est tiré vers le site qui a le plus **dépensé**. Que
+cela rassure ou alarme dépend de quel site va mal. Contre-exemple : un gros site à 0,75 (9 MMAD
+dépensés) et un petit à 0,90 (1 MMAD) donnent un consolidé de 0,765 pour une moyenne de 0,825 —
+l'inverse du cas de ce chantier. Ici le petit site est le plus dégradé, donc le consolidé est
+au-dessus de la moyenne ; c'est le cas le plus fréquent, parce qu'un petit site reçoit moins
+d'encadrement, et fréquent n'est pas toujours. Sur ce chantier, d'ailleurs, **le calcul faux aurait
+déclenché une alerte que le calcul juste ne déclenche pas** : 0,822 passe sous le seuil de 0,85, pas
+0,877.
 
 La conséquence est plus large que l'arithmétique. Un indicateur consolidé **divise la dérive d'un
 site par le poids de ce site** : le site secondaire pèse 12,9 % du coût réel, donc sa dérive arrive
@@ -1086,8 +1095,13 @@ CPI **étiquetée comme fausse**, à côté du consolidé.
 publié par ce cours est **la période entre deux fenêtres**, exprimée en jours, et non un pourcentage
 de dérive ni une valeur de CPI. Il est publié à côté des indicateurs de coût, pas à leur place.
 
-**Pourquoi.** Un cycle de consignation perdu ne produit **ni dépense ni valeur acquise** : le CPI du
-site ne bouge pas d'un millième. Le SPI finit par bouger, mais il arrive amorti par l'agrégation
+**Pourquoi.** Un cycle de consignation perdu ne produit **ni valeur acquise ni dépense d'ouvrage** :
+dans le périmètre où ce cours calcule le CPI — les ouvrages seuls, frais de durée exclus, comme D4
+les publie — l'indicateur ne bouge pas d'un millième. L'opération, elle, paie les vingt jours
+d'attente au tarif des frais de durée : **324 807 MAD**. C'est le pire des deux mondes, une dépense
+réelle qu'aucun indicateur de performance ne montre parce qu'elle est hors de son périmètre par
+construction — et l'omission de ce périmètre, dans une première version, rendait la phrase
+simplement fausse. Le SPI finit par bouger, mais il arrive amorti par l'agrégation
 (D-063) et retardé par la latence du reporting — soit, sur ce chantier, 14 jours en moyenne en
 rythme mensuel. L'information arrive quand elle ne sert plus.
 
@@ -1096,8 +1110,13 @@ Le module B7c avait établi la mécanique : sous consignation, un retard ne gran
 une période de fenêtre de 20 : le retard effectif sur sa première interception n'est pas de 22 jours
 mais de 40 — une amplification de 1,82. Et l'escalier a une propriété que le pilotage doit connaître
 : **juste avant une marche, un jour gagné en vaut vingt ; juste après, il n'en vaut aucun.** Un
-conducteur de travaux qui propose de « rattraper dix jours » sur un retard de 22 dépense sans rien
-produire, parce que le travail attendra la même fenêtre.
+conducteur de travaux qui propose de « rattraper dix jours » sur un retard de 22 en gagne en réalité
+vingt sur la date d'interception — mais il lui aurait suffi d'en rattraper **deux**, et les huit
+autres ne valent rien. Une première version de cette décision affirmait l'inverse : que dix jours ne
+produiraient rien et qu'il en faudrait davantage pour descendre d'une marche. Les deux étaient faux,
+et l'escalier que ce module publie disait déjà le contraire — c'est le corrigé d'un exercice, écrit
+de tête, qui contredisait la figure de la section précédente. Il est réécrit, et deux cas fermés
+d'étalonnage l'empêchent de revenir.
 
 **Le signal qui arrive à temps**, et c'est le second volet de la décision : la **marge à la date
 limite de demande** de chaque interface. Le registre que B7c publie donne les délais ; la

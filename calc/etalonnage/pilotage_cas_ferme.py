@@ -90,19 +90,50 @@ cas("sans delai de remontee, la latence vaut une demi-periode",
 cas("et l'ecart des deux rythmes ne depend PAS du delai de remontee",
     l0["ecart_des_deux_rythmes_j"], pil.latence(d, rec)["ecart_des_deux_rythmes_j"], 1e-9)
 
+CJ = rec["cout_d_un_jour"]["cout_hors_penalites_MAD_par_jour_ouvre"]
 per = d["planning"]["contraintes_exploitation"]["periode_entre_fenetres_jours"]["valeur"]
 dq = json.loads(json.dumps(d))
 for retard, attendu_cycles in ((1, 1), (per - 1, 1), (per, 1), (per + 1, 2), (2 * per, 2)):
     dq["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = retard
-    a_ = pil.alerte_ferroviaire(dq)
+    a_ = pil.alerte_ferroviaire(dq, CJ)
     cas(f"retard de {retard} j -> {attendu_cycles} cycle(s)",
         a_["cycles_perdus"], attendu_cycles, 1e-9)
 # INVARIANT : juste avant une marche, un jour gagne en vaut une periode entiere.
 dq["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = per + 1
-avant = pil.alerte_ferroviaire(dq)["retard_effectif_j"]
+avant = pil.alerte_ferroviaire(dq, CJ)["retard_effectif_j"]
 dq["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = per
-apres = pil.alerte_ferroviaire(dq)["retard_effectif_j"]
+apres = pil.alerte_ferroviaire(dq, CJ)["retard_effectif_j"]
 cas("un jour gagne au bon moment vaut une periode entiere", avant - apres, per, 1e-9, "j")
+
+# Ce qu'il faut rattraper pour descendre d'une marche, et ce que ca vaut : forme exacte.
+# L'exercice 4 du module affirmait d'abord qu'il fallait « plus de dix jours » et que dix
+# jours ne produiraient rien. Les deux etaient faux ; ce cas ferme les empeche de revenir.
+dq["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = 22
+a22 = pil.alerte_ferroviaire(dq, CJ)
+cas("a 22 j de retard, il suffit d'en rattraper 2 pour descendre d'une marche",
+    a22["jours_a_rattraper_pour_gagner_un_cycle"], 2.0, 1e-9, "j")
+cas("et rattraper 10 j fait descendre d'exactement une marche",
+    a22["effet_de_rattraper_10_j"], per, 1e-9, "j")
+dq["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = 20
+cas("en descendant a 20 j, le retard effectif vaut une seule periode",
+    pil.alerte_ferroviaire(dq, CJ)["retard_effectif_j"], per, 1e-9, "j")
+
+print("\n=== 5bis. Les deux mecanismes d'une derive ===")
+# Une derive peut etre une VA en moins ou un CR en plus : deux formes fermees distinctes,
+# et la seconde est toujours plus GRANDE parce que le denominateur grandit avec elle.
+sites2 = [_site("A", 0.9 * 9000, 9000), _site("B", 0.8 * 1000, 1000)]
+cons2b = pil.consolidation(sites2, SEUILS)
+m2b = pil.seuil_de_masquage(sites2, cons2b)
+s_ = m2b["seuil_retenu_CPI"]
+cas("derive invisible « surcout » = VA / seuil - CR",
+    m2b["derive_invisible_si_surcout_MAD"],
+    cons2b["valeur_acquise_VA_MAD"] / s_ - cons2b["cout_reel_CR_MAD"], 1.0, "MAD")
+ok_ = (m2b["derive_invisible_si_surcout_MAD"]
+       > m2b["derive_supplementaire_invisible_MAD"])
+if not ok_:
+    echecs.append("surcout > VA en moins")
+print(f"  {'ok  ' if ok_ else 'ECHEC'} et elle est toujours plus grande que la derive a "
+      "cout constant")
 
 print("\n=== 5. Le jeu REEL du projet ===")
 r = pil.tout_calculer(d)

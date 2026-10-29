@@ -40,8 +40,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   D-049 à D-052) · `REC` (réception, DOE, garanties, 28 défauts dont 8 bloquants — D-054 à
   D-057) · `RC1` (revue critique du palier, § 5.5, 23 défauts dont 6 bloquants — D-058) ·
   `C1` (installation de chantier, 23 défauts dont **3 bloquants** — D-059 à D-062) ·
-  `D7` (pilotage multi-sites, D-063 et D-064 — **passe adversariale à faire**).
-  Toutes les passes sont faites sauf celle de D7 ; tous leurs bloquants et majeurs corrigés.
+  `D7` (pilotage multi-sites, 29 défauts dont **4 bloquants** — D-063, D-064).
+  Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
 - ▶ **actifs, non écrits (11)** : A1, A2a, A5a, B5a-exec, B7b, C2, C4, C6, D3, D6, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
@@ -58,7 +58,7 @@ deux voies, étalonnages sur solution fermée, `pint` · **16 contrôles**, capt
 ## Défauts et passe adversariale /devil (§ 12.2)
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
-valeurs clés depuis `data/` seul. **17 rapports, 434 défauts, 96 bloquants** au dernier comptage de
+valeurs clés depuis `data/` seul. **18 rapports, 463 défauts, 100 bloquants** au dernier comptage de
 `calc/revue.py` (borne basse, dette 27) — E1 : 50 en 3 passes, TV : 117 en 5, une passe pour chacun
 des autres (D-034). **Tous les bloquants corrigés.** Détail de chaque défaut, de sa preuve et de la
 suite donnée : `QA/`.
@@ -81,11 +81,14 @@ pas la série annoncée ; (5) deux modules qui recalculent la même grandeur (D-
 conclusion **déduite** d'une définition piégeuse au lieu d'être mesurée (D-040).
 
 **Ce qui les trouve** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie, et
-des captures regardées. **Jamais un test** — les contrôles étaient verts avant chaque passe.
+des captures regardées. **Jamais un test.** **Et la neuvième famille, que D7 isole : la PHRASE À CÔTÉ
+DU NOMBRE** — ses quatre bloquants ont des calculs justes et des phrases fausses : une arithmétique
+faite de tête dans un corrigé, une légende qui nomme le mauvais seuil, une loi énoncée trop large, un
+périmètre oublié. Aucun test ne lit une phrase.
 
-**Trois fautes de méthode à ne pas reproduire.** D4 a modifié les fichiers de D1 pendant sa passe, et
-**C1 les siens pendant la sienne** : un livrable en relecture est figé. Et deux fois — C3 puis B3e —
-un test épinglait la **conclusion narrative** au lieu de la règle (D-041, D-043).
+**Trois fautes de méthode.** D4 a modifié les fichiers de D1 pendant sa passe, et **C1 les siens
+pendant la sienne** : un livrable en relecture est figé. Et deux fois — C3 puis B3e — un test
+épinglait la **conclusion narrative** au lieu de la règle (D-041, D-043).
 
 **La règle qui en sort** : toute grandeur d'état est **dérivée**, un test refait la dérivation ; tout
 paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verdict est une sortie de
@@ -93,9 +96,9 @@ paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verd
 même tâche **trouvent les mêmes heures** ; chaque verdict porte son canari. **74 canaris, tous
 rouges**, et deux ont trouvé seuls une erreur que la passe n'avait pas vue : un canari cherche.
 
-**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle. **V2 en attente** : aucune (le build échoue sur toute balise V2, § 5.0.6).
+**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle. **V2 en attente** : aucune.
 
-## Simplifications déclarées (§ R6) · Grilles § 7.2 : minimum 2 partout, détail `QA/grilles-72.md`
+## Simplifications déclarées (§ R6) · Grilles § 7.2 : minimum 2 partout (`QA/grilles-72.md`)
 
 Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une scène 3D par vue · contour de cadre en polyligne · fiches P2/P3 sobres · substitut textuel de la 3D à l'impression · cadres sans crochets (métré minorant, 0,08 % du total) · coffrage sans étaiement en démonstration · vérification dimensionnelle déportée · un seul relevé d'avancement dans `data/` · le contrôle de sécurité ne cherche qu'un mot.
 
@@ -120,7 +123,7 @@ Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une s
 | 26 | **D1 et REC divergent sur la date de restitution de la retenue de garantie.** D1 écrit qu'elle « ne revient qu'après la réception » et bâtit sa courbe de trésorerie là-dessus ; REC dit qu'elle est immobilisée jusqu'à une date que le marché fixe (⏸), postérieure. REC ne contredit plus D1 frontalement, mais le besoin de trésorerie publié par D1 est optimiste de la durée de la garantie | revue de palier |
 | 25 | **La date de fin publiée par D2 ne comprend pas une réception décomposée.** REC mesure, en rejouant le réseau, que les deux tâches de fin du planning demandent 16 jours ouvrés de plus que ce qu'elles portent : ESSA 15 j prévus pour 25 demandés, RECE 10 pour 16. Soit **16 jours de fin**, de 260 000 à 2 046 000 MAD selon que le chantier est ou non sous pénalités. Les deux durées sont des décisions de ce cours, posées à deux moments (D-055) ; l'écart n'est pas reporté dans `data/` tant que le lecteur n'a pas tranché | revue de palier |
 | 33 | **Le format `::n3` n'existait pas et rendait la valeur brute** — 45 occurrences dans six modules livrés, dont des CPI à quatre décimales à côté des mêmes à trois. Le build échoue désormais sur un format inconnu, et `n3`/`n4` sont implémentés. **La leçon est la même que pour les options de figure : un format ignoré en silence est un défaut, pas une tolérance** | fait |
-| 34 | **Le second site de D7 est entièrement V3** : budget, lots, avancements, coût réel, date de besoin et retard sont fabriqués pour la démonstration. Les mécanismes (consolidation, amortissement, masquage, latence, quantisation) sont exacts ; les nombres qui les illustrent ne décrivent aucun chantier réel | levée du § 5.0 |
+| 34 | **Le second site de D7 est entièrement V3** : budget, lots, avancements, coût réel, date de besoin et retard sont fabriqués. Les mécanismes (consolidation, amortissement, masquage, latence, quantisation) sont exacts et étalonnés ; les nombres qui les illustrent ne décrivent aucun chantier réel. **Et la latence n'est chiffrée que pour l'opération** : les frais de durée du second site ne sont pas déclarés | levée du § 5.0 |
 | 32 | **Deux contrôles que la passe de C1 propose et que personne n'a outillés** : (1) « la cadence du débit est celle qui produit la durée de la tâche » ; (2) **« toute grandeur multipliée par une durée de chantier nomme la fenêtre d'emploi de la ressource qu'elle loue »**. Le second attraperait la ligne de frais de durée de D1, qui porte le même défaut depuis trois modules | à outiller, et c'est la plus rentable |
 | 28 | **D1 budgète une grue sur 29,7 mois, C1 en retient deux sur 5,8.** D1 facture la grue en frais de durée sur toute la durée du chantier ; C1 lit dans le planning que les tâches servies par la grue tiennent dans une fenêtre de 117 j ouvrés. Les deux écarts vont en sens inverse et celui de la durée l'emporte : **D1 surestime de 1 723 300 MAD**. C1 publie l'écart et ne corrige pas le bordereau (D-055, D-062) : la correction demande une révision explicite du prix de revient, donc une décision du lecteur | revue de palier |
 | 29, 30 | **Deux dettes d'échafaudage.** Les fiches livrées de REC et de RC1 ne sont pas écrites (D-061) ; B7c, C7 et C1 ont la leur. Et `npm run check` a échoué 4 fois sur 16 pour une raison étrangère au cours — `maxBuffer` de 1 Mo dépassé par la sortie de Playwright (108 tests), corrigé à 64 Mo : l'échafaudage grandit avec le cours, et un faux rouge coûte autant qu'un faux vert | prochaine revue |

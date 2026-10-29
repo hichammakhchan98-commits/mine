@@ -37,6 +37,14 @@ def _f(x: float, dec: int = 0) -> str:
     return s.replace(".", ",") if dec else s
 
 
+def _court(texte: str, n: int) -> str:
+    """Tronque au dernier espace avant n : un libelle coupe en plein mot est illisible."""
+    if len(texte) <= n:
+        return texte
+    coupe = texte[:n].rsplit(" ", 1)[0]
+    return coupe + "…"
+
+
 def _b(o: dict) -> tuple[float, float]:
     f = o.get("fourchette")
     return (float(f[0]), float(f[1])) if f else (float(o["valeur"]), float(o["valeur"]))
@@ -146,6 +154,9 @@ def consolidation(sites_: list, seuils: dict) -> dict:
               "derive_MAD": s["derive_MAD"],
               # L'AMORTISSEMENT : de combien l'indicateur consolidé divise la dérive de
               # ce site. C'est l'inverse de son poids, et rien d'autre.
+              # Exact pour une derive a COUT REEL CONSTANT. Si la derive est une
+              # depense de plus, le denominateur bouge aussi et le facteur n'est
+              # qu'un ordre de grandeur — declare plutot que tu.
               "amortissement": round(cr / s["cout_reel_CR_MAD"], 1),
               # Ce qui se consolide SANS precaution : des montants. Le depassement prevu
               # a terminaison, site par site, s'additionne — et sa repartition n'a rien a
@@ -159,6 +170,12 @@ def consolidation(sites_: list, seuils: dict) -> dict:
             x["depassement_prevu_MAD"] / dep_total * 100, 1)
     return {
         "nb_sites": len(sites_),
+        "rapport_des_tailles_en_budget": round(
+            max(s["budget_a_l_achevement_BAC_MAD"] for s in sites_)
+            / min(s["budget_a_l_achevement_BAC_MAD"] for s in sites_), 1),
+        "rapport_des_tailles_en_cout_reel": round(
+            max(s["cout_reel_CR_MAD"] for s in sites_)
+            / min(s["cout_reel_CR_MAD"] for s in sites_), 1),
         "budget_a_l_achevement_BAC_MAD": round(bac, 2),
         "valeur_planifiee_VP_MAD": round(vp, 2),
         "valeur_acquise_VA_MAD": round(va, 2),
@@ -173,7 +190,7 @@ def consolidation(sites_: list, seuils: dict) -> dict:
         "_ce_qui_se_consolide_vraiment": (
             "Les montants, et eux seuls. À terminaison, si les dérives persistent, "
             f"l'opération dépasse de {_f(dep_total, 0)} MAD, soit "
-            f"{_f(dep_total / bac * 100, 1)} % du budget. Et la répartition de ce "
+            f"{_f(dep_total / bac * 100, 1)} % du budget des ouvrages des deux sites. Et la répartition de ce "
             "dépassement ne ressemble pas à celle du budget : le site secondaire pèse "
             f"{_f(poids[1]['poids_du_budget_pct'], 1)} % du budget et "
             f"{_f(poids[1]['part_du_depassement_prevu_pct'], 1)} % du dépassement prévu. "
@@ -187,13 +204,33 @@ def consolidation(sites_: list, seuils: dict) -> dict:
         # deplacer le CPI consolide d'un centieme. C'est la loi d'amortissement, en
         # monnaie, et elle est toujours bien posee — contrairement a une distance au
         # seuil, qui n'a de sens que si le seuil n'est pas deja franchi.
+        # À COÛT RÉEL CONSTANT : une perte de valeur acquise. Si la dérive est au
+        # contraire une DÉPENSE de plus, le dénominateur grandit aussi et il en faut
+        # davantage — le module publie les deux plutôt que de laisser croire à un seul.
         "MAD_pour_un_centieme_de_CPI": round(0.01 * cr, 2),
+        "MAD_pour_un_centieme_de_CPI_si_surcout": round(va / (cpi - 0.01) - cr, 2),
+        "_le_centieme_depend_du_mecanisme": (
+            f"{_f(0.01 * cr, 0)} MAD si la dérive est une valeur acquise en moins — un "
+            "ouvrage repris, une quantité surestimée. "
+            f"{_f(va / (cpi - 0.01) - cr, 0)} MAD si c'est une dépense en plus, "
+            "parce qu'alors le dénominateur grandit avec le numérateur. Les deux "
+            "mécanismes existent sur un chantier et ils ne se valent pas."),
         "lecture": (
             f"Les {len(sites_)} sites totalisent {_f(cr, 0)} MAD dépensés pour "
             f"{_f(va, 0)} MAD de valeur acquise : CPI consolidé "
             f"{_f(cpi, 3)}. La moyenne des CPI des sites vaut {_f(moyenne_cpi, 3)} — "
-            f"{_f(abs(cpi - moyenne_cpi) * 100, 1)} points d'écart, et dans le sens qui "
-            "rassure."),
+            f"{_f(abs(cpi - moyenne_cpi) * 100, 1)} points d'écart."),
+        "_dans_quel_sens_va_l_ecart": (
+            "Le consolidé est tiré vers le site qui a le plus DÉPENSÉ — c'est la seule "
+            "chose qui soit vraie en général. Le sens de l'écart avec la moyenne, lui, "
+            "dépend de quel site va mal : si c'est le petit, le consolidé est plus haut "
+            "que la moyenne et il rassure ; si c'est le gros, il est plus bas et il "
+            "alarme. Deux sites à 0,75 (9 MMAD dépensés) et 0,90 (1 MMAD) donnent un "
+            "consolidé de 0,765 pour une moyenne de 0,825 : l'inverse du cas de ce "
+            f"chantier. Ici le petit site est le plus dégradé, donc le consolidé "
+            f"({_f(cpi, 3)}) est au-dessus de la moyenne ({_f(moyenne_cpi, 3)}) — et "
+            "c'est le cas le plus fréquent, parce qu'un petit site reçoit moins "
+            "d'encadrement et dérive plus souvent. Fréquent n'est pas toujours."),
         "_un_ratio_ne_se_consolide_pas": (
             "Le CPI est un rapport. La moyenne de deux rapports n'est pas le rapport des "
             "sommes, sauf si les dénominateurs sont égaux — c'est-à-dire si les deux "
@@ -202,7 +239,8 @@ def consolidation(sites_: list, seuils: dict) -> dict:
             f"{_f(sites_[0]['cout_reel_CR_MAD'] / 1e6, 1)} MMAD et à un site de "
             f"{_f(sites_[1]['cout_reel_CR_MAD'] / 1e6, 1)} MMAD. Ce qui se consolide "
             "sans précaution, ce sont les MONTANTS : la dérive de l'opération est la "
-            f"somme des dérives, {_f(cr - va, 0)} MAD, et elle se lit site par site."),
+            f"somme des dérives, {_f(round((cr - va) / 1e4) * 1e4, 0)} MAD, et elle se "
+            "lit site par site."),
     }
 
 
@@ -236,6 +274,21 @@ def seuil_de_masquage(sites_: list, cons: dict, i_petit: int = 1) -> dict:
         "CPI_du_site_aujourd_hui": petit["CPI"],
         "CPI_du_site_au_seuil_consolide": cpi_limite,
         "derive_supplementaire_invisible_MAD": round(invisible, 2),
+        # À COÛT RÉEL CONSTANT. Si la derive supplementaire est une DEPENSE de plus, le
+        # denominateur du consolide grandit aussi, et il en faut davantage pour franchir
+        # le seuil. Les deux mecanismes sont publies : le module ne choisit pas en
+        # silence celui qui donne le plus joli nombre.
+        "derive_invisible_si_surcout_MAD": round(
+            cons["valeur_acquise_VA_MAD"] / seuil - cr_tot, 2),
+        "_les_deux_mecanismes": (
+            "Une dérive peut être une valeur acquise en moins (un ouvrage repris, une "
+            "quantité surestimée) ou une dépense en plus (des heures, un matériel). "
+            "À coût réel constant — le premier cas — le site peut perdre "
+            f"{_f(invisible, 0)} MAD sans faire franchir le seuil. Si c'est une dépense "
+            "en plus, il en faut "
+            f"{_f(cons['valeur_acquise_VA_MAD'] / seuil - cr_tot, 0)}"
+            " MAD, parce que le dénominateur grandit avec elle. Le second cas est le "
+            "plus fréquent sur un chantier, et c'est le plus favorable au masquage."),
         "part_du_budget_du_site_pct": round(
             invisible / petit["budget_a_l_achevement_BAC_MAD"] * 100, 1),
         "le_consolide_est_il_deja_sous_le_seuil": cons["CPI_consolide"] < seuil,
@@ -336,7 +389,24 @@ def latence(d: dict, rec: dict) -> dict:
         "cout_d_un_jour_MAD": cout_jour,
         "_source_du_cout": "calc/sorties/reception.json — coût d'un jour hors pénalités "
                            "(module REC), c'est-à-dire les frais de durée seuls",
+        "_le_domaine_de_ce_cout": (
+            "Ce coût journalier est celui de l'OPÉRATION — les frais de durée du site "
+            "principal, qui portent l'essentiel de l'encadrement. Il est juste pour "
+            "chiffrer la latence d'un dispositif de reporting qui couvre l'opération "
+            "entière. Il serait faux appliqué au seul site secondaire, dont les frais "
+            "de durée sont bien plus petits : ce cours ne les possède pas, et ne "
+            "chiffre donc pas la latence site par site."),
         "ecart_des_deux_rythmes_j": round(ecart, 1),
+        "les_bornes_des_deux_rythmes_se_chevauchent": (
+            lignes[0]["latence_moyenne_bornes_j"][1]
+            > lignes[1]["latence_moyenne_bornes_j"][0]),
+        "_ce_que_le_chevauchement_veut_dire": (
+            "Les fourchettes des deux latences se chevauchent : un reporting "
+            "hebdomadaire mal alimenté (remontée à "
+            f"{_f(rem_b[1])} jours) est plus lent qu'un reporting mensuel bien alimenté. "
+            "L'écart des deux rythmes, lui, ne dépend PAS du délai de remontée — il "
+            "s'annule dans la différence. Les deux leviers sont donc indépendants, et "
+            "c'est pourquoi il faut les tirer tous les deux."),
         "cout_de_l_ecart_MAD": round(ecart * cout_jour, 2),
         "part_du_delai_de_remontee_dans_l_hebdo_pct": round(
             remontee / lignes[0]["latence_moyenne_j"] * 100, 1),
@@ -344,15 +414,18 @@ def latence(d: dict, rec: dict) -> dict:
             f"Une dérive qui commence un jour quelconque devient lisible en moyenne "
             f"{_f(lignes[0]['latence_moyenne_j'], 1)} jours plus tard en reporting "
             f"hebdomadaire, et {_f(lignes[1]['latence_moyenne_j'], 1)} jours en reporting "
-            f"mensuel : {_f(ecart, 0)} jours d'écart, soit {_f(ecart * cout_jour, 0)} MAD "
+            f"mensuel : {_f(ecart, 1)} jours d'écart, soit {_f(ecart * cout_jour, 0)} MAD "
             "de frais de durée à chaque dérive détectée."),
         "_le_delai_de_remontee_est_la_moitie_du_sujet": (
             f"En reporting hebdomadaire, le délai de remontée des données "
             f"({_f(remontee)} jours) pèse "
             f"{_f(remontee / lignes[0]['latence_moyenne_j'] * 100, 0)} % de la latence "
-            "totale. Passer d'un rapport mensuel à un rapport hebdomadaire sans "
+            f"totale — contre {_f(remontee / lignes[1]['latence_moyenne_j'] * 100, 0)} % "
+            "en reporting mensuel, où la période écrase tout. Ce n'est donc pas « la "
+            "moitié de la latence » en général : c'est la moitié DÈS QU'ON RACCOURCIT "
+            "LE RYTHME, et c'est ce qui plafonne le gain. Passer d'un rapport mensuel à un rapport hebdomadaire sans "
             "raccourcir la remontée ne divise donc pas la latence par quatre : c'est la "
-            "moitié oubliée de toutes les décisions de rythme, et elle ne s'achète pas "
+            "part oubliée de toutes les décisions de rythme, et elle ne s'achète pas "
             "avec une réunion de plus — elle s'achète avec des attachements saisis le "
             "jour même."),
         "_ce_que_la_latence_n_est_pas": (
@@ -366,7 +439,7 @@ def latence(d: dict, rec: dict) -> dict:
 
 
 # ------------------------------------------------- 4. l'alerte qui compte vraiment
-def alerte_ferroviaire(d: dict) -> dict:
+def alerte_ferroviaire(d: dict, cout_jour: float) -> dict:
     """Sur un chantier ferroviaire, le bon seuil d'alerte n'est pas un pourcentage.
 
     Un retard se rattrape tant qu'il reste plus court que la période entre deux fenêtres
@@ -405,10 +478,32 @@ def alerte_ferroviaire(d: dict) -> dict:
         "seuil_d_alerte_du_site_j": periode,
         "le_retard_a_t_il_deja_franchi_le_seuil": retard > periode,
         "retard_tolerable_restant_j": round(cycles * periode - retard, 1),
+        # CE QU'IL FAUT RATTRAPER pour descendre d'une marche : redescendre sous le
+        # multiple inferieur de la periode. Une premiere version de l'exercice 4 affirmait
+        # qu'il fallait « plus de dix jours » et que dix jours ne produiraient rien : les
+        # deux etaient faux, et l'escalier publie par le module disait deja l'inverse.
+        "jours_a_rattraper_pour_gagner_un_cycle": round(
+            max(0.0, retard - (cycles - 1) * periode), 1) if cycles > 1 else None,
+        "gain_si_on_gagne_un_cycle_j": periode if cycles > 1 else None,
+        "effet_de_rattraper_10_j": (math.ceil(max(0.0, retard - 10) / periode) * periode
+                                    if retard > 10 else 0),
+        "_ce_que_rattraper_veut_dire": (
+            f"Pour descendre d'une marche, il suffit de repasser sous "
+            f"{_f((cycles - 1) * periode)} jours de retard, c'est-à-dire d'en rattraper "
+            f"{_f(max(0.0, retard - (cycles - 1) * periode))}. Ces "
+            f"{_f(max(0.0, retard - (cycles - 1) * periode))} jours-là en valent "
+            f"{_f(periode)} : c'est le meilleur rapport du chantier. Les suivants n'en "
+            "valent aucun, jusqu'à la marche d'après. **La question n'est jamais "
+            "« combien peut-on rattraper » mais « de quel côté de la marche "
+            "tombe-t-on »**."
+            if cycles > 1 else
+            "Le retard tient dans une seule fenêtre : il n'y a pas de marche à "
+            "descendre."),
         "lecture": (
             f"Le site secondaire accuse {_f(retard)} jours ouvrés de retard. La période "
             f"entre deux fenêtres de consignation est de {_f(periode)} jours : le retard "
-            f"a donc franchi un cycle, et la fenêtre visée est perdue. Le retard effectif "
+            f"a donc franchi la première marche, et la fenêtre visée est perdue : le "
+            f"travail attend la {_f(cycles)}ᵉ fenêtre. Le retard effectif "
             f"sur la première interception n'est pas de {_f(retard)} jours mais de "
             f"{_f(retard_effectif)} — une amplification de "
             f"{_f(retard_effectif / retard, 2) if retard else '—'}."),
@@ -419,16 +514,24 @@ def alerte_ferroviaire(d: dict) -> dict:
             "rattrape dans la fenêtre suivante ; au-delà, il coûte un cycle entier et "
             "aucun indicateur de coût ne le voit venir, parce qu'un cycle perdu ne "
             "dépense rien : il attend."),
+        "cout_d_un_cycle_perdu_en_frais_de_duree_MAD": round(periode * cout_jour, 2),
         "_pourquoi_le_CPI_ne_sert_a_rien_ici": (
-            "Un cycle perdu ne produit ni dépense ni valeur acquise : le CPI du site ne "
-            "bouge pas d'un millième. Le SPI finit par bouger, mais avec la latence du "
-            "reporting et l'amortissement de l'agrégation. L'alerte qui aurait servi est "
-            "d'une autre nature : une date de besoin, une période de fenêtre, et une "
-            "soustraction."),
+            "Un cycle perdu ne produit **ni valeur acquise ni dépense d'ouvrage** : dans "
+            "le périmètre où ce cours calcule le CPI — les ouvrages seuls, frais de "
+            "durée exclus, comme le module D4 le publie — l'indicateur ne bouge pas d'un "
+            "millième. L'opération, elle, paie : "
+            f"{_f(periode)} jours de frais de durée, soit "
+            f"{_f(periode * cout_jour, 0)} MAD. C'est le pire des deux mondes — une "
+            "dépense réelle qu'AUCUN indicateur de performance ne montre, parce qu'elle "
+            "est hors de son périmètre par construction. Le SPI finit par bouger, avec "
+            "la latence du reporting et l'amortissement de l'agrégation. L'alerte qui "
+            "aurait servi est d'une autre nature : une date de besoin, une période de "
+            "fenêtre, et une soustraction."),
     }
 
 
-def interfaces_a_date(d: dict, fer: dict, su: dict, pl: dict) -> dict:
+def interfaces_a_date(d: dict, fer: dict, su: dict, pl: dict,
+                      periode_fenetres: float) -> dict:
     """Les interfaces, rangées par leur DATE LIMITE DE DEMANDE plutôt que par leur objet.
 
     Le module B7c publie le registre des interfaces et leur délai de demande. Ce qui
@@ -446,6 +549,8 @@ def interfaces_a_date(d: dict, fer: dict, su: dict, pl: dict) -> dict:
     lignes = []
     for s in d["multi_sites"]["sites"]:
         retard_site = (s.get("retard_constate_j") or {}).get("valeur", 0)
+        retard_effectif_site = (math.ceil(retard_site / periode_fenetres) * periode_fenetres
+                                if retard_site else 0)
         b = s.get("date_de_besoin_premiere_interception_j")
         if not b:
             continue
@@ -484,8 +589,13 @@ def interfaces_a_date(d: dict, fer: dict, su: dict, pl: dict) -> dict:
                 # Ce que le retard du site fait à cette échéance. Un retard DÉCALE le
                 # besoin, donc il recule la date limite : il peut rattraper une demande
                 # en retard. C'est contre-intuitif et c'est vrai.
-                "marge_apres_le_retard_du_site_j": round(limite + retard_site - j_arret, 1)
-                if (not passe) and retard_site else None,
+                # Le besoin se decale du retard EFFECTIF — celui que l'escalier des
+                # fenetres impose — et non du retard brut : le travail ne peut avoir
+                # lieu qu'a une fenetre. Publier les deux dates donnerait 212 ici et
+                # 230 la, pour le meme evenement.
+                "marge_apres_le_retard_du_site_j": round(
+                    limite + retard_effectif_site - j_arret, 1)
+                if (not passe) and retard_effectif_site else None,
             })
     # Rangées par marge, mais les besoins déjà servis en dernier : ils ne portent plus
     # de décision, et les laisser en tête ferait lire une liste d'alarmes éteintes.
@@ -508,7 +618,7 @@ def interfaces_a_date(d: dict, fer: dict, su: dict, pl: dict) -> dict:
             (x for x in lignes if not x["deja_depassee"]), None),
         "lecture": (
             f"À la date d'arrêt (jour {_f(j_arret, 0)}), {len(depassees)} des "
-            f"{len(a_venir)} demandes d'interface encore à venir sont déjà en "
+            f"{len(a_venir)} demandes d'interface encore à venir est déjà en "
             f"retard — la plus ancienne de {_f(abs(depassees[0]['marge_a_la_date_d_arret_j']), 0)} "
             f"jours — et la plus urgente de celles qui tiennent encore a "
             f"{_f(next(x['marge_a_la_date_d_arret_j'] for x in lignes if not x['deja_depassee']), 0)} "
@@ -535,6 +645,10 @@ def interfaces_a_date(d: dict, fer: dict, su: dict, pl: dict) -> dict:
 def figures(sites_: list, cons: dict, mas: dict, lat: dict, alerte: dict,
             interf: dict) -> dict:
     return {
+        # La legende de couleur est CALCULEE : elle porte le seuil declare dans data/,
+        # et une figure ne peut pas resoudre une variable dans ses options.
+        "legende_seuil_alerte": f"sous le seuil d'alerte de "
+                                f"{_f(cons['seuil_d_alerte_CPI'], 2)}",
         # Ce que chaque site pèse, et ce que chacun dérive : deux séries, même axe.
         "derive_par_site": [{"libelle": s["site"].split(" (")[0],
                              "valeur": round(s["derive_MAD"] / 1000),
@@ -544,14 +658,21 @@ def figures(sites_: list, cons: dict, mas: dict, lat: dict, alerte: dict,
                           "valeur": round(s["CPI"], 3),
                           "alerte": s["CPI"] < cons["seuil_d_alerte_CPI"]}
                          for s in sites_]
-        + [{"libelle": "Consolidé", "valeur": round(cons["CPI_consolide"], 3)},
-           {"libelle": "Moyenne des CPI (faux)",
-            "valeur": round(cons["moyenne_des_CPI"], 3), "alerte": True}],
+        + [{"libelle": "Consolidé", "valeur": round(cons["CPI_consolide"], 3),
+            "alerte": cons["CPI_consolide"] < cons["seuil_d_alerte_CPI"]},
+           {"libelle": "Moyenne des CPI — à ne pas utiliser",
+            "valeur": round(cons["moyenne_des_CPI"], 3),
+            "alerte": cons["moyenne_des_CPI"] < cons["seuil_d_alerte_CPI"]}],
         # Les lots du site secondaire, par leur dérive : la ligne qui a bougé.
         "lots_du_site_secondaire": [
             {"libelle": x["lot"].split(" · ")[-1],
              "valeur": round(x["derive_MAD"] / 1000),
-             "alerte": x["CPI"] is not None and x["CPI"] < 0.9}
+             # Le seuil de l'OPERATION, applique tel quel a un lot : c'est
+             # exactement ce que le § S3b deconseille, et la figure le montre pour
+             # qu'on le voie. Un troisieme seuil invente ici n'aurait ete decide
+             # par personne.
+             "alerte": (x["CPI"] is not None
+                        and x["CPI"] < cons["seuil_d_alerte_CPI"])}
             for x in sites_[1]["lots"] if x["demarre"]],
         "latence": [{"libelle": x["rythme"], "valeur": x["latence_moyenne_j"]}
                     for x in lat["lignes"]],
@@ -559,14 +680,14 @@ def figures(sites_: list, cons: dict, mas: dict, lat: dict, alerte: dict,
         "retard_quantise": [
             {"x": j, "v": math.ceil(j / alerte["periode_entre_fenetres_j"])
              * alerte["periode_entre_fenetres_j"] if j > 0 else 0}
-            for j in range(0, 3 * alerte["periode_entre_fenetres_j"] + 1, 1)],
+            for j in range(0, int(2.5 * alerte["periode_entre_fenetres_j"]) + 1, 1)],
         "marqueur_retard": {
             "x": alerte["retard_constate_du_site_j"],
             "libelle": f"{alerte['retard_constate_du_site_j']} j constatés → "
                        f"{alerte['retard_effectif_j']} j subis"},
         # Seules les lignes qui portent ENCORE une decision : la legende de la figure
         # annonce l'absence des besoins deja servis, il faut qu'elle dise vrai.
-        "interfaces": [{"libelle": f"{x['site']} · {x['objet'][:34]}",
+        "interfaces": [{"libelle": f"{x['site']} · " + _court(x["objet"], 30),
                         "valeur": x["marge_a_la_date_d_arret_j"],
                         "alerte": x["deja_depassee"]}
                        for x in interf["lignes"]
@@ -586,8 +707,9 @@ def tout_calculer(d: dict) -> dict:
     mas = seuil_de_masquage(st, cons)
     rec_mas = masquage_recursif(st)
     lat = latence(d, rec)
-    al = alerte_ferroviaire(d)
-    itf = interfaces_a_date(d, fer, su, pl)
+    al = alerte_ferroviaire(
+        d, rec["cout_d_un_jour"]["cout_hors_penalites_MAD_par_jour_ouvre"])
+    itf = interfaces_a_date(d, fer, su, pl, al["periode_entre_fenetres_j"])
     return {
         "date_d_arret_j": su["date_arret"]["jour_ouvre"],
         "sites": st,

@@ -80,11 +80,18 @@ C'est la loi, et elle n'a rien de particulier à ce chantier :
 
 > **Un indicateur consolidé divise la dérive d'un site par le poids de ce site.**
 
-En monnaie, cela donne un nombre qu'on peut afficher au mur :
-**{{pilotage.consolidation.MAD_pour_un_centieme_de_CPI::k}} MAD** de dérive supplémentaire, où
-qu'elle se produise, pour faire bouger le CPI consolidé d'**un centième**.
+**Attention à ce que la loi ne dit pas.** Elle ne dit pas que l'erreur va toujours dans le sens qui
+rassure : elle dit que le consolidé est tiré vers le site qui a le plus **dépensé**.
 
-:::figure {"fn":"barres","args":"pilotage.figures.cpi_par_site","titre":"Quatre nombres pour deux sites, et deux d'entre eux ne veulent rien dire","num":1,"large":true,"options":{"unite":"CPI — valeur acquise / coût réel","origine":0.7,"legende_alerte":"sous le seuil de vigilance"},"voir":["Les deux premières barres sont les CPI réels des deux sites : {{pilotage.sites.0.CPI::n3}} et {{pilotage.sites.1.CPI::n3}}.","La troisième est le CPI consolidé, {{pilotage.consolidation.CPI_consolide::n3}} : il est presque collé à celui du grand site, parce qu'il en est une moyenne pondérée par les coûts.","La quatrième est la moyenne arithmétique des deux CPI, {{pilotage.consolidation.moyenne_des_CPI::n3}}. Elle est fausse — elle donne le même poids à un site de {{pilotage.sites.0.cout_reel_CR_MAD::k}} MAD et à un site de {{pilotage.sites.1.cout_reel_CR_MAD::k}} MAD — et elle est pourtant celle qu'on calcule de tête.","L'écart entre les deux dernières barres, {{pilotage.consolidation.ecart_entre_les_deux_pts::n1}} points, est l'erreur qu'on commet en moyennant des rapports."],"erreur":"Lire le CPI consolidé comme l'état de l'opération. Il dit où en est la MASSE d'argent, pas où en est le chantier : aucun des deux sites n'a un CPI proche de {{pilotage.consolidation.CPI_consolide::n3}}, et c'est le cas général dès que les tailles diffèrent."}
+{{pilotage.consolidation._dans_quel_sens_va_l_ecart}}
+
+En monnaie, l'amortissement donne un nombre qu'on peut afficher au mur —
+**{{pilotage.consolidation.MAD_pour_un_centieme_de_CPI::k}} MAD** de dérive pour faire bouger le CPI
+consolidé d'**un centième** — à condition de dire de quelle dérive on parle :
+
+{{pilotage.consolidation._le_centieme_depend_du_mecanisme}}
+
+:::figure {"fn":"barres","args":"pilotage.figures.cpi_par_site","titre":"Quatre nombres pour deux sites, et deux d'entre eux ne veulent rien dire","num":1,"large":true,"options":{"unite":"CPI — valeur acquise / coût réel","origine":0.7,"legende_alerte":{"$":"pilotage.figures.legende_seuil_alerte"}},"voir":["Les deux premières barres sont les CPI réels des deux sites : {{pilotage.sites.0.CPI::n3}} et {{pilotage.sites.1.CPI::n3}}.","La troisième est le CPI consolidé, {{pilotage.consolidation.CPI_consolide::n3}} : il est presque collé à celui du grand site, parce qu'il en est une moyenne pondérée par les coûts.","La quatrième est la moyenne arithmétique des deux CPI, {{pilotage.consolidation.moyenne_des_CPI::n3}} : elle donne le même poids à un site de {{pilotage.sites.0.cout_reel_CR_MAD::k}} MAD et à un site de {{pilotage.sites.1.cout_reel_CR_MAD::k}} MAD, et c'est pourtant celle qu'on calcule de tête.","Elle est rouge, et le consolidé ne l'est pas : sur ce chantier, le calcul faux aurait déclenché une alerte que le calcul juste ne déclenche pas. L'erreur ne va donc pas toujours dans le sens qui rassure — elle va dans le sens du site le plus lourd, et ici ce site va mieux que l'autre.","L'écart entre les deux dernières barres, {{pilotage.consolidation.ecart_entre_les_deux_pts::n1}} points, est l'erreur qu'on commet en moyennant des rapports."],"erreur":"Lire le CPI consolidé comme l'état de l'opération. Il est collé au CPI du site qui a le plus dépensé — ici {{pilotage.sites.0.CPI::n3}} contre {{pilotage.consolidation.CPI_consolide::n3}}, deux centièmes d'écart — et il ignore l'autre. Il dit où en est la MASSE d'argent ; il ne décrit aucun des deux chantiers."}
 :::
 
 **Pourquoi cela compte plus qu'il n'y paraît.** Un indicateur qui amortit n'est pas seulement
@@ -113,13 +120,13 @@ entre la fin de la période et le moment où les données sont consolidées et v
 
 {{pilotage.latence.lecture}}
 
-:::encart {"genre":"piege","titre":"La moitié de la latence ne s'achète pas avec une réunion de plus"}
+:::encart {"genre":"piege","titre":"Le délai de remontée ne s'achète pas avec une réunion de plus"}
 {{pilotage.latence._le_delai_de_remontee_est_la_moitie_du_sujet}}
 :::
 
 {{pilotage.latence._ce_que_la_latence_n_est_pas}}
 
-:::figure {"fn":"barres","args":"pilotage.figures.latence","titre":"Combien de temps une dérive vit avant d'être lisible","num":2,"options":{"unite":"jours ouvrés, latence moyenne (demi-période + remontée)"},"voir":["La latence n'est pas la période de reporting : c'est une demi-période, parce qu'une dérive ne commence pas le jour du rapport, plus le délai de remontée.","Passer du mensuel à l'hebdomadaire gagne {{pilotage.latence.ecart_des_deux_rythmes_j::n0}} jours en moyenne — pas trois semaines.","Le délai de remontée pèse {{pilotage.latence.part_du_delai_de_remontee_dans_l_hebdo_pct::n0}} % de la latence hebdomadaire. En dessous de ce délai, changer de rythme ne sert plus à rien.","Ces jours ne sont pas du retard : ce sont des jours pendant lesquels personne ne peut décider."],"erreur":"Croire qu'un rapport hebdomadaire divise la latence par quatre. Il divise la PÉRIODE par quatre ; la latence, elle, contient un terme que le rythme ne touche pas, et ce terme ne se réduit qu'en saisissant les attachements le jour même."}
+:::figure {"fn":"barres","args":"pilotage.figures.latence","titre":"Combien de temps une dérive vit avant d'être lisible","num":2,"options":{"unite":"jours ouvrés, latence moyenne (demi-période + remontée)"},"voir":["Chaque barre est une latence TOTALE : une demi-période de reporting plus le délai de remontée. La figure ne montre pas les deux termes séparément — le tableau ci-dessus les donne, et c'est là qu'il faut les lire.","Passer du mensuel à l'hebdomadaire gagne {{pilotage.latence.ecart_des_deux_rythmes_j::n0}} jours en moyenne — pas trois semaines.","Le délai de remontée pèse {{pilotage.latence.part_du_delai_de_remontee_dans_l_hebdo_pct::n0}} % de la latence hebdomadaire. En dessous de ce délai, changer de rythme ne sert plus à rien.","Ces jours ne sont pas du retard : ce sont des jours pendant lesquels personne ne peut décider."],"erreur":"Croire qu'un rapport hebdomadaire divise la latence par quatre. Il divise la PÉRIODE par quatre ; la latence, elle, contient un terme que le rythme ne touche pas, et ce terme ne se réduit qu'en saisissant les attachements le jour même."}
 :::
 
 **Ce que le chef de projet décide seul, et ce qu'il remonte.** La latence donne la règle, et elle est
@@ -157,6 +164,10 @@ elle se résout en une ligne :
 
 {{pilotage.seuil_de_masquage.lecture}}
 
+**Et ce nombre dépend du mécanisme de la dérive**, ce qui double presque la réponse :
+
+{{pilotage.seuil_de_masquage._les_deux_mecanismes}}
+
 :::encart {"genre":"alerte","titre":"La loi d'amortissement, et pourquoi un seuil unique n'existe pas"}
 {{pilotage.seuil_de_masquage._la_loi}}
 :::
@@ -165,7 +176,7 @@ elle se résout en une ligne :
 
 {{pilotage.masquage_recursif.lecture}}
 
-:::figure {"fn":"barres","args":"pilotage.figures.lots_du_site_secondaire","titre":"Les lots démarrés du site secondaire, par leur dérive","num":3,"large":true,"options":{"unite":"k MAD de dérive (coût réel − valeur acquise)","legende_alerte":"CPI du lot sous 0,90"},"voir":["Un seul lot porte {{pilotage.masquage_recursif.part_de_la_derive_du_site_pct::n0}} % de la dérive du site : les terrassements et fondations spéciales.","Son CPI vaut {{pilotage.masquage_recursif.CPI_du_lot::n3}} ; celui du site, {{pilotage.masquage_recursif.CPI_du_site::n3}}. Le site amortit déjà son propre lot d'un facteur {{pilotage.masquage_recursif.amortissement_du_lot_par_le_site::n1}}.","Le lot « Structure » est lui aussi sous 0,90, et sa dérive est onze fois plus petite : il démarre à peine, et son CPI est encore du bruit au sens de la courbe de fiabilité. Un tableau de bord qui alerte sur les deux traite une mesure et une rumeur de la même façon.","Le lot en cause est celui qu'un sol difficile était censé rendre risqué : le risque avait été identifié, et c'est l'indicateur qui ne l'a pas suivi."],"erreur":"Demander au site « pourquoi ton CPI baisse ? » au lieu de regarder ses lots. La réponse est toujours la même — un lot, parfois deux — et la question fait perdre une semaine à celui qui la reçoit."}
+:::figure {"fn":"barres","args":"pilotage.figures.lots_du_site_secondaire","titre":"Les lots démarrés du site secondaire, par leur dérive","num":3,"large":true,"options":{"unite":"k MAD de dérive (coût réel − valeur acquise)","legende_alerte":{"$":"pilotage.figures.legende_seuil_alerte"}},"voir":["Un seul lot porte {{pilotage.masquage_recursif.part_de_la_derive_du_site_pct::n0}} % de la dérive du site : les terrassements et fondations spéciales.","Son CPI vaut {{pilotage.masquage_recursif.CPI_du_lot::n3}} ; celui du site, {{pilotage.masquage_recursif.CPI_du_site::n3}}. Le site amortit déjà son propre lot d'un facteur {{pilotage.masquage_recursif.amortissement_du_lot_par_le_site::n1}}.","La barre rouge utilise le seuil de l'OPÉRATION appliqué tel quel à un lot : c'est précisément ce que le § S3b déconseille, et la figure le montre pour qu'on le voie. Un lot n'a pas le même seuil qu'une opération, et inventer ici un troisième seuil n'aurait été décidé par personne.","Le lot « Structure » est à {{pilotage.sites.1.lots.2.CPI::n3}} et sa dérive est onze fois plus petite : il démarre à peine, et son CPI est encore du bruit au sens de la courbe de fiabilité.","Le lot en cause est celui qu'un sol difficile était censé rendre risqué : le risque avait été identifié, et c'est l'indicateur qui ne l'a pas suivi."],"erreur":"Demander au site « pourquoi ton CPI baisse ? » au lieu de regarder ses lots. La réponse est toujours la même — un lot, parfois deux — et la question fait perdre une semaine à celui qui la reçoit."}
 :::
 
 {{pilotage.masquage_recursif._les_amortissements_se_multiplient}}
@@ -174,16 +185,19 @@ elle se résout en une ligne :
 
 {{pilotage.consolidation._ce_qui_se_consolide_vraiment}}
 
-:::figure {"fn":"barres","args":"pilotage.figures.derive_par_site","titre":"La même information en monnaie : la dérive par site","num":4,"options":{"unite":"k MAD de dérive à la date d'arrêt","legende_alerte":"CPI sous le seuil de vigilance"},"voir":["Les dérives s'ADDITIONNENT : {{pilotage.consolidation.derive_totale_MAD::k}} MAD au total. Les CPI, non.","Le site principal porte la plus grosse dérive en valeur absolue, parce qu'il est trois fois plus gros. Cela ne dit pas qu'il va plus mal.","Rapporté à son budget, c'est l'inverse : le site secondaire pèse {{pilotage.consolidation.poids.1.poids_du_budget_pct::n1}} % du budget et {{pilotage.consolidation.poids.1.part_du_depassement_prevu_pct::n1}} % du dépassement prévu à terminaison.","Deux lectures, deux décisions : la première dit où est l'argent, la seconde dit où aller."],"erreur":"Choisir entre les deux lectures. Il en faut deux : le montant dit ce que l'opération va coûter, le rapport dit quel site le cause. Un tableau de bord qui n'en porte qu'une produit soit de la panique sur le petit site, soit de l'aveuglement sur lui."}
+:::figure {"fn":"barres","args":"pilotage.figures.derive_par_site","titre":"La même information en monnaie : la dérive par site","num":4,"options":{"unite":"k MAD de dérive à la date d'arrêt","legende_alerte":{"$":"pilotage.figures.legende_seuil_alerte"}},"voir":["Les dérives s'ADDITIONNENT : {{pilotage.consolidation.derive_totale_MAD::k}} MAD au total. Les CPI, non.","Le site principal porte la plus grosse dérive en valeur absolue, parce qu'il est {{pilotage.consolidation.rapport_des_tailles_en_budget::n1}} fois plus gros en budget et {{pilotage.consolidation.rapport_des_tailles_en_cout_reel::n1}} fois en dépense. Cela ne dit pas qu'il va plus mal.","Rapporté à son budget, c'est l'inverse : le site secondaire pèse {{pilotage.consolidation.poids.1.poids_du_budget_pct::n1}} % du budget et {{pilotage.consolidation.poids.1.part_du_depassement_prevu_pct::n1}} % du dépassement prévu à terminaison.","Deux lectures, deux décisions : la première dit où est l'argent, la seconde dit où aller."],"erreur":"Choisir entre les deux lectures. Il en faut deux : le montant dit ce que l'opération va coûter, le rapport dit quel site le cause. Un tableau de bord qui n'en porte qu'une produit soit de la panique sur le petit site, soit de l'aveuglement sur lui."}
 :::
 
 **La fiabilité de ce qu'on lit.** Un CPI calculé tôt n'est pas un CPI : c'est du bruit. Le module D4
 publie la courbe — à {{suivi.fiabilite_du_cpi.points.0.avancement_pct::n1}} % d'avancement,
 l'incertitude du CPI vaut {{suivi.fiabilite_du_cpi.points.0.incertitude_pts::n1}} points ; il faut
 attendre {{suivi.fiabilite_du_cpi.points.4.avancement_pct::n1}} % pour qu'elle tombe à
-{{suivi.fiabilite_du_cpi.points.4.incertitude_pts::n1}}. En multi-sites, cela a une conséquence
-précise : **un site qui démarre n'a pas de CPI lisible**, et le consolider avec un site avancé mêle
-une mesure et une rumeur. Le site secondaire est ici à
+{{suivi.fiabilite_du_cpi.points.4.incertitude_pts::n1}}. Cette courbe est celle du site **principal**, et c'est une limite qu'il faut dire : sur un site
+{{pilotage.consolidation.rapport_des_tailles_en_budget::n1}} fois plus petit, les mêmes pour cent
+d'avancement portent beaucoup moins d'ouvrages, donc l'incertitude est **plus** grande au même
+pourcentage — la courbe du grand site en donne une borne optimiste, pas une mesure. En multi-sites,
+la conséquence est la même mais plus forte : **un site qui démarre n'a pas de CPI lisible**, et le
+consolider avec un site avancé mêle une mesure et une rumeur. Le site secondaire est ici à
 {{pilotage.sites.1.avancement_physique_pct::n1}} % d'avancement physique : c'est tout juste
 suffisant, et c'est à dire dans le rapport.
 
@@ -192,10 +206,18 @@ suffisant, et c'est à dire dans le rapport.
 Les deux sections précédentes mesurent la dérive avec des **indicateurs de coût**. Sur un chantier
 ferroviaire, ils ont un angle mort, et il est large.
 
-**Un cycle perdu ne dépense rien.** Quand un retard fait manquer une fenêtre de consignation, le
-travail n'est pas fait, donc il n'est pas payé, donc le coût réel ne bouge pas, donc le CPI ne bouge
-pas. Le SPI finit par bouger — avec la latence du § S3a et l'amortissement du § S3b. L'information
-arrive quand elle ne sert plus.
+**Un cycle perdu ne produit ni valeur acquise ni dépense d'ouvrage — et il coûte pourtant.** Quand
+un retard fait manquer une fenêtre de consignation, le travail n'est pas fait, donc il n'est pas
+payé : dans le périmètre où ce cours calcule le CPI — les ouvrages seuls, frais de durée exclus,
+comme D4 les publie — l'indicateur ne bouge pas d'un millième. L'opération, elle, paie les
+{{pilotage.alerte_ferroviaire.periode_entre_fenetres_j}} jours d'attente au tarif des frais de
+durée : **{{pilotage.alerte_ferroviaire.cout_d_un_cycle_perdu_en_frais_de_duree_MAD::k}} MAD**, soit
+{{pilotage.consolidation.MAD_pour_un_centieme_de_CPI::k}} MAD de plus qu'il n'en faudrait pour
+déplacer le CPI consolidé d'un centième — si seulement cette dépense était dans son périmètre.
+
+C'est le pire des deux mondes : **une dépense réelle qu'aucun indicateur de performance ne montre,
+parce qu'elle est hors de son périmètre par construction.** Le SPI finit par bouger, avec la latence
+du § S3a et l'amortissement du § S3b. L'information arrive quand elle ne sert plus.
 
 Or le module B7c l'a établi : **sous consignation, un retard ne grandit pas, il saute**.
 
@@ -219,6 +241,8 @@ moins le délai — et la marge à la date d'arrêt se lit d'un coup d'œil.
 | {{pilotage.interfaces.lignes.1.site}} | {{pilotage.interfaces.lignes.1.objet}} | {{pilotage.interfaces.lignes.1.delai_calendaire_j}} j | j {{pilotage.interfaces.lignes.1.date_de_besoin_j::n0}} | j {{pilotage.interfaces.lignes.1.date_limite_de_demande_j::n0}} | {{pilotage.interfaces.lignes.1.marge_a_la_date_d_arret_j::n0}} j | {{pilotage.interfaces.lignes.1.statut}} |
 | {{pilotage.interfaces.lignes.2.site}} | {{pilotage.interfaces.lignes.2.objet}} | {{pilotage.interfaces.lignes.2.delai_calendaire_j}} j | j {{pilotage.interfaces.lignes.2.date_de_besoin_j::n0}} | j {{pilotage.interfaces.lignes.2.date_limite_de_demande_j::n0}} | {{pilotage.interfaces.lignes.2.marge_a_la_date_d_arret_j::n0}} j | {{pilotage.interfaces.lignes.2.statut}} |
 | {{pilotage.interfaces.lignes.3.site}} | {{pilotage.interfaces.lignes.3.objet}} | {{pilotage.interfaces.lignes.3.delai_calendaire_j}} j | j {{pilotage.interfaces.lignes.3.date_de_besoin_j::n0}} | j {{pilotage.interfaces.lignes.3.date_limite_de_demande_j::n0}} | {{pilotage.interfaces.lignes.3.marge_a_la_date_d_arret_j::n0}} j | {{pilotage.interfaces.lignes.3.statut}} |
+| {{pilotage.interfaces.lignes.4.site}} | {{pilotage.interfaces.lignes.4.objet}} | {{pilotage.interfaces.lignes.4.delai_calendaire_j}} j | j {{pilotage.interfaces.lignes.4.date_de_besoin_j::n0}} | j {{pilotage.interfaces.lignes.4.date_limite_de_demande_j::n0}} | {{pilotage.interfaces.lignes.4.marge_a_la_date_d_arret_j::n0}} j | {{pilotage.interfaces.lignes.4.statut}} |
+| {{pilotage.interfaces.lignes.5.site}} | {{pilotage.interfaces.lignes.5.objet}} | {{pilotage.interfaces.lignes.5.delai_calendaire_j}} j | j {{pilotage.interfaces.lignes.5.date_de_besoin_j::n0}} | j {{pilotage.interfaces.lignes.5.date_limite_de_demande_j::n0}} | {{pilotage.interfaces.lignes.5.marge_a_la_date_d_arret_j::n0}} j | {{pilotage.interfaces.lignes.5.statut}} |
 
 *({{pilotage.interfaces.nb_besoins_deja_servis}} autres lignes concernent le site principal, dont le
 besoin est déjà passé : elles ne portent plus de décision et ferment la liste.)*
@@ -227,7 +251,7 @@ besoin est déjà passé : elles ne portent plus de décision et ferment la list
 
 {{pilotage.interfaces._ce_que_cette_table_remplace}}
 
-:::figure {"fn":"barres","args":"pilotage.figures.interfaces","titre":"Les interfaces rangées par marge, et non par objet","num":6,"large":true,"options":{"unite":"jours ouvrés de marge à la date d'arrêt","origine":0,"legende_alerte":"demande en retard"},"voir":["Une seule barre est négative : la demande de maintien du service du site secondaire, à déposer {{pilotage.interfaces.lignes.0.delai_calendaire_j}} jours à l'avance, a une marge de {{pilotage.interfaces.lignes.0.marge_a_la_date_d_arret_j::n0}} jours — elle aurait dû être déposée.","Les marges croissent avec la décroissance du délai de demande : ce sont les interfaces les plus LONGUES à obtenir qui arrivent à échéance en premier, et ce sont celles qu'on découvre en dernier.","Aucune de ces lignes n'apparaît dans un indicateur de coût ou de délai. Elles ne se lisent que sur un calendrier et un registre d'interfaces.","Les lignes du site principal sont absentes : leur besoin est derrière nous, donc elles ne portent plus de décision."],"erreur":"Ranger un registre d'interfaces par intervenant ou par objet. Rangé ainsi, il se lit une fois à la signature du marché. Rangé par marge, il se lit à chaque revue — et c'est la même donnée."}
+:::figure {"fn":"barres","args":"pilotage.figures.interfaces","titre":"Les interfaces rangées par marge, et non par objet","num":6,"large":true,"options":{"unite":"jours ouvrés de marge à la date d'arrêt","origine":0,"legende_alerte":"demande en retard"},"voir":["Une seule barre est négative : la demande de maintien du service du site secondaire, à déposer {{pilotage.interfaces.lignes.0.delai_calendaire_j}} jours à l'avance, a une marge de {{pilotage.interfaces.lignes.0.marge_a_la_date_d_arret_j::n0}} jours — elle aurait dû être déposée.","Les marges croissent quand le délai de demande décroît : ce sont les interfaces les plus LONGUES à obtenir qui arrivent à échéance en premier, et ce sont celles qu'on découvre en dernier.","Ici chaque site n'a qu'une date de besoin, donc l'ordre par marge se confond avec l'ordre par délai. Sur un chantier réel, chaque interface a sa propre date de besoin et les deux ordres n'ont plus rien à voir : c'est là que le classement par marge devient indispensable.","Aucune de ces lignes n'apparaît dans un indicateur de coût ou de délai. Elles ne se lisent que sur un calendrier et un registre d'interfaces.","Les lignes du site principal sont absentes : leur besoin est derrière nous, donc elles ne portent plus de décision."],"erreur":"Ranger un registre d'interfaces par intervenant ou par objet. Rangé ainsi, il se lit une fois à la signature du marché. Rangé par marge, il se lit à chaque revue — et c'est la même donnée."}
 :::
 
 :::encart {"genre":"piege","titre":"Le paradoxe qu'il faut avoir vu une fois : un retard peut sauver une interface"}
@@ -320,8 +344,9 @@ d'avancement, l'incertitude vaut {{suivi.fiabilite_du_cpi.points.0.incertitude_p
 **Symptôme** : des réunions sur un indicateur qui oscille, et une perte de crédibilité de
 l'indicateur quand il devient enfin significatif.
 
-**4. Croire qu'un rapport plus fréquent raccourcit la boucle.** La moitié de la latence est dans la
-remontée des données. **Symptôme** : une réunion de plus par semaine, les mêmes chiffres, et des
+**4. Croire qu'un rapport plus fréquent raccourcit la boucle.** En hebdomadaire, la remontée des
+données pèse {{pilotage.latence.part_du_delai_de_remontee_dans_l_hebdo_pct::n0}} % de la latence —
+et elle ne bouge pas quand le rythme change. **Symptôme** : une réunion de plus par semaine, les mêmes chiffres, et des
 conducteurs de travaux qui passent leur vendredi à faire du reporting au lieu de préparer la semaine.
 
 **5. Piloter un chantier sous interception avec des indicateurs de coût.** Un cycle perdu ne dépense
@@ -378,7 +403,16 @@ secondaire peut-il tomber sans déclencher l'alerte ?
 {{pilotage.seuil_de_masquage.part_du_budget_du_site_pct::n0}} % du budget de ce site.
 
 On écrit que le CPI consolidé vaut le seuil : $(VA_A + VA_B) / (CR_A + CR_B) = s$, d'où
-$VA_B = s \times (CR_A + CR_B) - VA_A$. Tout le reste est connu.
+$VA_B = s \times (CR_A + CR_B) - VA_A$. Tout le reste est connu. *(Le module publie la dérive
+calculée sur le CPI limite **arrondi** à quatre décimales, pour qu'un lecteur qui multiplie les deux
+nombres imprimés retrouve le troisième : 150 MAD d'écart avec la forme fermée, sur 689 000.)*
+
+**Et la réponse dépend du mécanisme de la dérive** : à coût réel constant —
+une valeur acquise en moins — c'est {{pilotage.seuil_de_masquage.derive_supplementaire_invisible_MAD::k}} MAD.
+Si la dérive est une **dépense en plus**, il en faut
+{{pilotage.seuil_de_masquage.derive_invisible_si_surcout_MAD::k}} MAD, parce que le dénominateur
+grandit avec elle — et c'est le cas le plus fréquent sur un chantier, donc le plus favorable au
+masquage.
 
 **Ce que l'exercice enseigne** : ce nombre est le vrai contenu d'un seuil d'alerte consolidé. Le
 publier à côté du seuil change la discussion — on ne demande plus « sommes-nous en alerte ? » mais
@@ -401,37 +435,52 @@ mensuel, {{pilotage.latence.lignes.1.periode_j::n0}}/2 + {{pilotage.latence.lign
 = {{pilotage.latence.lignes.0.latence_moyenne_j::n1}}. Le terme de remontée, lui, n'a pas bougé : il
 pèse désormais {{pilotage.latence.part_du_delai_de_remontee_dans_l_hebdo_pct::n0}} % de la latence.
 
-**Ce que vous proposez** : attaquer d'abord le délai de remontée, qui ne se négocie pas en réunion
-mais en organisation — attachements saisis le jour même sur le site, un seul format, une seule
-personne qui consolide. Le ramener de {{pilotage.latence.lignes.0.delai_de_remontee_j::n0}} à 1 jour
-gagnerait autant que le changement de rythme, sans une réunion de plus.
+**Ce que vous proposez** : attaquer **aussi** le délai de remontée, qui ne se négocie pas en
+réunion mais en organisation — attachements saisis le jour même sur le site, un seul format, une
+seule personne qui consolide. Le ramener de
+{{pilotage.latence.lignes.0.delai_de_remontee_j::n0}} à 1 jour gagne 3 jours de latence, contre
+{{pilotage.latence.ecart_des_deux_rythmes_j::n1}} pour le changement de rythme : moins, mais sans
+une réunion de plus, et les deux gains s'additionnent. Et surtout, sans ce travail-là, le rythme
+hebdomadaire plafonne : la remontée pèserait alors
+{{pilotage.latence.part_du_delai_de_remontee_dans_l_hebdo_pct::n0}} % de ce qui reste.
 
 **Et la question qui fâche** : quelles décisions prendrez-vous en hebdomadaire que vous ne preniez
 pas en mensuel ? Si la réponse est « aucune », le rythme n'est pas le problème.
 :::
 
-:::exercice {"titre":"4 · Un retard de trois semaines : combien coûte-t-il vraiment ?","niveau":"probleme"}
+:::exercice {"titre":"4 · Un retard de trois semaines : combien coûte-t-il, et que vaut un jour rattrapé ?","niveau":"probleme"}
 Le site secondaire annonce {{pilotage.alerte_ferroviaire.retard_constate_du_site_j}} jours ouvrés de
 retard sur son lot de fondations. Le conducteur de travaux propose de renforcer les équipes pour en
-rattraper dix. Qu'en pensez-vous ?
+rattraper dix. Qu'en pensez-vous — et que proposez-vous ?
 
-**Corrigé — la bonne réponse dépend d'un nombre qui n'est pas dans la question.** La période entre
+**Corrigé — la réponse ne se lit pas sur le retard, elle se lit sur l'escalier.** La période entre
 deux fenêtres de consignation vaut {{pilotage.alerte_ferroviaire.periode_entre_fenetres_j}} jours.
 
-À {{pilotage.alerte_ferroviaire.retard_constate_du_site_j}} jours, le site a franchi un cycle : la
-fenêtre visée est perdue et le retard effectif est de
-{{pilotage.alerte_ferroviaire.retard_effectif_j}} jours. Rattraper dix jours le ramènerait à
-{{pilotage.alerte_ferroviaire.retard_tolerable_restant_j::n0}} jours **de moins que le cycle
-suivant** — c'est-à-dire exactement rien, en termes de date d'interception : le travail attendra la
-même fenêtre.
+À {{pilotage.alerte_ferroviaire.retard_constate_du_site_j}} jours, le site a franchi la première
+marche : le travail attend la {{pilotage.alerte_ferroviaire.cycles_perdus}}ᵉ fenêtre et le retard
+effectif est de {{pilotage.alerte_ferroviaire.retard_effectif_j}} jours.
 
-**Ce qu'il faut faire à la place** : soit rattraper assez pour repasser **sous** un cycle, ce qui
-demande ici plus que dix jours, soit ne rien dépenser en rattrapage et replanifier sur la fenêtre
-suivante en négociant son contenu. Entre les deux, dépenser pour rattraper dix jours est la seule
-option qui coûte sans rien produire.
+**Les dix jours proposés sont utiles — et beaucoup plus que proposés.** Rattraper dix jours ramène
+le retard à {{pilotage.alerte_ferroviaire.effet_de_rattraper_10_j::n0}} jours effectifs : un cycle
+entier de gagné, soit {{pilotage.alerte_ferroviaire.periode_entre_fenetres_j}} jours sur la date
+d'interception.
 
-**Et la question qu'il faut poser à l'exploitant** : la fenêtre suivante peut-elle être allongée ou
-doublée ? C'est la seule négociation qui change l'escalier.
+**Mais il n'en faut pas dix.**
+
+{{pilotage.alerte_ferroviaire._ce_que_rattraper_veut_dire}}
+
+Autrement dit : **deux jours rattrapés en valent vingt ; les huit suivants n'en valent aucun.** Ce
+que vous proposez n'est donc pas « renforcez les équipes », c'est « trouvez-moi deux jours avant la
+date de la fenêtre, et ne dépensez pas un dirham de plus ». Les huit autres jours d'effort seraient
+à garder pour la marche suivante — ou à ne pas dépenser.
+
+**Et la question à poser à l'exploitant** : la fenêtre suivante peut-elle être allongée ou doublée ?
+C'est la seule négociation qui change l'escalier lui-même, et elle vaut plus que n'importe quel
+renfort d'équipe.
+
+**Ce que coûte le cycle perdu, si personne ne trouve ces deux jours** :
+{{pilotage.alerte_ferroviaire.cout_d_un_cycle_perdu_en_frais_de_duree_MAD::k}} MAD de frais de
+durée — et pas un centième de CPI, puisque cette dépense est hors du périmètre de l'indicateur.
 :::
 
 :::exercice {"titre":"5 · Revue critique : un tableau de bord à refuser","niveau":"revue"}
@@ -498,7 +547,7 @@ interfaces mesure le chantier d'hier.
 | **Amortissement d'un site** | l'inverse de son poids : de combien l'indicateur consolidé divise sa dérive |
 | **Seuil de masquage** | la dérive qu'un site peut encore prendre sans faire franchir le seuil au consolidé |
 | **Latence de détection** | demi-période de reporting + délai de remontée. Ce n'est pas la période |
-| **Délai de remontée** | de la fin de période à la donnée vérifiée. La moitié de la latence, et la seule qu'une réunion ne réduit pas |
+| **Délai de remontée** | de la fin de période à la donnée vérifiée. {{pilotage.latence.part_du_delai_de_remontee_dans_l_hebdo_pct::n0}} % de la latence en hebdomadaire, et la seule part qu'une réunion ne réduit pas |
 | **Date limite de demande** | date de besoin − délai d'instruction de l'interface. Une soustraction, et le seul vrai indicateur avancé |
 | **Retard quantisé** | sous consignation, un retard ne croît pas continûment : il saute d'une période de fenêtre (B7c, D-050) |
 | **EAC** | prévision à terminaison. Trois formules selon que la dérive est systématique, accidentelle, ou que le délai se paie (D4) |
@@ -564,7 +613,8 @@ $$ \text{CPI}_{\text{cons}} = \frac{\sum \text{VA}_i}{\sum \text{CR}_i} \qquad \
 | Dérive à date | {{pilotage.sites.0.derive_MAD::k}} | {{pilotage.sites.1.derive_MAD::k}} | **{{pilotage.consolidation.derive_totale_MAD::k}} MAD** |
 | Dépassement prévu | {{pilotage.consolidation.poids.0.depassement_prevu_MAD::k}} | {{pilotage.consolidation.poids.1.depassement_prevu_MAD::k}} | **{{pilotage.consolidation.depassement_prevu_total_MAD::k}} MAD** ({{pilotage.consolidation.depassement_prevu_pct::n1}} %) |
 | Part du budget / du dépassement | {{pilotage.consolidation.poids.0.poids_du_budget_pct::n1}} / {{pilotage.consolidation.poids.0.part_du_depassement_prevu_pct::n1}} % | {{pilotage.consolidation.poids.1.poids_du_budget_pct::n1}} / **{{pilotage.consolidation.poids.1.part_du_depassement_prevu_pct::n1}} %** | — |
-| Interface la plus urgente | — | {{pilotage.interfaces.lignes.0.marge_a_la_date_d_arret_j::n0}} j ({{pilotage.interfaces.lignes.0.statut}}) | — |
+| Interface en retard | — | {{pilotage.interfaces.lignes.0.objet}} : {{pilotage.interfaces.lignes.0.marge_a_la_date_d_arret_j::n0}} j | — |
+| Prochaine à déposer | — | {{pilotage.interfaces.la_plus_urgente_encore_tenable.objet}} : {{pilotage.interfaces.la_plus_urgente_encore_tenable.marge_a_la_date_d_arret_j::n0}} j de marge | — |
 | Retard contre cycle de fenêtre | — | {{pilotage.alerte_ferroviaire.retard_constate_du_site_j}} j / {{pilotage.alerte_ferroviaire.periode_entre_fenetres_j}} j → **{{pilotage.alerte_ferroviaire.retard_effectif_j}} j** | — |
 
 **Les six réflexes**

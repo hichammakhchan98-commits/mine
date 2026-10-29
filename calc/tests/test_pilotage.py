@@ -74,9 +74,13 @@ verifie("et ses trois grandeurs sont les sommes de celles de ses lots",
 _faux = pil.situation_par_lots("canari", [
     {"lot": "x", "budget_MAD": 1000, "avancement_planifie_pct": 50,
      "avancement_constate_pct": 60, "cout_reel_MAD": 600}], 1000)
-verifie("canari : un avancement physique different du cout donne un CPI different de 1",
+# Le PIEGE, nomme pour ce qu'il est : quand la depense SUIT l'avancement physique, le CPI
+# vaut exactement 1. Ce n'est pas un defaut du calcul, c'est ce qui rend un CPI bati sur un
+# avancement de DEPENSE inutile — il vaudrait 1 partout, toujours.
+verifie("un avancement physique qui coincide avec la depense donne CPI = 1",
         abs(_faux["CPI"] - 1.0) < 1e-9,
-        "600 MAD depenses pour 60 % physique sur 1 000 : CPI = 1, et c'est juste")
+        "600 MAD depenses pour 60 % de 1 000 : CPI = 1, et c'est pourquoi un avancement "
+        "de depense ne mesure rien")
 _faux2 = pil.situation_par_lots("canari", [
     {"lot": "x", "budget_MAD": 1000, "avancement_planifie_pct": 50,
      "avancement_constate_pct": 40, "cout_reel_MAD": 600}], 1000)
@@ -148,6 +152,23 @@ verifie("la derive invisible est positive, et c'est une derive SUPPLEMENTAIRE",
         m["derive_supplementaire_invisible_MAD"] > 0
         and m["CPI_du_site_au_seuil_consolide"] < rer["CPI"],
         f"{m['derive_supplementaire_invisible_MAD']:.0f} MAD")
+# LES DEUX MECANISMES : une derive peut etre une VA en moins ou un CR en plus, et les
+# deux ne donnent pas le meme seuil. On rejoue la seconde forme fermee.
+verifie("la derive invisible « surcout » annule le consolide au seuil, elle aussi",
+        abs(c["valeur_acquise_VA_MAD"]
+            / (c["cout_reel_CR_MAD"] + m["derive_invisible_si_surcout_MAD"])
+            - m["seuil_retenu_CPI"]) < 1e-4,
+        f"{m['derive_invisible_si_surcout_MAD']:.0f} MAD")
+verifie("et elle est PLUS GRANDE que la derive a cout constant",
+        m["derive_invisible_si_surcout_MAD"]
+        > m["derive_supplementaire_invisible_MAD"],
+        f"{m['derive_invisible_si_surcout_MAD']:.0f} contre "
+        f"{m['derive_supplementaire_invisible_MAD']:.0f} MAD")
+verifie("le centieme de CPI « surcout » suit sa propre forme fermee",
+        abs(c["valeur_acquise_VA_MAD"]
+            / (c["cout_reel_CR_MAD"] + c["MAD_pour_un_centieme_de_CPI_si_surcout"])
+            - (c["CPI_consolide"] - 0.01)) < 1e-4,
+        f"{c['MAD_pour_un_centieme_de_CPI_si_surcout']:.0f} MAD")
 verifie("et elle vaut la baisse de valeur acquise correspondante",
         abs(m["derive_supplementaire_invisible_MAD"]
             - (rer["valeur_acquise_VA_MAD"]
@@ -224,16 +245,44 @@ verifie("le seuil d'alerte du site EST la periode entre fenetres",
 verifie("et le module dit que ce seuil est une duree, pas un pourcentage",
         dit(a["_le_seuil_est_une_duree_pas_un_ratio"], "jours"))
 # canari : un retard plus petit que la periode ne coute qu'un cycle, pas zero.
+_cj = rec["cout_d_un_jour"]["cout_hors_penalites_MAD_par_jour_ouvre"]
 _d2 = json.loads(json.dumps(d))
 _d2["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = 3
-_petit = pil.alerte_ferroviaire(_d2)
+_petit = pil.alerte_ferroviaire(_d2, _cj)
 verifie("canari : trois jours de retard coutent quand meme un cycle entier",
         _petit["retard_effectif_j"] == a["periode_entre_fenetres_j"]
         and _petit["cycles_perdus"] == 1,
         f"3 j -> {_petit['retard_effectif_j']} j")
 _d2["multi_sites"]["sites"][1]["retard_constate_j"]["valeur"] = 0
 verifie("canari : zero jour de retard ne coute aucun cycle",
-        pil.alerte_ferroviaire(_d2)["cycles_perdus"] == 0)
+        pil.alerte_ferroviaire(_d2, _cj)["cycles_perdus"] == 0)
+
+# LA regle de B1 : ce qu'il faut rattraper pour descendre d'une marche, et ce que ca vaut.
+if a["cycles_perdus"] > 1:
+    verifie("rattraper juste ce qu'il faut descend d'exactement une marche",
+            pil.alerte_ferroviaire(
+                {**d, "multi_sites": {**MS, "sites": [
+                    MS["sites"][0],
+                    {**MS["sites"][1], "retard_constate_j": {
+                        **MS["sites"][1]["retard_constate_j"],
+                        "valeur": a["retard_constate_du_site_j"]
+                        - a["jours_a_rattraper_pour_gagner_un_cycle"]}}]}}, _cj
+            )["retard_effectif_j"]
+            == a["retard_effectif_j"] - a["periode_entre_fenetres_j"],
+            f"rattraper {a['jours_a_rattraper_pour_gagner_un_cycle']} j gagne "
+            f"{a['gain_si_on_gagne_un_cycle_j']} j")
+    verifie("et rattraper DIX jours donne bien ce que le module publie",
+            a["effet_de_rattraper_10_j"]
+            == math.ceil(max(0.0, a["retard_constate_du_site_j"] - 10)
+                         / a["periode_entre_fenetres_j"]) * a["periode_entre_fenetres_j"],
+            f"22 - 10 j -> {a['effet_de_rattraper_10_j']} j effectifs")
+# B4 : un cycle perdu coute des frais de duree, et le module le chiffre
+verifie("un cycle perdu est chiffre en frais de duree",
+        abs(a["cout_d_un_cycle_perdu_en_frais_de_duree_MAD"]
+            - a["periode_entre_fenetres_j"] * r["latence"]["cout_d_un_jour_MAD"]) < 1,
+        f"{a['cout_d_un_cycle_perdu_en_frais_de_duree_MAD']:.0f} MAD")
+verifie("et le module dit dans quel PERIMETRE le CPI ne bouge pas",
+        dit(a["_pourquoi_le_CPI_ne_sert_a_rien_ici"], "ouvrages seuls", "perimetre"))
 
 # ------------------------------------------------- 6. les interfaces
 print("\n--- les interfaces, rangees par marge ---")
@@ -273,7 +322,7 @@ verifie("le retard du site recule la date limite de la demande en retard",
         _r0["marge_apres_le_retard_du_site_j"] > _r0["marge_a_la_date_d_arret_j"]
         and abs(_r0["marge_apres_le_retard_du_site_j"]
                 - (_r0["marge_a_la_date_d_arret_j"]
-                   + a["retard_constate_du_site_j"])) < 0.1,
+                   + a["retard_effectif_j"])) < 0.1,
         f"{_r0['marge_a_la_date_d_arret_j']} -> "
         f"{_r0['marge_apres_le_retard_du_site_j']} j")
 
@@ -290,12 +339,15 @@ verifie("la figure des lots ne montre que les lots DEMARRES",
 verifie("la figure des interfaces ne montre que les besoins encore a venir",
         len(f["interfaces"]) == itf["nb_a_venir"],
         f"{len(f['interfaces'])} lignes")
-verifie("l'escalier du retard est croissant et constant par morceaux",
+_per = a["periode_entre_fenetres_j"]
+verifie("chaque point de l'escalier vaut le plafond du retard a la periode superieure",
+        all(x["v"] == (math.ceil(x["x"] / _per) * _per if x["x"] > 0 else 0)
+            for x in f["retard_quantise"]),
+        f"{len({x['v'] for x in f['retard_quantise']})} marches sur "
+        f"{len(f['retard_quantise'])} points")
+verifie("et il est croissant",
         all(b["v"] >= aa["v"] for aa, b in zip(f["retard_quantise"],
-                                               f["retard_quantise"][1:]))
-        and len({x["v"] for x in f["retard_quantise"]})
-        == len(f["retard_quantise"]) // a["periode_entre_fenetres_j"] + 1,
-        f"{len({x['v'] for x in f['retard_quantise']})} marches")
+                                               f["retard_quantise"][1:])))
 verifie("le marqueur de l'escalier est le retard constate",
         f["marqueur_retard"]["x"] == a["retard_constate_du_site_j"])
 
