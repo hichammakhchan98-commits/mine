@@ -33,36 +33,48 @@ def vrai(nom, condition, detail=""):
     print(f"  {'ok  ' if condition else 'ECHEC'} {nom}" + (f" — {detail}" if detail else ""))
 
 
-print("=== 1. La file de corps d'etat, formes exactes ===")
+print("=== 1. La file de corps d'etat ===")
 W = [30.0, 45.0, 30.0, 25.0, 25.0, 20.0]
+# LA REFERENCE est la simulation directe : on place les taches une a une. La forme fermee
+# n'est exacte que SANS cout de transition, et c'est precisement ce que ce bloc etablit.
 cas("en une seule zone, la file est la SOMME des durees",
-    syn.file_de_corps_d_etat(W, 1), sum(W), 1e-9, "j")
+    syn.file_simulee(W, 1), sum(W), 1e-9, "j")
 cas("a tres grand nombre de zones, elle tend vers le corps le plus lent",
-    syn.file_de_corps_d_etat(W, 1_000_000), max(W), 1e-3, "j")
+    syn.file_simulee(W, 5000), max(W), (sum(W) - max(W)) / 5000 * 1.1, "j")
+for Z in (1, 2, 3, 5, 8, 13, 21, 50):
+    cas(f"sans cout de frontiere, la forme fermee egale la simulation a Z={Z}",
+        syn.file_forme_fermee(W, Z), syn.file_simulee(W, Z, 0.0), 1e-9, "j")
 # Tous les corps egaux : la forme classique (N + Z - 1).W / Z.
 Wc, N, Z = [7.0] * 5, 5, 4
 cas("a durees egales, la file vaut (N + Z - 1).W / Z",
-    syn.file_de_corps_d_etat(Wc, Z), (N + Z - 1) * 7.0 / Z, 1e-9, "j")
-# INVARIANT : sans cout de frontiere, T(Z) decroit strictement tant qu'on n'a pas atteint
-# le plancher. Une file qui remonterait signalerait une erreur de signe.
-suite = [syn.file_de_corps_d_etat(W, z) for z in range(1, 40)]
+    syn.file_forme_fermee(Wc, Z), (N + Z - 1) * 7.0 / Z, 1e-9, "j")
+# INVARIANT : sans cout de frontiere, T(Z) decroit strictement.
+suite = [syn.file_simulee(W, z) for z in range(1, 40)]
 vrai("sans cout de frontiere, la file decroit strictement",
      all(b < a for a, b in zip(suite, suite[1:])),
      f"{suite[0]:.1f} -> {suite[-1]:.1f} j")
 vrai("et elle reste toujours au-dessus du plancher",
      all(x >= max(W) - 1e-9 for x in suite))
-# INVARIANT : avec un cout de frontiere, le minimum est INTERIEUR — ni en 1, ni a l'infini.
+# INVARIANT : avec un cout de frontiere, le minimum est INTERIEUR.
 f = 0.4
-avec = [syn.file_de_corps_d_etat(W, z, f) for z in range(1, 40)]
+avec = [syn.file_simulee(W, z, f) for z in range(1, 60)]
 i_min = avec.index(min(avec))
 vrai("avec un cout de frontiere, l'optimum est interieur",
      0 < i_min < len(avec) - 1, f"Z = {i_min + 1} zones")
-vrai("et il est plus court que la serie pure comme que le decoupage le plus fin",
-     avec[i_min] < avec[0] and avec[i_min] < avec[-1],
-     f"{avec[i_min]:.1f} j contre {avec[0]:.1f} et {avec[-1]:.1f}")
-# Un seul corps d'etat : le decoupage ne change RIEN, quel que soit Z (hors frontieres).
+# LE CAS QUI A TROUVE L'ERREUR : la formule « forme fermee + N(Z-1)f » surestime, parce
+# qu'elle met sur le chemin critique des jours que les corps en attente absorbent. Ce cas
+# fige l'ecart pour qu'il ne revienne pas.
+fausse = syn.file_forme_fermee(W, 8) + len(W) * 7 * f
+vrai("la formule « forme fermee + N(Z-1)f » surestime nettement",
+     fausse > syn.file_simulee(W, 8, f) + 10,
+     f"{fausse:.1f} j contre {syn.file_simulee(W, 8, f):.1f} j simules")
+vrai("et elle place l'optimum bien trop tot",
+     min(range(1, 60), key=lambda z: syn.file_forme_fermee(W, z) + len(W) * (z - 1) * f)
+     < i_min + 1,
+     "7 zones contre " + str(i_min + 1))
+# Un seul corps d'etat : le decoupage ne change RIEN (hors frontieres).
 cas("avec un seul corps d'etat, le decoupage ne change rien",
-    syn.file_de_corps_d_etat([30.0], 12), 30.0, 1e-9, "j")
+    syn.file_simulee([30.0], 12), 30.0, 1e-9, "j")
 
 print("\n=== 2. Le passage libre entre deux armatures ===")
 d = json.loads((RACINE / "data" / "projet-gare.json").read_text(encoding="utf-8"))
@@ -71,8 +83,14 @@ fer = json.loads((RACINE / "calc" / "sorties" / "ferraillage.json")
 pa = syn.passage_libre(d, fer)
 # Forme fermee : espacement moins diametre, pour chaque endroit.
 for e in pa["endroits"]:
-    cas(f"{e['endroit'][:40]} : libre = espacement - diametre",
-        e["passage_libre_mm"], e["espacement_mm"] - e["dia_armature_mm"], 1e-9, "mm")
+    cas(f"{e['endroit'][:40]} : le passage est la plus PETITE dimension de la maille",
+        e["passage_libre_mm"], min(e["maille_mm"]), 1e-9, "mm")
+# LE CAS QUI A TROUVE L'ERREUR : prendre la plus GRANDE dimension de la maille de dalle
+# faisait passer un fourreau de 160 mm la ou seul un 100 passe.
+_dalle = [e for e in pa["endroits"] if e["endroit"].startswith("Dalle")][0]
+vrai("prendre la plus grande dimension de la maille de dalle serait faux",
+     max(_dalle["maille_mm"]) > _dalle["passage_libre_mm"] + 50,
+     f"{max(_dalle['maille_mm'])} mm contre {_dalle['passage_libre_mm']} mm")
 # INVARIANT : le plus gros diametre retenu passe, le suivant du catalogue ne passe pas.
 dias = d["lots_techniques"]["reservations"]["diametres_courants_mm"]
 for e in pa["endroits"]:
@@ -92,15 +110,15 @@ for x in pa["diametres_qui_ne_passent_nulle_part_mm"]:
 print("\n=== 3. Le jeu REEL du projet ===")
 r = syn.tout_calculer(d)
 so = r["second_oeuvre"]
-cas("la file a 8 zones recolle a la forme fermee",
+cas("la file a 8 zones recolle a la simulation",
     so["duree_a_Z_zones_j"],
-    syn.file_de_corps_d_etat([c["duree_totale_j"] for c in so["corps"]],
-                             so["nb_zones_du_gros_oeuvre"], so["cout_de_frontiere_j"]),
+    syn.file_simulee([c["duree_totale_j"] for c in so["corps"]],
+                     so["nb_zones_du_gros_oeuvre"], so["cout_de_frontiere_j"]),
     0.05, "j")
-vrai("et elle encadre la duree que D2 declare, a moins de 10 %",
-     abs(so["duree_a_Z_zones_j"] - so["duree_declaree_par_D2_j"])
-     / so["duree_declaree_par_D2_j"] < 0.10,
-     f"{so['duree_a_Z_zones_j']} j contre {so['duree_declaree_par_D2_j']} j declares")
+vrai("le module ne compare PAS sa duree a celle de D2 : les perimetres different",
+     so["perimetre_de_la_decomposition_m2"] < so["perimetre_de_D2_m2"],
+     f"{so['perimetre_de_la_decomposition_m2']:.0f} m2 contre "
+     f"{so['perimetre_de_D2_m2']:.0f} m2")
 
 print()
 if echecs:

@@ -50,20 +50,29 @@ c'est tout ce qu'il a besoin d'en voir pour tenir un planning.
 
 ### a. La géométrie d'abord : qu'est-ce qui passe entre deux armatures ?
 
-Un fourreau se glisse entre deux armatures. L'espace dont il dispose ne dépend que de deux nombres
-que le plan de ferraillage donne déjà : l'**espacement** des armatures et leur **diamètre**.
+Un fourreau rond ne passe pas « entre deux armatures » : il passe dans une **maille**, et il y
+tient par la **plus petite** de ses deux dimensions. Une dalle est armée dans deux sens ; une poutre
+porte des cadres *et* des barres longitudinales. L'ouverture libre est donc un rectangle, et le
+diamètre admissible est le côté le plus court :
 
-$$ \text{passage libre} = \text{espacement} - \varnothing_{\text{armature}} $$
+$$ \varnothing_{\max} = \min\big(e_1 - \varnothing_1,\ e_2 - \varnothing_2\big) $$
 
-Rien de plus. Et sur ce chantier, les armatures sont celles que le module B3e publie — elles ne sont
-pas redéclarées ici :
+Les espacements, les diamètres et la largeur d'âme sont ceux que le module B3e publie — aucun n'est
+redéclaré ici. L'âme de la poutre fait
+{{synthese.passage_libre.largeur_d_ame_mm::n0}} mm entre les deux branches du cadre :
+{{gare.geometrie.mezzanine.poutre_type_module_temoin.section_bxh_cm.0}} cm de largeur, moins deux
+enrobages et deux diamètres de cadre.
 
-| Endroit | Armatures | Espace libre | Plus gros fourreau qui passe |
+| Endroit | Armatures | Maille | Ø maximal |
 |---|---|---:|---:|
-| {{synthese.passage_libre.endroits.0.endroit}} | {{synthese.passage_libre.endroits.0.armatures}} | **{{synthese.passage_libre.endroits.0.passage_libre_mm::n0}} mm** | {{synthese.passage_libre.endroits.0.plus_gros_diametre_qui_passe_mm}} mm |
-| {{synthese.passage_libre.endroits.1.endroit}} | {{synthese.passage_libre.endroits.1.armatures}} | **{{synthese.passage_libre.endroits.1.passage_libre_mm::n0}} mm** | {{synthese.passage_libre.endroits.1.plus_gros_diametre_qui_passe_mm}} mm |
-| {{synthese.passage_libre.endroits.2.endroit}} | {{synthese.passage_libre.endroits.2.armatures}} | **{{synthese.passage_libre.endroits.2.passage_libre_mm::n0}} mm** | {{synthese.passage_libre.endroits.2.plus_gros_diametre_qui_passe_mm}} mm |
-| {{synthese.passage_libre.endroits.3.endroit}} | {{synthese.passage_libre.endroits.3.armatures}} | **{{synthese.passage_libre.endroits.3.passage_libre_mm::n0}} mm** | {{synthese.passage_libre.endroits.3.plus_gros_diametre_qui_passe_mm}} mm |
+| {{synthese.passage_libre.endroits.0.endroit}} | {{synthese.passage_libre.endroits.0.armatures}} | {{synthese.passage_libre.endroits.0.maille_mm.0::n0}} × {{synthese.passage_libre.endroits.0.maille_mm.1::n0}} mm | **{{synthese.passage_libre.endroits.0.plus_gros_diametre_qui_passe_mm}} mm** |
+| {{synthese.passage_libre.endroits.1.endroit}} | {{synthese.passage_libre.endroits.1.armatures}} | {{synthese.passage_libre.endroits.1.maille_mm.0::n0}} × {{synthese.passage_libre.endroits.1.maille_mm.1::n0}} mm | **{{synthese.passage_libre.endroits.1.plus_gros_diametre_qui_passe_mm}} mm** |
+| {{synthese.passage_libre.endroits.2.endroit}} | {{synthese.passage_libre.endroits.2.armatures}} | {{synthese.passage_libre.endroits.2.maille_mm.0::n1}} × {{synthese.passage_libre.endroits.2.maille_mm.1::n0}} mm | **{{synthese.passage_libre.endroits.2.plus_gros_diametre_qui_passe_mm}} mm** |
+| {{synthese.passage_libre.endroits.3.endroit}} | {{synthese.passage_libre.endroits.3.armatures}} | {{synthese.passage_libre.endroits.3.maille_mm.0::n0}} × {{synthese.passage_libre.endroits.3.maille_mm.1::n0}} mm | **{{synthese.passage_libre.endroits.3.plus_gros_diametre_qui_passe_mm}} mm** |
+
+:::encart {"genre":"piege","titre":"L'erreur que ce module a commise, et qu'une relecture a trouvée"}
+{{synthese.passage_libre._une_maille_pas_un_espacement}}
+:::
 
 {{synthese.passage_libre.lecture}}
 
@@ -88,7 +97,7 @@ les recevoir et les poser —
 Le plancher en compte ⟦V3|nombre de réservations par m² de plancher dans un hall d'ERP avec plénum technique|0,12 /m²|réservations/m²|0,06 à 0,25|2026|CVC, électricité, courants faibles, plomberie, désenfumage. Un bureau en compte moins, un local technique beaucoup plus⟧,
 soit {{synthese.gel_des_reservations.reservations_sur_le_plancher::n0}} au total.
 
-:::figure {"fn":"gantt","args":"synthese.figures.gel","titre":"De la date de gel au coulage : la fenêtre où une réservation existe encore sur le papier","num":2,"large":true,"options":{},"voir":["Chaque barre court de la date de gel du carnet au coulage de sa zone : {{synthese.gel_des_reservations.delai_de_gel_j::n0}} jours, toujours les mêmes.","Les barres se décalent à la cadence du coulage, {{synthese.gel_des_reservations.cadence_j::n1}} jours. Le carnet n'a donc pas UNE date limite mais huit, échelonnées.","Pendant une barre, la réservation est encore modifiable sur le plan mais plus dans le coffrage : c'est la fenêtre où une erreur se corrige à la gomme. Après, elle se corrige à la carotteuse.","Toutes ces barres sont derrière nous à la date d'arrêt du module D4 : le carnet de la mezzanine est intégralement figé."],"erreur":"Traiter le carnet comme un document de synthèse à mettre à jour « quand la synthèse sera stabilisée ». La synthèse n'est jamais stabilisée ; le coffrage, lui, se ferme à une date connue des mois à l'avance."}
+:::figure {"fn":"gantt","args":"synthese.figures.gel","titre":"Du gel au coulage : la dernière fenêtre, celle où le carnet est clos mais le béton pas coulé","num":2,"large":true,"options":{},"voir":["Chaque barre court de la date de gel du carnet au coulage de sa zone : {{synthese.gel_des_reservations.delai_de_gel_j::n0}} jours, toujours les mêmes.","Les barres se décalent à la cadence du coulage, {{synthese.gel_des_reservations.cadence_j::n1}} jours. Le carnet n'a donc pas UNE date limite mais huit, échelonnées.","AVANT une barre, le carnet est ouvert : une erreur se corrige à la gomme. PENDANT la barre, le carnet est clos mais le béton pas encore coulé : l'erreur se corrige encore, en déplaçant physiquement un fourreau déjà posé — une reprise, pas une gomme. APRÈS, elle se corrige à la carotteuse, et à ×{{synthese.cout_du_trou_oublie.rapport::n1}}.","La barre n'est donc pas la période confortable : c'est la dernière avant l'irréversible, et elle ne dure que {{synthese.gel_des_reservations.delai_de_gel_j::n0}} jours.","Toutes ces barres sont derrière nous à la date d'arrêt du module D4 : le carnet de la mezzanine est intégralement figé."],"erreur":"Traiter le carnet comme un document de synthèse à mettre à jour « quand la synthèse sera stabilisée ». La synthèse n'est jamais stabilisée ; le coffrage, lui, se ferme à une date connue des mois à l'avance."}
 :::
 
 :::encart {"genre":"piege","titre":"Le carnet se joue pendant le gros œuvre, par des gens qui ne seront plus là"}
@@ -110,7 +119,7 @@ Et une réservation prévue coûte
 
 {{synthese.cout_du_trou_oublie.lecture}}
 
-:::figure {"fn":"cascade","args":"synthese.figures.cout","titre":"Les postes d'un percement après coup, dans un élément NON porteur","num":3,"large":true,"options":{"unite":"MAD"},"voir":["Le carottage n'est que {{synthese.cout_du_trou_oublie.postes.0.part_pct::n0}} % du total : c'est la seule ligne à laquelle on pense, et c'est la plus petite de celles qui comptent.","Le poste le plus lourd est {{synthese.cout_du_trou_oublie.poste_le_plus_lourd}} — une étude et un visa, c'est-à-dire du temps d'ingénieur et une attente.","{{synthese.cout_du_trou_oublie.part_sans_outil_pct::n0}} % du coût ne tiennent ni à la machine ni à l'ouvrier : l'étude, le visa et la remise en état de ce qui était déjà posé autour.","Ce total suppose un élément NON porteur et un second œuvre non terminé. Les deux hypothèses sautent souvent ensemble, et alors ce n'est plus un coût, c'est une décision."],"erreur":"Négocier le prix du carottage. C'est le poste sur lequel il y a le moins à gagner et le seul que tout le monde regarde — pendant que l'étude, le visa et la remise en état, qui font {{synthese.cout_du_trou_oublie.part_sans_outil_pct::n0}} % de la facture, ne figurent sur aucun devis de carotteur."}
+:::figure {"fn":"cascade","args":"synthese.figures.cout","titre":"Les postes d'un percement après coup, dans un élément NON porteur","num":3,"large":true,"options":{"unite":"MAD"},"voir":["Le carottage fait {{synthese.cout_du_trou_oublie.postes.0.part_pct::n0}} % du total. C'est la seule ligne à laquelle on pense — et elle ne vient qu'en deuxième.","Le poste le plus lourd est {{synthese.cout_du_trou_oublie.poste_le_plus_lourd}} — une étude et un visa, c'est-à-dire du temps d'ingénieur et une attente.","L'étude et son visa font {{synthese.cout_du_trou_oublie.part_de_l_etude_pct::n0}} % à eux seuls : du temps d'ingénieur et une attente, pas une machine. Et tout ce qui n'est pas le trou lui-même en fait {{synthese.cout_du_trou_oublie.part_de_ce_qui_n_est_pas_le_trou_pct::n0}} %.","Ce total suppose un élément NON porteur et un second œuvre non terminé. Les deux hypothèses sautent souvent ensemble, et alors ce n'est plus un coût, c'est une décision."],"erreur":"Négocier le prix du carottage. C'est le poste sur lequel il y a le moins à gagner et le seul que tout le monde regarde — pendant que l'étude, le visa et la remise en état, qui font {{synthese.cout_du_trou_oublie.part_de_ce_qui_n_est_pas_le_trou_pct::n0}} % de la facture, ne figurent sur aucun devis de carotteur."}
 :::
 
 {{synthese.cout_du_trou_oublie._ce_que_le_rapport_cache}}
@@ -128,10 +137,22 @@ la totalité du plancher, la durée est la **somme** : {{synthese.second_oeuvre.
 jours. Si l'on découpe le plancher en zones, ils travaillent en parallèle dans des volumes
 différents — et la durée s'écrit exactement :
 
-$$ T(Z) = \frac{\sum W_i + (Z-1)\max W_i}{Z} + N\,(Z-1)\,f $$
+$$ T(Z) = \frac{\sum W_i + (Z-1)\max W_i}{Z} \qquad \text{(sans coût de transition)} $$
 
-où $W_i$ est la durée du corps $i$ sur la totalité du plancher, $Z$ le nombre de zones, $N$ le nombre
-de corps d'état et $f$ le coût d'une frontière de zone.
+où $W_i$ est la durée du corps $i$ sur la totalité du plancher et $Z$ le nombre de zones. Cette
+forme est **exacte**, et une simulation directe la retrouve au quinzième chiffre.
+
+**Mais elle ne survit pas au coût de réinstallation.** Chaque corps d'état paie un temps de
+re-calage à chaque changement de zone —
+⟦V3|jours perdus par corps d'état et par frontière de zone|0,4 j|j ouvrés|0,15 à 1,0|2026|réinstallation, reprise d'approvisionnement, re-calage des équipes. C'est ce qui empêche de découper à l'infini, et personne ne le chiffre jamais⟧ —
+et on ne peut pas simplement l'ajouter à la formule. La raison est la même que celle du module D7 à
+propos des indicateurs consolidés : **ce qui est absorbé par une attente ne se retrouve pas dans le
+total.** Seuls les jours du corps qui se trouve sur le chemin critique à cet instant comptent ; les
+autres disparaissent dans la marge des corps qui attendaient déjà.
+
+Ce module calcule donc la file **par simulation** — on place les tâches une à une — et garde la
+forme fermée pour ce qu'elle est : le cas exact sans coût de transition, et la référence de son
+étalonnage.
 
 | Corps d'état | Durée totale | Par zone | Reçoit son support de |
 |---|---:|---:|---|
@@ -147,29 +168,42 @@ aussi : ⟦V3|jours perdus par corps d'état et par frontière de zone|0,4 j|j o
 
 {{synthese.second_oeuvre.lecture}}
 
-:::figure {"fn":"diagramme","args":"synthese.figures.file","titre":"La durée de la file en fonction du nombre de zones","num":4,"large":true,"options":{"unite":"j","axeX":true,"axeY":true,"uniteX":"nombre de zones","nom":"durée du second œuvre","depuisZero":true,"marqueur":{"$":"synthese.figures.marqueur_zones"}},"voir":["À une seule zone, la file dure {{synthese.second_oeuvre.duree_en_serie_pure_j::n0}} jours : chaque corps attend que le précédent ait fini tout le plancher.","La courbe tombe vite, puis s'aplatit : le découpage rattrape le temps d'attente, et rien de plus.","Deux planchers, qu'il ne faut pas confondre. SANS coût de frontière, la file tendrait vers {{synthese.second_oeuvre.plancher_incompressible_j::n0}} jours — la durée du corps le plus lent — et jamais en dessous. AVEC lui, la courbe remonte avant d'y arriver : son minimum est à {{synthese.second_oeuvre.duree_optimale_j::n0}} jours.","Le marqueur est le découpage que le gros œuvre a déjà choisi ({{synthese.second_oeuvre.nb_zones_du_gros_oeuvre}} zones de coulage) : {{synthese.second_oeuvre.duree_a_Z_zones_j::n0}} jours. L'optimum est à {{synthese.second_oeuvre.zone_optimale}} zones — le second œuvre n'a donc pas de raison de redécouper le plancher autrement.","La courbe remonte à droite : chaque frontière de zone oblige chaque corps d'état à se réinstaller, et à partir d'un certain point ces réinstallations coûtent plus que le parallélisme ne rapporte."],"erreur":"Croire qu'un découpage plus fin accélère toujours. Il accélère tant que des corps d'état attendent, et il ralentit dès que les frontières coûtent plus que l'attente qu'elles suppriment. Les deux effets sont dans la même formule."}
+:::figure {"fn":"diagramme","args":"synthese.figures.file","titre":"La durée de la file en fonction du nombre de zones","num":4,"large":true,"options":{"unite":"j","axeX":true,"axeY":true,"uniteX":"nombre de zones","nom":"durée du second œuvre","depuisZero":true,"marqueur":{"$":"synthese.figures.marqueur_zones"}},"voir":["À une seule zone, la file dure {{synthese.second_oeuvre.duree_en_serie_pure_j::n0}} jours : chaque corps attend que le précédent ait fini tout le plancher.","La courbe tombe vite, puis s'aplatit : le découpage rattrape le temps d'attente, et rien de plus.","Deux planchers, qu'il ne faut pas confondre. SANS coût de frontière, la file tendrait vers {{synthese.second_oeuvre.plancher_incompressible_j::n0}} jours — la durée du corps le plus lent — et jamais en dessous. AVEC lui, la courbe remonte avant d'y arriver : son minimum est à {{synthese.second_oeuvre.duree_optimale_j::n0}} jours.","Le marqueur est le découpage que le gros œuvre a déjà choisi ({{synthese.second_oeuvre.nb_zones_du_gros_oeuvre}} zones de coulage) : {{synthese.second_oeuvre.duree_a_Z_zones_j::n0}} jours. L'optimum de la file, lui, est à {{synthese.second_oeuvre.zone_optimale}} zones — hériter du découpage du gros œuvre coûte donc {{synthese.second_oeuvre.cout_de_reutiliser_le_decoupage_du_gros_oeuvre_j::n1}} jours, et c'est un arbitrage à poser, pas une fatalité.","La courbe remonte à droite : chaque frontière de zone oblige chaque corps d'état à se réinstaller, et à partir d'un certain point ces réinstallations coûtent plus que le parallélisme ne rapporte."],"erreur":"Croire qu'un découpage plus fin accélère toujours. Il accélère tant que des corps d'état attendent, et il ralentit dès que les frontières coûtent plus que l'attente qu'elles suppriment. Les deux effets sont dans la même formule."}
 :::
 
 {{synthese.second_oeuvre._la_forme_fermee}}
 
-### b. Deux voies, et elles s'accordent
+{{synthese.second_oeuvre._redecouper_ou_pas}}
+
+:::encart {"genre":"alerte","titre":"L'optimum n'est pas un nombre à retenir"}
+{{synthese.second_oeuvre._l_optimum_n_est_pas_un_nombre}}
+:::
+
+### b. Ce que cette formule ne permet pas de faire
 
 Le module D2 donne au second œuvre une durée unique et déclarée :
-**{{synthese.second_oeuvre.duree_declaree_par_D2_j::n0}} jours**, sur le chemin critique, sans marge.
-La forme fermée ci-dessus, alimentée par six durées de corps d'état et un coût de frontière tous
-déclarés séparément, en donne **{{synthese.second_oeuvre.duree_a_Z_zones_j::n0}}**.
+**{{synthese.second_oeuvre.duree_declaree_par_D2_j::n0}} jours**, sur le chemin critique. La
+décomposition ci-dessus en donne **{{synthese.second_oeuvre.duree_a_Z_zones_j::n0}}**. Il serait
+tentant d'y voir un contre-calcul indépendant qui s'accorde. **C'en serait un abus**, pour deux
+raisons, et elles valent d'être écrites parce qu'elles reviennent sans cesse :
 
-**{{synthese.second_oeuvre.ecart_avec_D2_j::n1}} jour d'écart sur 75**, par deux chemins qui ne
-partagent aucune donnée : l'un est un jugement d'expérience posé à l'Étape 0, l'autre une
-décomposition par corps d'état avec sa formule. C'est le contre-calcul indépendant du § 3.3, et son
-accord vaut plus que la précision de chacun.
+{{synthese.second_oeuvre._pourquoi_on_ne_compare_pas}}
 
-:::encart {"genre":"voir","titre":"Ce qu'un accord à 4 % autorise — et ce qu'il n'autorise pas"}
-Il autorise à **utiliser la décomposition pour piloter** : puisqu'elle reproduit la durée globale,
-ses termes sont crédibles, et c'est eux qu'on suit semaine après semaine. Il n'autorise pas à dire
-que les six durées sont justes : six nombres peuvent se compenser. Ce que l'accord prouve, c'est que
-le **modèle** — une file pipelinée sur huit zones avec un coût de frontière — décrit bien ce que le
-planificateur avait en tête sans le formuler.
+Et la seconde raison est de méthode. Les six durées de corps d'état et le coût de frontière ont été
+posés **dans le même mouvement** que ce module, par le même auteur, en sachant quel ordre de
+grandeur D2 affichait. Deux voies ne sont indépendantes que si l'une ignore la seconde — ce n'était
+pas le cas. Un accord obtenu ainsi ne prouve rien, et l'annoncer comme une vérification aurait été
+la pire des erreurs de ce cours : **une fausse preuve est plus nuisible qu'une absence de preuve.**
+
+:::encart {"genre":"voir","titre":"Ce que la décomposition apporte quand même"}
+Un **modèle**. Une file, un goulot, un plancher incompressible, un optimum de découpage et le prix
+d'un découpage hérité : cinq objets qu'on peut suivre semaine après semaine, et qu'une durée
+globale de 75 jours ne permet pas de suivre. La décomposition ne vérifie pas D2 — elle le rend
+pilotable, ce qui est un autre service et sans doute le plus utile.
+
+Ce qu'il faudrait pour en faire une vraie seconde voie : des durées relevées sur un chantier
+comparable, ou le planning détaillé d'un sous-traitant, l'un comme l'autre arrivant d'ailleurs que
+de ce cours. C'est inscrit en dette.
 :::
 
 ### c. Le goulot, et pourquoi accélérer ailleurs ne sert à rien
@@ -204,14 +238,19 @@ la responsabilité change de main.
 ## S4 · Étude de cas : un conflit réservation / poutre, un lundi matin
 
 Le lot CVC demande une réservation de
-{{synthese.passage_libre.diametres_qui_ne_passent_nulle_part_mm.0}} mm dans la poutre PM1, à 2 m de
-l'appui, pour un collecteur de désenfumage. Le carnet de la zone concernée gèle dans six jours.
+{{synthese.passage_libre.diametres_qui_ne_passent_nulle_part_mm.0}} mm dans l'âme de la poutre PM1,
+près d'un appui, pour un collecteur de désenfumage. Le carnet de la zone concernée gèle dans six jours.
 
-**1. Vous ouvrez le plan de ferraillage avant d'ouvrir un débat.** À 2 m de l'appui, on est dans la
-zone de cadres resserrés : espacement {{synthese.passage_libre.endroits.0.armatures}}, donc
-{{synthese.passage_libre.endroits.0.passage_libre_mm::n0}} mm d'espace libre. Le fourreau demandé en
-fait {{synthese.passage_libre.diametres_qui_ne_passent_nulle_part_mm.0}}. **C'est non, et ce n'est
-pas une opinion.**
+**1. Vous ouvrez le plan de ferraillage avant d'ouvrir un débat.** Près d'un appui, les cadres sont
+resserrés — {{synthese.passage_libre.endroits.0.armatures}} — et la maille tombe à
+{{synthese.passage_libre.endroits.0.passage_libre_mm::n0}} mm. Le fourreau demandé en fait
+{{synthese.passage_libre.diametres_qui_ne_passent_nulle_part_mm.0}}. **C'est non, et ce n'est pas
+une opinion.**
+
+Vous vérifiez aussitôt la deuxième question, celle qui évite un second aller-retour : *et ailleurs
+sur la poutre ?* La maille la plus large de l'âme vaut
+{{synthese.passage_libre.endroits.1.passage_libre_mm::n0}} mm, en travée courante. **Nulle part sur
+cette poutre, donc** — et la réponse complète tient dans le même message.
 
 **2. Vous ne dites pas « non ».** Vous dites : *« cette réservation coupe au moins un cadre ; ce
 n'est plus une réservation, c'est une modification de structure. Deux chemins : un tracé qui sort de
@@ -230,9 +269,12 @@ venez de leur faire gagner la semaine qu'ils auraient passée à la demander.
 après coulage et qu'elle est accordée sur un élément non porteur, le trou coûte
 {{synthese.cout_du_trou_oublie.cout_du_percement_MAD::k}} MAD au lieu de
 {{synthese.cout_du_trou_oublie.cout_d_une_reservation_prevue_MAD}} —
-**×{{synthese.cout_du_trou_oublie.rapport::n1}}**. Sur les
-{{synthese.gel_des_reservations.reservations_sur_le_plancher::n0}} réservations du plancher, deux
-pour cent d'oublis coûteraient à eux seuls plus que l'ensemble du carnet.
+**×{{synthese.cout_du_trou_oublie.rapport::n1}}**. Et le repère qui va avec, parce qu'il tient en une division :
+
+{{synthese.cout_du_trou_oublie._le_seuil_d_equivalence}}
+
+Sur les {{synthese.gel_des_reservations.reservations_sur_le_plancher::n0}} réservations du plancher,
+cela fait onze oublis — au-delà, les percements coûtent plus que tout le carnet.
 
 **5. Vous notez la date, pas le sujet.** Le carnet de cette zone gèle dans six jours ; celui de la
 zone suivante, {{synthese.gel_des_reservations.cadence_j::n1}} jours plus tard. Ce qui entre à
@@ -262,8 +304,8 @@ sans leurs réservations, et un budget de carottage qui apparaît au cinquième 
 
 **3. Négocier le prix du carottage.** C'est {{synthese.cout_du_trou_oublie.postes.0.part_pct::n0}} %
 de la facture. **Symptôme** : trois devis de carotteur comparés au dirham près, pendant que l'étude
-et la remise en état — {{synthese.cout_du_trou_oublie.part_sans_outil_pct::n0}} % du coût — ne
-figurent sur aucun des trois.
+et la remise en état — {{synthese.cout_du_trou_oublie.part_de_ce_qui_n_est_pas_le_trou_pct::n0}} %
+du coût — ne figurent sur aucun des trois.
 
 **4. Prendre la durée du second œuvre pour une tâche.** C'est une file. **Symptôme** : un planning
 qui montre « second œuvre, 75 jours » et qui ne dit rien quand un corps d'état glisse — alors que
@@ -287,12 +329,18 @@ Le lot plomberie demande un passage de {{synthese.passage_libre.diametres_qui_ne
 dans la poutre PM1, en travée courante. Le plan de ferraillage indique des cadres
 {{synthese.passage_libre.endroits.1.armatures}}. Que répondez-vous, et en combien de temps ?
 
-**Corrigé — en une soustraction.** L'espace libre vaut
-{{synthese.passage_libre.endroits.1.espacement_mm::n0}} −
-{{synthese.passage_libre.endroits.1.dia_armature_mm}} =
-**{{synthese.passage_libre.endroits.1.passage_libre_mm::n0}} mm**. Le fourreau en demande
-{{synthese.passage_libre.diametres_qui_ne_passent_nulle_part_mm.0}} : il ne passe pas, et il ne
-passera nulle part sur cette poutre puisque c'est l'endroit le plus large.
+**Corrigé — en deux soustractions, et c'est la seconde qui compte.** La maille de l'âme en travée
+vaut {{synthese.passage_libre.endroits.1.maille_mm.0::n0}} ×
+{{synthese.passage_libre.endroits.1.maille_mm.1::n0}} mm : l'espacement des cadres moins leur
+diamètre dans un sens, la largeur d'âme entre les deux branches dans l'autre. Un fourreau rond y
+tient par la plus petite des deux :
+**{{synthese.passage_libre.endroits.1.passage_libre_mm::n0}} mm**.
+
+Le fourreau en demande {{synthese.passage_libre.diametres_qui_ne_passent_nulle_part_mm.0}} : il ne
+passe pas, et il ne passera nulle part sur cette poutre puisque l'âme en travée est l'endroit le plus
+large. Près de l'appui, la maille tombe à
+{{synthese.passage_libre.endroits.0.passage_libre_mm::n0}} mm ; au niveau des aciers inférieurs, à
+{{synthese.passage_libre.endroits.2.passage_libre_mm::n0}} mm.
 
 **Ce que vous répondez** n'est pas « non » mais : *cette réservation coupe un cadre, donc elle n'est
 plus une réservation. Soit le tracé sort de la poutre, soit il faut une note du bureau d'études —
@@ -408,21 +456,27 @@ document doit répondre.
 jour {{planification.segments_de_travail.SECO.0.0::n0}}.
 
 **4. Quel est le poste le plus lourd d'un percement après coup ?**
-**L’{{synthese.cout_du_trou_oublie.poste_le_plus_lourd}}**, pas le carottage — qui ne fait
-que {{synthese.cout_du_trou_oublie.postes.0.part_pct::n0}} % du total.
+**L’{{synthese.cout_du_trou_oublie.poste_le_plus_lourd}}**, à
+{{synthese.cout_du_trou_oublie.part_de_l_etude_pct::n0}} % — devant le carottage, qui en fait
+{{synthese.cout_du_trou_oublie.postes.0.part_pct::n0}}.
 
 **5. Le découpage en zones peut-il descendre sous la durée du corps d'état le plus lent ?**
 **Jamais.** C'est le plancher de la forme fermée :
 {{synthese.second_oeuvre.plancher_incompressible_j::n0}} jours ici.
 
 **6. Découper plus fin accélère-t-il toujours ?**
-**Non.** Chaque frontière coûte une réinstallation à chaque corps. L'optimum est à
-{{synthese.second_oeuvre.zone_optimale}} zones, et au-delà la courbe remonte.
+**Non.** Chaque frontière coûte une réinstallation. L'optimum est à
+{{synthese.second_oeuvre.zone_optimale}} zones ici, et au-delà la courbe remonte. Le gros œuvre en a
+choisi {{synthese.second_oeuvre.nb_zones_du_gros_oeuvre}} pour ses propres raisons : le second œuvre
+en hérite, et cela lui coûte
+{{synthese.second_oeuvre.cout_de_reutiliser_le_decoupage_du_gros_oeuvre_j::n1}} jours.
 
-**7. Deux voies donnent {{synthese.second_oeuvre.duree_declaree_par_D2_j::n0}} et {{synthese.second_oeuvre.duree_a_Z_zones_j::n0}} jours. Que conclure ?**
-**Qu'elles s'accordent** — {{synthese.second_oeuvre.ecart_avec_D2_j::n1}} jour d'écart sans données
-communes. Cela crédite la décomposition, donc on peut piloter avec ; cela ne prouve pas que chacune
-des six durées soit juste.
+**7. D2 donne {{synthese.second_oeuvre.duree_declaree_par_D2_j::n0}} jours au second œuvre et cette décomposition {{synthese.second_oeuvre.duree_a_Z_zones_j::n0}}. Que conclure ?**
+**Rien.** Les deux périmètres diffèrent — {{synthese.second_oeuvre.perimetre_de_D2_m2::n0}} m²
+contre {{synthese.second_oeuvre.perimetre_de_la_decomposition_m2::n0}} — et les paramètres de la
+seconde ont été posés en connaissant la première. Deux voies ne sont indépendantes que si l'une
+ignore l'autre. Ce que la décomposition apporte n'est pas une vérification mais un **modèle
+pilotable**.
 
 :::memo
 ## Fiche mémo — lots techniques et second œuvre

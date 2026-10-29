@@ -226,3 +226,4 @@ H224;rebouchage, calfeutrement et reprise d'étanchéité autour d'une traversé
 H225;remise en état des ouvrages déjà posés autour d'un percement après coup;350 MAD;MAD;150 à 900;2026;B7b + C4;protection, nettoyage, reprises. C'est le poste qui explose quand le second œuvre est fini
 H226;fourreau, calage, repérage et pose d'une réservation dans le coffrage avant coulage;120 MAD;MAD;60 à 250;2026;B7b + C4;c'est le coût d'une minute de pose et d'un morceau de PVC
 H227;jours perdus par corps d'état et par frontière de zone;0,4 j;j ouvrés;0,15 à 1,0;2026;B7b + C4;réinstallation, reprise d'approvisionnement, re-calage des équipes. C'est ce qui empêche de découper à l'infini, et personne ne le chiffre jamais
+H228;jours perdus par corps d'état et par frontière de zone;0,4 j;j ouvrés;0,15 à 1,0;2026;B7b + C4;réinstallation, reprise d'approvisionnement, re-calage des équipes. C'est ce qui empêche de découper à l'infini, et personne ne le chiffre jamais

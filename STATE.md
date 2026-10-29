@@ -41,8 +41,8 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   D-057) · `RC1` (revue critique du palier, § 5.5, 23 défauts dont 6 bloquants — D-058) ·
   `C1` (installation de chantier, 23 défauts dont **3 bloquants** — D-059 à D-062) ·
   `D7` (pilotage multi-sites, 29 défauts dont **4 bloquants** — D-063, D-064) ·
-  `B7b+C4` (lots techniques et second œuvre, D-065, D-066 — **passe à faire**).
-  Toutes les passes sont faites sauf celle de B7b+C4 ; tous leurs bloquants corrigés.
+  `B7b+C4` (lots techniques et second œuvre, 26 défauts dont **5 bloquants** — D-065
+  à D-067). Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
 - ▶ **actifs, non écrits (9)** : A1, A2a, A5a, B5a-exec, C2, C6, D3, D6, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
@@ -59,21 +59,18 @@ deux voies, étalonnages sur solution fermée, `pint` · **16 contrôles**, capt
 ## Défauts et passe adversariale /devil (§ 12.2)
 
 Portée par un **sous-agent distinct** qui n'a pas lu le raisonnement de l'auteur et recalcule les
-valeurs clés depuis `data/` seul. **18 rapports, 463 défauts, 100 bloquants** au dernier comptage de
+valeurs clés depuis `data/` seul. **19 rapports, 489 défauts, 105 bloquants** au dernier comptage de
 `calc/revue.py` (borne basse, dette 27) — E1 : 50 en 3 passes, TV : 117 en 5, une passe pour chacun
 des autres (D-034). **Tous les bloquants corrigés.** Détail de chaque défaut, de sa preuve et de la
 suite donnée : `QA/`.
 
-**La huitième famille, trouvée par B7c, est la plus insidieuse : le CHANGEMENT D'UNITÉ SILENCIEUX.**
-Une grandeur garde son nom (« jours ») et change de contenu (des plages de 6 h). Aucune vérification
-dimensionnelle ne le voit — `pint` lit des heures des deux côtés. Le seul contrôle qui l'attrape est
-celui que personne n'avait écrit : **deux modules qui chiffrent la même tâche doivent trouver les
-mêmes heures**. Il est en place, et il a exposé un second écart du même genre dès sa première
-exécution.
+**La huitième, trouvée par B7c : le CHANGEMENT D'UNITÉ SILENCIEUX.** Une grandeur garde son nom
+(« jours ») et change de contenu (des plages de 6 h). `pint` lit des heures des deux côtés et ne voit
+rien. Seul l'attrape le contrôle que personne n'avait écrit : **deux modules qui chiffrent la même
+tâche trouvent les mêmes heures**.
 
-**La septième, découverte par B3e : l'erreur de MODÈLE PHYSIQUE.** Une formule de recouvrement qui ne couvre pas l'ouvrage, une nappe qui laisse 18 m² de
-dalle nue, un plan qui met l'acier du mauvais côté de la poutre. Aucun contrôle de cohérence ne les
-voit : il faut refaire la géométrie. Les chercher d'abord dans tout module qui pose une géométrie.
+**La septième, découverte par B3e : l'erreur de MODÈLE PHYSIQUE.** Une formule de recouvrement qui
+ne couvre pas l'ouvrage, un plan qui met l'acier du mauvais côté. Il faut refaire la géométrie.
 
 **Les six autres familles** : (1) une grandeur d'état **saisie** au lieu d'être dérivée ; (2) un
 paramètre déclaré, publié, que **rien ne lit** ; (3) un ratio ou un indice lu **hors de son
@@ -82,8 +79,11 @@ pas la série annoncée ; (5) deux modules qui recalculent la même grandeur (D-
 conclusion **déduite** d'une définition piégeuse au lieu d'être mesurée (D-040).
 
 **Ce qui les trouve** : une contre-expertise à l'aveugle, deux nombres du même fichier de sortie, et
-des captures regardées. **Jamais un test.** **Et la neuvième famille, que D7 isole : la PHRASE À CÔTÉ
-DU NOMBRE** — ses quatre bloquants ont des calculs justes et des phrases fausses : une arithmétique
+des captures regardées. **Jamais un test.** **La dixième, trouvée par C4 : l'ERREUR DE MODÈLE.** Une formule de déroulement dont chaque terme est
+homogène et dont un terme est faux — ici le coût de frontière, ajouté N(Z−1) fois alors que l'attente
+en absorbe l'essentiel : 78 j publiés contre 64 réels. Aucun test ne la voit, parce qu'ils comparent
+la sortie à la formule. Seule une **simulation directe** la voit (D-067). **Et la neuvième, que D7
+isole : la PHRASE À CÔTÉ DU NOMBRE** — ses quatre bloquants ont des calculs justes et des phrases fausses : une arithmétique
 faite de tête dans un corrigé, une légende qui nomme le mauvais seuil, une loi énoncée trop large, un
 périmètre oublié. Aucun test ne lit une phrase.
 

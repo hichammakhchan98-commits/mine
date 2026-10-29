@@ -1145,10 +1145,20 @@ ensuite la question réglementaire, qui est ⏸. Les sorties de `calc/` publient
 libre** (espacement des armatures moins leur diamètre) avant tout autre indicateur d'interface.
 
 **Pourquoi.** Une demande impossible et une demande à instruire ne se traitent pas de la même façon,
-et on perd des semaines à instruire des impossibilités. Sur ce chantier, l'espace libre entre deux
-armatures vaut 92 mm sur appui et 192 mm en travée : les fourreaux de 200, 250 et 315 mm — le
-désenfumage, les eaux usées, les gaines principales — ne passent **nulle part** sans couper un cadre.
-La vérification prend dix secondes et elle ne demande l'avis de personne.
+et on perd des semaines à instruire des impossibilités. La vérification prend dix secondes et elle ne
+demande l'avis de personne.
+
+**Mais elle se fait sur une MAILLE, pas sur un espacement**, et la première version de cette décision
+l'avait manqué. Un fourreau rond ne passe pas entre deux armatures : il passe dans une ouverture
+rectangulaire — deux espacements, deux diamètres — et il y tient par le **plus petit** des deux
+côtés. Une dalle armée HA14 à 12,5 cm dans un sens et HA12 à 20 dans l'autre donne une maille de
+111 × 188 mm : le plus gros fourreau y est de Ø100, et non de Ø160 comme la première version l'a
+publié. Dans une poutre, il faut de même compter la largeur d'âme entre les branches du cadre, et le
+niveau des aciers longitudinaux, où l'espacement libre tombe à 99,5 mm.
+
+Sur ce chantier, la conclusion de tête survit a fortiori : les fourreaux de 200, 250 et 315 mm — le
+désenfumage, les eaux usées, les gaines principales — ne passent **nulle part** sans couper une
+armature.
 
 Et elle trace la seule frontière dont un chef de projet suivi ait besoin : **une réservation qui
 coupe une armature n'est plus une réservation.** Elle quitte le carnet pour devenir une note de
@@ -1196,3 +1206,41 @@ d'études, dont l'issue n'est pas acquise : le module refuse de la chiffrer (⏸
 **Impact.** `calc/synthese.py` publie `gel_des_reservations` zone par zone, avec la fenêtre du carnet
 et les tâches en cours au premier gel, **lues dans le réseau de D2** et non supposées. La figure est
 un diagramme de Gantt du gel au coulage : la fenêtre où une erreur se corrige encore à la gomme.
+
+---
+
+## D-067 — 29/10/2026 — Un modèle se vérifie contre une exécution directe, pas contre l'algèbre
+
+**Décision.** Toute formule de ce cours qui prétend décrire un **déroulement** — un enchaînement de
+tâches, une file, un cycle, une propagation de retard — est accompagnée d'une **simulation directe**
+dans `calc/etalonnage/`, qui place les événements un à un et sert de référence. La forme fermée n'est
+publiée que là où la simulation la confirme, et son domaine de validité est écrit.
+
+**Pourquoi.** Le module C4 publiait la durée d'une file de corps d'état comme
+
+> T(Z) = (ΣW + (Z−1)·max W) / Z + N·(Z−1)·f
+
+Le premier terme est exact : la simulation le retrouve au quinzième chiffre. Le second est faux, et
+l'erreur est une erreur de **raisonnement**, pas de calcul : chaque corps d'état paie bien f à chaque
+changement de zone, mais seuls les jours du corps qui se trouve alors sur le chemin critique se
+retrouvent dans la durée totale. Les autres sont absorbés par l'attente. Résultat : 78 jours publiés
+contre **64** réels à huit zones, et un optimum annoncé à 7 zones là où il est à 17.
+
+C'est exactement le mécanisme que le module D7 avait énoncé une semaine plus tôt à propos des
+indicateurs consolidés — *ce qui est absorbé par une marge ne se retrouve pas dans le total* — et le
+module suivant l'a reproduit sur un autre objet sans le reconnaître. Une règle de pilotage ne se
+transporte pas toute seule d'un sujet à l'autre : il faut la chercher.
+
+**Ce qui ne l'a pas vu.** Ni les 56 contrôles du module, ni l'étalonnage, ni la vérification
+dimensionnelle : le terme fautif est **homogène** — des jours ajoutés à des jours — et tous les
+tests comparaient la sortie à la formule, c'est-à-dire la formule à elle-même. Un test ne vaut que
+ce que vaut sa référence, et la référence d'un modèle ne peut pas être le modèle.
+
+**Ce qui l'a vu.** Une simulation de quinze lignes, écrite par un relecteur qui ne croyait pas la
+formule. Elle est désormais dans `calc/`, elle est la référence, et la forme fermée est reléguée à
+son rôle exact : le cas sans coût de transition, et l'étalonnage de la simulation.
+
+**Impact.** `calc/synthese.py` publie `file_simulee` (référence) et `file_forme_fermee` (cas exact).
+L'étalonnage rejoue la formule fausse et vérifie qu'elle surestime. Les deux prochains modules qui
+poseront une formule de déroulement — C2 et C6 en portent — devront fournir leur simulation à
+l'écriture, pas après la relecture.

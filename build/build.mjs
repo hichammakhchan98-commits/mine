@@ -253,7 +253,8 @@ for (const f of readdirSync("content").filter((x) => x.endsWith(".md")).sort()) 
 
   // injection des variables {{...}} : ECHEC si absente (§ 4.3)
   const substituer = (texte) => substituerDans(texte, f);
-  html = substituer(html);
+  html = substituer(html)
+    .replace(/\*\*([^*\n]{1,300}?)\*\*/g, "<strong>$1</strong>");
 
   const som = titres.map((t) =>
     `<li class="${t.niv >= 3 ? "niv2" : ""}"><a href="#${t.id}">${t.txt}</a></li>`).join("");

@@ -667,14 +667,17 @@ leve("date limite obtenue en soustrayant un delai a un MONTANT",
 # ---------------------------------------------------------------- synthese.py (B7b, C4)
 print("\nsynthese.py — passage libre, gel du carnet, file de corps d'etat")
 _sy = json.loads((SORTIES / "synthese.json").read_text(encoding="utf-8"))
-# Un passage libre est une difference de LONGUEURS : un espacement moins un diametre.
+# Un passage libre est le MIN des deux dimensions d'une maille : deux LONGUEURS.
 _e = _sy["passage_libre"]["endroits"][0]
-esp = _e["espacement_mm"] * u.mm
-dia = _e["dia_armature_mm"] * u.mm
-libre = (esp - dia).to(u.mm)
+m1 = _e["maille_mm"][0] * u.mm
+m2 = _e["maille_mm"][1] * u.mm
+libre = min(m1, m2).to(u.mm)
 dit(abs(libre.magnitude - _e["passage_libre_mm"]) < 1e-6,
-    "passage libre = espacement - diametre est une LONGUEUR",
-    f"{libre.magnitude:.0f} mm")
+    "passage libre = min des deux cotes de la maille, et c'est une LONGUEUR",
+    f"{libre.magnitude:.0f} mm sur une maille {_e['maille_mm']}")
+ame = _sy["passage_libre"]["largeur_d_ame_mm"] * u.mm
+dit(str((ame / m1).to(u.dimensionless).units) == "dimensionless",
+    "le rapport de deux dimensions de maille est SANS DIMENSION")
 # Le nombre de reservations : une densite par unite de SURFACE fois une surface.
 _g = _sy["gel_des_reservations"]
 dens = _g["densite_par_m2"] / u.m**2
@@ -696,10 +699,17 @@ _so = _sy["second_oeuvre"]
 W = [c["duree_totale_j"] * u.day for c in _so["corps"]]
 Z = _so["nb_zones_du_gros_oeuvre"]
 fr = _so["cout_de_frontiere_j"] * u.day
-T = ((sum(W) + (Z - 1) * max(W)) / Z + len(W) * (Z - 1) * fr).to(u.day)
-dit(abs(T.magnitude - _so["duree_a_Z_zones_j"]) < 0.05,
-    "file = (somme + (Z-1) x max) / Z + N (Z-1) f est une DUREE",
-    f"{T.magnitude:.1f} j")
+T = ((sum(W) + (Z - 1) * max(W)) / Z).to(u.day)
+dit(abs(T.magnitude - _so["duree_a_Z_zones_sans_frontiere_j"]) < 0.05,
+    "la forme fermee (somme + (Z-1) x max) / Z est une DUREE",
+    f"{T.magnitude:.2f} j")
+# La duree AVEC cout de frontiere se calcule par simulation : pint ne peut pas la
+# reecrire. Il verifie ce qu'il peut — que le cout de frontiere est bien en JOURS, et que
+# l'ajouter a une duree donne une duree. LIMITE DECLAREE : il ne voit pas que l'ajouter
+# N(Z-1) fois etait faux, parce que c'etait juste dimensionnellement.
+dit(str((T + fr).to(u.day).units) == "day",
+    "et le cout de frontiere s'exprime bien en JOURS",
+    f"{_so['cout_de_frontiere_j']} j par corps et par frontiere")
 dit(str((T / (_so["duree_declaree_par_D2_j"] * u.day)).to(u.dimensionless).units)
     == "dimensionless",
     "le rapport des deux voies est SANS DIMENSION",
@@ -715,10 +725,12 @@ dit(str((sum(postes) / (_c["cout_d_une_reservation_prevue_MAD"] * u.MAD))
     "et le rapport a la reservation prevue est SANS DIMENSION",
     f"x{_c['rapport']}")
 
-leve("passage libre obtenu en soustrayant un NOMBRE de reservations a un espacement",
-     lambda: (esp - _g["reservations_sur_le_plancher"] * u.dimensionless).to(u.mm))
+leve("passage libre obtenu en soustrayant un NOMBRE de reservations a une maille",
+     lambda: (m1 - _g["reservations_sur_le_plancher"] * u.dimensionless).to(u.mm))
 leve("file de corps d'etat obtenue sans diviser par le nombre de zones",
      lambda: ((sum(W) + (Z - 1) * max(W)) / (Z * u.day)).to(u.day))
+leve("cout de frontiere pris pour un nombre de zones",
+     lambda: (T + Z * u.dimensionless).to(u.day))
 leve("date de gel obtenue en soustrayant un COUT a une date",
      lambda: (coulage - _c["cout_du_percement_MAD"] * u.MAD).to(u.day))
 leve("densite de reservations prise pour un nombre nu",
