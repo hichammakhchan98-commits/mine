@@ -1037,3 +1037,80 @@ se calcule avec deux horloges. L'écart avec le bordereau de D1 **change de sign
 1 723 300 MAD au lieu de sous-estimer de 2 821 500. Il reste publié et en dette (D-055), non corrigé
 en silence. Le contrôle qui attraperait la même faute ailleurs — « toute grandeur multipliée par une
 durée de chantier nomme la fenêtre d'emploi de ce qu'elle loue » — n'est pas outillé : dette 32.
+
+---
+
+## D-063 — 29/10/2026 — Un ratio ne se consolide pas ; un montant, si
+
+**Décision.** Tout indicateur consolidé publié par ce cours est accompagné des **sommes** dont il
+est le rapport, et tout tableau de bord multi-niveaux publie, à côté de ses ratios, les **montants**
+qui s'additionnent : dérive à date et dépassement prévu par site. Un ratio agrégé n'est jamais
+calculé comme une moyenne de ratios, et la moyenne, quand elle est montrée, est montrée **comme
+fausse**.
+
+**Pourquoi.** Le CPI d'une opération est ΣVA / ΣCR : une moyenne des CPI pondérée par les coûts
+réels. La moyenne arithmétique des CPI donne ici 0,822 contre 0,877 — 5,5 points, et toujours dans
+le sens du plus gros site, c'est-à-dire dans le sens qui rassure. Les deux nombres s'appellent « CPI
+de l'opération » et un seul veut dire quelque chose.
+
+La conséquence est plus large que l'arithmétique. Un indicateur consolidé **divise la dérive d'un
+site par le poids de ce site** : le site secondaire pèse 12,9 % du coût réel, donc sa dérive arrive
+amortie 7,8 fois. Il peut perdre 689 000 MAD de plus — 7 % de son budget — sans que le CPI consolidé
+franchisse le seuil d'alerte. Et le mécanisme est **récursif** : ce que l'opération fait au site, le
+site le fait à ses lots, de sorte qu'une dérive de lot arrive au sommet divisée par le produit des
+poids.
+
+Ce qui échappe à l'amortissement, ce sont les montants. La dérive de l'opération est la somme des
+dérives, et le dépassement prévu à terminaison aussi. Mieux : leur **répartition** porte
+l'information que les ratios cachent — le site secondaire fait 14 % du budget et 32 % du dépassement
+prévu. C'est ce rapport-là qui dit où aller, et il ne se lit sur aucun CPI.
+
+**Trois règles qui en sortent**, appliquées à partir de D7 :
+
+1. un seuil d'alerte est fixé **par étage** d'agrégation et **avant** de lire les chiffres ; un seuil
+   unique cascadé est un seuil différent à chaque étage, que personne n'a décidé ;
+2. un site peu avancé n'a pas de CPI lisible (D4 publie la courbe d'incertitude) : on le **dit**
+   plutôt que de le consolider en silence ;
+3. ce que la direction lit en premier, ce sont deux montants — ce que l'opération va coûter, et quel
+   site le cause.
+
+**Impact.** `calc/pilotage.py` publie les quatre sommes, les poids, l'amortissement par site, le
+seuil de masquage et le dépassement prévu par site. La figure 1 du module D7 montre la moyenne des
+CPI **étiquetée comme fausse**, à côté du consolidé.
+
+---
+
+## D-064 — 29/10/2026 — Sur un chantier sous interception, le seuil d'alerte est une durée
+
+**Décision.** Pour tout site dont le travail dépend de fenêtres de consignation, le seuil d'alerte
+publié par ce cours est **la période entre deux fenêtres**, exprimée en jours, et non un pourcentage
+de dérive ni une valeur de CPI. Il est publié à côté des indicateurs de coût, pas à leur place.
+
+**Pourquoi.** Un cycle de consignation perdu ne produit **ni dépense ni valeur acquise** : le CPI du
+site ne bouge pas d'un millième. Le SPI finit par bouger, mais il arrive amorti par l'agrégation
+(D-063) et retardé par la latence du reporting — soit, sur ce chantier, 14 jours en moyenne en
+rythme mensuel. L'information arrive quand elle ne sert plus.
+
+Le module B7c avait établi la mécanique : sous consignation, un retard ne grandit pas, il **saute**
+(D-050). D7 en tire la conséquence de pilotage. Le site secondaire accuse 22 jours de retard pour
+une période de fenêtre de 20 : le retard effectif sur sa première interception n'est pas de 22 jours
+mais de 40 — une amplification de 1,82. Et l'escalier a une propriété que le pilotage doit connaître
+: **juste avant une marche, un jour gagné en vaut vingt ; juste après, il n'en vaut aucun.** Un
+conducteur de travaux qui propose de « rattraper dix jours » sur un retard de 22 dépense sans rien
+produire, parce que le travail attendra la même fenêtre.
+
+**Le signal qui arrive à temps**, et c'est le second volet de la décision : la **marge à la date
+limite de demande** de chaque interface. Le registre que B7c publie donne les délais ; la
+soustraction donne les dates ; le classement par marge donne l'ordre du jour d'une revue. Sur ce
+chantier, une demande à 180 jours de délai est déjà en retard de 13 jours à la date d'arrêt, et
+aucun des cinq autres indicateurs du module ne le montre.
+
+**Et le paradoxe, qui est publié plutôt que tu** : le retard du site **recule** sa date de besoin,
+donc sa date limite de demande, donc il rend faisable la demande en retard (+8,6 jours de marge). Les
+deux signaux pointent en sens inverse. Aucun tableau de bord ne tranche cela ; c'est une décision,
+elle se prend avec l'exploitant, et elle s'écrit.
+
+**Impact.** `calc/pilotage.py` publie `alerte_ferroviaire` (période, cycles perdus, amplification,
+seuil) et `interfaces_a_date` (date limite, marge, statut par site), avec une figure en escalier et
+une figure des marges. Les interfaces dont le besoin est déjà passé sont marquées « besoin déjà
+servi » et ne comptent pas comme des retards : une liste d'alarmes éteintes ne se lit pas.

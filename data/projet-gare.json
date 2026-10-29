@@ -1970,7 +1970,13 @@
     "emprise_m": [
      120,
      40
-    ]
+    ],
+    "role": "site principal",
+    "_ou_sont_ses_chiffres": "calc/sorties/suivi.json → valeur_acquise (module D4) pour le budget, la valeur acquise, le coût réel et la date d'arrêt ; calc/sorties/planification.json pour les tâches sous consignation. Rien n'est recopié ici.",
+    "date_de_besoin_premiere_interception_j": {
+     "_lu_dans": "consignations.PSOU.debut",
+     "note": "première tâche du site principal soumise à consignation : le passage souterrain. La date est celle du réseau, pas une déclaration."
+    }
    },
    {
     "id": "S-RER",
@@ -1979,11 +1985,115 @@
      45,
      18
     ],
-    "statut": "esquisse — pas de modules de calcul dedies",
+    "statut": "situation de site déclarée pour D7 — aucun module de calcul dédié",
     "site_geotechnique": "S2 — Agadir (sables laches, nappe a 3,5 m, sismicite forte)",
-    "raison": "aucun defaut concurrent n'etait propose pour ce point ; l'option S2 est retenue pour que D7 porte des sols difficiles sans alourdir le cas phare. Reversible d'un mot."
+    "raison": "aucun defaut concurrent n'etait propose pour ce point ; l'option S2 est retenue pour que D7 porte des sols difficiles sans alourdir le cas phare. Reversible d'un mot.",
+    "role": "site secondaire",
+    "budget_ouvrages_MAD": {
+     "valeur": 9500000,
+     "fourchette": [
+      6500000,
+      14000000
+     ],
+     "note": "budget des OUVRAGES seuls, hors frais de durée — même périmètre que celui que D4 publie pour le site principal, sinon la consolidation additionne deux choses différentes. Ordre de grandeur : une gare de RER de 810 m² d'emprise à environ 11 700 MAD/m², contre 12 150 pour la gare à grande vitesse"
+    },
+    "_lots": "Ce qu'un site remonte réellement : un budget par lot, un avancement physique planifié, un avancement constaté et un coût réel. La valeur acquise s'en DÉRIVE — elle ne se déclare pas. Les avancements sont des pourcentages physiques constatés sur attachement, pas des pourcentages de dépense.",
+    "lots": [
+     {
+      "lot": "0 · Préparation et installation",
+      "budget_MAD": 450000,
+      "avancement_planifie_pct": 100,
+      "avancement_constate_pct": 100,
+      "cout_reel_MAD": 470000,
+      "note": "terminé, léger dépassement : l'installation a demandé un rabattement de nappe non prévu à l'offre"
+     },
+     {
+      "lot": "1 · Terrassements et fondations spéciales",
+      "budget_MAD": 2600000,
+      "avancement_planifie_pct": 85,
+      "avancement_constate_pct": 62,
+      "cout_reel_MAD": 2350000,
+      "note": "LE lot en difficulté : sables lâches et nappe à 3,5 m, rendement des inclusions très inférieur à l'hypothèse d'offre"
+     },
+     {
+      "lot": "2 · Structure",
+      "budget_MAD": 3200000,
+      "avancement_planifie_pct": 20,
+      "avancement_constate_pct": 12,
+      "cout_reel_MAD": 450000,
+      "note": "démarre en retard parce qu'il suit le lot 1"
+     },
+     {
+      "lot": "3 · Clos et couvert",
+      "budget_MAD": 2000000,
+      "avancement_planifie_pct": 0,
+      "avancement_constate_pct": 0,
+      "cout_reel_MAD": 0,
+      "note": "non commencé"
+     },
+     {
+      "lot": "4 · Quais, aménagements et interfaces",
+      "budget_MAD": 1250000,
+      "avancement_planifie_pct": 0,
+      "avancement_constate_pct": 0,
+      "cout_reel_MAD": 0,
+      "note": "non commencé. C'est pourtant lui qui porte la demande d'interception, et une demande se dépose longtemps avant que le lot ne démarre"
+     }
+    ],
+    "date_de_besoin_premiere_interception_j": {
+     "valeur": 190,
+     "fourchette": [
+      160,
+      230
+     ],
+     "note": "jour ouvré, dans le calendrier commun de l'opération, où le site secondaire a besoin de sa première consignation (raccordement des quais à la voie existante). Déclaré ici parce qu'aucun planning de ce site n'est modélisé"
+    },
+    "retard_constate_j": {
+     "valeur": 22,
+     "fourchette": [
+      12,
+      35
+     ],
+     "note": "retard calendaire constaté sur le lot 1 à la date d'arrêt, en jours ouvrés, tel que le site le remonte. Il est DÉCLARÉ et non déduit du SPI : un SPI est un rapport de budgets, il ne donne pas des jours"
+    }
    }
-  ]
+  ],
+  "_role": "Module D7 — pilotage de PLUSIEURS sites. Le site principal n'est pas redéclaré ici : son budget, son avancement et son coût réel sont publiés par les modules D1, D2 et D4, et D7 les LIT (D-039). Seul le second site est déclaré, parce qu'aucun module ne le produit. Tout y est V3 : c'est une situation de site fabriquée pour la démonstration, et elle est construite lot par lot plutôt que posée en bloc — un chef de projet reçoit des lots, pas un CPI.",
+  "date_d_arret_commune": "Les deux situations sont arrêtées au MÊME jour ouvré que celui du module D4 — c'est la première décision d'un pilotage multi-sites, et elle ne va pas de soi : chaque site a son rythme de facturation et son propre comptable. Consolider deux dates différentes produit un indicateur qui ne mesure rien.",
+  "reporting": {
+   "_role": "Le rythme du reporting et le délai de remontée. Les deux fabriquent ensemble la LATENCE de détection : le temps qui sépare le moment où une dérive commence du moment où quelqu'un peut la lire.",
+   "periode_hebdomadaire_j": {
+    "valeur": 5,
+    "fourchette": [
+     5,
+     5
+    ],
+    "note": "un point par semaine ouvrée. Sans fourchette : c'est une décision d'organisation, pas une incertitude"
+   },
+   "periode_mensuelle_j": {
+    "valeur": 20,
+    "fourchette": [
+     20,
+     23
+    ],
+    "note": "un rapport par mois, en jours ouvrés. La fourchette ne couvre que la variation du nombre de jours ouvrés d'un mois à l'autre"
+   },
+   "delai_de_remontee_j": {
+    "valeur": 4,
+    "fourchette": [
+     2,
+     10
+    ],
+    "note": "délai entre la fin de la période et la disponibilité des données consolidées : relevés d'attachement, saisie, vérification, consolidation. C'est le délai qu'on oublie en comparant deux rythmes de reporting"
+   },
+   "_pourquoi_la_latence_compte": "Une dérive détectée tard n'est pas seulement détectée tard : elle a continué de produire ses effets pendant tout ce temps, et ces jours-là se paient au tarif des frais de durée."
+  },
+  "seuils_du_tableau_de_bord": {
+   "_role": "DÉCISIONS de pilotage, pas des hypothèses : une direction de projet choisit ses seuils et les écrit. Deux niveaux, parce qu'un seul transforme le tableau de bord en alarme binaire — et une alarme qui sonne tout le temps ne sonne plus.",
+   "vigilance_CPI": 0.95,
+   "alerte_CPI": 0.85,
+   "_ce_que_les_deux_niveaux_veulent_dire": "Vigilance : on explique l'écart à la revue mensuelle et on dit ce qu'on fait. Alerte : on remonte au maître d'ouvrage et on ouvre une analyse. Les deux valeurs n'ont rien de normatif ; ce qui compte est qu'elles soient écrites AVANT de lire le tableau de bord, et qu'elles soient fixées par ÉTAGE d'agrégation."
+  }
  },
  "ratios_V3": {
   "_role": "Ratios d'ordre de grandeur. En phase § 5.0, les quantites ne peuvent PAS sortir d'un dimensionnement : elles sortent de ces ratios, declares avec leur fourchette.",

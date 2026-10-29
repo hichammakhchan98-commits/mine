@@ -594,5 +594,75 @@ leve("ratio jours-par-mois pris pour un nombre nu",
 leve("duree de location additionnee a une surface de base-vie",
      lambda: (duree_grues + surface).to(u.month))
 
+# ---------------------------------------------------------------- pilotage.py (D7)
+print("\npilotage.py — consolidation, latence, retard quantise")
+_pi = json.loads((SORTIES / "pilotage.json").read_text(encoding="utf-8"))
+_c = _pi["consolidation"]
+# Un CPI est un rapport de deux MONTANTS : il est sans dimension, et c'est precisement
+# ce qui le rend non additif. pint ne peut pas dire qu'une moyenne de rapports est
+# fausse — elle est homogene — mais il verifie que le rapport des sommes en est un.
+va = _c["valeur_acquise_VA_MAD"] * u.MAD
+cr = _c["cout_reel_CR_MAD"] * u.MAD
+dit(str((va / cr).to(u.dimensionless).units) == "dimensionless"
+    and abs((va / cr).magnitude - _c["CPI_consolide"]) < 1e-4,
+    "CPI consolide = somme des VA / somme des CR est SANS DIMENSION",
+    f"{_c['CPI_consolide']}")
+dit(str((0.01 * cr).to(u.MAD).units) == "MAD"
+    and abs((0.01 * cr).magnitude - _c["MAD_pour_un_centieme_de_CPI"]) < 1,
+    "un centieme de CPI x le cout reel total est un MONTANT",
+    f"{_c['MAD_pour_un_centieme_de_CPI']:.0f} MAD")
+# Les derives s'ADDITIONNENT parce qu'elles sont en MAD. C'est tout le message du module,
+# et c'est la seule part que pint peut tenir.
+_d = [s["derive_MAD"] * u.MAD for s in _pi["sites"]]
+dit(abs(sum(_d).to(u.MAD).magnitude - _c["derive_totale_MAD"]) < 1,
+    "la somme des derives de site est un MONTANT, et c'est la derive de l'operation",
+    f"{_c['derive_totale_MAD']:.0f} MAD")
+
+# La latence est une DUREE : demi-periode plus delai, deux durees.
+_l = _pi["latence"]["lignes"][1]
+per = _l["periode_j"] * u.day
+rem = _l["delai_de_remontee_j"] * u.day
+lat = (per / 2 + rem).to(u.day)
+dit(abs(lat.magnitude - _l["latence_moyenne_j"]) < 0.05,
+    "latence = demi-periode + delai de remontee est une DUREE",
+    f"{lat.magnitude:.1f} j")
+cout_j = _pi["latence"]["cout_d_un_jour_MAD"] * u.MAD / u.day
+dit(abs((lat * cout_j).to(u.MAD).magnitude
+        - _l["cout_de_la_latence_moyenne_MAD"]) < 1,
+    "latence x cout journalier est un MONTANT",
+    f"{_l['cout_de_la_latence_moyenne_MAD']:.0f} MAD")
+
+# Le retard quantise : un multiple entier d'une periode reste une duree, et
+# l'amplification est un rapport de durees, donc sans dimension.
+_a = _pi["alerte_ferroviaire"]
+periode = _a["periode_entre_fenetres_j"] * u.day
+retard = _a["retard_constate_du_site_j"] * u.day
+effectif = (_a["cycles_perdus"] * periode).to(u.day)
+dit(abs(effectif.magnitude - _a["retard_effectif_j"]) < 1e-9,
+    "retard effectif = nombre de cycles x periode est une DUREE",
+    f"{effectif.magnitude:.0f} j")
+dit(str((effectif / retard).to(u.dimensionless).units) == "dimensionless",
+    "l'amplification est un rapport de durees, SANS DIMENSION",
+    f"x{_a['amplification']}")
+
+# Une interface : une date de besoin moins un delai, deux durees depuis la meme origine.
+_i = _pi["interfaces"]["lignes"][0]
+besoin = _i["date_de_besoin_j"] * u.day
+delai = _i["delai_ouvre_j"] * u.day
+dit(abs((besoin - delai).to(u.day).magnitude - _i["date_limite_de_demande_j"]) < 0.1,
+    "date limite = date de besoin - delai est une DATE, en jours",
+    f"jour {_i['date_limite_de_demande_j']:.0f}")
+
+leve("CPI obtenu en divisant une valeur acquise par une duree",
+     lambda: (va / periode).to(u.dimensionless))
+leve("derive consolidee obtenue en additionnant des CPI",
+     lambda: (_c["CPI_consolide"] * u.dimensionless + _d[0]).to(u.MAD))
+leve("latence obtenue en additionnant une periode et un cout journalier",
+     lambda: (per + cout_j).to(u.day))
+leve("cout de la latence obtenu sans multiplier par la duree",
+     lambda: (cout_j + 1 * u.MAD).to(u.MAD))
+leve("date limite obtenue en soustrayant un delai a un MONTANT",
+     lambda: (va - delai).to(u.day))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

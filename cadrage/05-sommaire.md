@@ -955,3 +955,47 @@ EFFET SUR LE COURS : publie un ecart avec D1 — qui facture UNE grue au mois su
           calc/run_all.py : placee avant les calculs, elle controlait les sorties de l'execution
           precedente, et laissait un module entier non verifie.
 ```
+
+### D7 — Pilotage et suivi multi-sites (écrit le 29/10/2026)
+```text
+ID : D7               Titre : Pilotage et suivi multi-sites — ce qu'une agregation vous cache
+Palier : P1           Type : gestion     Niveau : [N]     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Parties : livre en UN module a trois sections (a organisation et reporting · b tableau de bord
+          consolide · c interfaces et alerte precoce) plutot qu'en trois livraisons. Ecart assume
+          avec la fiche d'origine (D-061) : les trois parties partagent les memes donnees et la
+          meme these, et les separer aurait oblige a redire deux fois la loi d'amortissement.
+Options : O1 – · O2 ✓ (n = 6 : CPI par site, latence, lots du site secondaire, derive par site,
+          escalier du retard quantise, interfaces par marge) · O3 – · O4 ○ non retenu · O5 ✓ ·
+          O6 ✓ (la revue du 4e mois, de bout en bout, en S4) · O7 ✓
+Partie ⏸ : obligations contractuelles de reporting (contenu, destinataires, delais), seuils de
+          declaration imposes par le marche, conditions d'ouverture d'une reclamation, formes et
+          delais des ordres de service, regles d'acces du gestionnaire d'infrastructure.
+Contenu propre : UN RATIO NE SE CONSOLIDE PAS — CPI consolide 0,877 contre une moyenne des CPI a
+          0,822, et l'ecart va toujours dans le sens du plus gros site ; la LOI D'AMORTISSEMENT —
+          un indicateur consolide divise la derive d'un site par son poids, x7,8 ici, et
+          254 058 MAD de derive pour un centieme de CPI ; le SEUIL DE MASQUAGE — le site
+          secondaire peut perdre 689 000 MAD de plus sans faire franchir le seuil d'alerte ; le
+          MASQUAGE RECURSIF — un lot a 0,686 dans un site a 0,748, et les amortissements se
+          multiplient d'un etage a l'autre ; la LATENCE — demi-periode + delai de remontee, dont
+          la remontee fait 62 % en hebdomadaire ; et le resultat le plus utile au lecteur : sur un
+          chantier ferroviaire LE SEUIL D'ALERTE EST UNE DUREE, la periode entre deux fenetres de
+          consignation, parce qu'un cycle perdu ne depense rien et n'apparait dans aucun CPI.
+Donnees lues : calc/sorties/suivi.json (D4 : BAC, VP, VA, CR, CPI, SPI du site principal — jamais
+          recopies), planification.json (segments, consignations, calendrier), prix.json (duree en
+          mois), reception.json (cout d'un jour hors penalites), ferroviaire.json (registre des
+          interfaces et delais de demande) ; data/ -> multi_sites.* (site secondaire declare lot
+          par lot, seuils du tableau de bord, rythmes de reporting)
+Donnees ecrites : calc/sorties/pilotage.json
+Contre-calcul : etalonnage sur cas fermes (calc/etalonnage/pilotage_cas_ferme.py) — le cas
+          degenere ou la moyenne des CPI EST juste (couts reels egaux), la loi d'amortissement
+          verifiee exactement, la forme fermee du seuil de masquage, et cinq points de rupture de
+          l'escalier du retard quantise.
+Double lecture entreprise / MOE : ✓ (la revue critique de l'exercice 5 est un tableau de bord a
+          refuser)     Fiche memo S8 : ✓ (une page de tableau de bord + 6 reflexes)
+Exercices : 2 application + 2 problemes + 1 revue critique   Quiz : 8 questions
+Tests : calc/tests/test_pilotage.py (90 controles, 4 canaris) + etalonnage + verif_unites + rendu
+EFFET SUR LE COURS : le format « ::n3 » n'existait pas et rendait la valeur BRUTE — 45 occurrences
+          dans six modules deja livres, dont des CPI a quatre decimales a cote des memes a trois.
+          Le build echoue desormais sur un format inconnu, et n3/n4 sont implementes.
+```

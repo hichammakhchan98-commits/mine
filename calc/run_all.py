@@ -38,6 +38,10 @@ ETAPES = [
                                  str(RACINE / "etalonnage" / "installation_cas_ferme.py")]),
     ("Installation (C1)",    [sys.executable, str(RACINE / "installation.py")]),
     ("Tests installation",   [sys.executable, str(RACINE / "tests" / "test_installation.py")]),
+    ("Etalonnage pilotage",  [sys.executable,
+                              str(RACINE / "etalonnage" / "pilotage_cas_ferme.py")]),
+    ("Pilotage (D7)",        [sys.executable, str(RACINE / "pilotage.py")]),
+    ("Tests pilotage",       [sys.executable, str(RACINE / "tests" / "test_pilotage.py")]),
     # En DERNIER : la verification dimensionnelle lit les sorties de calc/sorties/. Placee
     # plus haut, elle controlerait les sorties de l'execution precedente — ce qu'elle a
     # fait jusqu'ici, et qui laissait un module non verifie pendant une execution entiere.

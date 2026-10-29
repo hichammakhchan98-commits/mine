@@ -64,11 +64,18 @@ function substituerDans(texte, f) {
       if (fmt === "n1") v = Number(v).toFixed(1);
       else if (fmt === "n2") v = Number(v).toFixed(2);
       else if (fmt === "n0") v = Math.round(Number(v));
+      else if (fmt === "n3") v = Number(v).toFixed(3);
+      else if (fmt === "n4") v = Number(v).toFixed(4);
       else if (fmt === "n3s") v = Number(v).toPrecision(3);
       // « ::k » : trois chiffres significatifs en notation decimale (§ 3.6). `toPrecision`
       // bascule en exponentielle au-dela de six chiffres et rendait « 1.28e+5 » au
       // milieu d'une phrase. Un montant publie au dirham pres alors que ses entrees sont
       // des hypotheses a facteur deux est un faux niveau de precision.
+      // Un format INCONNU est une erreur, pas une tolerance : « ::n3 » n'existe pas, et
+      // il sortait la valeur brute — 0,8962 a cote d'un 0,896 dans la meme figure. Le
+      // defaut est de la meme famille qu'une option de figure acceptee et ignoree.
+      else if (fmt && !["n0", "n1", "n2", "n3", "n4", "n3s", "k"].includes(fmt))
+        throw new Error(`format « ::${fmt} » inconnu (n0, n1, n2, n3, n4, n3s, k)`);
       else if (fmt === "k") {
         const n = Number(v);
         const p = n ? Math.pow(10, Math.floor(Math.log10(Math.abs(n))) - 2) : 1;
