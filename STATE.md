@@ -6,7 +6,7 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `D7` — pilotage multi-sites. Zip : `cours-genie-civil-P1-D7.zip`
+- **Dernier livrable** : `B7b + C4` — lots techniques et second œuvre. Zip : `cours-genie-civil-P1-B7b-C4.zip`
 - **Toutes les passes /devil sont faites**, tous les bloquants corrigés. C7 : **45 défauts,
   13 bloquants, 22 majeurs — livraison refusée en première passe**, tous traités (D-049 à D-052).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
@@ -29,9 +29,9 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Statut des modules
 
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
-**24 livraisons**, dont **13 faites** et 12 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
+**24 livraisons**, dont **14 faites** et 10 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
-- **Livré (13)** : `E1` (socle) · `TV` (tranche verticale) · `D2` (planification, 32 défauts,
+- **Livré (14)** : `E1` (socle) · `TV` (tranche verticale) · `D2` (planification, 32 défauts,
   8 bloquants — D-035) · `D1` (métrés et prix, 28 défauts, 7 bloquants) · `D4` (suivi et contrôle,
   32 défauts, 8 bloquants — D-042) · `C3` (gros œuvre, 33 défauts, 6 bloquants — D-040, D-041) ·
   `B3e` (béton armé en exécution, 36 défauts, 11 bloquants dont **trois erreurs de modèle
@@ -40,9 +40,10 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   D-049 à D-052) · `REC` (réception, DOE, garanties, 28 défauts dont 8 bloquants — D-054 à
   D-057) · `RC1` (revue critique du palier, § 5.5, 23 défauts dont 6 bloquants — D-058) ·
   `C1` (installation de chantier, 23 défauts dont **3 bloquants** — D-059 à D-062) ·
-  `D7` (pilotage multi-sites, 29 défauts dont **4 bloquants** — D-063, D-064).
-  Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
-- ▶ **actifs, non écrits (11)** : A1, A2a, A5a, B5a-exec, B7b, C2, C4, C6, D3, D6, M3D
+  `D7` (pilotage multi-sites, 29 défauts dont **4 bloquants** — D-063, D-064) ·
+  `B7b+C4` (lots techniques et second œuvre, D-065, D-066 — **passe à faire**).
+  Toutes les passes sont faites sauf celle de B7b+C4 ; tous leurs bloquants corrigés.
+- ▶ **actifs, non écrits (9)** : A1, A2a, A5a, B5a-exec, C2, C6, D3, D6, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
 Fiches-module : `cadrage/05-sommaire.md` (périmètre d'origine, conservé pour mémoire).
@@ -96,7 +97,7 @@ paramètre déclaré est **relu dans le résultat qu'il engendre** ; tout **verd
 même tâche **trouvent les mêmes heures** ; chaque verdict porte son canari. **74 canaris, tous
 rouges**, et deux ont trouvé seuls une erreur que la passe n'avait pas vue : un canari cherche.
 
-**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle. **V2 en attente** : aucune.
+**Dette TV** : scalaires V3 hors registre · deux bibliothèques hors vérification dimensionnelle.
 
 ## Simplifications déclarées (§ R6) · Grilles § 7.2 : minimum 2 partout (`QA/grilles-72.md`)
 
@@ -123,6 +124,7 @@ Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une s
 | 26 | **D1 et REC divergent sur la date de restitution de la retenue de garantie.** D1 écrit qu'elle « ne revient qu'après la réception » et bâtit sa courbe de trésorerie là-dessus ; REC dit qu'elle est immobilisée jusqu'à une date que le marché fixe (⏸), postérieure. REC ne contredit plus D1 frontalement, mais le besoin de trésorerie publié par D1 est optimiste de la durée de la garantie | revue de palier |
 | 25 | **La date de fin publiée par D2 ne comprend pas une réception décomposée.** REC mesure, en rejouant le réseau, que les deux tâches de fin du planning demandent 16 jours ouvrés de plus que ce qu'elles portent : ESSA 15 j prévus pour 25 demandés, RECE 10 pour 16. Soit **16 jours de fin**, de 260 000 à 2 046 000 MAD selon que le chantier est ou non sous pénalités. Les deux durées sont des décisions de ce cours, posées à deux moments (D-055) ; l'écart n'est pas reporté dans `data/` tant que le lecteur n'a pas tranché | revue de palier |
 | 33 | **Le format `::n3` n'existait pas et rendait la valeur brute** — 45 occurrences dans six modules livrés, dont des CPI à quatre décimales à côté des mêmes à trois. Le build échoue désormais sur un format inconnu, et `n3`/`n4` sont implémentés. **La leçon est la même que pour les options de figure : un format ignoré en silence est un défaut, pas une tolérance** | fait |
+| 35 | **Les six corps d'état du second œuvre sont des durées V3** (30, 45, 30, 25, 25, 20 j) et le coût d'une frontière de zone aussi (0,4 j). Leur somme reproduit à 4 % la durée que D2 déclare, ce qui crédite le **modèle** — une file pipelinée sur huit zones — mais pas chacune des six durées : six nombres peuvent se compenser | attachements réels |
 | 34 | **Le second site de D7 est entièrement V3** : budget, lots, avancements, coût réel, date de besoin et retard sont fabriqués. Les mécanismes (consolidation, amortissement, masquage, latence, quantisation) sont exacts et étalonnés ; les nombres qui les illustrent ne décrivent aucun chantier réel. **Et la latence n'est chiffrée que pour l'opération** : les frais de durée du second site ne sont pas déclarés | levée du § 5.0 |
 | 32 | **Deux contrôles que la passe de C1 propose et que personne n'a outillés** : (1) « la cadence du débit est celle qui produit la durée de la tâche » ; (2) **« toute grandeur multipliée par une durée de chantier nomme la fenêtre d'emploi de la ressource qu'elle loue »**. Le second attraperait la ligne de frais de durée de D1, qui porte le même défaut depuis trois modules | à outiller, et c'est la plus rentable |
 | 28 | **D1 budgète une grue sur 29,7 mois, C1 en retient deux sur 5,8.** D1 facture la grue en frais de durée sur toute la durée du chantier ; C1 lit dans le planning que les tâches servies par la grue tiennent dans une fenêtre de 117 j ouvrés. Les deux écarts vont en sens inverse et celui de la durée l'emporte : **D1 surestime de 1 723 300 MAD**. C1 publie l'écart et ne corrige pas le bordereau (D-055, D-062) : la correction demande une révision explicite du prix de revient, donc une décision du lecteur | revue de palier |
@@ -131,20 +133,18 @@ Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une s
 | 17, 24 | **C3 et C7, non corrigés.** C3 : le `floor` du parc ne mord sur aucune ligne du tableau (m5) · cure de 2 j insensible sur sa fourchette (m6) · loyer et montage sans bornes dans le tableau (m7) · loyer sans battement ni repli, donc **borne basse** (m8) · deux durées du plancher coexistent dans `data/` (m10). C7 : la pondération de nuit (1,8) et l'abattement de cadence de nuit de B7c (30 %) restent deux coefficients pour une même cause, leurs notes se croisent sans qu'aucun soit dérivé de l'autre · 4 mineurs de forme (`QA/C7-passe1.md`) | avant la prochaine revue |
 | 20 | **B3e, non corrigés** : les 17 majeurs et 8 mineurs que la correction des bloquants n'a pas emportés — dont ~20 nombres techniques encore écrits à la main (§ 4.3) et trois listes fermées de points de contrôle avant coulage (C3 en a deux, B3e une) sans renvoi croisé (D-039 non appliqué entre les deux modules). Détail : `QA/B3e-passe1.md` | avant la revue de palier |
 | 19 | **B3e** : le plan de ferraillage est **fictif et calibré** sur les ratios V3, non dimensionné — une première version posée à vue pesait 35 à 43 % de moins. Le module le dit quatre fois ; il reste qu'aucune de ses sections n'est justifiée. Levée : module **B3c** à l'arrivée du BAEL | levée du § 5.0 |
-| 18 | **D4, non corrigés** : les 15 majeurs et 9 mineurs que la réécriture de S3c, S4c, de l'exercice 2 et de la fiche mémo n'a pas emportés (détail : `QA/D4-passe1.md`) | avant la revue de palier |
-| 16 | **D1, non corrigés** (D-034) : figure 4 écrite en dur dans `figures()` au lieu d'être générée depuis `data/` (M6) · un seul canari pour cinq verdicts (M9) · nombres encore écrits à la main (M10) · dix mineurs. Et une **simplification déclarée** : tous les totaux de D1 sont calculés **sans** la ligne de divers calibrée (28,7 %), donc ce sont des bornes basses | avant la revue de palier |
+| 16, 18 | **D1 et D4, non corrigés** (D-034). D1 : figure 4 écrite en dur au lieu d'être générée (M6) · un seul canari pour cinq verdicts (M9) · nombres à la main (M10) · dix mineurs · et une **simplification déclarée** — tous les totaux de D1 sont calculés **sans** la ligne de divers calibrée (28,7 %), donc ce sont des bornes basses. D4 : les 15 majeurs et 9 mineurs que la réécriture de S3c, S4c, de l'exercice 2 et de la fiche mémo n'a pas emportés (`QA/D4-passe1.md`) | avant la revue de palier |
 | 15 | **D1, corrigé en écrivant D4** : l'avancement déclaré de la situation était saisi à la main dans `data/` et décrivait un état de chantier du 2ᵉ mois pour une situation annoncée au 7ᵉ. Il est désormais dérivé du réseau (`calc/etat.py`), partagé par D1 et D4 | fait, D-039 |
 | 14 | **D2, non corrigés** (D-034) : réseau, lots et `21,7` en dur dans `calc/` au lieu de `data/` (M1) · 9 effectifs posés sans forme `{valeur, fourchette}` (M3) · levier « protection de voie » modélisé par un contournement (M5) · nombres encore écrits à la main (M10) · quantités calculées jamais publiées (m1) · axe de la ligne d'équilibre (m2, m3) · deux libellés plus larges que leur métré (m5) · pas de double lecture MOE (m6) · effet de seuil des fenêtres non commenté (m9, m10) | avant la revue de palier |
 
 ## Données modifiées depuis la dernière livraison
 
-Jeux figés en 1.0, valeurs de conception inchangées. Ajouts : le bloc `armatures` (plan de
-ferraillage fictif calibré, B3e) et le bloc `ferroviaire` (plages de consignation, interfaces,
-B7c). Corrigé par les passes : parc de tables, étais, `suivi.quantites_relevees`, `materiel`,
-`cycle_zone`, portées des nappes, segments de cadres, base des ratios d'acier. **207 hypothèses V3
-registrées**, toutes couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Ajouts de C1 : le bloc `installation` (grue, trois variantes de calage, pièces à lever — dont celle de charpente **lue** chez B7c et non redéclarée —, levages, base-vie, aires) et `installation.voisinage`. Le taux d'utilisation de la grue porte son unité dans son nom (D-056). Ajouts de D7 : `multi_sites` (le second site déclaré lot par lot, les deux seuils du tableau de bord, les rythmes de reporting et le délai de remontée). Détail dans git et dans `QA/`.
+Jeux figés en 1.0, valeurs de conception inchangées. Ajouts : `armatures` (B3e) et `ferroviaire`
+(B7c). Corrigé par les passes : parc de tables, étais, `suivi.quantites_relevees`, `materiel`,
+`cycle_zone`, portées des nappes, segments de cadres, base des ratios d'acier. **227 hypothèses V3
+registrées**, toutes couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Ajouts de C1 : le bloc `installation` (grue, trois variantes de calage, pièces à lever — dont celle de charpente **lue** chez B7c et non redéclarée —, levages, base-vie, aires) et `installation.voisinage`. Le taux d'utilisation de la grue porte son unité dans son nom (D-056). Ajouts de D7 : `multi_sites` (second site lot par lot, seuils du tableau de bord, rythmes de reporting). Ajouts de B7b+C4 : `lots_techniques` (diamètres courants, densité de réservations, délai de gel, cinq postes d'un percement, six corps d'état et le coût d'une frontière de zone). Détail dans git et dans `QA/`.
 
 ## Effort consommé (§ 13.2)
 
-**22 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC, RC1, C1 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
-**Avancement sur le programme du 31/10** : **13 livraisons sur 18**. C1 puis D7 ont été livrés sur go du lecteur. Restent : C4+B7b, C2, C6, D3, D6, A1, A2a, A5a, B5a-exec, M3D — plus que le budget ne permet d'ici le 31/10. L'arbitrage est au lecteur, et il est posé, pas découvert le 31.
+**23 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC, RC1, C1 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
+**Avancement sur le programme du 31/10** : **14 livraisons sur 18**. C1, D7 puis B7b+C4 ont été livrés sur go du lecteur. Restent : C2, C6, D3, D6, A1, A2a, A5a, B5a-exec, M3D — plus que le budget ne permet d'ici le 31/10. L'arbitrage est au lecteur, et il est posé, pas découvert le 31.

@@ -324,8 +324,12 @@
     // `nom` : le nom de la serie, en haut a gauche du cadre. Il figurait dans la liste
     // des options acceptees sans que le generateur ne le dessine : une figure de REC le
     // passait depuis sa livraison, et il etait ignore en silence.
-    if (o.nom) g += texte(r.x(Math.min(...xs)), 30, o.nom,
-      { taille: 10.5, mono: 1, couleur: o.couleur || "#1b4f72", gras: 1 });
+    if (o.nom) {
+      const aGauche = xs[vs.indexOf(Math.max(...vs))] < (Math.min(...xs) + Math.max(...xs)) / 2;
+      g += texte(aGauche ? r.x(Math.max(...xs)) : r.x(Math.min(...xs)), 30, o.nom,
+        { taille: 10.5, mono: 1, couleur: o.couleur || "#1b4f72", gras: 1,
+          ancre: aGauche ? "end" : "start" });
+    }
     if (o.titre) g += texte(L / 2, 20, o.titre, { taille: 12, gras: 1, ancre: "middle" });
     return { svg: g, largeur: L, hauteur: H };
   }

@@ -664,5 +664,65 @@ leve("cout de la latence obtenu sans multiplier par la duree",
 leve("date limite obtenue en soustrayant un delai a un MONTANT",
      lambda: (va - delai).to(u.day))
 
+# ---------------------------------------------------------------- synthese.py (B7b, C4)
+print("\nsynthese.py — passage libre, gel du carnet, file de corps d'etat")
+_sy = json.loads((SORTIES / "synthese.json").read_text(encoding="utf-8"))
+# Un passage libre est une difference de LONGUEURS : un espacement moins un diametre.
+_e = _sy["passage_libre"]["endroits"][0]
+esp = _e["espacement_mm"] * u.mm
+dia = _e["dia_armature_mm"] * u.mm
+libre = (esp - dia).to(u.mm)
+dit(abs(libre.magnitude - _e["passage_libre_mm"]) < 1e-6,
+    "passage libre = espacement - diametre est une LONGUEUR",
+    f"{libre.magnitude:.0f} mm")
+# Le nombre de reservations : une densite par unite de SURFACE fois une surface.
+_g = _sy["gel_des_reservations"]
+dens = _g["densite_par_m2"] / u.m**2
+surf = _g["surface_d_une_zone_m2"] * _g["nb_zones"] * u.m**2
+dit(str((dens * surf).to(u.dimensionless).units) == "dimensionless"
+    and abs((dens * surf).magnitude - _g["reservations_sur_le_plancher"]) < 1,
+    "densite par m2 x surface est un NOMBRE, sans dimension",
+    f"{_g['reservations_sur_le_plancher']:.0f} reservations")
+# Une date de gel est une date moins un delai : deux durees depuis la meme origine.
+_l = _g["lignes"][0]
+coulage = _l["date_de_coulage_j"] * u.day
+delai = _g["delai_de_gel_j"] * u.day
+dit(abs((coulage - delai).to(u.day).magnitude - _l["date_de_gel_j"]) < 0.05,
+    "date de gel = date de coulage - delai est une DATE, en jours",
+    f"jour {_l['date_de_gel_j']:.0f}")
+# La file de corps d'etat : une somme de durees divisee par un NOMBRE de zones, plus un
+# nombre de frontieres fois un cout en jours. Tout doit rester en jours.
+_so = _sy["second_oeuvre"]
+W = [c["duree_totale_j"] * u.day for c in _so["corps"]]
+Z = _so["nb_zones_du_gros_oeuvre"]
+fr = _so["cout_de_frontiere_j"] * u.day
+T = ((sum(W) + (Z - 1) * max(W)) / Z + len(W) * (Z - 1) * fr).to(u.day)
+dit(abs(T.magnitude - _so["duree_a_Z_zones_j"]) < 0.05,
+    "file = (somme + (Z-1) x max) / Z + N (Z-1) f est une DUREE",
+    f"{T.magnitude:.1f} j")
+dit(str((T / (_so["duree_declaree_par_D2_j"] * u.day)).to(u.dimensionless).units)
+    == "dimensionless",
+    "le rapport des deux voies est SANS DIMENSION",
+    f"{T.magnitude / _so['duree_declaree_par_D2_j']:.3f}")
+# Le cout d'un percement : une somme de MONTANTS, et un rapport sans dimension.
+_c = _sy["cout_du_trou_oublie"]
+postes = [p_["MAD"] * u.MAD for p_ in _c["postes"]]
+dit(abs(sum(postes).to(u.MAD).magnitude - _c["cout_du_percement_MAD"]) < 0.01,
+    "le cout d'un percement est une somme de MONTANTS",
+    f"{_c['cout_du_percement_MAD']:.0f} MAD")
+dit(str((sum(postes) / (_c["cout_d_une_reservation_prevue_MAD"] * u.MAD))
+        .to(u.dimensionless).units) == "dimensionless",
+    "et le rapport a la reservation prevue est SANS DIMENSION",
+    f"x{_c['rapport']}")
+
+leve("passage libre obtenu en soustrayant un NOMBRE de reservations a un espacement",
+     lambda: (esp - _g["reservations_sur_le_plancher"] * u.dimensionless).to(u.mm))
+leve("file de corps d'etat obtenue sans diviser par le nombre de zones",
+     lambda: ((sum(W) + (Z - 1) * max(W)) / (Z * u.day)).to(u.day))
+leve("date de gel obtenue en soustrayant un COUT a une date",
+     lambda: (coulage - _c["cout_du_percement_MAD"] * u.MAD).to(u.day))
+leve("densite de reservations prise pour un nombre nu",
+     lambda: (dens * (1 * u.dimensionless)).to(u.dimensionless))
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

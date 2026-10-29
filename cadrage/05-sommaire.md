@@ -999,3 +999,49 @@ EFFET SUR LE COURS : le format « ::n3 » n'existait pas et rendait la valeur BR
           dans six modules deja livres, dont des CPI a quatre decimales a cote des memes a trois.
           Le build echoue desormais sur un format inconnu, et n3/n4 sont implementes.
 ```
+
+### B7b + C4 — Lots techniques et second œuvre (écrit le 29/10/2026)
+```text
+ID : B7b + C4         Titre : Lots techniques et second oeuvre — vus par l'interface
+Palier : P1           Type : synthese + execution     Niveau : [C]     Etat : LIVRE
+PLAFOND TENU : un seul module pour les deux fiches, parce qu'elles partagent le meme sujet —
+          l'INTERFACE. Les separer aurait double les generalites sans doubler le contenu, et
+          le § 2.2 plafonne l'ensemble a 10 % du cours. Ecart assume avec les deux fiches
+          d'origine (D-061), qui prevoyaient deux livraisons.
+Socle : S1 a S8 (tous)
+Options : O1 ○ retenu (le carnet de reservations EST le plan annote) · O2 ✓ (n = 5) · O3 – ·
+          O4 ✓ (la chaine de reception des supports) · O5 ✓ (le prix d'un trou oublie) ·
+          O6 ✓ (l'etude de cas du lundi matin) · O7 ✓ — RELEVE : les deux fiches le disaient
+          sans objet. Il y a bien deux calculs non normatifs, et l'un a une forme fermee.
+Partie ⏸ : regles de percement d'un element porteur, sections et positions admissibles,
+          distances aux armatures et aux appuis, retablissement du degre coupe-feu d'une
+          traversee, classements au feu, tolerances contractuelles de planeite et d'humidite.
+Contenu propre : LA GEOMETRIE AVANT LE DEBAT — passage libre = espacement moins diametre, lu
+          sur le ferraillage de B3e : 92 mm sur appui, 192 en travee, et les diametres 200,
+          250 et 315 mm ne passent NULLE PART ; LA DATE DE GEL — un carnet n'est pas un
+          document mais huit echeances, et elles tombent aux jours 37 a 61 quand le second
+          oeuvre commence au jour 500, soit 439 jours plus tard ; LE PRIX D'UN TROU OUBLIE —
+          x31, dont 47 % ne tiennent ni a la machine ni a l'ouvrier ; LA FILE DE CORPS
+          D'ETAT — forme fermee T(Z) = (SW + (Z-1).maxW)/Z + N(Z-1)f, qui decroit, bute sur
+          le corps le plus lent et remonte quand les frontieres l'emportent ; LA RECEPTION
+          DES SUPPORTS — la seule decision irreversible d'une journee de second oeuvre.
+Donnees lues : calc/sorties/ferraillage.json (cadres et nappes de B3e — aucun espacement
+          redeclare), planification.json (segments MEZZ et SECO, duree declaree du second
+          oeuvre), gros-oeuvre.json (zones et cadence de C3), suivi.json (date d'arret) ;
+          data/ -> lots_techniques.* (diametres, densite, delai de gel, postes d'un percement,
+          six corps d'etat, cout de frontiere)
+Donnees ecrites : calc/sorties/synthese.json
+Contre-calcul : SECONDE VOIE sur la duree du second oeuvre — la forme fermee donne 78 j contre
+          75 j declares par D2, deux chemins sans donnee commune, 4 % d'ecart. Etalonnage sur
+          cas fermes (calc/etalonnage/synthese_cas_ferme.py) : serie pure en Z=1, plancher
+          quand Z tend vers l'infini, forme (N+Z-1).W/Z a durees egales, decroissance stricte
+          sans frontiere, optimum interieur avec, et le passage libre endroit par endroit.
+Double lecture entreprise / MOE : ✓ (l'exercice 3 est un carnet de reservations a viser, deux
+          observations bloquantes)     Fiche memo S8 : ✓ (5 reflexes, 2 formules)
+Exercices : 1 application + 1 probleme + 1 revue critique   Quiz : 7 questions
+Tests : calc/tests/test_synthese.py (56 controles, 3 canaris) + etalonnage + verif_unites + rendu
+EFFET SUR LE COURS : premiere SECONDE VOIE sur une duree declaree a l'Etape 0. Les 75 jours de
+          second oeuvre de D2 etaient un jugement d'experience ; la decomposition en six corps
+          avec sa forme fermee en donne 78. L'accord credite la decomposition, donc on peut
+          desormais piloter le second oeuvre par ses termes — et le goulot a un nom.
+```

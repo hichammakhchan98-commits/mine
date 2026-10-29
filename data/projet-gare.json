@@ -3423,5 +3423,184 @@
    "_dangereux": "Les déchets dangereux pèsent peu et commandent tout le reste : ils imposent un stockage séparé, un document de suivi et une filière agréée. Les mélanger à une benne de gravats déclasse la benne entière, et la filière avec."
   },
   "_documents": "Les documents cites dans ce module — plan de prevention, plan de securite propre a l'entreprise, bordereau de suivi des dechets dangereux — portent des noms qui DEPENDENT DU DROIT APPLICABLE. Le cours decrit la FONCTION que chacun remplit et renvoie au marche pour le nom, le contenu et le caractere obligatoire : ⏸ tant que le CPS et la reglementation marocaine ne sont pas fournis. Nommer un instrument de droit francais dans un cours marocain serait une faute de meme nature que citer un article de norme sans l'avoir lu."
+ },
+ "lots_techniques": {
+  "_role": "Modules B7b et C4. Le lecteur n'est PAS responsable des lots techniques : il les voit par l'INTERFACE avec le gros œuvre — réservations, trémies, charges suspendues, scellements — et par l'ENCHAÎNEMENT des corps d'état. Rien ici n'est réglementaire : les règles de percement d'un élément porteur, les sections admissibles, les distances aux armatures et les classements au feu des traversées sont normatifs et restent ⏸. Ce bloc porte la GÉOMÉTRIE, les DATES et les COÛTS.",
+  "niveau_preuve": "V3",
+  "annee_ref": 2026,
+  "reservations": {
+   "_role": "Une réservation est un trou PRÉVU, coulé avec l'ouvrage. Un percement est le même trou fait après coup. La différence de coût se chiffre ; la différence de nature ne se chiffre pas : sur un élément porteur, le second n'est plus une réservation, c'est une modification de structure.",
+   "diametres_courants_mm": [
+    50,
+    80,
+    100,
+    125,
+    160,
+    200,
+    250,
+    315
+   ],
+   "_diametres_courants": "Diamètres extérieurs usuels des fourreaux et gaines, du courant faible au désenfumage. Ce sont des catalogues de fabricants, pas des valeurs normatives : ils servent ici à savoir LEQUEL passe entre deux armatures.",
+   "densite_par_m2": {
+    "valeur": 0.12,
+    "fourchette": [
+     0.06,
+     0.25
+    ],
+    "note": "nombre de réservations par m² de plancher dans un hall d'ERP avec plénum technique : CVC, électricité, courants faibles, plomberie, désenfumage. Un bureau en compte moins, un local technique beaucoup plus"
+   },
+   "cout_d_une_reservation_prevue_MAD": {
+    "valeur": 120,
+    "fourchette": [
+     60,
+     250
+    ],
+    "note": "fourreau, calage, repérage et pose dans le coffrage avant coulage. C'est le coût d'une minute de pose et d'un morceau de PVC"
+   },
+   "percement_apres_coup_MAD": {
+    "_role": "Les postes d'un percement de 160 mm fait après coulage, dans un élément NON porteur. Dans un élément porteur, ce n'est plus un coût, c'est une décision du bureau d'études (⏸).",
+    "carottage": {
+     "valeur": 950,
+     "fourchette": [
+      600,
+      1600
+     ],
+     "note": "amenée de la carotteuse, eau, carottage Ø160 dans 25 cm de dalle, évacuation de la carotte"
+    },
+    "detection_d_armatures": {
+     "valeur": 450,
+     "fourchette": [
+      250,
+      900
+     ],
+     "note": "repérage au ferroscan avant carottage. Sans lui, on coupe une armature sans le savoir — et on ne le sait jamais"
+    },
+    "etude_et_visa": {
+     "valeur": 1400,
+     "fourchette": [
+      600,
+      4000
+     ],
+     "note": "note du bureau d'études et visa : vérifier qu'un trou non prévu ne remet pas en cause l'ouvrage. Sur un élément porteur, cette ligne devient la seule qui compte, et son issue n'est pas acquise"
+    },
+    "rebouchage_et_etancheite": {
+     "valeur": 600,
+     "fourchette": [
+      300,
+      1200
+     ],
+     "note": "calfeutrement, reprise d'étanchéité et de parement autour de la traversée. Le rétablissement du degré coupe-feu est réglementaire : ⏸"
+    },
+    "remise_en_etat_des_abords": {
+     "valeur": 350,
+     "fourchette": [
+      150,
+      900
+     ],
+     "note": "protection, nettoyage, reprise des ouvrages déjà posés autour — et c'est ce poste qui explose quand le second œuvre est fini"
+    }
+   },
+   "delai_de_gel_j": {
+    "valeur": 12,
+    "fourchette": [
+     7,
+     25
+    ],
+    "note": "jours ouvrés entre l'arrêt du carnet de réservations et le coulage de la zone : diffusion du plan, commande des fourreaux, livraison, pose et contrôle avant fermeture du coffrage"
+   }
+  },
+  "second_oeuvre": {
+   "_role": "Le second œuvre d'un hall n'est pas une tâche : c'est une FILE de corps d'état qui se passent le même volume. Le module D2 lui donne une durée unique, déclarée. Ce bloc la décompose pour voir ce qu'elle suppose.",
+   "_les_durees": "Durées de chaque corps d'état sur la TOTALITÉ du plancher, en jours ouvrés, s'il travaillait seul et d'un bout à l'autre. Ce sont elles qui se divisent par le nombre de zones.",
+   "corps_d_etat": [
+    {
+     "corps": "Cloisons et doublages",
+     "duree_totale_j": {
+      "valeur": 30,
+      "fourchette": [
+       20,
+       45
+      ],
+      "note": "ossatures, plaques, bandes. Le premier à entrer, et celui qui ferme les volumes"
+     },
+     "recoit_de": "gros œuvre",
+     "support_a_receptionner": "planéité et niveau du support, implantation tracée"
+    },
+    {
+     "corps": "Réseaux en plénum (CVC, élec, CFa, plomberie)",
+     "duree_totale_j": {
+      "valeur": 45,
+      "fourchette": [
+       30,
+       70
+      ],
+      "note": "gaines, chemins de câbles, tuyauteries et supportage au-dessus du faux-plafond. Quatre lots dans le même plénum, et le plus long des quatre commande"
+     },
+     "recoit_de": "cloisons et doublages",
+     "support_a_receptionner": "réservations exécutées et repérées, charges suspendues admissibles connues"
+    },
+    {
+     "corps": "Faux-plafonds de grande hauteur",
+     "duree_totale_j": {
+      "valeur": 30,
+      "fourchette": [
+       20,
+       50
+      ],
+      "note": "ossature suspendue et plaques sous 9 m de hauteur libre : l'accès coûte plus que la pose"
+     },
+     "recoit_de": "réseaux en plénum",
+     "support_a_receptionner": "réseaux terminés ET essais faits : un faux-plafond posé avant essais se redépose"
+    },
+    {
+     "corps": "Revêtements de sol de forte fréquentation",
+     "duree_totale_j": {
+      "valeur": 25,
+      "fourchette": [
+       15,
+       40
+      ],
+      "note": "ragréage, pose, joints. Sensible à l'humidité du support et aux passages"
+     },
+     "recoit_de": "faux-plafonds",
+     "support_a_receptionner": "humidité du support mesurée, planéité, propreté"
+    },
+    {
+     "corps": "Menuiseries, agencement, signalétique",
+     "duree_totale_j": {
+      "valeur": 25,
+      "fourchette": [
+       15,
+       40
+      ],
+      "note": "portes, banques, mobilier fixe, signalétique voyageurs"
+     },
+     "recoit_de": "revêtements de sol",
+     "support_a_receptionner": "sols posés et protégés, réservations de scellement"
+    },
+    {
+     "corps": "Peinture et finitions",
+     "duree_totale_j": {
+      "valeur": 20,
+      "fourchette": [
+       12,
+       35
+      ],
+      "note": "le dernier, et celui qui paie toutes les reprises des autres"
+     },
+     "recoit_de": "menuiseries",
+     "support_a_receptionner": "supports secs, ouvrages protégés"
+    }
+   ],
+   "cout_de_frontiere_j": {
+    "valeur": 0.4,
+    "fourchette": [
+     0.15,
+     1.0
+    ],
+    "note": "jours perdus par corps d'état et par frontière de zone : réinstallation, reprise d'approvisionnement, re-calage des équipes. C'est ce qui empêche de découper à l'infini, et personne ne le chiffre jamais"
+   },
+   "_pourquoi_une_frontiere_coute": "Découper en zones fait gagner du temps parce que les corps d'état travaillent en parallèle dans des volumes différents. Mais chaque frontière oblige chaque corps à s'installer, s'approvisionner et se recaler une fois de plus. Le découpage optimal n'est donc pas le plus fin : il existe, et il se calcule."
+  }
  }
 }

@@ -1133,3 +1133,66 @@ elle se prend avec l'exploitant, et elle s'écrit.
 seuil) et `interfaces_a_date` (date limite, marge, statut par site), avec une figure en escalier et
 une figure des marges. Les interfaces dont le besoin est déjà passé sont marquées « besoin déjà
 servi » et ne comptent pas comme des retards : une liste d'alarmes éteintes ne se lit pas.
+
+---
+
+## D-065 — 29/10/2026 — Une question d'interface se tranche d'abord par la géométrie
+
+**Décision.** Avant toute discussion sur une demande d'interface entre un lot technique et le gros
+œuvre — une réservation, un percement, un scellement, une charge suspendue — ce cours pose d'abord la
+question **géométrique**, qui se résout en une soustraction sur le plan de ferraillage, et seulement
+ensuite la question réglementaire, qui est ⏸. Les sorties de `calc/` publient donc le **passage
+libre** (espacement des armatures moins leur diamètre) avant tout autre indicateur d'interface.
+
+**Pourquoi.** Une demande impossible et une demande à instruire ne se traitent pas de la même façon,
+et on perd des semaines à instruire des impossibilités. Sur ce chantier, l'espace libre entre deux
+armatures vaut 92 mm sur appui et 192 mm en travée : les fourreaux de 200, 250 et 315 mm — le
+désenfumage, les eaux usées, les gaines principales — ne passent **nulle part** sans couper un cadre.
+La vérification prend dix secondes et elle ne demande l'avis de personne.
+
+Et elle trace la seule frontière dont un chef de projet suivi ait besoin : **une réservation qui
+coupe une armature n'est plus une réservation.** Elle quitte le carnet pour devenir une note de
+calcul, et elle change de délai, de décideur et de prix d'un coup. Dire « c'est non » est un
+conflit ; dire « ce n'est plus la même procédure, et voici les deux chemins » est une décision.
+
+**Ce que la règle ne permet pas.** Qu'un fourreau tienne entre deux armatures ne dit rien de son
+droit d'y être. La position admissible, la section maximale, la distance aux appuis sont
+réglementaires et restent ⏸. La géométrie ne donne jamais une autorisation — elle donne des refus
+immédiats, et c'est déjà beaucoup.
+
+**Impact.** `calc/synthese.py` publie `passage_libre` depuis le ferraillage que B3e publie, sans
+redéclarer un seul espacement (D-039). Un canari des tests remplace les cadres par un espacement de
+30 cm et vérifie que le verdict change : le calcul suit les armatures, il n'est pas figé.
+
+---
+
+## D-066 — 29/10/2026 — Une échéance se publie par zone, jamais en bloc
+
+**Décision.** Tout document dont le contenu devient irrévocable à une date — un carnet de
+réservations, une commande, une demande d'interface — est publié par ce cours **découpé selon
+l'unité qui le rend irrévocable**, avec une date par unité, et non comme un document unique avec une
+date globale. Pour le carnet de réservations, l'unité est la **zone de coulage** : huit zones, huit
+dates de gel, échelonnées à la cadence du coffrage.
+
+**Pourquoi.** Un carnet « à finaliser » n'a pas de sens : il est déjà figé pour les zones coulées et
+encore ouvert pour les autres. Présenté en bloc, il invite à attendre « que la synthèse soit
+stabilisée » — or la synthèse n'est jamais stabilisée, tandis que le coffrage se ferme à une date
+connue des mois à l'avance. Présenté par zone, il devient un ordre du jour : *zone 5, gel dans six
+jours*.
+
+**Et le calendrier dit quelque chose que personne n'attend.** Sur ce chantier, les carnets gèlent
+entre les jours 37 et 61 — pendant les études de charpente et le plancher du niveau technique. Le
+second œuvre qui s'en servira commence au jour 500, **439 jours plus tard**. Le carnet de
+réservations se joue donc pendant le gros œuvre, par des gens qui ne seront plus là quand on
+s'en servira. C'est la raison de fond pour laquelle il est si souvent mal fait, et elle n'a rien à
+voir avec la compétence des lots techniques.
+
+**Le prix de l'oubli, pour que la décision soit prise et non subie** : une réservation prévue coûte
+120 MAD, le même trou percé après coup en coûte 3 750 — un rapport de 31. Et 47 % de ce coût ne
+tiennent ni à la machine ni à l'ouvrier : ce sont l'étude, le visa et la remise en état de ce qui
+était déjà posé autour. Sur un élément porteur, ce n'est plus un coût mais une décision du bureau
+d'études, dont l'issue n'est pas acquise : le module refuse de la chiffrer (⏸).
+
+**Impact.** `calc/synthese.py` publie `gel_des_reservations` zone par zone, avec la fenêtre du carnet
+et les tâches en cours au premier gel, **lues dans le réseau de D2** et non supposées. La figure est
+un diagramme de Gantt du gel au coulage : la fenêtre où une erreur se corrige encore à la gomme.
