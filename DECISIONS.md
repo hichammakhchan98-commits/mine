@@ -1320,3 +1320,48 @@ donc pas à douter, il sert à **clore**.
 hypothèses sont tirées **indépendamment**, et c'est déclaré : si le prix d'achat et le prix de
 location montaient ensemble, la dispersion serait plus faible et le verdict plus net — la part
 publiée est donc prudente.
+
+
+---
+
+## D-070 — 30/10/2026 — Un prix se lit avec ses INCLUSIONS, et ce qu'il ne comprend pas change le modèle
+
+**Décision.** Tout prix de location déclaré dans `data/` porte la liste de ce qu'il **comprend** —
+opérateur, carburant, entretien — et `calc/` ajoute au locataire, **à l'heure travaillée**, tout ce
+qui n'y figure pas. La décision « louer ou posséder » ne se publie pas sans cette liste.
+
+**Pourquoi.** La passe adversariale de C6 a trouvé que la pente de l'écart du chariot télescopique
+valait **exactement son gasoil** : 7 l/h × 11,5 MAD = 80,5 MAD/h. Le carburant était compté du seul
+côté de la possession, alors que la location est déclarée « nue ». Rétabli des deux côtés, le coût
+marginal est **identique** — $L_1 = v$ —, la pente devient **nulle**, et il n'y a plus de seuil du
+tout : les heures disparaissent de la comparaison, qui devient un coût fixe contre un coût fixe.
+
+Le verdict a changé avec : de « NON TRANCHÉ » (85,7 % des tirages) à **POSSÉDER** (93,3 %), et avec
+lui la figure 1, deux exercices et l'encart sur la mutualisation. Un défaut d'une ligne dans une
+fonction de coût, et c'est la conclusion du module qui s'inverse.
+
+**Ce que cela ajoute au cours.** Une troisième forme au seuil, et elle est fréquente :
+$v < L_1$ (possession au-dessus), $v > L_1$ (possession au-dessous), $v = L_1$ (**aucun seuil**). Le
+troisième cas arrive chaque fois qu'un engin est loué nu et payé à la présence, c'est-à-dire pour la
+plupart des engins de manutention d'un chantier de bâtiment. La question « combien d'heures ? » n'y
+sert à rien ; les deux bonnes questions sont **combien de jours la facture court-elle** et **que le
+prix ne comprend-il pas**.
+
+**Trois erreurs de modèle sur le même objet, trois instruments différents.** C6 a publié trois fois
+une facturation fausse : un jour de location par jour de tâche pour la pompe ; un seuil
+$F/(\ell - v)$ qui suppose $L_0 = 0$ ; le carburant d'un seul côté. Elles ont été trouvées par un
+**croisement avec un autre module** (le bordereau de D1 comptait 5,52 jours de pompe là où C6 en
+comptait 140), par une **figure** (qui ne croisait pas zéro là où le seuil l'annonçait), et par une
+**relecture hostile**. **Aucune par un test** — les trois étaient dimensionnellement homogènes, et
+les tests comparaient la sortie à la formule. C'est la onzième famille de défauts de ce cours, et
+c'est une variante aggravée de la dixième : non pas une formule dont un terme est faux, mais une
+formule dont un terme **manque d'un côté seulement**.
+
+**Impact.** `data/projet-gare.json` → `materiel_engins.familles[].location.comprend`.
+`calc/cout_horaire.py` : `parametres()` publie `_en_plus_MAD_h`, `location_affine()` l'ajoute à
+$L_1$, `point_d_equilibre()` publie `pente_nulle` et un `sens` qui le dit. Un canari de
+`test_cout_horaire.py` rejoue l'erreur et vérifie que la pente retrouvée vaut le gasoil. Deux autres
+bloquants de la même passe sont corrigés dans le même mouvement : l'emploi se compte sur l'**union**
+des jours de calendrier et non sur la somme des segments (un engin ne travaille pas deux fois le
+même jour), et la **présence** d'un engin dépend de son régime — un engin qui vient et repart n'est
+pas présent entre deux venues.

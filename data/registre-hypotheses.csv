@@ -260,3 +260,11 @@ H258;disponibilité des aiguilles vibrantes;97 %;%;92 à 99;2026;C6;panne d'aigu
 H259;immobilisation d'une seconde pompe en attente sur le site;1 800 MAD;MAD/j;1 000 à 3 200;2026;C6;pompe immobilisée sans pompage , ce n'est pas le prix d'une intervention
 H260;heures perdues en transferts et conflits de calendrier entre deux sites;12 %;%;5 à 25;2026;C6;transferts, remises en route, conflits de calendrier. Sans cette ligne la mutualisation paraîtrait gratuite
 H261;heures que le second site de D7 ajoute, en part du besoin de la gare;0,8;sans unité;0,4 à 1,2;2026;C6;le second site de D7 est entièrement V3 (dette 34) : ce coefficient aussi
+H262;largeur libre à laisser en crête d'un talus provisoire;2,0 m;m;1,0 à 3,0;2026;C2;circulation des engins, stockage interdit, distance de la charge au bord. La valeur réglementaire ou contractuelle, s'il en existe une, est ⏸
+H263;fruit d'un talus provisoire en limon sableux dense;1,0;sans unité;0,6 à 1,5;2026;C2;recul horizontal par mètre de hauteur. ATTENTION : la pente réellement admissible est un RÉSULTAT de stabilité et relève du module B2 (⏸) — ce fruit est une hypothèse de travail
+H264;blindage provisoire d'une fouille de quelques mètres, posé et replié;850 MAD/m²;MAD/m²;500 à 1 600;2026;C2;le choix du procédé et son dimensionnement sont ⏸ (module B2) : ce prix sert à comparer un ordre de grandeur, pas à chiffrer un marché
+H265;godet de terrassement d'une pelle 30 t;1,8 m³;m³;1,2 à 2,5;2026;C2;volume ras
+H266;temps de cycle complet d'une pelle 30 t en pleine masse;22 s;s;16 à 30;2026;C2;remplissage, relevage, orientation, déversement, retour. Dépend surtout de l'angle d'orientation, très peu de la machine
+H267;coefficient de remplissage d'un godet en terrain foisonné;0,85;sans unité;0,70 à 0,95;2026;C2;part du godet réellement remplie à la reprise
+H268;distance du chantier à la décharge autorisée;14 km;km;5 à 35;2026;C2;un seul sens. La fourchette est large parce qu'elle décide de tout : le nombre de camions en est proportionnel
+H269;vitesse moyenne d'un camion chargé en milieu périurbain;28 km/h;km/h;18 à 45;2026;C2;arrêts et traversées compris. Jamais la vitesse autorisée

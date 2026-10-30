@@ -81,8 +81,7 @@ def couts_annuels(par: dict, heures_par_an: float, unites_facturees_par_an: floa
     variable_h = par["carburant"] * par["gasoil"] + par["conducteur"]
     possession = fixe + heures_par_an * variable_h
     location = unites_facturees_par_an * par["prix_loc"]
-    if not par["_operateur_compris"]:
-        location += heures_par_an * par["conducteur"]
+    location += heures_par_an * par["_en_plus_MAD_h"]
     return {"heures_par_an": heures_par_an,
             "unites_facturees_par_an": unites_facturees_par_an,
             "amortissement_MAD_an": amort, "entretien_MAD_an": entretien,
@@ -118,8 +117,16 @@ def parametres(d: dict, fam: dict, bornes: str = "nominal") -> dict:
         out[cle] = (_v(o) if bornes == "nominal" or s == 0
                     else (hi if s > 0 else lo) if bornes == "pro_possession"
                     else (lo if s > 0 else hi))
-    out["_operateur_compris"] = bool(fam["location"]["operateur_compris"])
     out["_regime_loc"] = fam["regime_de_location"]
+    # CE QUE LE PRIX NE COMPREND PAS, le locataire le paie en plus, et a l'heure
+    # TRAVAILLEE. L'oublier pour le carburant etait le defaut bloquant de la premiere
+    # version : la pente de l'ecart du chariot valait exactement son gasoil, et ce
+    # gasoil n'etait compte que d'un seul cote.
+    compris = fam["location"].get("comprend", [])
+    out["_comprend"] = list(compris)
+    out["_en_plus_MAD_h"] = (
+        (0.0 if "operateur" in compris else out["conducteur"])
+        + (0.0 if "carburant" in compris else out["carburant"] * out["gasoil"]))
     return out
 
 
@@ -155,8 +162,12 @@ def part_des_tirages(d: dict, fam: dict, emp: dict, tirages: int, graine: int,
     gagne = 0
     for _ in range(tirages):
         par = {k: rng.uniform(*_b(o)) for k, o in objets.items()}
-        par["_operateur_compris"] = bool(fam["location"]["operateur_compris"])
         par["_regime_loc"] = fam["regime_de_location"]
+        compris = fam["location"].get("comprend", [])
+        par["_comprend"] = list(compris)
+        par["_en_plus_MAD_h"] = (
+            (0.0 if "operateur" in compris else par["conducteur"])
+            + (0.0 if "carburant" in compris else par["carburant"] * par["gasoil"]))
         h, uf = emploi_pour(fam, emp, par.get("hpjs"), facteur_emploi)
         if couts_annuels(par, h, uf)["ecart_MAD_an"] < 0:
             gagne += 1
@@ -181,9 +192,31 @@ def emploi(fam: dict, pl: dict, jours_ouvres_par_an: float, prix: dict, d: dict,
     l'ETALEMENT, et il se lit dans la fenetre.
     """
     seg, dur = pl["segments_de_travail"], pl["durees"]
-    taches = [t for t in fam["taches"] if t in seg]
-    manquantes = [t for t in fam["taches"] if t not in seg]
-    jours_seg = sum(b - a for t in taches for a, b in seg[t])
+    # Pour un engin a service par INTERVENTION, les taches ne se declarent pas : ce sont
+    # exactement les postes dont le sous-detail de D1 porte sa ressource. Les declarer
+    # faisait diviser des heures deduites de 3 postes par une fenetre deduite de 9
+    # taches — un rapport entre deux perimetres differents, et le cout horaire publie
+    # s'en trouvait multiplie par cinq.
+    if fam["regime_de_service"] == "intervention":
+        cle_r = fam["location"]["cle_prix"]
+        declarees = [p_["poste"] for p_ in prix["bordereau"]["postes"]
+                     if any(m_["ressource"] == cle_r for m_ in (p_.get("materiel") or []))]
+    else:
+        declarees = list(fam["taches"])
+    taches = [t for t in declarees if t in seg]
+    manquantes = [t for t in declarees if t not in seg]
+    # L'UNION des jours, et non la somme des segments : deux taches servies par le meme
+    # engin se recouvrent dans le temps, et un engin ne travaille pas deux fois le meme
+    # jour. Sommer les segments donnait 252 jours pour le chariot la ou le calendrier
+    # n'en compte que 206, soit une intensite d'emploi de 4,3 h par jour pour une
+    # intensite declaree de 3,5 — et deux nombres de jours d'attente dans le meme
+    # module, 303 dans le texte et 350 dans la figure.
+    jours_actifs = set()
+    for t in taches:
+        for a, b in seg[t]:
+            jours_actifs.update(range(int(math.floor(a)), int(math.ceil(b))))
+    jours_seg = float(len(jours_actifs))
+    somme_des_segments = sum(b - a for t in taches for a, b in seg[t])
     jours_dur = sum(dur[t]["duree_j"] for t in taches)
     debut = min(a for t in taches for a, b in seg[t])
     fin = max(b for t in taches for a, b in seg[t])
@@ -193,14 +226,21 @@ def emploi(fam: dict, pl: dict, jours_ouvres_par_an: float, prix: dict, d: dict,
         "regime_de_service": fam["regime_de_service"],
         "regime_de_location": fam["regime_de_location"],
         "taches": taches, "taches_absentes_du_planning": manquantes,
-        "jours_de_travail_voie_segments_j": round(jours_seg, 2),
+        "taches_deduites_du_bordereau": bool(fam["regime_de_service"] == "intervention"),
+        "jours_de_travail_union_j": jours_seg,
+        "somme_des_segments_j": round(somme_des_segments, 2),
+        "ecart_avec_la_somme_des_segments_j": round(somme_des_segments - jours_seg, 2),
+        "_pourquoi_l_union": (
+            "L'emploi se compte sur l'UNION des jours de calendrier touchés par les "
+            "tâches servies, et non sur la somme de leurs segments. L'écart entre les "
+            "deux a DEUX causes de sens contraire, et il faut les deux pour le lire : "
+            "deux tâches qui se recouvrent font compter deux fois le même jour (la "
+            "somme dépasse l'union), et un segment qui commence ou finit en cours de "
+            "journée occupe quand même la journée entière (l'union dépasse la somme). "
+            "Sommer les segments donnait au chariot une intensité d'emploi de 4,3 h par "
+            "jour pour une intensité déclarée de 3,5."),
         "jours_de_travail_voie_durees_j": round(jours_dur, 2),
-        "ecart_des_deux_voies_j": round(jours_seg - jours_dur, 2),
-        "_les_deux_voies_ne_sont_pas_independantes": (
-            "Nul par construction : une consignation découpe le travail sans l'étirer. "
-            "Ce n'est donc pas un contre-calcul, c'est un contrôle de non-régression du "
-            "modèle de D2 — il n'attrapera qu'une faute de lecture des segments."),
-        "jours_de_travail_j": round(jours_seg, 2),
+        "jours_de_travail_j": jours_seg,
         "fenetre_j": [round(debut, 2), round(fin, 2)],
         "fenetre_duree_j": round(fenetre, 2),
         "fenetre_ans": round(fenetre_ans, 3),
@@ -280,11 +320,16 @@ def location_affine(par: dict, emp: dict) -> tuple[float, float]:
     * **par heure de service** : L0 = 0, L1 = le prix horaire ;
     * **par intervention** : L0 = 0, L1 = prix / duree d'une intervention — les heures
       et les venues sont proportionnelles ;
-    * **par duree de presence** : L1 = 0 (hors conducteur) et **L0 = toute la facture**.
-      Travailler une heure de plus ne coute rien au locataire.
+    * **par duree de presence** : L1 = 0 pour le prix lui-meme et **L0 = toute la
+      facture**. Travailler une heure de plus ne coute au locataire que ce que le prix
+      NE comprend pas.
 
-    Le conducteur non compris s'ajoute a L1 dans les trois cas : il se paie a l'heure
-    travaillee, quel que soit le regime de l'engin.
+    Ce que le prix ne comprend pas — conducteur, carburant — s'ajoute a L1 dans les
+    trois cas, parce que cela se paie a l'heure travaillee quel que soit le regime. Pour
+    une location NUE payee a la presence, ce supplement vaut exactement le cout variable
+    de la possession : L1 = v, la pente de l'ecart est NULLE, et il n'y a pas de seuil.
+    Les heures disparaissent de la comparaison, qui devient un cout fixe contre un cout
+    fixe.
     """
     reg = par["_regime_loc"]
     if reg == "par_heure_de_service":
@@ -295,8 +340,7 @@ def location_affine(par: dict, emp: dict) -> tuple[float, float]:
         L0, L1 = emp["_unites_par_an_exact"] * par["prix_loc"], 0.0
     else:
         raise ValueError(f"regime de location inconnu : {reg}")
-    if not par["_operateur_compris"]:
-        L1 += par["conducteur"]
+    L1 += par["_en_plus_MAD_h"]
     return L0, L1
 
 
@@ -337,7 +381,10 @@ def point_d_equilibre(par: dict, emp: dict, heures_par_an: float) -> dict:
         "pente_de_l_ecart_MAD_h": round(pente, 1),
         "ecart_a_emploi_nul_MAD_an": round(A),
         "seuil_h_par_an": round(h0, 1) if h0 and h0 > 0 else None,
-        "sens": ("possession gagne AU-DESSUS du seuil" if pente < 0
+        "pente_nulle": bool(abs(pente) <= 1e-9),
+        "sens": ("l'ecart NE DEPEND PAS des heures : aucun seuil"
+                 if abs(pente) <= 1e-9
+                 else "possession gagne AU-DESSUS du seuil" if pente < 0
                  else "possession gagne AU-DESSOUS du seuil"),
         "cas_classique": bool(pente < 0),
         "location_MAD_h_de_travail": round(c["location_MAD_an"] / heures_par_an, 1),
@@ -428,6 +475,8 @@ def verdict(d: dict, fam: dict, emp: dict, tirages: int = 20000,
                                       or eq["seuil_h_par_an"] > hmax),
         "conclusion_sans_estimation": (
             None if eq["seuil_h_par_an"] is not None and eq["seuil_h_par_an"] <= hmax
+            else ("POSSÉDER quel que soit l'emploi" if cn["ecart_MAD_an"] < 0
+                  else "LOUER quel que soit l'emploi") if eq["pente_nulle"]
             else "LOUER quel que soit l'emploi" if eq["cas_classique"]
             else "POSSÉDER quel que soit l'emploi"),
         "_coin_extreme": (
@@ -445,21 +494,27 @@ def verdict(d: dict, fam: dict, emp: dict, tirages: int = 20000,
 
 
 # ------------------------------------------------------------ 4. le parc, jour apres jour
-def profil_du_parc(d: dict, pl: dict) -> dict:
+def profil_du_parc(d: dict, pl: dict, emplois: dict) -> dict:
     """Presence et travail de chaque famille, jour par jour.
 
-    La presence est la FENETRE (du premier au dernier jour de besoin) ; le travail est
-    l'union des segments des taches servies. L'ecart entre les deux courbes est le taux
-    d'emploi du parc, vu a l'oeil — et c'est la regle que la passe de C1 a proposee
-    sans que personne l'outille : toute ressource louee a la duree nomme sa fenetre
-    d'emploi.
+    **La presence depend du regime.** Un engin paye a la DUREE DE PRESENCE reste sur le
+    site du premier au dernier jour de besoin : sa presence est sa fenetre. Un engin qui
+    vient et repart — une pompe appelee pour un coulage, une pelle louee a l'heure — est
+    present les jours ou il travaille, et pas un de plus. Compter la fenetre pour tous
+    inventait une presence de 281 jours a une pompe qui vient quinze fois, et le taux
+    d'emploi du parc en etait fausse.
+
+    L'ecart entre les deux courbes reste ce qui interesse : c'est la regle que la passe
+    de C1 a proposee sans que personne l'outille — toute ressource louee a la duree
+    nomme sa fenetre d'emploi. Mais elle ne vaut que pour les ressources louees a la
+    duree, et c'est le regime qui le dit.
     """
     seg = pl["segments_de_travail"]
     fams = d["materiel_engins"]["familles"]
     jmax = math.ceil(max(b for s in seg.values() for a, b in s))
     presents, travail, detail = [], [], []
     for fam in fams:
-        taches = [t for t in fam["taches"] if t in seg]
+        taches = [t for t in emplois[fam["cle"]]["taches"] if t in seg]
         debut = min(a for t in taches for a, b in seg[t])
         fin = max(b for t in taches for a, b in seg[t])
         actifs = set()
@@ -475,10 +530,16 @@ def profil_du_parc(d: dict, pl: dict) -> dict:
                        # au-dessus de celle de la presence.
                        "premier_jour": int(math.floor(debut)),
                        "dernier_jour": int(math.ceil(fin)) - 1,
+                       "regime_de_location": fam["regime_de_location"],
+                       "paye_a_la_presence": bool(
+                           fam["regime_de_location"] == "par_duree_de_presence"),
                        "jours_actifs": actifs})
+    for f in detail:
+        f["jours_de_presence"] = (
+            set(range(f["premier_jour"], f["dernier_jour"] + 1))
+            if f["paye_a_la_presence"] else set(f["jours_actifs"]))
     for j in range(jmax + 1):
-        presents.append(sum(1 for f in detail
-                            if f["premier_jour"] <= j <= f["dernier_jour"]))
+        presents.append(sum(1 for f in detail if j in f["jours_de_presence"]))
         travail.append(sum(1 for f in detail if j in f["jours_actifs"]))
     aire_p, aire_t = sum(presents), sum(travail)
 
@@ -495,16 +556,22 @@ def profil_du_parc(d: dict, pl: dict) -> dict:
     # Les trous de chaque famille : les jours de sa fenetre ou elle ne travaille pas.
     # Les ecrire a la main dans une legende serait un nombre technique tape au clavier.
     for f in detail:
-        creux = [j for j in range(f["premier_jour"], f["dernier_jour"] + 1)
-                 if j not in f["jours_actifs"]]
+        creux = sorted(f["jours_de_presence"] - set(f["jours_actifs"]))
         pl_ = sorted(plages(creux), key=lambda x: x[1] - x[0], reverse=True)
         f["jours_sans_emploi"] = len(creux)
         f["plus_longs_trous_j"] = pl_[:3]
     tout = [j for j, n in enumerate(travail) if n == len(detail)]
     return {
         "jours": jmax + 1,
-        "familles": [{k: v for k, v in f.items() if k != "jours_actifs"}
+        "familles": [{k: (v if k != "jours_de_presence" else len(v))
+                      for k, v in f.items() if k != "jours_actifs"}
                      for f in detail],
+        "_perimetre": (
+            "Ce parc est celui des trois familles du module C6. La grue à tour et le "
+            "parc de coffrage n'y sont pas : ils appartiennent à C1 et à C3, et les "
+            "redessiner ici en ferait deux fois le même nombre. La pointe lue sur cette "
+            "figure est donc celle de ces trois familles, pas celle du matériel du "
+            "chantier."),
         "engins_jours_de_presence": aire_p,
         "engins_jours_de_travail": aire_t,
         "taux_d_emploi_du_parc_pct": round(aire_t / aire_p * 100, 1),
@@ -512,6 +579,61 @@ def profil_du_parc(d: dict, pl: dict) -> dict:
         "jours_ou_tout_le_parc_travaille": len(tout),
         "plages_ou_tout_le_parc_travaille": plages(tout),
         "profil_presents": presents, "profil_travail": travail,
+    }
+
+
+def indisponibilite(d: dict, emplois: dict, pl: dict, prix: dict) -> dict:
+    """Ce que la disponibilite declaree de chaque engin coute en jours, et a qui.
+
+    Ce bloc existe parce que la passe adversariale a trouve deux hypotheses declarees,
+    commentees, et que RIEN ne lisait : les disponibilites de la pelle et du chariot.
+    Une hypothese qu'aucun resultat ne consomme est un ornement ; soit elle sert, soit
+    elle se declare non publiee. Elle sert, et voici a quoi.
+
+    Un engin disponible a p pour cent perd (1 - p) de ses jours de travail. Ce que cette
+    perte coute depend d'une seule chose : la tache servie est-elle sur le chemin
+    critique ? Si elle ne l'est pas, la perte se mange dans la marge et ne coute rien en
+    delai. Si elle l'est, elle coute un jour de chantier — et le jour de chantier est un
+    prix que D1 publie.
+    """
+    jour = prix["cout_du_retard"]["1"]["frais_de_duree_MAD"]
+    lignes = []
+    for fam in d["materiel_engins"]["familles"]:
+        e = emplois[fam["cle"]]
+        dispo = _v(fam["disponibilite_pct"]) / 100
+        jours = e["jours_de_travail_j"]
+        perdus = jours * (1 - dispo)
+        critiques = [t for t in e["taches"] if pl["durees"][t]["critique"]]
+        marge = min(pl["durees"][t]["marge_totale_j"] for t in e["taches"])
+        lignes.append({
+            "cle": fam["cle"], "nom": fam["nom"],
+            "disponibilite_pct": round(dispo * 100, 1),
+            "jours_de_travail_j": jours,
+            "jours_perdus_esperes_j": round(perdus, 1),
+            "taches_critiques_servies": critiques,
+            "marge_la_plus_faible_des_taches_j": marge,
+            "la_perte_tient_dans_la_marge": bool(perdus <= marge),
+            "cout_en_delai_MAD": 0 if perdus <= marge else round(
+                (perdus - marge) * jour),
+        })
+    return {
+        "lignes": lignes,
+        "cout_d_un_jour_de_chantier_MAD": jour,
+        "nb_familles_dont_la_panne_coute_un_delai": sum(
+            1 for l in lignes if not l["la_perte_tient_dans_la_marge"]),
+        "lecture": (
+            "Aucune des trois pannes attendues ne coûte un jour de chantier : chacune "
+            "tient dans la marge de ses propres tâches. "
+            + " · ".join(f"{l['cle']} : {_f(l['jours_perdus_esperes_j'], 1)} j perdus "
+                         f"pour {_f(l['marge_la_plus_faible_des_taches_j'], 1)} j de "
+                         "marge" for l in lignes)
+            + ". C'est un résultat, et il se retourne : une disponibilité n'est un "
+            "sujet de pilotage que sur une tâche sans marge, et la seule chaîne sans "
+            "marge de ce module est celle du coulage (§ S4e)."
+            if all(l["la_perte_tient_dans_la_marge"] for l in lignes) else
+            "Au moins une panne attendue dépasse la marge de ses tâches : "
+            + " · ".join(f"{l['cle']} {_f(l['cout_en_delai_MAD'], 0)} MAD"
+                         for l in lignes if not l["la_perte_tient_dans_la_marge"])),
     }
 
 
@@ -532,9 +654,8 @@ def cout_du_parc(d: dict, emplois: dict, verdicts: list, prix: dict) -> dict:
         e = emplois[v["cle"]]
         cle = fam["location"].get("cle_prix")
         prix_u = _v(_prix_de_location(d, fam))
-        cout = e["unites_facturees"] * prix_u
-        if not fam["location"]["operateur_compris"]:
-            cout += e["heures_de_travail_h"] * _v(d["materiel_engins"]["conducteur_MAD_h"])
+        par = parametres(d, fam, "nominal")
+        cout = e["unites_facturees"] * prix_u + e["heures_de_travail_h"] * par["_en_plus_MAD_h"]
         lignes.append({
             "cle": v["cle"], "nom": v["nom"],
             "unite_de_facturation": e["unite_de_facturation"],
@@ -545,6 +666,8 @@ def cout_du_parc(d: dict, emplois: dict, verdicts: list, prix: dict) -> dict:
             "cout_par_heure_de_travail_MAD": round(cout / e["heures_de_travail_h"], 1),
             "ligne_au_bordereau_de_D1": bool(cle and cle in utilises),
             "cle_de_prix": cle,
+            "le_prix_comprend": par["_comprend"],
+            "en_plus_a_la_charge_du_locataire_MAD_h": round(par["_en_plus_MAD_h"], 1),
         })
     absentes = [l for l in lignes if not l["ligne_au_bordereau_de_D1"]]
     # LIMITE, publiee avec le nombre : un poste au FORFAIT peut porter la depense sans
@@ -688,11 +811,17 @@ def chaine_du_coulage(d: dict, prix: dict, go_cycle: dict, tirages: int = 50000,
             "avec_secours_pct": round(p2[i] * 100, 2),
             "chaine_avec_secours_pct": round(nouveau * 100, 1),
             "gain_en_points_de_chaine": round(gain * 100, 2),
-            "cout_du_secours_MAD_j": prix_j,
-            "esperance_de_gain_MAD_j": round(gain * jour_perdu, 1),
+            "cout_du_secours_par_coulage_MAD": prix_j,
+            "esperance_de_gain_par_coulage_MAD": round(gain * jour_perdu, 1),
             "rentable": bool(gain * jour_perdu > prix_j),
             "rapport_gain_sur_cout": round(gain * jour_perdu / prix_j, 2),
             "MAD_par_point_de_chaine": round(prix_j / (gain * 100), 1),
+            "_unite": (
+                "Les deux montants sont PAR COULAGE, et non par jour : un secours ne "
+                "s'immobilise que les matinées de coulage, et la perte espérée ne se "
+                "produit que ces matinées-là. Les comparer sous un en-tête « MAD/j » "
+                "dans un module dont la thèse est l'unité de facturation aurait été une "
+                "faute de méthode."),
         })
     zones = go_cycle["nb_zones"]
     doublables = [s for s in secours if s["possible"]]
@@ -757,8 +886,21 @@ def mutualisation(d: dict, emplois: dict, verdicts: list) -> dict:
             "heures_par_an_mutualisees_h": round(h, 1),
             "seuil_h_par_an": h_eq,
             "sens": v["equilibre"]["sens"],
+            # « X fois l'emploi de ce chantier » n'est PAS « X sites » : le facteur
+            # d'emploi de n sites vaut (1 + (n-1).k)(1 - perte), et non n. On publie les
+            # deux, et c'est l'inversion de ce facteur qui donne le nombre de sites.
             "sites_equivalents_pour_atteindre_le_seuil": round(
                 h_eq / v["heures_par_an_h"], 2) if h_eq else None,
+            "nb_sites_equivalents": round(
+                1 + (h_eq / v["heures_par_an_h"] / (1 - perte) - 1) / k, 1)
+            if h_eq else None,
+            "_ce_que_compte_ce_nombre": (
+                "« sites_equivalents_pour_atteindre_le_seuil » est un rapport "
+                "D'EMPLOI : combien de fois l'emploi de ce chantier il faudrait. "
+                "« nb_sites_equivalents » est le nombre de SITES correspondant, obtenu "
+                "en inversant le facteur de mutualisation (1 + (n-1)·k)(1 − perte) — il "
+                "est plus grand, parce que chaque site ajouté n'apporte que k fois le "
+                "besoin du premier et que les transferts en reprennent une part."),
             # Ce que ce nombre de sites SIGNIFIE depend du sens du seuil, et l'ecrire
             # une fois pour toutes evite la phrase fausse a cote du nombre juste : pour
             # un engin dont la possession gagne AU-DESSOUS du seuil, atteindre le seuil
@@ -804,20 +946,19 @@ def mutualisation(d: dict, emplois: dict, verdicts: list) -> dict:
                            if l["verdict_mutualise"] != l["verdict_seul"]),
         "lecture": (
             f"Deux sites font {_f(facteur, 2)} site équivalent, pertes de transfert "
-            "déduites, et cela ne fait basculer aucun verdict. Les deux engins loués "
-            "sont beaucoup trop loin de leur seuil : il faudrait "
-            + " et ".join(
-                f"{_f(l['sites_equivalents_pour_atteindre_le_seuil'], 1)} sites pour "
-                f"{l['cle']}" for l in lignes
-                if l["verdict_seul"] == "LOUER") +
-            ". Et le troisième n'a rien à y gagner : le chariot est déjà du bon côté de "
-            "son seuil, et mutualiser l'en rapproche au lieu de l'en éloigner — "
-            f"{_f(next(l['part_du_seuil_atteinte_pct'] for l in lignes if l['cle'] == 'chariot'), 0)} % "
-            "du seuil au lieu de "
-            f"{_f(next(l['heures_par_an_seul_h'] / l['seuil_h_par_an'] * 100 for l in lignes if l['cle'] == 'chariot'), 0)} %. "
-            "La mutualisation n'est pas un levier général : c'est le métier du loueur, "
-            "qui regroupe des dizaines de sites, et c'est pour cela qu'il peut vendre "
-            "l'heure moins cher que le coût de possession."),
+            "déduites, et cela ne fait basculer aucun verdict. "
+            + " ".join(
+                (f"Pour {l['cle']}, l'écart ne dépend même pas des heures : "
+                 "mutualiser ne change rigoureusement rien.")
+                if l["seuil_h_par_an"] is None else
+                (f"Pour {l['cle']}, il faudrait "
+                 f"{_f(l['sites_equivalents_pour_atteindre_le_seuil'], 1)} fois l'emploi "
+                 f"de ce chantier — soit {_f(l['nb_sites_equivalents'], 1)} sites comme "
+                 "celui-ci — pour atteindre le seuil.")
+                for l in lignes)
+            + " La mutualisation n'est donc pas un levier général : c'est le métier du "
+            "loueur, qui regroupe des dizaines de sites, et c'est pour cela qu'il peut "
+            "vendre l'heure moins cher que le coût de possession."),
     }
 
 
@@ -826,30 +967,36 @@ def figures(verdicts: list, emplois: dict, parc: dict, rend: dict, d: dict) -> d
     """Trois figures, et aucune n'est un doublon : C1 a dessine la courbe de charge de
     la grue, C3 l'optimum du parc de coffrage, D2 la demande de grue jour par jour.
     """
-    # 1. ecart de cout annuel du chariot selon les heures travaillees par an : le zero
-    #    de l'axe EST le prix de la location, et la courbe le croise a l'equilibre.
+    # 1. L'ecart annuel du chariot en fonction du PRIX JOURNALIER de location.
+    #    Pourquoi le prix et non les heures : pour une location nue payee a la presence,
+    #    ce que le prix ne comprend pas vaut exactement le cout variable de la
+    #    possession, les heures se compensent et l'ecart n'en depend pas. Tracer l'ecart
+    #    contre les heures donnait une droite dont la pente etait le gasoil compte une
+    #    seule fois — le defaut bloquant de la premiere version. Contre le prix, la
+    #    droite a un sens, elle croise zero, et son croisement est une cible de
+    #    negociation.
     fam = next(f for f in d["materiel_engins"]["familles"] if f["cle"] == "chariot")
     e = emplois["chariot"]
     par = parametres(d, fam, "nominal")
     v = next(x for x in verdicts if x["cle"] == "chariot")
-    seuil = v["equilibre"]["seuil_h_par_an"]
-    # On balaie jusqu'au-dela du seuil ET du plafond d'emploi, pour que la figure montre
-    # le croisement et la part du domaine qui est hors d'atteinte.
-    hmax_fig = max(seuil * 1.25, v["heures_max_a_cette_intensite_h"] * 1.1)
-    pas = 25 * max(1, round(hmax_fig / 1200))
+    prix_declare = par["prix_loc"]
+    lo, hi = _b(_prix_de_location(d, fam))
     pts = []
-    h_ = pas
-    while h_ <= hmax_fig:
-        # l'emploi varie, la fenetre de presence ne varie pas : c'est tout le piege du
-        # regime « par duree de presence »
-        c = couts_annuels(par, h_, _unites(par, e, h_))
-        pts.append({"x": h_, "v": round(c["ecart_MAD_an"] / 1000, 1)})
-        h_ += pas
+    pas = 50
+    prix = max(100, int(lo * 0.5) // pas * pas)
+    while prix <= hi * 1.15:
+        c = couts_annuels({**par, "prix_loc": float(prix)},
+                          e["_heures_par_an_exact"], e["_unites_par_an_exact"])
+        pts.append({"x": float(prix), "v": round(c["ecart_MAD_an"] / 1000, 1)})
+        prix += pas
+    # prix qui annule l'ecart : F = unites x prix, les heures se compensant
+    prix_eq = v["fixe_MAD_an"] / e["_unites_par_an_exact"]
     f1 = {"points": pts,
-          "marqueur": {"x": round(seuil),
-                       "libelle": f"seuil {_f(seuil, 0)} h/an"},
-          "plafond": v["heures_max_a_cette_intensite_h"],
-          "emploi_reel": v["heures_par_an_h"]}
+          "marqueur": {"x": round(prix_eq),
+                       "libelle": f"{_f(prix_eq, 0)} MAD/j : la location rattrape"},
+          "prix_declare_MAD_j": prix_declare,
+          "prix_d_equilibre_MAD_j": round(prix_eq, 1),
+          "remise_a_obtenir_pct": round((1 - prix_eq / prix_declare) * 100, 1)}
     f2 = [{"libelle": x["etape"], "valeur": x["debit_m3_h"]} for x in rend["etapes"]]
     return {"equilibre_chariot": f1, "rendement": f2,
             "parc_presents": [{"j": j, "n": n}
@@ -871,11 +1018,12 @@ def tout_calculer(d: dict) -> dict:
         emplois[fam["cle"]] = emploi(fam, pl, joa, prix, d, tp, go)
     for fam in d["materiel_engins"]["familles"]:
         verdicts.append(verdict(d, fam, emplois[fam["cle"]]))
-    parc = profil_du_parc(d, pl)
+    parc = profil_du_parc(d, pl, emplois)
     rend = rendement_de_la_pompe(d, go)
     return {
         "emplois": emplois, "verdicts": verdicts, "parc": parc,
         "cout_du_parc": cout_du_parc(d, emplois, verdicts, prix),
+        "indisponibilite": indisponibilite(d, emplois, pl, prix),
         "rendement_de_la_pompe": rend,
         "chaine_du_coulage": chaine_du_coulage(d, prix, go["cycle"]),
         "mutualisation": mutualisation(d, emplois, verdicts),
@@ -894,7 +1042,8 @@ if __name__ == "__main__":
         e = v["equilibre"]
         print(f"  {v['nom'][:32]:<34} {v['unite_de_facturation'][:18]:<20} "
               f"{v['heures_par_an_h']:>7.1f} h/an · seuil "
-              f"{e['seuil_h_par_an']} ({'au-dessus' if e['cas_classique'] else 'au-dessous'})"
+              f"{e['seuil_h_par_an']} ("
+              f"{'aucun' if e['pente_nulle'] else 'au-dessus' if e['cas_classique'] else 'au-dessous'})"
               f" · {v['conclusion_sans_estimation'] or v['verdict']:<28} "
               f"({v['part_des_tirages_pro_possession_pct']} % des tirages)")
     p = r["parc"]

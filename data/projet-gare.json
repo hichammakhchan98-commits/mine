@@ -3660,7 +3660,9 @@
      "fourchette": [78, 95],
      "note": "part des jours de besoin ou l'engin repond. Pannes, revisions, et l'indisponibilite du loueur sur un appel non programme"
     },
-    "location": {"cle_prix": "pompe_a_beton_j", "unite": "j", "operateur_compris": true,
+    "location": {"cle_prix": "pompe_a_beton_j", "unite": "j",
+                 "comprend": ["operateur", "carburant", "entretien"],
+                 "_comprend": "Une pompe vient avec son pompiste, son gasoil et son entretien : le prix du bordereau couvre tout, et le locataire ne paie que la venue.",
                  "_note": "prix lu dans prix_unitaires_MAD.ressources.materiel_MAD, et non redeclare. Le prix est a la JOURNEE d'intervention : on paie la venue, pas les heures pompees"}
    },
    {
@@ -3692,7 +3694,9 @@
      "fourchette": [75, 93],
      "note": "la plus basse des trois : une pelle travaille dans la terre, et c'est ce qui la casse"
     },
-    "location": {"cle_prix": "pelle_30t_h", "unite": "h", "operateur_compris": true,
+    "location": {"cle_prix": "pelle_30t_h", "unite": "h",
+                 "comprend": ["operateur", "carburant", "entretien"],
+                 "_comprend": "Location au compteur horaire, conducteur et gasoil compris : c'est ce que dit la note du bordereau de D1, « avec conducteur », et l'usage pour une pelle louee a l'heure.",
                  "_note": "prix lu dans prix_unitaires_MAD.ressources.materiel_MAD. Facture a l'HEURE, conducteur compris"}
    },
    {
@@ -3727,7 +3731,9 @@
     },
     "location": {"MAD_j": {"valeur": 1450, "fourchette": [1000, 2200],
                            "note": "location nue a la journee, transport amorti. Aucun prix de chariot telescopique n'existait dans le bordereau de D1 : cette ligne est declaree ici"},
-                 "unite": "j", "operateur_compris": false}
+                 "unite": "j",
+                 "comprend": ["entretien"],
+                 "_comprend": "Location NUE : le loueur entretient la machine, le locataire fournit le conducteur ET le gasoil. C'est ce que « nue » veut dire, et l'oublier etait le defaut bloquant de la premiere version de ce module — le carburant ne figurait que du cote de la possession, ce qui donnait a la possession un avantage marginal qu'elle n'a pas."}
    }
   ],
   "_familles_note": "Trois familles, et non tout le parc. La grue à tour appartient à C1 (courbe de charge, calage, fenêtre d'emploi) et le parc de coffrage à C3 (loyer mensuel, optimum de parc) : les reprendre ici serait écrire deux fois le même nombre. Les trois retenues sont celles dont personne n'a encore calculé l'heure.",
@@ -3797,6 +3803,84 @@
     "fourchette": [5, 25],
     "note": "heures perdues en transferts, remises en route et conflits de calendrier entre deux sites. Sans cette ligne la mutualisation paraitrait gratuite"
    }
+  }
+ },
+ "terrassement": {
+  "_role": "Paramètres du terrassement et de l'évacuation des terres (module C2). Rien ici n'est réglementaire : un volume de talus, un cycle de camion, un débit de pelle et un rendement ne relèvent d'aucune norme. Ce qui EST réglementaire — la stabilité d'un talus, le dimensionnement d'un blindage, le rabattement de nappe — reste ⏸ et appartient au module B2. Les quantités de décapage et de fouille ne sont pas ici : elles sont CALCULÉES par D1 depuis la géométrie, et C2 les lit.",
+  "niveau_preuve": "V3",
+  "annee_ref": 2026,
+  "fouille": {
+   "retrait_facade_cote_voies_m": 2.0,
+   "_retrait": "DÉCISION, sans fourchette : on place la fouille du niveau technique. Elle est tirée vers la façade côté voies parce que le niveau technique porte le raccordement du passage souterrain vers les quais (geometrie.niveaux). Ce retrait de 2 m est ce qui décide du mode de soutènement de ce côté-là, et c'est le sujet du module.",
+   "banquette_en_crete_m": {
+    "valeur": 2.0,
+    "fourchette": [1.0, 3.0],
+    "note": "largeur libre à laisser en crête d'un talus : circulation des engins, stockage interdit, et distance de la charge au bord. La valeur réglementaire ou contractuelle, s'il en existe une, est ⏸ : celle-ci est un ordre de grandeur de chantier"
+   },
+   "fruit_de_talus": {
+    "valeur": 1.0,
+    "fourchette": [0.6, 1.5],
+    "note": "fruit = recul horizontal par mètre de hauteur. 1/1 correspond à un talus provisoire courant dans un limon sableux dense. ATTENTION : la pente réellement admissible est un RÉSULTAT de stabilité, pas une hypothèse — elle relève du module B2 (⏸). Ce que C2 calcule, c'est ce qu'une pente DONNÉE coûte en volume et en emprise"
+   },
+   "blindage_MAD_m2": {
+    "valeur": 850,
+    "fourchette": [500, 1600],
+    "note": "blindage provisoire d'une fouille de quelques mètres, posé et replié, au m² de paroi soutenue. Le choix du procédé et son dimensionnement sont ⏸ (B2) : ce prix sert à comparer un ordre de grandeur, pas à chiffrer un marché"
+   }
+  },
+  "pelle": {
+   "_role": "Débit d'une pelle 30 t en pleine masse. L'engin lui-même, son prix de location et son coût de possession appartiennent au module C6 : aucun des deux n'est redéclaré ici. Ce bloc porte ce que C6 n'a pas calculé — combien de mètres cubes elle sort par heure.",
+   "godet_m3": {
+    "valeur": 1.8,
+    "fourchette": [1.2, 2.5],
+    "note": "godet de terrassement d'une pelle 30 t, volume ras"
+   },
+   "temps_de_cycle_s": {
+    "valeur": 22,
+    "fourchette": [16, 30],
+    "note": "cycle complet : remplissage, relevage, orientation, déversement, retour. Dépend surtout de l'angle d'orientation et de la hauteur de déversement, très peu de la machine"
+   },
+   "coefficient_de_remplissage": {
+    "valeur": 0.85,
+    "fourchette": [0.70, 0.95],
+    "note": "part du godet réellement remplie, en terrain foisonné à la reprise"
+   }
+  },
+  "camion": {
+   "capacite_m3": {
+    "valeur": 20,
+    "fourchette": [12, 30],
+    "note": "benne d'un semi-remorque, en m³ FOISONNÉS — c'est le volume transporté, pas le volume en place"
+   },
+   "temps_de_dechargement_min": {
+    "valeur": 3,
+    "fourchette": [2, 6],
+    "note": "bennage au dépôt, attente de bascule comprise"
+   },
+   "temps_de_manoeuvre_min": {
+    "valeur": 4,
+    "fourchette": [2, 8],
+    "note": "entrée et sortie de chantier, positionnement sous la pelle, bâchage. C'est le poste qu'on oublie, et il pèse autant qu'un kilomètre de trajet"
+   }
+  },
+  "depot": {
+   "distance_km": {
+    "valeur": 14,
+    "fourchette": [5, 35],
+    "note": "distance chantier → décharge autorisée, un seul sens. La fourchette est large parce qu'elle décide de tout : le nombre de camions en est proportionnel"
+   },
+   "vitesse_moyenne_km_h": {
+    "valeur": 28,
+    "fourchette": [18, 45],
+    "note": "vitesse moyenne d'un camion chargé en milieu périurbain, arrêts et traversées compris. Jamais la vitesse autorisée"
+   },
+   "distances_a_comparer_km": [5, 10, 14, 20, 25, 30, 35],
+   "camions_a_comparer": [1, 2, 3, 4, 5, 6, 8, 10, 12, 15]
+  },
+  "reemploi_en_remblai_pct": {
+   "valeur": 35,
+   "fourchette": [15, 60],
+   "note": "part du déblai réutilisable en remblai périphérique après tri. Le reste part au dépôt. Un sol argileux ou pollué fait tomber ce chiffre à zéro, et c'est alors le budget d'évacuation qui double"
   }
  }
 }

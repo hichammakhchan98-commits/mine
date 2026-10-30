@@ -796,11 +796,19 @@ dit(str(prod.to(u.dimensionless).units) == "dimensionless"
 # L'esperance d'un secours : une probabilite (sans dimension) fois un MAD par jour.
 _s6 = next(x for x in _c6["secours"] if x["possible"])
 gain = _s6["gain_en_points_de_chaine"] / 100 * u.dimensionless
-jour = _c6["cout_d_un_jour_perdu_MAD"] * u.MAD / u.day
-dit(str((gain * jour).to(u.MAD / u.day).units) == "MAD / day"
-    and abs((gain * jour).magnitude - _s6["esperance_de_gain_MAD_j"]) < 1,
-    "esperance de gain d'un secours = probabilite x MAD/jour, en MAD/jour",
-    f"{_s6['esperance_de_gain_MAD_j']:.0f} MAD/j")
+# Un coulage, et non un jour : les deux montants de ce secours sont PAR COULAGE, et le
+# module le dit. On modelise donc le coulage comme l'unite de comptage.
+u.define("coulage = [coulage]")
+jour = _c6["cout_d_un_jour_perdu_MAD"] * u.MAD / u.coulage
+dit(str((gain * jour).to(u.MAD / u.coulage).units) == "MAD / coulage"
+    and abs((gain * jour).magnitude
+            - _s6["esperance_de_gain_par_coulage_MAD"]) < 1,
+    "esperance de gain d'un secours = probabilite x MAD/coulage, en MAD/coulage",
+    f"{_s6['esperance_de_gain_par_coulage_MAD']:.0f} MAD par coulage")
+cout_s = _s6["cout_du_secours_par_coulage_MAD"] * u.MAD / u.coulage
+dit(str((gain * jour - cout_s).to(u.MAD / u.coulage).units) == "MAD / coulage",
+    "et elle se compare au cout du secours dans LA MEME unite",
+    f"{(gain * jour - cout_s).magnitude:.0f} MAD par coulage")
 # Un debit de pompe est un VOLUME par heure, et une cascade de facteurs sans dimension
 # ne change pas son unite.
 _r6 = _ma["rendement_de_la_pompe"]
@@ -816,8 +824,10 @@ leve("point d'equilibre pris pour une duree de detention",
      lambda: heq.to(u.year))
 leve("taux d'emploi pris pour une duree",
      lambda: (trav / fen).to(u.day))
-leve("esperance de gain par jour prise pour un montant",
+leve("esperance de gain par coulage prise pour un montant",
      lambda: (gain * jour).to(u.MAD))
+leve("cout d'un secours PAR COULAGE additionne a un cout PAR JOUR",
+     lambda: (cout_s + fixe).to(u.MAD / u.coulage))
 leve("debit de pompe additionne a un cout horaire",
      lambda: (reel + varh).to(u.m**3 / u.hour))
 leve("debit de pompe additionne a un nombre d'heures par an",
@@ -834,8 +844,8 @@ leve("debit de pompe additionne a un nombre d'heures par an",
 for nom, f in (
     ("MAD/an + MAD/h : pint convertit, l'addition fausse passe",
      lambda: (fixe + varh).to(u.MAD / u.year)),
-    ("MAD/j - MAD/an : meme dimension, aucune alerte",
-     lambda: ((gain * jour) - fixe).to(u.MAD / u.day)),
+    ("MAD/h - MAD/an : meme dimension, aucune alerte",
+     lambda: (varh - fixe).to(u.MAD / u.hour)),
     ("un taux d'emploi additionne a des h/an : les deux sont sans dimension",
      lambda: ((trav / fen) + hpa).to(u.dimensionless)),
 ):
@@ -844,6 +854,82 @@ for nom, f in (
         dit(True, f"LIMITE : {nom}")
     except Exception:                                                   # pragma: no cover
         dit(False, f"LIMITE : {nom} — elle a leve, la limite n'est plus celle-ci")
+
+print("\nterrassement.py — cubatures et rotations (C2)")
+_te = json.loads((SORTIES / "terrassement.json").read_text(encoding="utf-8"))
+_g2, _c2, _p2 = _te["geometrie"], _te["cubatures"], _te["pelle"]
+# Un recul de talus : un fruit SANS DIMENSION fois une hauteur, plus une largeur.
+fruit = _g2["fruit"] * u.dimensionless
+haut = _g2["profondeur_m"] * u.m
+banq = _g2["banquette_m"] * u.m
+recul = (fruit * haut + banq).to(u.m)
+dit(abs(recul.magnitude - _g2["recul_necessaire_par_cote_m"]) < 1e-9,
+    "recul = fruit (sans dimension) x hauteur + banquette, et c'est une LONGUEUR",
+    f"{recul.magnitude:.2f} m")
+# Le volume d'une fouille talutee : les trois termes sont des VOLUMES, et c'est ce qui
+# permet de voir qu'aucun coefficient n'a change de dimension en route.
+L2 = _g2["longueur_m"] * u.m
+W2 = _g2["largeur_m"] * u.m
+a2 = _g2["cotes_talutes_en_longueur"] * fruit
+b2 = _g2["cotes_talutes_en_largeur"] * fruit
+t1 = (L2 * W2 * haut).to(u.m**3)
+t2 = ((L2 * b2 + W2 * a2) * haut**2 / 2).to(u.m**3)
+t3 = (a2 * b2 * haut**3 / 3).to(u.m**3)
+dit(abs((t1 + t2 + t3).magnitude
+        - _c2["trois_voies_du_volume_talute"]["integrale_exacte_m3"]) < 0.05,
+    "les trois termes du volume talute sont des m3",
+    f"{t1.magnitude:.0f} + {t2.magnitude:.0f} + {t3.magnitude:.0f} m3")
+dit(abs((a2 * b2 * haut**3 / 6).to(u.m**3).magnitude
+        - _c2["trois_voies_du_volume_talute"]["forme_fermee_de_l_erreur"]) < 0.02,
+    "et l'erreur de la methode des profils, a.b.h3/6, est un m3 elle aussi",
+    f"{_c2['trois_voies_du_volume_talute']['forme_fermee_de_l_erreur']:.2f} m3")
+# Le foisonnement est SANS DIMENSION : il relie deux volumes.
+foi = _c2["foisonnement_pct"] / 100 * u.dimensionless
+dit(str(((1 + foi)).to(u.dimensionless).units) == "dimensionless"
+    and abs((_c2["au_depot_en_place_m3"] * u.m**3 * (1 + foi)).to(u.m**3).magnitude
+            - _c2["transporte_foisonne_m3"]) < 0.2,
+    "volume en place x (1 + foisonnement) = volume transporte, en m3",
+    f"{_c2['transporte_foisonne_m3']:.0f} m3")
+# Un debit de pelle : un volume par heure. Le godet est un volume, le cycle un temps.
+godet = _p2["godet_m3"] * u.m**3
+cyc = _p2["temps_de_cycle_s"] * u.s
+deb = (godet * _p2["coefficient_de_remplissage"] / cyc).to(u.m**3 / u.hour)
+dit(abs(deb.magnitude - _p2["debit_foisonne_m3_h"]) < 0.1,
+    "debit = godet / temps de cycle, et c'est un m3/h",
+    f"{deb.magnitude:.1f} m3/h foisonnes")
+# Un temps de chargement : un volume divise par un debit.
+cap = _te["rotation_saturante"]["capacite_camion_m3"] * u.m**3
+tch = (cap / deb).to(u.minute)
+dit(abs(tch.magnitude - _te["rotation_saturante"]["temps_de_chargement_min"]) < 0.02,
+    "temps de chargement = capacite / debit, et c'est une DUREE",
+    f"{tch.magnitude:.2f} min")
+# Une flotte : un rapport de deux DUREES, donc un NOMBRE.
+tcy = _te["rotation_saturante"]["temps_de_cycle_min"] * u.minute
+dit(str((tcy / tch).to(u.dimensionless).units) == "dimensionless"
+    and abs((tcy / tch).magnitude
+            - _te["rotation_saturante"]["flotte_qui_sature_la_pelle_exacte"]) < 0.01,
+    "flotte de saturation = cycle / chargement, SANS DIMENSION",
+    f"{(tcy / tch).magnitude:.2f} camions")
+# Un trajet : une distance divisee par une vitesse.
+dist = _te["rotation_saturante"]["distance_km"] * u.km
+vit = d["terrassement"]["depot"]["vitesse_moyenne_km_h"]["valeur"] * u.km / u.hour
+dit(abs((2 * dist / vit).to(u.minute).magnitude
+        - _te["rotation_saturante"]["temps_de_trajet_aller_retour_min"]) < 0.1,
+    "trajet aller-retour = 2 x distance / vitesse, et c'est une DUREE",
+    f"{_te['rotation_saturante']['temps_de_trajet_aller_retour_min']:.1f} min")
+
+leve("recul de talus obtenu en ajoutant un fruit sans dimension a une longueur",
+     lambda: (fruit + banq).to(u.m))
+leve("volume talute additionne a une surface",
+     lambda: (t1 + L2 * W2).to(u.m**3))
+leve("debit de pelle pris pour un volume",
+     lambda: deb.to(u.m**3))
+leve("flotte de camions prise pour une duree",
+     lambda: (tcy / tch).to(u.minute))
+leve("temps de chargement additionne a une capacite",
+     lambda: (tch + cap).to(u.minute))
+leve("foisonnement additionne a un volume",
+     lambda: (foi + t1).to(u.dimensionless))
 
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

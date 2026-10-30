@@ -42,7 +42,8 @@ def vrai(nom, condition, detail=""):
 # Un jeu de parametres ROND, choisi pour que chaque resultat soit calculable de tete.
 PAR = {"achat": 1000000.0, "amort": 10.0, "entretien": 0.0, "financier": 0.0,
        "residuelle": 0.0, "carburant": 0.0, "gasoil": 0.0, "conducteur": 50.0,
-       "prix_loc": 150.0, "_operateur_compris": True,
+       "prix_loc": 150.0, "_en_plus_MAD_h": 0.0,
+       "_comprend": ["operateur", "carburant", "entretien"],
        "_regime_loc": "par_heure_de_service"}
 
 print("=== 1. Amortissement et parts fixe / variable ===")
@@ -160,9 +161,24 @@ for nom, par, emp in (("heure de service", PAR_H, EMP_H), ("intervention", PAR_I
 vrai("cout marginal identique des deux cotes -> aucun seuil",
      ch.point_d_equilibre({**PAR_H, "prix_loc": 50.0}, EMP_H, 1000.0)["seuil_h_par_an"]
      is None)
-vrai("l'operateur non compris s'ajoute a L1 et deplace le seuil",
-     ch.point_d_equilibre({**PAR_H, "_operateur_compris": False}, EMP_H,
+vrai("ce que le prix ne comprend pas s'ajoute a L1 et deplace le seuil",
+     ch.point_d_equilibre({**PAR_H, "_en_plus_MAD_h": 50.0}, EMP_H,
                           1000.0)["location_marginale_L1_MAD_h"] == 200.0)
+# LA PROPRIETE QUI A COUTE UN BLOQUANT : une location NUE payee a la presence a le
+# meme cout marginal que la possession, donc une pente NULLE et aucun seuil. Les
+# heures disparaissent de la comparaison.
+nue = {**PAR_P, "_en_plus_MAD_h": 50.0, "_comprend": ["entretien"]}
+eq_nue = ch.point_d_equilibre(nue, EMP_P, 1000.0)
+cas("location nue a la presence : L1 = le cout variable de la possession",
+    eq_nue["location_marginale_L1_MAD_h"], 50.0, 1e-9, "MAD/h")
+cas("donc la pente de l'ecart est NULLE", eq_nue["pente_de_l_ecart_MAD_h"], 0.0, 1e-9)
+vrai("et il n'y a AUCUN seuil : l'ecart ne depend pas des heures",
+     eq_nue["seuil_h_par_an"] is None and eq_nue["pente_nulle"]
+     and "NE DEPEND PAS" in eq_nue["sens"])
+e1 = ch.couts_annuels(nue, 300.0, ch._unites(nue, EMP_P, 300.0))["ecart_MAD_an"]
+e2 = ch.couts_annuels(nue, 1800.0, ch._unites(nue, EMP_P, 1800.0))["ecart_MAD_an"]
+cas("l'ecart est le MEME a 300 et a 1 800 h/an", e2, e1, 1e-9, "MAD/an")
+cas("et il vaut exactement F - L0", e1, 100000.0 - 150000.0, 1e-9, "MAD/an")
 
 print("\n=== 3. La disponibilite d'une chaine ===")
 rng = random.Random(7)

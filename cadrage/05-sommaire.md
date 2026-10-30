@@ -1067,17 +1067,21 @@ ECARTS avec la fiche de l'Etape 0 (D-061), et leurs raisons :
 Partie ⏸ : verifications reglementaires des engins et des appareils de levage, periodicites et
           criteres d'acceptation, habilitations et autorisations de conduite, consignes
           reglementaires d'exploitation, regles de distance et de survol (deja ⏸ depuis C1).
-Contenu propre : CE QUI DECIDE N'EST PAS L'ENGIN, C'EST L'UNITE DANS LAQUELLE ON LE PAIE —
-          trois regimes coexistent sur ce chantier (par intervention, par heure de service,
-          par duree de presence) et donnent 520, 973 et 1 364 MAD par heure de travail sur le
-          meme marche ; LE POINT D'EQUILIBRE EST UN NOMBRE D'HEURES PAR AN, h* = F/(l-v), et
-          non une duree de detention ; LE PLAFOND D'EMPLOI clot la question sans aucune
-          estimation pour deux des trois engins ; LE PARC TRAVAILLE 39 % DE SA PRESENCE ;
-          857 629 MAD DE LOCATION N'ONT AUCUNE LIGNE AU BORDEREAU, soit 160 % du poste qui
-          pourrait les absorber ; LE CATALOGUE PERD 52 % en arrivant sur un chantier ; UNE
-          CHAINE VAUT LE PRODUIT DE SES MAILLONS, 75,4 % pour un maillon faible a 88 % ; UN
-          SECOURS SE CLASSE EN MAD PAR POINT DE CHAINE, et celui au plus gros gain n'est pas
-          rentable.
+Contenu propre : CE QUI DECIDE N'EST PAS L'ENGIN, C'EST L'UNITE DANS LAQUELLE ON LE PAIE ET CE
+          QUE LE PRIX COMPREND — trois regimes coexistent sur ce chantier (par intervention,
+          par heure de service, par duree de presence) et donnent 520, 1 257 et 1 364 MAD par
+          heure de travail sur le meme marche ; L'ECART EST UNE DROITE, ecart(h) =
+          (F - L0) + (v - L1).h, dont le SEUIL h0 = (L0 - F)/(v - L1) ne vaut rien sans son
+          SENS — et n'existe pas quand v = L1, ce qui est le cas de toute location NUE payee
+          a la presence : les heures disparaissent de la comparaison ; LE PLAFOND D'EMPLOI
+          clot la question sans aucune estimation pour les trois engins ; LE PARC TRAVAILLE
+          44 % DE SA PRESENCE, et toute l'attente est celle d'un seul engin ; 906 022 MAD DE
+          LOCATION N'ONT AUCUNE LIGNE AU BORDEREAU, soit 170 % du poste qui pourrait les
+          absorber ; LE CATALOGUE PERD 52 % en arrivant sur un chantier ; UNE CHAINE VAUT LE
+          PRODUIT DE SES MAILLONS, 75,4 % pour un maillon faible a 88 % ; UN SECOURS SE
+          CLASSE EN MAD PAR POINT DE CHAINE, et celui au plus gros gain n'est pas rentable ;
+          UNE DISPONIBILITE NE COUTE QUE SUR UNE TACHE SANS MARGE — 267 641 MAD pour le seul
+          engin qui sert le chemin critique.
 Donnees lues : calc/sorties/planification.json (segments et durees des taches servies, d'ou
           les fenetres d'emploi), prix.json (prix de location du bordereau de D1, jours de
           pompe des sous-details, frais de duree par jour, poste energie-et-divers),
@@ -1088,7 +1092,7 @@ Donnees lues : calc/sorties/planification.json (segments et durees des taches se
 Donnees ecrites : calc/sorties/materiel.json
 Contre-calcul : TROIS VOIES sur le verdict — forme fermee au nominal, les deux coins extremes
           du domaine, et 20 000 tirages uniformes dans les fourchettes. C'est le tirage qui
-          tranche (D-068) ; pour la pompe les deux coins concordent, et c'est la preuve la
+          tranche (D-069) ; pour la pompe les deux coins concordent, et c'est la preuve la
           plus forte du module. SECONDE VOIE sur le debit pratique de la pompe : la cascade de
           facteurs donne 42,8 m3/h contre 45 declares par C3, ecart 4,8 % sous la tolerance du
           § 3.3. SECONDE VOIE sur les jours de pompe : D1 en compte 5,52 au volume, C6 en
@@ -1103,15 +1107,92 @@ Contre-calcul : TROIS VOIES sur le verdict — forme fermee au nominal, les deux
 Double lecture entreprise / MOE : ✓ (quatre gestes cote entreprise, trois controles sur pieces
           cote MOE dont l'adequation des moyens aux cadences visees)   Fiche memo S8 : ✓
 Exercices : 2 application + 1 probleme   Quiz : 6 questions
-Tests : calc/tests/test_cout_horaire.py (177 controles, 7 canaris) + etalonnage + verif_unites
+Tests : calc/tests/test_cout_horaire.py (250 controles, 9 canaris) + etalonnage + verif_unites
           + rendu
 LIMITE DECLAREE, la plus lourde du cours : dans ce module les trois erreurs les plus probables
           sont dimensionnellement INVISIBLES — MAD/an, MAD/h et MAD/j ont la meme dimension et
           pint convertit l'une en l'autre sans alerte. verif_unites.py le VERIFIE
           explicitement, pour que personne ne croie la verification dimensionnelle protectrice
           ici. Ce qui attrape ces erreurs : les tests de regle et le balayage de l'etalonnage.
-EFFET SUR LE COURS : la premiere version de ce module facturait a la pompe un jour de location
-          par jour de tache — 140 jours au lieu de 15 interventions, neuf fois le montant. La
-          correction a produit la regle du module, et elle generalise la dette 32 ouverte par
-          C1 : toute ressource louee nomme son UNITE de facturation avant son prix.
+PASSE ADVERSARIALE : 29 defauts dont 4 BLOQUANTS, 10 majeurs, 15 mineurs (QA/C6-passe1.md).
+          Les quatre bloquants et huit majeurs sont corriges ; deux bloquants etaient des
+          ERREURS DE MODELE que ni les tests ni pint ne voyaient. Detail dans le rapport et
+          dans D-070.
+EFFET SUR LE COURS : trois erreurs de modele successives sur le MEME objet — la facturation.
+          (1) un jour de location par jour de tache pour la pompe (140 au lieu de 15
+          interventions) ; (2) un seuil h* = F/(l-v) qui suppose L0 = 0 ; (3) le carburant
+          compte du seul cote de la possession, alors qu'une location NUE le laisse au
+          locataire — et la pente publiee valait exactement ce gasoil. Les trois ont ete
+          trouvees par trois instruments differents : un croisement avec le bordereau de D1,
+          une FIGURE qui ne croisait pas zero ou son seuil l'annoncait, et une relecture
+          hostile. Aucune par un test. La regle qui en sort generalise la dette 32 ouverte
+          par C1 : toute ressource louee nomme son UNITE de facturation ET SES INCLUSIONS
+          avant son prix.
+```
+
+### C2 — Terrassements, fouilles et évacuation des terres (écrit le 30/10/2026)
+
+```text
+ID : C2               Titre : Terrassements, fouilles et evacuation des terres
+Palier : P1           Type : execution     Niveau : [M] fiche d'expert     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Options : O1 ○ non retenu · O2 ✓ (n = 4) · O3 ○ non retenu · O4 ✓ · O5 ✓ · O6 ○ non retenu ·
+          O7 ✓ (cubatures et rotations — non normatif, conserve par § 5.0.3)
+ECARTS avec la fiche de l'Etape 0 (D-061) : la fiche prevoyait DEUX fichiers de calcul
+          (calc/cubatures.py et calc/rotations.py) ; un seul est livre, calc/terrassement.py,
+          parce que les deux objets partagent la geometrie de la fouille et que les separer
+          aurait duplique sa lecture. L'etalonnage garde le nom prevu
+          (calc/etalonnage/cubature_volume_ferme.py).
+Partie ⏸ : stabilite des talus et pente admissible, dimensionnement du blindage, poussee des
+          terres, rabattement de nappe, profondeur reglementaire d'obligation de blindage,
+          distances imposees en crete, obligations de controle des fouilles -> module B2 et
+          plan HSE.
+Contenu propre : LA PLACE DECIDE DU MODE DE SOUTENEMENT, PAS LA NATURE DU SOL — un talus
+          demande m.h + banquette de recul, soit 6,40 m ici ; trois cotes l'ont, le cote
+          voies n'a que 2 m, donc on blinde 176 m2 pour 149 600 MAD, et c'est la limite
+          d'EMPRISE DES TRAVAUX qui contraint, pas le gabarit de la voie ; LE VOLUME D'UN
+          TALUS A UNE FORME FERMEE, la formule prismatique est EXACTE et la methode des
+          profils surestime de a.b.h3/6 — demontre, et verifie sur 100 geometries tirees au
+          hasard ; 831 m3 DE TALUS N'ONT AUCUNE LIGNE AU BORDEREAU (67 850 MAD), et en sens
+          inverse D1 evacue 100 % de ce qu'il cube sans compter le reemploi : deux erreurs
+          qui se compensent pour 82 206 MAD net ; LE GODET CHARGE DU FOISONNE ET LE METRE
+          COMPTE DE L'EN PLACE, un quart d'ecart ; LA DUREE S'ACHETE AU CAMION — 15 camions
+          saturent la pelle, la cadence de D2 n'en demande que 5 par atelier et n'emploie la
+          pelle qu'a 28 %, et la flotte est PROPORTIONNELLE a la distance au depot (2 a 10
+          camions sur la fourchette declaree) ; LA NAPPE EST A 18 m POUR UNE FOUILLE DE 4,40 m,
+          donc aucun rabattement — une question qui se referme en une ligne et qu'il faut
+          fermer explicitement.
+Donnees lues : calc/sorties/prix.json (quantites TERR et FOUI du bordereau, coefficient
+          d'evacuation, prix du m3 foisonne, prix horaire de la pelle, frais de duree),
+          planification.json (cadence d'atelier, nombre d'ateliers, durees et marges de TERR
+          et FOUI), materiel.json (intensite d'emploi de la pelle publiee par C6) ;
+          data/ -> terrassement.* (fruit, banquette, retrait de la fouille, blindage, godet,
+          cycle, remplissage, camion, depot, reemploi) · geometrie.niveaux (emprise et
+          altitude du niveau technique) · site (nappe) · planning.ratios_quantites_V3
+          (surprofondeur, foisonnement)
+Donnees ecrites : calc/sorties/terrassement.json
+Contre-calcul : TROIS VOIES sur le volume talute — integrale exacte, formule prismatique
+          (exacte) et methode des profils (fausse, et son erreur a une forme fermee verifiee
+          sur 100 geometries aleatoires). DEUX VOIES sur la cadence — capacite de chargement
+          de la pelle contre debit de la rotation, la cadence tenue etant le minimum.
+          CROISEMENT avec D1 sur l'evacuation (82 206 MAD d'ecart, deux causes de sens
+          contraire) et avec C6 sur les heures de pelle (2 ateliers = 2 pelles, 15 759 MAD).
+          Etalonnage : calc/etalonnage/cubature_volume_ferme.py — prisme droit a fruit nul,
+          tronc de pyramide calcule a la main, 100 geometries aleatoires, cas degenerants de
+          la rotation (trajet nul, un seul camion), et la formule fausse rejouee.
+Securite (§ 3.4) : ✓ six dispositions essentielles explicites sur l'ensevelissement, avec la
+          part reglementaire nommee comme ⏸.
+Double lecture entreprise / MOE : ✓ (trois controles sur pieces, dont l'adequation de la
+          flotte a la cadence du planning vise)   Fiche memo S8 : ✓
+Exercices : la fiche prevoyait 2 application + 1 probleme ; le module livre ses quatre
+          resultats dans le corps et son quiz de 6 questions, les exercices restent a ecrire
+          — ECART ASSUME ET INSCRIT EN DETTE, faute de budget avant l'echeance du 31/10.
+Quiz : 6 questions
+Tests : calc/tests/test_terrassement.py (89 controles, 6 canaris) + etalonnage + verif_unites
+          + rendu
+EFFET SUR LE COURS : C2 trouve un defaut de C6 que la passe de C6 n'avait pas vu — le modele
+          de C6 deduit les heures d'un engin des JOURS de ses taches et n'a nulle part la
+          notion de NOMBRE DE MACHINES par famille. Deux ateliers de terrassement, c'est deux
+          pelles ; C6 en compte une. C'est le troisieme module d'affilee qui trouve le defaut
+          du precedent par un simple croisement de perimetre.
 ```
