@@ -227,3 +227,36 @@ H225;remise en état des ouvrages déjà posés autour d'un percement après cou
 H226;fourreau, calage, repérage et pose d'une réservation dans le coffrage avant coulage;120 MAD;MAD;60 à 250;2026;B7b + C4;c'est le coût d'une minute de pose et d'un morceau de PVC
 H227;jours perdus par corps d'état et par frontière de zone;0,4 j;j ouvrés;0,15 à 1,0;2026;B7b + C4;réinstallation, reprise d'approvisionnement, re-calage des équipes. C'est ce qui empêche de découper à l'infini, et personne ne le chiffre jamais
 H228;jours perdus par corps d'état et par frontière de zone;0,4 j;j ouvrés;0,15 à 1,0;2026;B7b + C4;réinstallation, reprise d'approvisionnement, re-calage des équipes. C'est ce qui empêche de découper à l'infini, et personne ne le chiffre jamais
+H229;jours ouvrés annuels d'un engin;250 j;j ouvrés/an;230 à 260;2026;C6;congés et jours fériés déduits , sert à convertir une fenêtre d'emploi en années, jamais à planifier
+H230;gasoil professionnel livré sur chantier;11,5 MAD/l;MAD/l;9,0 à 15,0;2026;C6;cuve de chantier comprise
+H231;conducteur d'engin, charges patronales comprises;60 MAD/h;MAD/h;48 à 80;2026;C6;du même ordre que le grutier de D1 (62 MAD/h) , déclaré ici parce que le tableau de main d'œuvre de D1 n'a pas cette ligne
+H232;part du prix d'achat récupérée à la revente en fin d'amortissement;20 %;%;10 à 30;2026;C6;commune aux trois engins : un paramètre par engin n'ajouterait rien à la précision de cette comparaison
+H233;coût du capital immobilisé, appliqué au capital moyen engagé;7,0 %;%/an;5,0 à 11,0;2026;C6;demi-somme du prix d'achat et de la valeur résiduelle. Sans cette ligne la possession paraîtrait gratuite en trésorerie
+H234;prix d'achat d'une pompe à béton automotrice 32 m, neuve;4 200 000 MAD;MAD;3 200 000 à 6 500 000;2026;C6;châssis porteur compris
+H235;durée d'amortissement linéaire d'une pompe à béton;7 ans;ans;5 à 10;2026;C6;amortissement linéaire, sans montée de l'entretien avec l'âge (simplification déclarée)
+H236;entretien annuel d'une pompe à béton, en part du prix d'achat;9 %;%/an;6 à 14;2026;C6;pièces d'usure (tuyauteries, lunettes, vérins) et révisions. C'est l'engin dont l'entretien pèse le plus, parce que le béton use tout ce qu'il traverse
+H237;consommation d'une pompe à béton en pompage effectif;18 l/h;l/h;12 à 26;2026;C6;en pompage effectif, non en attente
+H238;prix d'achat d'une pelle hydraulique sur chenilles 30 t, neuve;2 600 000 MAD;MAD;2 000 000 à 3 800 000;2026;C6;godet et marteau compris
+H239;durée d'amortissement linéaire d'une pelle 30 t;8 ans;ans;6 à 12;2026;C6;amortissement linéaire
+H240;entretien annuel d'une pelle 30 t, en part du prix d'achat;11 %;%/an;8 à 16;2026;C6;trains de chenilles, dents, circuit hydraulique. Un terrassement abrasif double ce poste
+H241;consommation d'une pelle 30 t en terrassement soutenu;24 l/h;l/h;18 à 34;2026;C6;en terrassement soutenu
+H242;heures de travail effectif d'une pelle par jour ouvré des tâches servies;5,5 h/j;h par jour servi;4,0 à 7,0;2026;C6;une pelle en terrassement travaille presque toute la journée : c'est l'engin au meilleur taux de présence utile du chantier
+H243;disponibilité d'une pelle 30 t;85 %;%;75 à 93;2026;C6;la plus basse des trois : une pelle travaille dans la terre, et c'est ce qui la casse
+H244;prix d'achat d'un chariot télescopique 4 t à 17 m, neuf;950 000 MAD;MAD;700 000 à 1 400 000;2026;C6;fourches et tablier compris
+H245;durée d'amortissement linéaire d'un chariot télescopique;8 ans;ans;6 à 12;2026;C6;amortissement linéaire
+H246;entretien annuel d'un chariot télescopique, en part du prix d'achat;8 %;%/an;5 à 13;2026;C6;le poste le plus faible des trois : pas de béton, pas de terre
+H247;consommation d'un chariot télescopique en manutention courante;7 l/h;l/h;5 à 11;2026;C6;manutention courante
+H248;heures de manutention effective d'un chariot par jour ouvré des tâches servies;3,5 h/j;h par jour servi;2,0 à 5,5;2026;C6;c'est l'engin que tout le monde appelle et que personne ne compte : gros œuvre, couverture, façades, quais et second œuvre
+H249;disponibilité d'un chariot télescopique;92 %;%;85 à 97;2026;C6;la meilleure des trois, et c'est pourquoi tout le chantier finit par en dépendre
+H250;débit catalogue d'une pompe à béton automotrice 32 m;90 m³/h;m³/h;60 à 150;2026;C6;débit théorique du prospectus, mesuré à pression nulle avec un mélange de laboratoire. Aucun chantier ne l'a jamais vu
+H251;facteur de pompabilité du béton réel, tuyauterie comprise;0,80;sans unité;0,70 à 0,90;2026;C6;consistance, granulométrie, longueur et coudes de la tuyauterie : le cylindre ne se remplit jamais complètement
+H252;part de l'heure de présence réellement passée à pousser du béton;0,70;sans unité;0,55 à 0,85;2026;C6;le reste est déplacement de flèche, changement de bande, attente de toupie
+H253;facteur d'arrêts et de nettoyages pendant un coulage;0,85;sans unité;0,70 à 0,95;2026;C6;nettoyages de tuyauterie, bouchons, pauses de l'équipe de mise en œuvre
+H254;location journalière nue d'un chariot télescopique 4 t / 17 m;1 450 MAD;MAD/j;1 000 à 2 200;2026;C6;transport amorti, opérateur non compris. Aucun prix de chariot télescopique n'existait au bordereau de D1 : cette ligne est déclarée par C6
+H255;disponibilité d'une centrale à béton pour un coulage programmé;96 %;%;90 à 99;2026;C6;panne de centrale, rupture de ciment, commande non honorée
+H256;disponibilité de la rotation des toupies;92 %;%;82 à 97;2026;C6;trafic urbain, accès chantier, panne d'un camion dans la rotation
+H257;disponibilité d'une pompe à béton le jour où on l'appelle;88 %;%;78 à 95;2026;C6;pannes, révisions, et indisponibilité du loueur sur un appel non programmé
+H258;disponibilité des aiguilles vibrantes;97 %;%;92 à 99;2026;C6;panne d'aiguille ou de convertisseur
+H259;immobilisation d'une seconde pompe en attente sur le site;1 800 MAD;MAD/j;1 000 à 3 200;2026;C6;pompe immobilisée sans pompage , ce n'est pas le prix d'une intervention
+H260;heures perdues en transferts et conflits de calendrier entre deux sites;12 %;%;5 à 25;2026;C6;transferts, remises en route, conflits de calendrier. Sans cette ligne la mutualisation paraîtrait gratuite
+H261;heures que le second site de D7 ajoute, en part du besoin de la gare;0,8;sans unité;0,4 à 1,2;2026;C6;le second site de D7 est entièrement V3 (dette 34) : ce coefficient aussi

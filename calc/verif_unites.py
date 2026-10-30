@@ -736,5 +736,114 @@ leve("date de gel obtenue en soustrayant un COUT a une date",
 leve("densite de reservations prise pour un nombre nu",
      lambda: (dens * (1 * u.dimensionless)).to(u.dimensionless))
 
+print("\ncout_horaire.py — l'heure d'un engin (C6)")
+_ma = json.loads((SORTIES / "materiel.json").read_text(encoding="utf-8"))
+_v6 = _ma["verdicts"][0]
+# Un cout annuel fixe est en MAD/an ; une part variable en MAD/h ; leur somme n'a de
+# sens qu'une fois la part variable multipliee par des heures PAR AN.
+fixe = _v6["fixe_MAD_an"] * u.MAD / u.year
+varh = _v6["variable_MAD_h"] * u.MAD / u.hour
+hpa = _v6["heures_par_an_h"] * u.hour / u.year
+poss = (fixe + varh * hpa).to(u.MAD / u.year)
+dit(abs(poss.magnitude - _v6["possession_MAD_an"]) < 1e-3 * _v6["possession_MAD_an"],
+    "cout de possession = fixe par an + (MAD/h x h/an), et c'est un MAD/an",
+    f"{poss.magnitude:,.0f} MAD/an".replace(",", " "))
+# Le point d'equilibre : un MAD/an divise par un MAD/h donne des HEURES, qu'il reste a
+# rapporter a l'annee. C'est la seule facon de voir qu'il s'agit d'heures PAR AN.
+# Le seuil : un MAD/an divise par un MAD/h donne des HEURES, qu'il reste a rapporter a
+# l'annee. L0 et F sont tous deux des MAD/an, leur difference aussi ; la pente est un
+# MAD/h. Note : pint ne peut pas distinguer L0 (fixe) de L1.h (proportionnel) — c'est
+# la limite declaree plus bas.
+pente = _v6["equilibre"]["pente_de_l_ecart_MAD_h"] * u.MAD / u.hour
+A = _v6["equilibre"]["ecart_a_emploi_nul_MAD_an"] * u.MAD / u.year
+heq = (-A / pente).to(u.hour / u.year)
+dit(abs(heq.magnitude - _v6["equilibre"]["seuil_h_par_an"]) < 0.5,
+    "seuil d'emploi = (MAD/an) / (MAD/h) = des HEURES PAR AN",
+    f"{heq.magnitude:.1f} h/an")
+L0 = _v6["equilibre"]["location_fixe_L0_MAD_an"] * u.MAD / u.year
+L1 = _v6["equilibre"]["location_marginale_L1_MAD_h"] * u.MAD / u.hour
+dit(str((L0 + L1 * hpa).to(u.MAD / u.year).units) == "MAD / year",
+    "location affine : L0 (MAD/an) + L1 (MAD/h) x h/an, en MAD/an",
+    f"{(L0 + L1 * hpa).to(u.MAD / u.year).magnitude:,.0f} MAD/an".replace(",", " "))
+# Le cout horaire de possession : un MAD/an divise par des h/an redonne des MAD/h.
+dit(str((poss / hpa).to(u.MAD / u.hour).units) == "MAD / hour"
+    and abs((poss / hpa).magnitude - _v6["possession_MAD_h"])
+    < 1e-2 * _v6["possession_MAD_h"],
+    "cout horaire = (MAD/an) / (h/an), en MAD/h",
+    f"{_v6['possession_MAD_h']:.0f} MAD/h")
+# Un taux d'emploi est un rapport de DUREES : sans dimension.
+_e6 = _ma["emplois"]["chariot"]
+trav = _e6["jours_de_travail_j"] * u.day
+fen = _e6["fenetre_duree_j"] * u.day
+dit(str((trav / fen).to(u.dimensionless).units) == "dimensionless"
+    and abs((trav / fen).magnitude * 100 - _e6["taux_de_presence_utile_pct"]) < 0.2,
+    "taux de presence utile = jours de travail / jours de fenetre, SANS DIMENSION",
+    f"{_e6['taux_de_presence_utile_pct']} %")
+# Une disponibilite de chaine est un produit de nombres sans dimension : le produit de
+# quatre grandeurs sans dimension reste sans dimension, et pint ne verra jamais qu'on a
+# pris le minimum au lieu du produit. LIMITE DECLAREE, et c'est exactement la famille
+# de defaut que D-067 isole : seule la simulation de calc/ le voit.
+_c6 = _ma["chaine_du_coulage"]
+ps = [m["disponibilite_pct"] / 100 * u.dimensionless for m in _c6["maillons"]]
+prod = ps[0]
+for x in ps[1:]:
+    prod = prod * x
+dit(str(prod.to(u.dimensionless).units) == "dimensionless"
+    and abs(prod.magnitude * 100 - _c6["disponibilite_forme_fermee_pct"]) < 0.05,
+    "disponibilite de chaine : un produit de grandeurs SANS DIMENSION",
+    f"{_c6['disponibilite_forme_fermee_pct']} % — pint ne distingue pas ce produit "
+    "d'un minimum")
+# L'esperance d'un secours : une probabilite (sans dimension) fois un MAD par jour.
+_s6 = next(x for x in _c6["secours"] if x["possible"])
+gain = _s6["gain_en_points_de_chaine"] / 100 * u.dimensionless
+jour = _c6["cout_d_un_jour_perdu_MAD"] * u.MAD / u.day
+dit(str((gain * jour).to(u.MAD / u.day).units) == "MAD / day"
+    and abs((gain * jour).magnitude - _s6["esperance_de_gain_MAD_j"]) < 1,
+    "esperance de gain d'un secours = probabilite x MAD/jour, en MAD/jour",
+    f"{_s6['esperance_de_gain_MAD_j']:.0f} MAD/j")
+# Un debit de pompe est un VOLUME par heure, et une cascade de facteurs sans dimension
+# ne change pas son unite.
+_r6 = _ma["rendement_de_la_pompe"]
+cat = _r6["debit_catalogue_m3_h"] * u.m**3 / u.hour
+reel = (cat * _r6["produit_des_facteurs"]).to(u.m**3 / u.hour)
+dit(abs(reel.magnitude - _r6["debit_recalcule_m3_h"]) < 0.1,
+    "debit catalogue x facteurs sans dimension reste un m3/h",
+    f"{reel.magnitude:.1f} m3/h")
+
+leve("cout fixe annuel additionne a une disponibilite",
+     lambda: (fixe + prod).to(u.MAD / u.year))
+leve("point d'equilibre pris pour une duree de detention",
+     lambda: heq.to(u.year))
+leve("taux d'emploi pris pour une duree",
+     lambda: (trav / fen).to(u.day))
+leve("esperance de gain par jour prise pour un montant",
+     lambda: (gain * jour).to(u.MAD))
+leve("debit de pompe additionne a un cout horaire",
+     lambda: (reel + varh).to(u.m**3 / u.hour))
+leve("debit de pompe additionne a un nombre d'heures par an",
+     lambda: (reel + hpa).to(u.m**3 / u.hour))
+
+# LIMITE DECLAREE, et c'est la plus lourde de tout le cours : dans ce module, les trois
+# erreurs les plus probables sont dimensionnellement INVISIBLES. Un cout fixe annuel
+# (MAD/an), un cout horaire (MAD/h) et un cout journalier (MAD/j) ont la MEME dimension,
+# MAD par temps : pint convertit l'un en l'autre sans rien signaler. De meme, un taux
+# d'emploi et des heures par an sont tous deux sans dimension. Les trois lignes qui
+# suivent VERIFIENT que ces additions fausses passent, pour que personne ne croie que la
+# verification dimensionnelle protege ce module. Ce qui les attrape est ailleurs : les
+# tests de regle de calc/tests/test_cout_horaire.py et l'etalonnage par balayage.
+for nom, f in (
+    ("MAD/an + MAD/h : pint convertit, l'addition fausse passe",
+     lambda: (fixe + varh).to(u.MAD / u.year)),
+    ("MAD/j - MAD/an : meme dimension, aucune alerte",
+     lambda: ((gain * jour) - fixe).to(u.MAD / u.day)),
+    ("un taux d'emploi additionne a des h/an : les deux sont sans dimension",
+     lambda: ((trav / fen) + hpa).to(u.dimensionless)),
+):
+    try:
+        f()
+        dit(True, f"LIMITE : {nom}")
+    except Exception:                                                   # pragma: no cover
+        dit(False, f"LIMITE : {nom} — elle a leve, la limite n'est plus celle-ci")
+
 print("\nVerification dimensionnelle : " + ("tout est homogene." if ok else "AU MOINS UNE FORMULE EST FAUSSE."))
 sys.exit(0 if ok else 1)

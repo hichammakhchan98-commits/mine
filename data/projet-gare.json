@@ -3602,5 +3602,201 @@
    },
    "_pourquoi_une_frontiere_coute": "Découper en zones fait gagner du temps parce que les corps d'état travaillent en parallèle dans des volumes différents. Mais chaque frontière oblige chaque corps à s'installer, s'approvisionner et se recaler une fois de plus. Le découpage optimal n'est donc pas le plus fin : il existe, et il se calcule."
   }
+ },
+ "materiel_engins": {
+  "_role": "Parametres economiques du MATERIEL (module C6). Rien ici n'est reglementaire : un cout horaire, un amortissement, une disponibilite et un rendement reel ne relevent d'aucune norme. Ce bloc porte ce que les autres modules n'ont pas : C1 pose la grue, C3 loue le parc de coffrage, D1 facture des locations. Personne n'avait encore compare le cout de POSSESSION d'un engin a son prix de LOCATION, et c'est la seule question que ce bloc permet de trancher.",
+  "niveau_preuve": "V3",
+  "annee_ref": 2026,
+  "jours_ouvres_par_an": {
+   "valeur": 250,
+   "fourchette": [230, 260],
+   "note": "jours ouvres annuels d'un engin, conges et jours feries deduits. Sert a convertir une fenetre d'emploi en annees, et non a planifier : le planning a son propre calendrier (planning.calendrier)"
+  },
+  "gasoil_MAD_l": {
+   "valeur": 11.5,
+   "fourchette": [9.0, 15.0],
+   "note": "gasoil professionnel livre sur chantier, cuve comprise. Annee de reference 2026"
+  },
+  "conducteur_MAD_h": {
+   "valeur": 60,
+   "fourchette": [48, 80],
+   "note": "conducteur d'engin, charges patronales comprises. Du meme ordre que le grutier de D1 (62 MAD/h), declare ici parce que le tableau de main d'oeuvre de D1 n'a pas cette ligne"
+  },
+  "valeur_residuelle_pct": {
+   "valeur": 20,
+   "fourchette": [10, 30],
+   "note": "part du prix d'achat recuperee a la revente en fin d'amortissement. Commune aux trois engins : un parametre par engin n'apporterait rien a la precision de cette comparaison"
+  },
+  "cout_financier_pct_an": {
+   "valeur": 7.0,
+   "fourchette": [5.0, 11.0],
+   "note": "cout du capital immobilise, applique au capital MOYEN engage, soit la demi-somme du prix d'achat et de la valeur residuelle. Sans cette ligne la possession paraissait gratuite en tresorerie, ce qui fausse la comparaison dans le sens du mauvais choix"
+  },
+  "_les_trois_regimes_de_location": "Un prix de location ne se compare à un coût de possession qu'une fois su DANS QUELLE UNITÉ on le paie. Trois régimes, et ils ne donnent pas le même résultat : par INTERVENTION (la pompe, qui vient et repart), par HEURE DE SERVICE (la pelle, au compteur horaire), par DURÉE DE PRÉSENCE (le chariot, payé du premier au dernier jour de besoin, jours d'attente compris). À heures de travail égales, le dernier coûte plusieurs fois le deuxième.",
+  "_modele_du_cout_horaire": "Le cout annuel de possession se decompose en une part FIXE (amortissement lineaire, entretien, cout financier) qui ne depend pas des heures, et une part VARIABLE (carburant, conducteur) qui en depend. La location, elle, est presque entierement variable. La comparaison ne se joue donc pas sur une duree de detention mais sur un TAUX D'EMPLOI : le point d'equilibre est un nombre d'heures par an.",
+  "familles": [
+   {
+    "cle": "pompe",
+    "nom": "Pompe à béton automotrice 32 m",
+    "taches": ["FOND", "RADT", "VOIL", "PHNT", "POTR", "MEZZ", "NOYX", "MARQ", "PSOU"],
+    "prix_achat_MAD": {
+     "valeur": 4200000,
+     "fourchette": [3200000, 6500000],
+     "note": "pompe automotrice de 32 m de portee de fleche, chassis porteur compris, neuve"
+    },
+    "amortissement_ans": {"valeur": 7, "fourchette": [5, 10], "note": "amortissement lineaire"},
+    "entretien_pct_achat_an": {
+     "valeur": 9,
+     "fourchette": [6, 14],
+     "note": "entretien, pieces d'usure (tuyauteries, lunettes, verins), revisions. Une pompe est l'engin dont l'entretien pese le plus, parce que le beton use tout ce qu'il traverse"
+    },
+    "carburant_l_h": {"valeur": 18, "fourchette": [12, 26], "note": "en pompage effectif"},
+    "regime_de_service": "intervention",
+    "_regime_de_service": "La pompe ne reste pas sur le site : elle VIENT pour un coulage et repart. Son emploi ne se declare donc pas en heures par jour de tache — il se DEDUIT : nombre d'interventions = volume de beton pompe (bordereau de D1) / volume d'un coulage (zone du module TV), et heures = interventions x duree d'un coulage (module C3). Aucune heure n'est declaree ici.",
+    "regime_de_location": "par_intervention",
+    "_regime_de_location": "On paie la VENUE, pas les heures : le prix du bordereau est a la journee d'intervention, et une journee d'intervention couvre un coulage de quelques heures.",
+    "disponibilite_pct": {
+     "valeur": 88,
+     "fourchette": [78, 95],
+     "note": "part des jours de besoin ou l'engin repond. Pannes, revisions, et l'indisponibilite du loueur sur un appel non programme"
+    },
+    "location": {"cle_prix": "pompe_a_beton_j", "unite": "j", "operateur_compris": true,
+                 "_note": "prix lu dans prix_unitaires_MAD.ressources.materiel_MAD, et non redeclare. Le prix est a la JOURNEE d'intervention : on paie la venue, pas les heures pompees"}
+   },
+   {
+    "cle": "pelle",
+    "nom": "Pelle hydraulique sur chenilles 30 t",
+    "taches": ["TERR", "FOUI", "SOUT", "ETAN"],
+    "prix_achat_MAD": {
+     "valeur": 2600000,
+     "fourchette": [2000000, 3800000],
+     "note": "pelle 30 t, godet et marteau, neuve"
+    },
+    "amortissement_ans": {"valeur": 8, "fourchette": [6, 12], "note": "amortissement lineaire"},
+    "entretien_pct_achat_an": {
+     "valeur": 11,
+     "fourchette": [8, 16],
+     "note": "trains de chenilles, dents, circuit hydraulique. Un terrassement abrasif double ce poste"
+    },
+    "carburant_l_h": {"valeur": 24, "fourchette": [18, 34], "note": "en terrassement soutenu"},
+    "heures_par_jour_servi": {
+     "valeur": 5.5,
+     "fourchette": [4.0, 7.0],
+     "note": "heures de travail effectif par jour ouvre des taches servies. Une pelle en terrassement travaille presque toute la journee : c'est l'engin au taux d'emploi le plus eleve du chantier"
+    },
+    "regime_de_service": "continu",
+    "regime_de_location": "par_heure_de_service",
+    "_regime_de_location": "Compteur horaire : on paie les heures travaillees, conducteur compris. C'est le regime le plus favorable au locataire — il ne paie rien quand l'engin attend.",
+    "disponibilite_pct": {
+     "valeur": 85,
+     "fourchette": [75, 93],
+     "note": "la plus basse des trois : une pelle travaille dans la terre, et c'est ce qui la casse"
+    },
+    "location": {"cle_prix": "pelle_30t_h", "unite": "h", "operateur_compris": true,
+                 "_note": "prix lu dans prix_unitaires_MAD.ressources.materiel_MAD. Facture a l'HEURE, conducteur compris"}
+   },
+   {
+    "cle": "chariot",
+    "nom": "Chariot télescopique 4 t / 17 m",
+    "taches": ["FOND", "RADT", "VOIL", "PHNT", "POTR", "MEZZ", "NOYX", "MARQ",
+               "COUV", "FACA", "QUAI", "SECO"],
+    "prix_achat_MAD": {
+     "valeur": 950000,
+     "fourchette": [700000, 1400000],
+     "note": "chariot telescopique 4 t a 17 m, fourches et tablier, neuf"
+    },
+    "amortissement_ans": {"valeur": 8, "fourchette": [6, 12], "note": "amortissement lineaire"},
+    "entretien_pct_achat_an": {
+     "valeur": 8,
+     "fourchette": [5, 13],
+     "note": "le poste le plus faible des trois : pas de beton, pas de terre"
+    },
+    "carburant_l_h": {"valeur": 7, "fourchette": [5, 11], "note": "manutention courante"},
+    "heures_par_jour_servi": {
+     "valeur": 3.5,
+     "fourchette": [2.0, 5.5],
+     "note": "heures de manutention effective par jour ouvre des taches servies. C'est l'engin que tout le monde appelle et que personne ne compte : il sert au gros oeuvre, a la couverture, aux facades, aux quais et au second oeuvre"
+    },
+    "regime_de_service": "continu",
+    "regime_de_location": "par_duree_de_presence",
+    "_regime_de_location": "Un chariot telescopique ne se rend pas chaque soir : il reste sur le site du premier au dernier jour ou on en a besoin, et se paie pendant toute cette FENETRE, les jours sans emploi compris. C'est le regime le plus defavorable au locataire, et c'est celui que personne ne regarde — la passe de C1 l'avait signale pour la grue et proposait un controle que personne n'avait outille.",
+    "disponibilite_pct": {
+     "valeur": 92,
+     "fourchette": [85, 97],
+     "note": "la meilleure des trois, et c'est pourquoi tout le chantier finit par en dependre"
+    },
+    "location": {"MAD_j": {"valeur": 1450, "fourchette": [1000, 2200],
+                           "note": "location nue a la journee, transport amorti. Aucun prix de chariot telescopique n'existait dans le bordereau de D1 : cette ligne est declaree ici"},
+                 "unite": "j", "operateur_compris": false}
+   }
+  ],
+  "_familles_note": "Trois familles, et non tout le parc. La grue à tour appartient à C1 (courbe de charge, calage, fenêtre d'emploi) et le parc de coffrage à C3 (loyer mensuel, optimum de parc) : les reprendre ici serait écrire deux fois le même nombre. Les trois retenues sont celles dont personne n'a encore calculé l'heure.",
+  "rendement_de_la_pompe": {
+   "_role": "Du debit CATALOGUE au debit PRATIQUE, par une chaine de facteurs. Le module C3 declare un debit pratique de 45 m3/h en precisant « et non son debit catalogue » : ce bloc permet de retrouver ce nombre par une voie independante, et de verifier l'ecart.",
+   "debit_catalogue_m3_h": {
+    "valeur": 90,
+    "fourchette": [60, 150],
+    "note": "debit theorique du prospectus, mesure a pression nulle avec un melange de laboratoire. Aucun chantier ne l'a jamais vu"
+   },
+   "facteur_pompabilite": {
+    "valeur": 0.80,
+    "fourchette": [0.70, 0.90],
+    "note": "beton reel : consistance, granulometrie, longueur et coudes de la tuyauterie. Le cylindre ne se remplit jamais completement"
+   },
+   "part_de_l_heure_pompee": {
+    "valeur": 0.70,
+    "fourchette": [0.55, 0.85],
+    "note": "part de l'heure de presence passee a pousser du beton : le reste est deplacement de fleche, changement de bande, attente de toupie"
+   },
+   "facteur_arrets": {
+    "valeur": 0.85,
+    "fourchette": [0.70, 0.95],
+    "note": "nettoyages de tuyauterie, bouchons, pauses de l'equipe de mise en oeuvre"
+   }
+  },
+  "chaine_du_coulage": {
+   "_role": "Un coulage demande que PLUSIEURS maillons repondent le meme matin. La disponibilite de la chaine est le PRODUIT des disponibilites, pas la plus faible d'entre elles — et c'est ce qui surprend.",
+   "maillons": [
+    {"element": "Centrale à béton (approvisionnement)",
+     "disponibilite_pct": {"valeur": 96, "fourchette": [90, 99],
+                           "note": "panne de centrale, rupture de ciment, commande non honoree"},
+     "secours_possible": false,
+     "cout_du_secours_MAD_j": null,
+     "_secours": "Une seconde centrale agréée existe rarement à distance utile, et changer de centrale change la formule du béton : ce n'est pas un secours, c'est un autre ouvrage."},
+    {"element": "Rotation des toupies (trafic, accès)",
+     "disponibilite_pct": {"valeur": 92, "fourchette": [82, 97],
+                           "note": "trafic urbain, acces chantier, panne d'un camion dans la rotation"},
+     "secours_possible": false,
+     "cout_du_secours_MAD_j": null,
+     "_secours": "Une toupie de plus ne couvre pas une rotation interrompue : elle augmente le débit, elle ne rétablit pas l'accès. C3 l'a déjà chiffrée comme débit, pas comme secours."},
+    {"element": "Pompe à béton",
+     "disponibilite_pct": {"valeur": 88, "fourchette": [78, 95],
+                           "note": "meme valeur que la famille pompe, et c'est volontaire : un seul nombre pour une seule machine"},
+     "secours_possible": true,
+     "cout_du_secours_MAD_j": {"valeur": 1800, "fourchette": [1000, 3200],
+                               "note": "immobilisation d'une seconde pompe en attente sur le site, sans pompage. Ce n'est pas le prix d'une intervention"},
+     "_secours": "Techniquement possible et cher : une pompe immobilisée ne pompe pas."},
+    {"element": "Aiguilles vibrantes",
+     "disponibilite_pct": {"valeur": 97, "fourchette": [92, 99],
+                           "note": "panne d'aiguille ou de convertisseur"},
+     "secours_possible": true,
+     "cout_du_secours_MAD_j": {"cle_prix": "vibreur_j",
+                               "_note": "prix lu dans le bordereau de D1, non redeclare : 120 MAD/j"},
+     "_secours": "Le secours le moins cher du chantier, et celui qu'on oublie le plus souvent."}
+   ]
+  },
+  "mutualisation": {
+   "_role": "Lien avec D7. Un engin ne se possede pas pour un chantier : il se possede pour un PARC. Mettre deux sites sur le meme engin additionne les heures sans additionner les couts fixes, et peut faire basculer la decision.",
+   "besoin_relatif_du_second_site": {
+    "valeur": 0.8,
+    "fourchette": [0.4, 1.2],
+    "note": "heures que le second site de D7 ajoute, en part du besoin de la gare, pour le meme engin. Le second site est entierement V3 (dette 34) : ce coefficient aussi"
+   },
+   "perte_de_mutualisation_pct": {
+    "valeur": 12,
+    "fourchette": [5, 25],
+    "note": "heures perdues en transferts, remises en route et conflits de calendrier entre deux sites. Sans cette ligne la mutualisation paraitrait gratuite"
+   }
+  }
  }
 }

@@ -1,12 +1,12 @@
 # STATE — avancement du cours
 
-Dernière mise à jour : **29/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
+Dernière mise à jour : **30/10/2026** · Étape : **3 — paliers, programme recentré au 31/10**
 Mode d'exécution : **B** (chat avec bac à sable éphémère, § 12.5)
 Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 
 ## Reprise (mode B — à lire en premier à chaque séance)
 
-- **Dernier livrable** : `B7b + C4` — lots techniques et second œuvre. Zip : `cours-genie-civil-P1-B7b-C4.zip`
+- **Dernier livrable** : `C6` — matériel, l'heure d'un engin. Zip : `cours-genie-civil-P1-C6.zip`
 - **Toutes les passes /devil sont faites**, tous les bloquants corrigés. C7 : **45 défauts,
   13 bloquants, 22 majeurs — livraison refusée en première passe**, tous traités (D-049 à D-052).
 - **Commande de contrôle** : `npm ci --ignore-scripts && npm run check`
@@ -29,9 +29,9 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
 ## Statut des modules
 
 **Périmètre recentré (D-033)** : paliers 2 et 3 supprimés sauf ce qui touche une gare.
-**24 livraisons**, dont **14 faites** et 10 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
+**24 livraisons**, dont **15 faites** et 9 au programme du 31/10 (`cadrage/07-programme-31-10.md`).
 
-- **Livré (14)** : `E1` (socle) · `TV` (tranche verticale) · `D2` (planification, 32 défauts,
+- **Livré (15)** : `E1` (socle) · `TV` (tranche verticale) · `D2` (planification, 32 défauts,
   8 bloquants — D-035) · `D1` (métrés et prix, 28 défauts, 7 bloquants) · `D4` (suivi et contrôle,
   32 défauts, 8 bloquants — D-042) · `C3` (gros œuvre, 33 défauts, 6 bloquants — D-040, D-041) ·
   `B3e` (béton armé en exécution, 36 défauts, 11 bloquants dont **trois erreurs de modèle
@@ -41,9 +41,10 @@ Phase : **§ 5.0 — SANS CALCULS NORMATIFS** (`normes_disponibles = false`)
   D-057) · `RC1` (revue critique du palier, § 5.5, 23 défauts dont 6 bloquants — D-058) ·
   `C1` (installation de chantier, 23 défauts dont **3 bloquants** — D-059 à D-062) ·
   `D7` (pilotage multi-sites, 29 défauts dont **4 bloquants** — D-063, D-064) ·
-  `B7b+C4` (lots techniques et second œuvre, 26 défauts dont **5 bloquants** — D-065
-  à D-067). Toutes les passes sont faites, tous les bloquants et majeurs corrigés.
-- ▶ **actifs, non écrits (9)** : A1, A2a, A5a, B5a-exec, C2, C6, D3, D6, M3D
+  `B7b+C4` (lots techniques, 26 défauts dont **5 bloquants** — D-065 à D-067) ·
+  `C6` (matériel : coût horaire, régimes de location, chaîne — D-068, D-069). Toutes les
+  passes sont faites, tous les bloquants et majeurs corrigés.
+- ▶ **actifs, non écrits (8)** : A1, A2a, A5a, B5a-exec, C2, D3, D6, M3D
 - ⏸ **suspendus** (§ 5.0.4) : A2b, A3, A4, A5b, B1, B2, B3, B5a-calc, B6, B6b, B7a, R5
 
 Fiches-module : `cadrage/05-sommaire.md` (périmètre d'origine, conservé pour mémoire).
@@ -142,9 +143,8 @@ Neuf, inchangées depuis C3, détaillées dans chaque module et dans git : une s
 Jeux figés en 1.0, valeurs de conception inchangées. Ajouts : `armatures` (B3e) et `ferroviaire`
 (B7c). Corrigé par les passes : parc de tables, étais, `suivi.quantites_relevees`, `materiel`,
 `cycle_zone`, portées des nappes, segments de cadres, base des ratios d'acier. **227 hypothèses V3
-registrées**, toutes couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Ajouts de C1 : le bloc `installation` (grue, trois variantes de calage, pièces à lever — dont celle de charpente **lue** chez B7c et non redéclarée —, levages, base-vie, aires) et `installation.voisinage`. Le taux d'utilisation de la grue porte son unité dans son nom (D-056). Ajouts de D7 : `multi_sites` (second site lot par lot, seuils du tableau de bord, rythmes de reporting). Ajouts de B7b+C4 : `lots_techniques` (diamètres courants, densité de réservations, délai de gel, cinq postes d'un percement, six corps d'état et le coût d'une frontière de zone). Détail dans git et dans `QA/`.
+registrées**, toutes couvertes. Ajouts de C7 : l'heure de contrôle d'un cadre (140 MAD/h, distincte de l'heure de compagnon), les heures annuelles d'un compagnon, les cinq ratios de déchets désormais tous balisés ; le plan de contrôle porte l'exécutant ET le visa, les points d'arrêt avec leur durée, et le renvoi vers les plans de C3 et de B3e. Ajouts de C1 : le bloc `installation` (grue, trois variantes de calage, pièces à lever — dont celle de charpente **lue** chez B7c et non redéclarée —, levages, base-vie, aires) et `installation.voisinage`. Le taux d'utilisation de la grue porte son unité dans son nom (D-056). Ajouts de D7 : `multi_sites` (second site lot par lot, seuils du tableau de bord, rythmes de reporting). Ajouts de B7b+C4 : `lots_techniques` (diamètres courants, densité de réservations, délai de gel, cinq postes d'un percement, six corps d'état et le coût d'une frontière de zone). Ajouts de C6 : `materiel_engins` (trois familles avec leur **régime de service** et leur **régime de location**, cascade de rendement de la pompe, quatre maillons de la chaîne du coulage avec leur secours, mutualisation). Détail dans git et dans `QA/`.
 
 ## Effort consommé (§ 13.2)
 
-**23 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · D2, D1, D4, C3, B3e, B7c, C7, REC, RC1, C1 = 1 chacun, plus 3 pour les passes et corrections de C3, D4, B7c et C7.
-**Avancement sur le programme du 31/10** : **14 livraisons sur 18**. C1, D7 puis B7b+C4 ont été livrés sur go du lecteur. Restent : C2, C6, D3, D6, A1, A2a, A5a, B5a-exec, M3D — plus que le budget ne permet d'ici le 31/10. L'arbitrage est au lecteur, et il est posé, pas découvert le 31.
+**24 séances** : Étape 0 = 1 · Étape 1 = 2 · Étape 2 = 4 · un module par séance ensuite, plus 3 pour les passes et corrections de C3, D4, B7c et C7. **Avancement sur le programme du 31/10** : **15 livraisons sur 18**. C1, D7, B7b+C4 puis C6 ont été livrés sur go du lecteur. Restent : C2, D3, D6, A1, A2a, A5a, B5a-exec, M3D — plus que le budget ne permet d'ici le 31/10. L'arbitrage est au lecteur, et il est posé, pas découvert le 31.

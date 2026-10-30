@@ -1244,3 +1244,79 @@ son rôle exact : le cas sans coût de transition, et l'étalonnage de la simula
 L'étalonnage rejoue la formule fausse et vérifie qu'elle surestime. Les deux prochains modules qui
 poseront une formule de déroulement — C2 et C6 en portent — devront fournir leur simulation à
 l'écriture, pas après la relecture.
+
+---
+
+## D-068 — 30/10/2026 — Un prix de location se nomme par son UNITÉ avant son montant
+
+**Décision.** Toute ressource louée déclare, dans `data/`, le **régime** dans lequel elle est
+facturée, avant et indépendamment de son prix. Trois régimes sont nommés et traités séparément par
+`calc/` : **par intervention** (on paie la venue), **par heure de service** (on paie le compteur),
+**par durée de présence** (on paie du premier au dernier jour de besoin, attente comprise). Aucun
+montant de location n'entre dans un résultat du cours sans son régime, et tout coût de matériel est
+publié **ramené à l'heure de travail**, seule grandeur comparable d'un régime à l'autre.
+
+**Pourquoi.** Parce que la première version du module C6 a fait l'erreur, et qu'elle était grosse.
+Elle facturait à la pompe à béton **un jour de location par jour de tâche servie** — 140 jours au
+lieu de 15 interventions, neuf fois le montant réel — et au chariot télescopique ses **jours de
+travail** alors qu'un chariot reste sur le site et se paie sa fenêtre entière, soit 555 jours au lieu
+de 252. Les deux erreurs vont en sens inverse, et chacune **inverse un verdict** : avec la première,
+la pompe paraissait presque achetable ; avec la seconde, le chariot paraissait clairement louable.
+Le calcul n'avait aucune faute d'arithmétique. Il comptait la mauvaise chose.
+
+**Ce qui ne l'a pas vu.** Rien de l'outillage. La vérification dimensionnelle est aveugle ici, et
+c'est démontré : MAD/an, MAD/h et MAD/j ont la **même dimension**, et `pint` convertit l'une en
+l'autre sans un mot. `verif_unites.py` vérifie désormais *explicitement* que ces trois additions
+fausses passent, pour que personne ne croie la vérification dimensionnelle protectrice sur ce module.
+Les tests de règle ne l'ont pas vue non plus tant qu'ils comparaient la sortie au modèle.
+
+**Ce qui l'a vu.** Un croisement avec un autre module : le bordereau de D1 compte **5,52 jours de
+pompe** pour toute la gare quand C6 en comptait 140. Un facteur 25 entre deux modules du même cours
+sur la même machine ne peut pas être une divergence d'hypothèses — c'est une erreur de modèle, et il
+a suffi de chercher laquelle. Les deux voies restent publiées et divergent encore d'un facteur 2,72,
+mais pour une raison **comprise et nommée** : D1 facture au mètre cube une ressource qui se paie à la
+venue.
+
+**Impact.** `data/projet-gare.json` → `materiel_engins.familles[].regime_de_service` et
+`regime_de_location`. `calc/cout_horaire.py` sépare `heures_par_an` (ce qui brûle du carburant) de
+`unites_facturees_par_an` (ce que le loueur compte) dans une seule fonction de coût, et
+`cout_du_parc` publie le coût **par heure de travail** de chaque engin. Deux canaris de
+`test_cout_horaire.py` rejouent les deux erreurs et vérifient qu'elles inversent le verdict. Ce qui
+suit de cette décision dépasse le matériel : la dette 32, ouverte par la passe de C1 — « toute
+grandeur multipliée par une durée de chantier nomme la fenêtre d'emploi de la ressource qu'elle
+loue » — en est le cas particulier du troisième régime, et la ligne de frais de durée de D1 qui porte
+le même défaut depuis trois modules attend toujours.
+
+---
+
+## D-069 — 30/10/2026 — Un coin du domaine n'est pas un scénario : c'est la part des tirages qui tranche
+
+**Décision.** Quand un verdict de ce cours dépend de plus de trois hypothèses V3 à la fois, il n'est
+plus tranché par les **bornes** des fourchettes mais par la **part des tirages** uniformes dans ces
+fourchettes qui vont dans le même sens, avec un seuil déclaré — 10 % dans les deux sens pour C6.
+Entre les deux seuils, le module publie « NON TRANCHÉ » et la part obtenue, et il ne convertit pas
+une présomption en décision. Les deux coins extrêmes restent publiés, mais comme ce qu'ils sont : les
+sommets du domaine, et non des scénarios.
+
+**Pourquoi.** D-059 posait qu'une voie dont les bornes encadrent le seuil ne tranche pas. La règle
+est juste et elle devient inutilisable en dimension dix : prendre neuf ou dix paramètres
+**simultanément** à leur borne favorable décrit une combinaison de probabilité nulle, et les deux
+coins encadrent alors le seuil **toujours**. Appliquée telle quelle, la règle refusait de trancher
+le cas de la pompe à béton, où 19 998 tirages sur 20 000 disent de louer. Le seuil n'avait pas
+disparu : c'est l'instrument qui était trop grossier.
+
+Et la part des tirages dit quelque chose que ni le nominal ni les bornes ne disent : un **degré**. Le
+chariot télescopique de ce chantier gagne à être possédé au nominal, et la possession ne l'emporte
+que dans 85,7 % des tirages. Ce n'est pas la même information qu'un oui, ni qu'un peut-être : c'est
+une présomption chiffrée, et la seule réponse honnête que des hypothèses V3 autorisent.
+
+**Ce qui reste de D-059.** Tout, et renforcé par son contraire : quand les **deux** coins donnent le
+même verdict — c'est le cas de la pompe — aucune combinaison de ces fourchettes ne peut l'inverser,
+et c'est la preuve la plus forte que ce cours sache produire sur une décision V3. Le coin ne sert
+donc pas à douter, il sert à **clore**.
+
+**Impact.** `calc/cout_horaire.py` : `SEUIL_VERDICT_PCT`, `part_des_tirages()`, et un champ
+`bornes_tranchent` publié avec le texte qui dit lequel des deux cas s'applique à chaque engin. Les
+hypothèses sont tirées **indépendamment**, et c'est déclaré : si le prix d'achat et le prix de
+location montaient ensemble, la dispersion serait plus faible et le verdict plus net — la part
+publiée est donc prudente.

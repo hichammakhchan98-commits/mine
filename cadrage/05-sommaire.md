@@ -1045,3 +1045,73 @@ EFFET SUR LE COURS : premiere SECONDE VOIE sur une duree declaree a l'Etape 0. L
           avec sa forme fermee en donne 78. L'accord credite la decomposition, donc on peut
           desormais piloter le second oeuvre par ses termes — et le goulot a un nom.
 ```
+
+### C6 — Matériel : engins, pompes, coûts horaires (écrit le 30/10/2026)
+
+```text
+ID : C6               Titre : Materiel — l'heure d'un engin, et ce qu'elle decide
+Palier : P1           Type : execution     Niveau : [M] fiche d'expert     Etat : LIVRE
+Socle : S1 a S8 (tous)
+Options : O1 – (pas de plan d'ouvrage) · O2 ✓ (n = 3) · O3 – (dupliquer la grue de C1 serait
+          cocher une case) · O4 ✓ (double lecture, dont trois controles de MOE sur pieces) ·
+          O5 ✓ (le cout du parc sur le chantier, et la ligne qui manque au bordereau) ·
+          O6 ○ non retenu (l'exercice 3 en tient lieu) · O7 ✓
+ECARTS avec la fiche de l'Etape 0 (D-061), et leurs raisons :
+          (1) les trois figures prevues etaient « courbes de charge, histogramme de materiel,
+          arbre de decision location/achat ». La courbe de charge appartient a C1 et la
+          redessiner aurait double une figure existante : remplacee par la DROITE D'ECART
+          possession-location, qui est l'arbre de decision sous sa forme calculable. Les deux
+          autres sont livrees telles quelles (histogramme du parc, et la cascade de rendement
+          en plus). (2) « parc multi-sites (lien D7) » : traite, mais le resultat est negatif
+          et publie comme tel — deux sites ne font basculer AUCUN verdict.
+Partie ⏸ : verifications reglementaires des engins et des appareils de levage, periodicites et
+          criteres d'acceptation, habilitations et autorisations de conduite, consignes
+          reglementaires d'exploitation, regles de distance et de survol (deja ⏸ depuis C1).
+Contenu propre : CE QUI DECIDE N'EST PAS L'ENGIN, C'EST L'UNITE DANS LAQUELLE ON LE PAIE —
+          trois regimes coexistent sur ce chantier (par intervention, par heure de service,
+          par duree de presence) et donnent 520, 973 et 1 364 MAD par heure de travail sur le
+          meme marche ; LE POINT D'EQUILIBRE EST UN NOMBRE D'HEURES PAR AN, h* = F/(l-v), et
+          non une duree de detention ; LE PLAFOND D'EMPLOI clot la question sans aucune
+          estimation pour deux des trois engins ; LE PARC TRAVAILLE 39 % DE SA PRESENCE ;
+          857 629 MAD DE LOCATION N'ONT AUCUNE LIGNE AU BORDEREAU, soit 160 % du poste qui
+          pourrait les absorber ; LE CATALOGUE PERD 52 % en arrivant sur un chantier ; UNE
+          CHAINE VAUT LE PRODUIT DE SES MAILLONS, 75,4 % pour un maillon faible a 88 % ; UN
+          SECOURS SE CLASSE EN MAD PAR POINT DE CHAINE, et celui au plus gros gain n'est pas
+          rentable.
+Donnees lues : calc/sorties/planification.json (segments et durees des taches servies, d'ou
+          les fenetres d'emploi), prix.json (prix de location du bordereau de D1, jours de
+          pompe des sous-details, frais de duree par jour, poste energie-et-divers),
+          gros-oeuvre.json (duree d'un coulage, zones du cycle, debit tenu et plancher
+          anti-reprise), tranche-plancher.json (volume d'une zone) ; data/ ->
+          materiel_engins.* (trois familles avec leur regime, rendement de la pompe, chaine du
+          coulage, mutualisation)
+Donnees ecrites : calc/sorties/materiel.json
+Contre-calcul : TROIS VOIES sur le verdict — forme fermee au nominal, les deux coins extremes
+          du domaine, et 20 000 tirages uniformes dans les fourchettes. C'est le tirage qui
+          tranche (D-068) ; pour la pompe les deux coins concordent, et c'est la preuve la
+          plus forte du module. SECONDE VOIE sur le debit pratique de la pompe : la cascade de
+          facteurs donne 42,8 m3/h contre 45 declares par C3, ecart 4,8 % sous la tolerance du
+          § 3.3. SECONDE VOIE sur les jours de pompe : D1 en compte 5,52 au volume, C6 en
+          compte 15 aux interventions (x2,72) — et l'explication est que le pompage se facture
+          a la venue. SIMULATION DIRECTE de la chaine : 50 000 matinees tirees, 0,02 point
+          d'ecart avec le produit. Etalonnage sur cas fermes
+          (calc/etalonnage/cout_horaire_cas_ferme.py) : amortissement lineaire, cout financier
+          sur le capital moyen, h* par BALAYAGE sans connaitre la formule, effet d'un rapport
+          d'unites, chaine a quatre maillons egaux, secours 1-(1-p)^2, et la formule fausse
+          « la chaine vaut son maillon le plus faible » rejouee pour mesurer de combien elle
+          surestime.
+Double lecture entreprise / MOE : ✓ (quatre gestes cote entreprise, trois controles sur pieces
+          cote MOE dont l'adequation des moyens aux cadences visees)   Fiche memo S8 : ✓
+Exercices : 2 application + 1 probleme   Quiz : 6 questions
+Tests : calc/tests/test_cout_horaire.py (177 controles, 7 canaris) + etalonnage + verif_unites
+          + rendu
+LIMITE DECLAREE, la plus lourde du cours : dans ce module les trois erreurs les plus probables
+          sont dimensionnellement INVISIBLES — MAD/an, MAD/h et MAD/j ont la meme dimension et
+          pint convertit l'une en l'autre sans alerte. verif_unites.py le VERIFIE
+          explicitement, pour que personne ne croie la verification dimensionnelle protectrice
+          ici. Ce qui attrape ces erreurs : les tests de regle et le balayage de l'etalonnage.
+EFFET SUR LE COURS : la premiere version de ce module facturait a la pompe un jour de location
+          par jour de tache — 140 jours au lieu de 15 interventions, neuf fois le montant. La
+          correction a produit la regle du module, et elle generalise la dette 32 ouverte par
+          C1 : toute ressource louee nomme son UNITE de facturation avant son prix.
+```
